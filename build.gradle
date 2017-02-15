@@ -1,9 +1,21 @@
+apply plugin: 'findbugs'
 apply plugin: 'java'
+
+repositories {
+    mavenCentral() // for findbugs
+}
 
 jar {
     manifest {
         attributes(
                 'Main-Class': 'main.java.Main'
         )
+    }
+}
+
+tasks.withType(FindBugs) {
+    reports {
+        xml.enabled false
+        html.enabled true
     }
 }
