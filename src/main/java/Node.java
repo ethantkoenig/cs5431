@@ -74,7 +74,8 @@ public class Node {
             try {
                 connectionThread.send(output);
             } catch (IOException e) {
-
+                System.err.printf("Lost connection to connectionThread: %s.\n", connectionThread.toString());
+                this.connections.remove(connectionThread);
             }
         }
     }
