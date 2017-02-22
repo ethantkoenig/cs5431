@@ -3,7 +3,7 @@ package testutils;
 import java.util.Random;
 
 /**
- * A utility class for reproducible, randomized testutils.
+ * A utility class for reproducible, randomized tests.
  */
 public class SeededRandom {
     private static final Random classRandom = new Random();
@@ -17,14 +17,14 @@ public class SeededRandom {
     }
 
     /**
-     * @return A testutils.SeededRandom with a random seed
+     * @return A SeededRandom with a random seed
      */
     public static SeededRandom randomSeed() {
         return new SeededRandom(classRandom.nextLong());
     }
 
     /**
-     * @return A testutils.SeededRandom with the given seed
+     * @return A SeededRandom with the given seed
      */
     public static SeededRandom fixedSeed(long seed) {
         return new SeededRandom(seed);
