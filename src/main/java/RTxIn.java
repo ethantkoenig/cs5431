@@ -1,4 +1,7 @@
 import java.nio.ByteBuffer;
+import java.security.GeneralSecurityException;
+import utils.Crypto;
+import java.security.*;
 
 /**
  * Created by willronchetti on 2/21/17.
@@ -11,19 +14,21 @@ import java.nio.ByteBuffer;
   * owning the funds, which will be signed using the associated Private Key
  */
 public class RTxIn {
-    ByteBuffer prevtxid;
+    byte[] prevtxid;
     int txidx;
-    ByteBuffer pubkeyscript;
+    byte[] pubkeyscript;
+    byte[] signature;
 
     public RTxIn() {
-        prevtxid = ByteBuffer.allocate(32);
+        prevtxid = new byte[32];
         txidx = 0;
-        pubkeyscript = ByteBuffer.allocate(32);
+        pubkeyscript = new byte[32];
+        signature = new byte[32];
     }
 
 //  Enforce TxID size of 32 Bytes.
-    void setPrevTxID(ByteBuffer TxID) throws AssertionError {
-        assert TxID.capacity() == 32;
+    void setPrevTxID(byte[] TxID) throws AssertionError {
+        assert TxID.length == 32;
         prevtxid = TxID;
     }
 
@@ -32,15 +37,14 @@ public class RTxIn {
     }
 
 //  PKeyScript should be the SHA256 hash of the public key holding the funds
-    void setPubkeyScript(ByteBuffer PKeyScript) {
-        assert PKeyScript.capacity() == 32;
+    void setPubkeyScript(byte[] PKeyScript) {
+        assert PKeyScript.length == 32;
         pubkeyscript = PKeyScript;
     }
 
-//  XXX: Finish
-    boolean produceSignature(ByteBuffer PrivateKey) {
-        return false;
+//  Signs pubkeyscript with Private Key passed in
+    byte[] produceSignature(PrivateKey PrKey) throws GeneralSecurityException {
+        signature = Crypto.sign(pubkeyscript, PrKey);
+        return signature;
     }
-
-
 }
