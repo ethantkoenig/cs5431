@@ -1,7 +1,9 @@
+package network;
+
 import java.util.concurrent.BlockingQueue;
 
 /**
- * The HandleMessageThread is a background thread ran by the instantiated Node class
+ * The network.HandleMessageThread is a background thread ran by the instantiated Node class
  * in order to process incoming messages from all connected nodes.
  *
  * @author Evan King

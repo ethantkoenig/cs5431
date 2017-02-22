@@ -1,3 +1,5 @@
+package network;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -6,7 +8,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.SynchronousQueue;
 
 /**
- * The Node class represents an arbitrary node in the network that can communicate
+ * The network.Node class represents an arbitrary node in the network that can communicate
  * with all other nodes through the use of the broadcast function.
  *
  * @author Evan King
@@ -44,7 +46,7 @@ public class Node {
 
         System.out.println("[+] Accepting connections");
 
-        // Start HandleMessageThread
+        // Start network.HandleMessageThread
         new HandleMessageThread(this.messageQueue).start();
 
         while (true) {

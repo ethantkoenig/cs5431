@@ -1,14 +1,23 @@
+apply plugin: 'application'
 apply plugin: 'findbugs'
 apply plugin: 'java'
 
+
 repositories {
-    mavenCentral() // for findbugs
+    mavenCentral()
 }
+
+dependencies {
+    compile group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: '1.56'
+    testCompile 'junit:junit:4.12'
+}
+
+mainClassName = "Main"
 
 jar {
     manifest {
         attributes(
-                'Main-Class': 'main.java.Main'
+                'Main-Class': 'Main'
         )
     }
 }

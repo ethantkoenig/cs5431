@@ -1,9 +1,11 @@
+package network;
+
 import java.net.*;
 import java.io.*;
 import java.util.concurrent.BlockingQueue;
 
 /**
- * The ConnectionThread class extends Thread and represents another node in the network that one is connected to.
+ * The network.ConnectionThread class extends Thread and represents another node in the network that one is connected to.
  * The class allows one to send and receive messages to/from other nodes.
  *
  * @author Evan King
@@ -14,10 +16,10 @@ public class ConnectionThread extends Thread {
     private Socket socket = null;
     private BlockingQueue<String> queue;
 
-    // The out buffer to write to this ConnectionThread
+    // The out buffer to write to this network.ConnectionThread
     private PrintWriter out;
 
-    // The in buffer to read incoming messages to this ConnectionThread
+    // The in buffer to read incoming messages to this network.ConnectionThread
     private BufferedReader in;
 
     public ConnectionThread(Socket socket, BlockingQueue<String> queue) {
@@ -56,7 +58,7 @@ public class ConnectionThread extends Thread {
 
 
     /**
-     * Send the given output to this ConnectionThread
+     * Send the given output to this network.ConnectionThread
      *
      * @param output the message to be sent
      * @throws IOException if out.checkError() returns true indicating that the connection has been closed.
