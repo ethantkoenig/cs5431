@@ -23,10 +23,10 @@ public class ConnectionThread implements Runnable {
         this.node = node;
         this.socket = socket;
         try {
-            this.out = new PrintWriter(socket.getOutputStream(), true);
-            this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            this.out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"), true);
+            this.in = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
         } catch (IOException e) {
-            System.err.printf("Unable to establish two way connection between nodes.\n");
+            System.err.printf("Unable to establish two way connection between nodes.%n");
             e.printStackTrace();
         }
     }
@@ -40,7 +40,7 @@ public class ConnectionThread implements Runnable {
         try {
             send("[+] Connection Established");
         } catch (IOException e) {
-            System.err.printf("Unable to send to client.\n");
+            System.err.printf("Unable to send to client.%n");
             e.printStackTrace();
         }
 
@@ -82,7 +82,7 @@ public class ConnectionThread implements Runnable {
                 System.out.println(outputLine);
             }
         } catch (IOException e) {
-            System.err.printf("Unable to read input. Client most likely disconnected.\n");
+            System.err.printf("Unable to read input. Client most likely disconnected.%n");
             node.connections.remove(this);
         }
     }

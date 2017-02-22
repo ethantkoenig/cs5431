@@ -33,8 +33,7 @@ public class Node {
         try {
             serverSocket = new ServerSocket(PORT);
         } catch (IOException e) {
-            System.err.printf("Could not listen on port: %s.\n", PORT);
-            System.exit(-1);
+            System.err.printf("Could not listen on port: %s.%n", PORT);
         }
 
         System.out.println("[+] Accepting connections");
@@ -52,15 +51,14 @@ public class Node {
      * @param host is the ip address of the remote Node you wish to connect to.
      */
     public void connect(String host) {
-        System.out.printf("[+] Connecting to host: %s.\n", host);
+        System.out.printf("[+] Connecting to host: %s.%n", host);
         try {
             Socket socket = new Socket(host, PORT);
             ConnectionThread connectionThread = new ConnectionThread(socket, this);
             connectionThread.run();
             this.connections.add(connectionThread);
         } catch (IOException e) {
-            System.err.printf("Could not connect to host: %s.\n", host);
-            System.exit(-1);
+            System.err.printf("Could not connect to host: %s.%n", host);
         }
     }
 
@@ -74,7 +72,7 @@ public class Node {
             try {
                 connectionThread.send(output);
             } catch (IOException e) {
-                System.err.printf("Lost connection to connectionThread: %s.\n", connectionThread.toString());
+                System.err.printf("Lost connection to connectionThread: %s.%n", connectionThread.toString());
                 this.connections.remove(connectionThread);
             }
         }
