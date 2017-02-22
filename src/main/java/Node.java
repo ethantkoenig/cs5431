@@ -2,6 +2,8 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.SynchronousQueue;
 
 /**
  * The Node class represents an arbitrary node in the network that can communicate
@@ -15,11 +17,15 @@ public class Node {
     private static final int PORT = 4444;
     private ServerSocket serverSocket;
 
+    // Synchronized blocking queue to hold incoming messages
+    protected BlockingQueue<String> messageQueue;
+
     // The connections list holds all of the Nodes current connections
     protected ArrayList<ConnectionThread> connections;
 
     public Node() {
         this.connections = new ArrayList<>();
+        this.messageQueue = new SynchronousQueue<>();
     }
 
     /**
@@ -38,9 +44,12 @@ public class Node {
 
         System.out.println("[+] Accepting connections");
 
+        // Start HandleMessageThread
+        new HandleMessageThread(this.messageQueue).start();
+
         while (true) {
-            ConnectionThread connectionThread = new ConnectionThread(serverSocket.accept(), this);
-            connectionThread.run();
+            ConnectionThread connectionThread = new ConnectionThread(serverSocket.accept(), this.messageQueue);
+            connectionThread.start();
             this.connections.add(connectionThread);
         }
     }
@@ -54,8 +63,8 @@ public class Node {
         System.out.printf("[+] Connecting to host: %s.%n", host);
         try {
             Socket socket = new Socket(host, PORT);
-            ConnectionThread connectionThread = new ConnectionThread(socket, this);
-            connectionThread.run();
+            ConnectionThread connectionThread = new ConnectionThread(socket, this.messageQueue);
+            connectionThread.start();
             this.connections.add(connectionThread);
         } catch (IOException e) {
             System.err.printf("Could not connect to host: %s.%n", host);

@@ -1,5 +1,6 @@
 import java.net.*;
 import java.io.*;
+import java.util.concurrent.BlockingQueue;
 
 /**
  * The ConnectionThread class extends Thread and represents another node in the network that one is connected to.
@@ -9,9 +10,9 @@ import java.io.*;
  * @version 1.0, Feb 16 2017
  * @todo error handling will need to be thoroughly tested in regards to lost connections
  */
-public class ConnectionThread implements Runnable {
-    private Node node;
+public class ConnectionThread extends Thread {
     private Socket socket = null;
+    private BlockingQueue<String> queue;
 
     // The out buffer to write to this ConnectionThread
     private PrintWriter out;
@@ -19,9 +20,9 @@ public class ConnectionThread implements Runnable {
     // The in buffer to read incoming messages to this ConnectionThread
     private BufferedReader in;
 
-    public ConnectionThread(Socket socket, Node node) {
-        this.node = node;
+    public ConnectionThread(Socket socket, BlockingQueue<String> queue) {
         this.socket = socket;
+        this.queue = queue;
         try {
             this.out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"), true);
             this.in = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
@@ -75,15 +76,13 @@ public class ConnectionThread implements Runnable {
      */
     public void receive() {
 
-        String inputLine, outputLine;
+        String inputLine;
         try {
             while ((inputLine = in.readLine()) != null) {
-                outputLine = "We received the input: " + inputLine;
-                System.out.println(outputLine);
+                queue.put(inputLine);
             }
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             System.err.printf("Unable to read input. Client most likely disconnected.%n");
-            node.connections.remove(this);
         }
     }
 
@@ -103,7 +102,6 @@ public class ConnectionThread implements Runnable {
     @Override
     public String toString() {
         return "ConnectionThread{" +
-                "node=" + node +
                 ", socket=" + socket +
                 '}';
     }
