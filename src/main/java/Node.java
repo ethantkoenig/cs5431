@@ -41,7 +41,7 @@ public class Node {
 
         while (true) {
             ConnectionThread connectionThread = new ConnectionThread(serverSocket.accept(), this);
-            connectionThread.start();
+            connectionThread.run();
             this.connections.add(connectionThread);
         }
     }
@@ -56,7 +56,7 @@ public class Node {
         try {
             Socket socket = new Socket(host, PORT);
             ConnectionThread connectionThread = new ConnectionThread(socket, this);
-            connectionThread.start();
+            connectionThread.run();
             this.connections.add(connectionThread);
         } catch (IOException e) {
             System.err.printf("Could not connect to host: %s.\n", host);

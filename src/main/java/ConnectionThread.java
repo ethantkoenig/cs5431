@@ -9,7 +9,7 @@ import java.io.*;
  * @version 1.0, Feb 16 2017
  * @todo error handling will need to be thoroughly tested in regards to lost connections
  */
-public class ConnectionThread extends Thread {
+public class ConnectionThread implements Runnable {
     private Node node;
     private Socket socket = null;
 
@@ -35,6 +35,7 @@ public class ConnectionThread extends Thread {
      * The run() function is ran when the thread is started. We initialize and start
      * a background thread to listen to incoming messages and send an initial connection message.
      */
+    @Override
     public void run() {
         try {
             send("[+] Connection Established");
