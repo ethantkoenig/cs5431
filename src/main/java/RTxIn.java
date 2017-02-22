@@ -4,32 +4,37 @@ import java.nio.ByteBuffer;
  * Created by willronchetti on 2/21/17.
  */
 
-// Class representing the TxID, input index and Script triple.
+/** Class representing the TxID, input index and Script triple.
+  * TxID is a hash corresponding to a previous transaction to be referenced
+  * in the new transaction. Input idex is the output number of the previous
+  * transaction. The script (for now) is the SHA256 hash of the public key
+  * owning the funds, which will be signed using the associated Private Key
+ */
 public class RTxIn {
-    ByteBuffer PrevTxID;
-    int TxIndex;
-    ByteBuffer PubkeyScript;
+    ByteBuffer prevtxid;
+    int txidx;
+    ByteBuffer pubkeyscript;
 
     public RTxIn() {
-        PrevTxID = ByteBuffer.allocate(32);
-        TxIndex = 0;
-        PubkeyScript = ByteBuffer.allocate(91);
+        prevtxid = ByteBuffer.allocate(32);
+        txidx = 0;
+        pubkeyscript = ByteBuffer.allocate(32);
     }
 
 //  Enforce TxID size of 32 Bytes.
     void setPrevTxID(ByteBuffer TxID) throws AssertionError {
         assert TxID.capacity() == 32;
-        PrevTxID = TxID;
+        prevtxid = TxID;
     }
 
     void setTxIndex(int idx) {
-        TxIndex = idx;
+        txidx = idx;
     }
 
-//  Enforce public key size of 91 bytes
-    void setPubkeyScript(ByteBuffer PKey) {
-        assert PKey.capacity() == 91;
-        PubkeyScript = PKey;
+//  PKeyScript should be the SHA256 hash of the public key holding the funds
+    void setPubkeyScript(ByteBuffer PKeyScript) {
+        assert PKeyScript.capacity() == 32;
+        pubkeyscript = PKeyScript;
     }
 
 //  XXX: Finish
