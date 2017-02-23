@@ -1,7 +1,9 @@
 package transaction;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
+import java.security.PrivateKey;
 
 /**
  * Created by willronchetti on 2/21/17.
@@ -29,16 +31,13 @@ public class RTransaction {
         numOutputs = 0;
     }
 
-    public void setNumTxIn(int numinputs){
+    private void setNumTxIn(int numinputs){
         assert numInputs > 0;
         numInputs = numinputs;
         txIn = new RTxIn[numInputs];
     }
 
-//  Insert a new TxIn object in the proper slot. Returns in case that slots
-//  are full.
-//  XXX: Figure out a better way to handle this case. Throw exception?
-    public boolean insertTxIn(ByteBuffer txid, int idx, ByteBuffer pubkey){
+    private boolean insertTxIn(ByteBuffer txid, int idx, ByteBuffer pubkey){
         if (insertInputIdx == numInputs - 1) {
             return false;
         }
@@ -50,12 +49,12 @@ public class RTransaction {
         return true;
     }
 
-    public void setNumTxOut(int numoutputs) {
+    private void setNumTxOut(int numoutputs) {
         assert numOutputs > 0;
         numOutputs = numoutputs;
     }
 
-    public boolean insertTxOut(int val, ByteBuffer pubkey) throws GeneralSecurityException {
+    private boolean insertTxOut(int val, ByteBuffer pubkey) throws GeneralSecurityException {
         if (insertOutputIdx == numInputs - 1) {
             return false;
         }
@@ -63,6 +62,39 @@ public class RTransaction {
         txOut[insertOutputIdx].setValue(val);
         txOut[insertOutputIdx].setScriptpubkey(pubkey);
         insertOutputIdx++;
+        return true;
+    }
+
+//  Takes in a hash as a string and returns a ByteBuffer containing the Byte representation
+//  of the string. Hash should be either a TxId or a Public Key.
+    public ByteBuffer convertHashFromString(String hash) {
+        return ByteBuffer.wrap(hash.getBytes(Charset.forName("UTF8")));
+    }
+
+//  Public method for adding TxIn's to the transaction
+    public boolean addTxIns(int numinputs, ByteBuffer[] hashes, int[] idx, ByteBuffer pubkey) {
+        setNumTxIn(numinputs);
+        for (int i = 0; i < numinputs; i++) {
+            insertTxIn(hashes[i], idx[i], pubkey);
+        }
+        return true;
+    }
+
+//  Signs the users inputs to the transaction
+    public boolean signInputs(PrivateKey key) throws GeneralSecurityException {
+        assert numInputs > 0;
+        for (int i = 0; i < numInputs; i++) {
+            txIn[i].produceSignature(key);
+        }
+        return true;
+    }
+
+//  Public method for adding TxOut's to the transaction
+    public boolean addTxOuts(int numoutputs, int[] amts, ByteBuffer pubkeyscript) throws GeneralSecurityException {
+        setNumTxOut(numoutputs);
+        for (int i = 0; i < numOutputs; i++) {
+            insertTxOut(amts[i], pubkeyscript);
+        }
         return true;
     }
 
