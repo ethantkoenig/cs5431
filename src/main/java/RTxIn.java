@@ -14,21 +14,21 @@ import java.security.*;
   * owning the funds, which will be signed using the associated Private Key
  */
 public class RTxIn {
-    byte[] prevtxid;
+    ByteBuffer prevtxid;
     int txidx;
-    byte[] pubkeyscript;
-    byte[] signature;
+    ByteBuffer script;
+    ByteBuffer signature;
 
     public RTxIn() {
-        prevtxid = new byte[32];
+        prevtxid = ByteBuffer.allocate(32);
         txidx = 0;
-        pubkeyscript = new byte[32];
-        signature = new byte[32];
+        script = ByteBuffer.allocate(32);
+        signature = ByteBuffer.allocate(32);
     }
 
 //  Enforce TxID size of 32 Bytes.
-    void setPrevTxID(byte[] TxID) throws AssertionError {
-        assert TxID.length == 32;
+    void setPrevTxID(ByteBuffer TxID) throws AssertionError {
+        assert TxID.capacity() == 32;
         prevtxid = TxID;
     }
 
@@ -37,14 +37,14 @@ public class RTxIn {
     }
 
 //  PKeyScript should be the SHA256 hash of the public key holding the funds
-    void setPubkeyScript(byte[] PKeyScript) {
-        assert PKeyScript.length == 32;
-        pubkeyscript = PKeyScript;
+    void setPubkeyScript(ByteBuffer PKeyScript) {
+        assert PKeyScript.capacity() == 32;
+        script = PKeyScript;
     }
 
 //  Signs pubkeyscript with Private Key passed in
     byte[] produceSignature(PrivateKey PrKey) throws GeneralSecurityException {
-        signature = Crypto.sign(pubkeyscript, PrKey);
-        return signature;
+        signature = ByteBuffer.wrap(Crypto.sign(script.array(), PrKey));
+        return signature.array();
     }
 }
