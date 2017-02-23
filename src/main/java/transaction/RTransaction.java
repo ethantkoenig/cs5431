@@ -74,10 +74,11 @@ public class RTransaction {
 //  Public method for adding TxIn's to the transaction
     public boolean addTxIns(int numinputs, ByteBuffer[] hashes, int[] idx, ByteBuffer pubkey) {
         setNumTxIn(numinputs);
+        boolean result = true;
         for (int i = 0; i < numinputs; i++) {
-            insertTxIn(hashes[i], idx[i], pubkey);
+            result = result && insertTxIn(hashes[i], idx[i], pubkey);
         }
-        return true;
+        return result;
     }
 
 //  Signs the users inputs to the transaction
@@ -92,10 +93,11 @@ public class RTransaction {
 //  Public method for adding TxOut's to the transaction
     public boolean addTxOuts(int numoutputs, int[] amts, ByteBuffer pubkeyscript) throws GeneralSecurityException {
         setNumTxOut(numoutputs);
+        boolean result = true;
         for (int i = 0; i < numOutputs; i++) {
-            insertTxOut(amts[i], pubkeyscript);
+            result = result && insertTxOut(amts[i], pubkeyscript);
         }
-        return true;
+        return result;
     }
 
 }
