@@ -1,3 +1,5 @@
+package transaction;
+
 import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
 
@@ -12,54 +14,56 @@ import java.security.GeneralSecurityException;
  * output classes
  */
 public class RTransaction {
-    private int insertinputidx;
-    int numinputs;
-    RTxIn[] txin;
-    private int insertoutputidx;
-    int numoutputs;
-    RTxOut[] txout;
+    private int insertInputIdx;
+    int numInputs;
+    RTxIn[] txIn;
+    private int insertOutputIdx;
+    int numOutputs;
+    RTxOut[] txOut;
 
     public RTransaction() {
-        insertinputidx = 0;
-        numinputs = 0;
-        txin = new RTxIn[0];
-        insertoutputidx = 0;
-        numoutputs = 0;
+        insertInputIdx = 0;
+        numInputs = 0;
+        txIn = new RTxIn[0];
+        insertOutputIdx = 0;
+        numOutputs = 0;
     }
 
-    public void setNumTxIn(int numInputs){
+    public void setNumTxIn(int numinputs){
         assert numInputs > 0;
-        numinputs = numInputs;
-        txin = new RTxIn[numInputs];
+        numInputs = numinputs;
+        txIn = new RTxIn[numInputs];
     }
 
 //  Insert a new TxIn object in the proper slot. Returns in case that slots
 //  are full.
 //  XXX: Figure out a better way to handle this case. Throw exception?
-    public void insertTxIn(ByteBuffer txid, int idx, ByteBuffer pubkey){
-        if (insertinputidx == numinputs - 1) {
-            return;
+    public boolean insertTxIn(ByteBuffer txid, int idx, ByteBuffer pubkey){
+        if (insertInputIdx == numInputs - 1) {
+            return false;
         }
-        txin[insertinputidx] = new RTxIn();
-        txin[insertinputidx].prevtxid = txid;
-        txin[insertinputidx].txidx = idx;
-        txin[insertinputidx].script = pubkey;
-        insertinputidx++;
+        txIn[insertInputIdx] = new RTxIn();
+        txIn[insertInputIdx].prevTxId = txid;
+        txIn[insertInputIdx].txIdx = idx;
+        txIn[insertInputIdx].script = pubkey;
+        insertInputIdx++;
+        return true;
     }
 
-    public void setNumTxOut(int numOutputs) {
+    public void setNumTxOut(int numoutputs) {
         assert numOutputs > 0;
-        numoutputs = numOutputs;
+        numOutputs = numoutputs;
     }
 
-    public void insertTxOut(int val, ByteBuffer pubkey) throws GeneralSecurityException {
-        if (insertoutputidx == numinputs - 1) {
-            return;
+    public boolean insertTxOut(int val, ByteBuffer pubkey) throws GeneralSecurityException {
+        if (insertOutputIdx == numInputs - 1) {
+            return false;
         }
-        txout[insertoutputidx] = new RTxOut();
-        txout[insertoutputidx].setValue(val);
-        txout[insertoutputidx].setScriptpubkey(pubkey);
-        insertoutputidx++;
+        txOut[insertOutputIdx] = new RTxOut();
+        txOut[insertOutputIdx].setValue(val);
+        txOut[insertOutputIdx].setScriptpubkey(pubkey);
+        insertOutputIdx++;
+        return true;
     }
 
 }

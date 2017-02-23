@@ -1,3 +1,5 @@
+package transaction;
+
 import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
 import utils.Crypto;
@@ -14,14 +16,14 @@ import java.security.*;
   * owning the funds, which will be signed using the associated Private Key
  */
 public class RTxIn {
-    ByteBuffer prevtxid;
-    int txidx;
+    ByteBuffer prevTxId;
+    int txIdx;
     ByteBuffer script;
     ByteBuffer signature;
 
     public RTxIn() {
-        prevtxid = ByteBuffer.allocate(32);
-        txidx = 0;
+        prevTxId = ByteBuffer.allocate(32);
+        txIdx = 0;
         script = ByteBuffer.allocate(32);
         signature = ByteBuffer.allocate(32);
     }
@@ -29,11 +31,11 @@ public class RTxIn {
 //  Enforce TxID size of 32 Bytes.
     void setPrevTxID(ByteBuffer TxID) throws AssertionError {
         assert TxID.capacity() == 32;
-        prevtxid = TxID;
+        prevTxId = TxID;
     }
 
     void setTxIndex(int idx) {
-        txidx = idx;
+        txIdx = idx;
     }
 
 //  PKeyScript should be the SHA256 hash of the public key holding the funds

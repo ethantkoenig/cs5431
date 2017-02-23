@@ -1,3 +1,5 @@
+package transaction;
+
 import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
 
@@ -13,7 +15,7 @@ import utils.Crypto;
  */
 public class RTxOut {
     int value;
-    ByteBuffer scriptpubkey;
+    ByteBuffer scriptPubKey;
 
     public void setValue(int val){
         assert val > 0;
@@ -25,10 +27,10 @@ public class RTxOut {
     public void setScriptpubkey(ByteBuffer pubkey) throws GeneralSecurityException {
         assert pubkey.capacity() == 32 || pubkey.capacity() == 91;
         if (pubkey.capacity() == 32) {
-            scriptpubkey = pubkey;
+            scriptPubKey = pubkey;
         }
         else {
-            scriptpubkey = ByteBuffer.wrap(Crypto.sha256(pubkey.array()));
+            scriptPubKey = ByteBuffer.wrap(Crypto.sha256(pubkey.array()));
         }
     }
 }
