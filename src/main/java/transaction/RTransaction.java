@@ -18,6 +18,7 @@ import java.security.PrivateKey;
 public class RTransaction {
     private int insertInputIdx;
     int numInputs;
+    int[] inputSlots;
     RTxIn[] txIn;
     private int insertOutputIdx;
     int numOutputs;
@@ -81,11 +82,15 @@ public class RTransaction {
         return result;
     }
 
-//  Signs the users inputs to the transaction
+//  Signs the users inputs to the transaction, denoted by an array slots containing
+//  the indices of the inputs belonging to the user.
     public boolean signInputs(PrivateKey key) throws GeneralSecurityException {
         assert numInputs > 0;
+        int j = 0;
         for (int i = 0; i < numInputs; i++) {
-            txIn[i].produceSignature(key);
+            if (inputSlots[j] == i) {
+                txIn[i].produceSignature(key);
+            }
         }
         return true;
     }
