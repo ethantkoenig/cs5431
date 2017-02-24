@@ -4,8 +4,8 @@ import utils.ShaTwoFiftySix;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 
 /**
  * Represents a block of transactions in the ledger
@@ -22,14 +22,21 @@ public class Block {
         this.previousBlockHash = previousBlockHash;
     }
 
+    /**
+     * @param previousBlockHash SHA-256 hash of the previous Block
+     * @return an empty block.
+     */
     public static Block empty(ShaTwoFiftySix previousBlockHash) {
         return new Block(previousBlockHash);
     }
 
-    public static Block deserialize(ByteBuffer input) {
-        byte[] previousBlockHash = new byte[ShaTwoFiftySix.HASH_SIZE_IN_BYTES];
-        input.get(previousBlockHash);
-        Block block = new Block(ShaTwoFiftySix.sha256(previousBlockHash));
+    /**
+     * @param input input bytes to deserialize
+     * @return deserialized block
+     * @throws BufferUnderflowException if the buffer is too short
+     */
+    public static Block deserialize(ByteBuffer input) throws BufferUnderflowException {
+        Block block = new Block(ShaTwoFiftySix.deserialize(input));
         for (int i = 0; i < NUM_TRANSACTIONS_PER_BLOCK; i++) {
             block.transactions[i] = Transaction.deserialize(input);
         }
@@ -37,6 +44,11 @@ public class Block {
         return block;
     }
 
+    /**
+     * Writes the serialization of this block to {@code outputStream}
+     * @param outputStream {@code OutputStream} to write the serialized block to
+     * @throws IOException
+     */
     public void serialize(OutputStream outputStream) throws IOException {
         previousBlockHash.writeTo(outputStream);
         for (Transaction transaction : transactions) {

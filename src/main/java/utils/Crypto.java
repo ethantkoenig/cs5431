@@ -33,8 +33,8 @@ public class Crypto {
         return signature.verify(signed);
     }
 
-    public static ShaTwoFiftySix sha256(byte[] content) throws GeneralSecurityException {
+    public static byte[] sha256(byte[] content) throws GeneralSecurityException {
         MessageDigest digest = MessageDigest.getInstance("SHA-256");
-        return ShaTwoFiftySix.sha256(digest.digest(content));
+        return digest.digest(content);
     }
 }

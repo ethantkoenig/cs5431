@@ -43,7 +43,7 @@ public class CryptoTest {
 
         final int len = rand.nextInt(1024);
         byte[] content = new byte[len];
-        ShaTwoFiftySix hash = Crypto.sha256(content);
-        Assert.assertEquals(seededRand.errorMessage(), 32, hash.copyOfHash().length);
+        byte[] hash = Crypto.sha256(content);
+        Assert.assertEquals(seededRand.errorMessage(), 32, hash.length);
     }
 }
