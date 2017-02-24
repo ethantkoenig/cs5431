@@ -18,7 +18,6 @@ import java.security.PrivateKey;
 public class RTransaction {
     private int insertInputIdx;
     int numInputs;
-    int[] inputSlots;
     RTxIn[] txIn;
     private int insertOutputIdx;
     int numOutputs;
@@ -72,7 +71,9 @@ public class RTransaction {
         return ByteBuffer.wrap(hash.getBytes(Charset.forName("UTF8")));
     }
 
-//  Public method for adding TxIn's to the transaction
+//  Public method for adding TxIn's to the transaction. Takes in an array of hashes
+//  along with an array of the corresponding indices. Also takes in the pubkey to
+//  be signed.
     public boolean addTxIns(int numinputs, ByteBuffer[] hashes, int[] idx, ByteBuffer pubkey) {
         setNumTxIn(numinputs);
         boolean result = true;
@@ -86,11 +87,8 @@ public class RTransaction {
 //  the indices of the inputs belonging to the user.
     public boolean signInputs(PrivateKey key) throws GeneralSecurityException {
         assert numInputs > 0;
-        int j = 0;
         for (int i = 0; i < numInputs; i++) {
-            if (inputSlots[j] == i) {
-                txIn[i].produceSignature(key);
-            }
+            txIn[i].produceSignature(key);
         }
         return true;
     }
