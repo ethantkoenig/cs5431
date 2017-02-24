@@ -3,7 +3,6 @@ package transaction;
 import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
 
-import utils.Crypto;
 
 /**
  * Created by willronchetti on 2/22/17.
@@ -22,15 +21,11 @@ public class RTxOut {
         value = val;
     }
 
-//  Sets the public key script to be the pubkey given if already hashed or
-//  hashes the public key given to get the proper script.
+//  Sets the public key script to be the pubkey given
+//  Note that we are sticking with straight up public key for now.
     public void setScriptpubkey(ByteBuffer pubkey) throws GeneralSecurityException {
-        assert pubkey.capacity() == 32 || pubkey.capacity() == 91;
-        if (pubkey.capacity() == 32) {
-            scriptPubKey = pubkey;
-        }
-        else {
-            scriptPubKey = ByteBuffer.wrap(Crypto.sha256(pubkey.array()));
-        }
+        assert pubkey.capacity() == 91;
+        scriptPubKey = ByteBuffer.wrap(pubkey.array());
+
     }
 }
