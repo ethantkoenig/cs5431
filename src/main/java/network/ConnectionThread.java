@@ -2,6 +2,7 @@ package network;
 
 import java.io.*;
 import java.net.Socket;
+import java.nio.ByteBuffer;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
@@ -16,21 +17,21 @@ import java.util.logging.Logger;
 public class ConnectionThread extends Thread {
     private static final Logger LOGGER = Logger.getLogger(ConnectionThread.class.getName());
 
-    private Socket socket = null;
-    private BlockingQueue<String> queue;
+    private final Socket socket;
+    private final BlockingQueue<Message> queue;
 
     // The out buffer to write to this network.ConnectionThread
-    private PrintWriter out;
+    private OutputStream out;
 
     // The in buffer to read incoming messages to this network.ConnectionThread
-    private BufferedReader in;
+    private InputStream in;
 
-    public ConnectionThread(Socket socket, BlockingQueue<String> queue) {
+    public ConnectionThread(Socket socket, BlockingQueue<Message> queue) {
         this.socket = socket;
         this.queue = queue;
         try {
-            this.out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"), true);
-            this.in = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
+            this.out = socket.getOutputStream();
+            this.in = socket.getInputStream();
         } catch (IOException e) {
             LOGGER.severe("Unable to establish two way connection between nodes.%n");
             e.printStackTrace();
@@ -38,54 +39,60 @@ public class ConnectionThread extends Thread {
     }
 
     /**
-     * The run() function is ran when the thread is started. We initialize and start
+     * The run() function is run when the thread is started. We initialize and start
      * a background thread to listen to incoming messages and send an initial connection message.
      */
     @Override
     public void run() {
         try {
-            send("[+] Connection Established");
-        } catch (IOException e) {
-            LOGGER.severe("Unable to send to client.%n");
-            e.printStackTrace();
-        }
-
-        // Start anonymous thread to handle all incoming messages in the background
-        new Thread(() -> {
-            LOGGER.info("[+] Starting to receive messages");
             receive();
-        }).start();
+        } catch (IOException | InterruptedException e) {
+            LOGGER.severe(e.getMessage());
+        }
     }
 
 
     /**
      * Send the given output to this network.ConnectionThread
      *
+     * @param type the type of message to be sent
      * @param output the message to be sent
      * @throws IOException if out.checkError() returns true indicating that the connection has been closed.
      */
-    public void send(String output) throws IOException {
-        out.println(output);
-
-        //connection closed by remote node
-        if (out.checkError())
-            throw new IOException("Remote socket closed.");
+    public void send(byte type, byte[] output) throws IOException {
+        out.write(ByteBuffer.allocate(Integer.BYTES).putInt(output.length).array());
+        out.write(type);
+        out.write(output);
     }
 
     /**
-     * Ran by a background thread as seen in the run() function. Receives and handles all incoming messages.
-     *
-     * @todo Do something with received input, for now just print to stdout
+     * Receives incoming messages, and put them onto the queue.
      */
-    public void receive() {
+    public void receive() throws IOException, InterruptedException {
+        byte[] headerBuffer = new byte[Integer.BYTES + Byte.BYTES];
+        while (true) {
+            fill(headerBuffer);
+            int payloadLen = ByteBuffer.wrap(headerBuffer, 0, Integer.BYTES).getInt();
+            byte payloadType = ByteBuffer.wrap(headerBuffer, Integer.BYTES, Byte.BYTES).get();
+            Message message = Message.create(payloadType, payloadLen);
+            fill(message.payload);
+            queue.put(message);
+        }
+    }
 
-        String inputLine;
-        try {
-            while ((inputLine = in.readLine()) != null) {
-                queue.put(inputLine);
+    /**
+     * Fill the buffer with input from the socket
+     * @param buffer buffer to fill
+     * @throws IOException
+     */
+    private void fill(byte[] buffer) throws IOException {
+        int index = 0;
+        while (index < buffer.length) {
+            int numBytes = in.read(buffer, index, buffer.length - index);
+            if (numBytes <= 0) {
+                throw new IOException("Reached EOF from input socket");
             }
-        } catch (IOException | InterruptedException e) {
-            LOGGER.severe("Unable to read input. Client most likely disconnected.%n");
+            index += numBytes;
         }
     }
 
@@ -104,8 +111,6 @@ public class ConnectionThread extends Thread {
 
     @Override
     public String toString() {
-        return "ConnectionThread{" +
-                ", socket=" + socket +
-                '}';
+        return "ConnectionThread{socket=" + socket + "}";
     }
 }
