@@ -40,23 +40,22 @@ public class BlockChain {
     }
 
     /**
-     * Finds all the ancestors of {@code b} contained in {@code this} and returns them from youngest to oldest.
+     * Finds all the ancestors of {@code Block} with hash {@code hash} contained in {@code this} and returns them from
+     * youngest to oldest.
      *
-     * An ancestor of a {@code Block b} is considered to be either a parent of {@code b} or a parent of an ancestor.
-     * Therefore, a node is not considered to be its own ancestor.
-     *
-     * @param b The latest block to appear in the Block List
-     * @return A {@code List} of all ancestor {@code Block}s related to {@code b}, from youngest to oldest
+     * @param hash The SHA-256 hash of the first {@code Block} that will appear in the list
+     * @return A {@code List} of all ancestor {@code Block}s related to the {@code Block} with hash {@code hash}, from
+     * youngest to oldest, or an empty list if no such {@code Block} exists
      */
-    public List<Block> getAncestorsOf(Block b) {
+    public List<Block> getAncestorsStartingAt(ShaTwoFiftySix hash) {
         ArrayList<Block> result = new ArrayList<>();
 
-        if (b == null) return result;
+        if (hash == null) return result;
 
-        Block current = b;
-        while (blocks.containsKey(current.previousBlockHash)) {
-            current = blocks.get(b);
+        while (blocks.containsKey(hash)) {
+            Block current = blocks.get(hash);
             result.add(current);
+            hash = current.previousBlockHash;
         }
 
         return result;
