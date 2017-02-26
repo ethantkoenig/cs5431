@@ -57,6 +57,13 @@ public class Block {
         outputStream.write(nonce);
     }
 
+    /**
+     * @return The SHA-256 hash of the serialization of {@code this}
+     */
+    public ShaTwoFiftySix getShaTwoFiftySix() {
+        // TODO: hook together serialization and util.ShaTwoFiftySix
+    }
+
     // TODO a placeholder for the real Transaction class
     public static class Transaction {
         public static Transaction deserialize(ByteBuffer input) {
