@@ -62,6 +62,7 @@ public class Block {
      */
     public ShaTwoFiftySix getShaTwoFiftySix() {
         // TODO: hook together serialization and util.ShaTwoFiftySix
+        return null;
     }
 
     // TODO a placeholder for the real Transaction class
