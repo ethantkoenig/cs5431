@@ -6,6 +6,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.SynchronousQueue;
+import java.util.logging.Logger;
 
 /**
  * The network.Node class represents an arbitrary node in the network that can communicate
@@ -16,6 +17,8 @@ import java.util.concurrent.SynchronousQueue;
  * @todo error handling will need to be thoroughly tested in regards to lost connections
  */
 public class Node {
+    private static final Logger LOGGER = Logger.getLogger(Node.class.getName());
+
     private static final int PORT = 4444;
     private ServerSocket serverSocket;
 
@@ -41,10 +44,10 @@ public class Node {
         try {
             serverSocket = new ServerSocket(PORT);
         } catch (IOException e) {
-            System.err.printf("Could not listen on port: %s.%n", PORT);
+            LOGGER.severe(String.format("Could not listen on port: %s.%n", PORT));
         }
 
-        System.out.println("[+] Accepting connections");
+        LOGGER.info("[+] Accepting connections");
 
         // Start network.HandleMessageThread
         new HandleMessageThread(this.messageQueue).start();
@@ -62,14 +65,14 @@ public class Node {
      * @param host is the ip address of the remote Node you wish to connect to.
      */
     public void connect(String host) {
-        System.out.printf("[+] Connecting to host: %s.%n", host);
+        LOGGER.info(String.format("[+] Connecting to host: %s.%n", host));
         try {
             Socket socket = new Socket(host, PORT);
             ConnectionThread connectionThread = new ConnectionThread(socket, this.messageQueue);
             connectionThread.start();
             this.connections.add(connectionThread);
         } catch (IOException e) {
-            System.err.printf("Could not connect to host: %s.%n", host);
+            LOGGER.severe(String.format("Could not connect to host: %s.%n", host));
         }
     }
 
@@ -83,7 +86,8 @@ public class Node {
             try {
                 connectionThread.send(output);
             } catch (IOException e) {
-                System.err.printf("Lost connection to connectionThread: %s.%n", connectionThread.toString());
+                LOGGER.warning(String.format(
+                        "Lost connection to connectionThread: %s.%n", connectionThread));
                 this.connections.remove(connectionThread);
             }
         }

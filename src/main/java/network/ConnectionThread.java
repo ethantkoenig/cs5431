@@ -1,8 +1,9 @@
 package network;
 
-import java.net.*;
 import java.io.*;
+import java.net.Socket;
 import java.util.concurrent.BlockingQueue;
+import java.util.logging.Logger;
 
 /**
  * The network.ConnectionThread class extends Thread and represents another node in the network that one is connected to.
@@ -13,6 +14,8 @@ import java.util.concurrent.BlockingQueue;
  * @todo error handling will need to be thoroughly tested in regards to lost connections
  */
 public class ConnectionThread extends Thread {
+    private static final Logger LOGGER = Logger.getLogger(ConnectionThread.class.getName());
+
     private Socket socket = null;
     private BlockingQueue<String> queue;
 
@@ -29,7 +32,7 @@ public class ConnectionThread extends Thread {
             this.out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"), true);
             this.in = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
         } catch (IOException e) {
-            System.err.printf("Unable to establish two way connection between nodes.%n");
+            LOGGER.severe("Unable to establish two way connection between nodes.%n");
             e.printStackTrace();
         }
     }
@@ -43,17 +46,15 @@ public class ConnectionThread extends Thread {
         try {
             send("[+] Connection Established");
         } catch (IOException e) {
-            System.err.printf("Unable to send to client.%n");
+            LOGGER.severe("Unable to send to client.%n");
             e.printStackTrace();
         }
 
         // Start anonymous thread to handle all incoming messages in the background
-        new Thread() {
-            public void run() {
-                System.out.println("[+] Starting to receive messages");
-                receive();
-            }
-        }.start();
+        new Thread(() -> {
+            LOGGER.info("[+] Starting to receive messages");
+            receive();
+        }).start();
     }
 
 
@@ -84,7 +85,7 @@ public class ConnectionThread extends Thread {
                 queue.put(inputLine);
             }
         } catch (IOException | InterruptedException e) {
-            System.err.printf("Unable to read input. Client most likely disconnected.%n");
+            LOGGER.severe("Unable to read input. Client most likely disconnected.%n");
         }
     }
 
