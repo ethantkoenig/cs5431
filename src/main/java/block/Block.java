@@ -2,15 +2,20 @@ package block;
 
 import utils.ShaTwoFiftySix;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
+import java.security.GeneralSecurityException;
+import java.util.logging.Logger;
 
 /**
  * Represents a block of transactions in the ledger
  */
 public class Block {
+    private final static Logger LOGGER = Logger.getLogger(Block.class.getName());
+
     public final static int NUM_TRANSACTIONS_PER_BLOCK = 128;
     public final static int NONCE_SIZE_IN_BYTES = 128;
 
@@ -46,6 +51,7 @@ public class Block {
 
     /**
      * Writes the serialization of this block to {@code outputStream}
+     *
      * @param outputStream {@code OutputStream} to write the serialized block to
      * @throws IOException
      */
@@ -61,8 +67,14 @@ public class Block {
      * @return The SHA-256 hash of the serialization of {@code this}
      */
     public ShaTwoFiftySix getShaTwoFiftySix() {
-        // TODO: hook together serialization and util.ShaTwoFiftySix
-        return null;
+        try {
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            serialize(outputStream);
+            return ShaTwoFiftySix.hashOf(outputStream.toByteArray());
+        } catch (IOException | GeneralSecurityException e) {
+            LOGGER.severe(e.getMessage());
+            throw new RuntimeException(e);
+        }
     }
 
     // TODO a placeholder for the real Transaction class
