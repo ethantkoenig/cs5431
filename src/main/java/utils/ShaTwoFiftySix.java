@@ -10,7 +10,7 @@ import java.util.Arrays;
 /**
  * Represents a SHA-256 hash
  */
-public final class ShaTwoFiftySix {
+public final class ShaTwoFiftySix implements Comparable<ShaTwoFiftySix>{
     public static final int HASH_SIZE_IN_BYTES = 32;
 
     private final byte[] hash;
@@ -74,6 +74,11 @@ public final class ShaTwoFiftySix {
         }
         ShaTwoFiftySix other = (ShaTwoFiftySix) o;
         return Arrays.equals(hash, other.hash);
+    }
+
+    @Override
+    public int compareTo(ShaTwoFiftySix shaTwoFiftySix) {
+        return this.hash.toString().compareTo(shaTwoFiftySix.hash.toString());
     }
 
     @Override

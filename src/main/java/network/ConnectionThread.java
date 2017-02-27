@@ -74,8 +74,8 @@ public class ConnectionThread extends Thread {
 
     /**
      * Ran by a background thread as seen in the run() function. Receives and handles all incoming messages.
+     * Puts messages on the queue to be consumed by the HandleMessageThread
      *
-     * @todo Do something with received input, for now just print to stdout
      */
     public void receive() {
 
