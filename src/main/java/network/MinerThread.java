@@ -53,15 +53,14 @@ public class MinerThread extends Thread{
         return hash.compareTo(this.hashGoal) <= 0;
     }
 
-    private Block tryNonces(Block block) throws IOException {
-        while (ByteUtil.compare(block.nonce, MAX_NONCE) < 0){ //or while true
+    private Block tryNonces(Block block) throws Exception {
+        while (true){
             ShaTwoFiftySix hash = computeHash(block);
             if (checkHash(hash))
                 return block;
 
             block.nonceAddOne();
         }
-        return null;
     }
 
     @Override

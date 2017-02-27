@@ -58,7 +58,7 @@ public class Block {
         outputStream.write(nonce);
     }
 
-    public void nonceAddOne(){
+    public void nonceAddOne() throws Exception {
         ByteUtil.addOne(this.nonce);
     }
 

@@ -33,7 +33,16 @@ public class ByteUtilTest extends RandomizedTest {
     @Test
     public void testAddOneByte() throws Exception {
         byte[] a = new byte[]{(byte) 0xa,(byte) 0xe};
-        Assert.assertTrue(errorMessage, Arrays.equals(new byte[]{(byte) 0xa,(byte) 0xf}, ByteUtil.addOne(a)));
+        ByteUtil.addOne(a);
+        Assert.assertTrue(errorMessage, Arrays.equals(new byte[]{(byte) 0xa,(byte) 0xf}, a));
+    }
+
+    @Test
+    public void testAddOneByteCarry() throws Exception {
+        byte[] a = new byte[]{(byte) 0xa,(byte) 0xf};
+        ByteUtil.addOne(a);
+        System.out.println(ByteUtil.bytesToHexString(a));
+        Assert.assertTrue(errorMessage, Arrays.equals(new byte[]{(byte) 0xb,(byte) 0x0}, a));
     }
 
     @Test
