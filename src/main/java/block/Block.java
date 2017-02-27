@@ -1,5 +1,6 @@
 package block;
 
+import utils.ByteUtil;
 import utils.ShaTwoFiftySix;
 
 import java.io.IOException;
@@ -55,6 +56,10 @@ public class Block {
             transaction.serialize(outputStream);
         }
         outputStream.write(nonce);
+    }
+
+    public void nonceAddOne(){
+        ByteUtil.addOne(this.nonce);
     }
 
     /**

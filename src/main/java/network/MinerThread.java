@@ -20,6 +20,7 @@ public class MinerThread extends Thread{
 
     private ShaTwoFiftySix hashGoal;
     private Block block;
+    private final static byte[] MAX_NONCE = ByteUtil.hexStringToByteArray("100000000");
 
     public MinerThread(ShaTwoFiftySix hashGoal, Block block) {
         this.hashGoal = hashGoal;
@@ -34,12 +35,12 @@ public class MinerThread extends Thread{
         this.block = block;
     }
 
-    private static ShaTwoFiftySix computeHash(Block block, byte[] nonce) throws IOException {
+    private static ShaTwoFiftySix computeHash(Block block) throws IOException {
         ShaTwoFiftySix hash = null;
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         block.serialize(os);
         try {
-            byte[] bytes = ByteUtil.concatenate(os.toByteArray(), nonce);
+            byte[] bytes = ByteUtil.concatenate(os.toByteArray(), block.nonce);
             hash = ShaTwoFiftySix.hashOf(bytes);
         } catch (GeneralSecurityException e) {
             //TODO: Logging
@@ -52,15 +53,13 @@ public class MinerThread extends Thread{
         return hash.compareTo(this.hashGoal) <= 0;
     }
 
-    private byte[] tryNonces(Block block) throws IOException {
-        byte[] nonce = new byte[100000000];
-        while (nonce.toString().compareTo("100000000") < 0){
-
-            ShaTwoFiftySix hash = computeHash(block, nonce);
+    private Block tryNonces(Block block) throws IOException {
+        while (ByteUtil.compare(block.nonce, MAX_NONCE) < 0){ //or while true
+            ShaTwoFiftySix hash = computeHash(block);
             if (checkHash(hash))
-                return nonce;
+                return block;
 
-            nonce = ByteUtil.addOne(nonce);
+            block.nonceAddOne();
         }
         return null;
     }

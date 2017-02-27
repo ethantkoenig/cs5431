@@ -1,5 +1,8 @@
+import network.Node;
+
 public class Main {
     public static void main(String[] args) throws Exception {
-        System.out.println("Hello World!");
+        Node n = new Node();
+        n.accept();
     }
 }

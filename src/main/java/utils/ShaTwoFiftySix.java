@@ -77,8 +77,8 @@ public final class ShaTwoFiftySix implements Comparable<ShaTwoFiftySix>{
     }
 
     @Override
-    public int compareTo(ShaTwoFiftySix shaTwoFiftySix) {
-        return this.hash.toString().compareTo(shaTwoFiftySix.hash.toString());
+    public int compareTo(ShaTwoFiftySix other) {
+        return ByteUtil.compare(this.hash, other.hash);
     }
 
     @Override
