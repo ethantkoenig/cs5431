@@ -16,7 +16,7 @@ import java.util.logging.Logger;
 public class Block {
     private final static Logger LOGGER = Logger.getLogger(Block.class.getName());
 
-    public final static int NUM_TRANSACTIONS_PER_BLOCK = 128;
+    public final static int NUM_TRANSACTIONS_PER_BLOCK = 4;
     public final static int NONCE_SIZE_IN_BYTES = 128;
 
     public final ShaTwoFiftySix previousBlockHash;
