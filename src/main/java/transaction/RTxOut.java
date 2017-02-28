@@ -14,18 +14,32 @@ import java.security.GeneralSecurityException;
  */
 public class RTxOut {
     int value;
-    ByteBuffer scriptPubKey;
+    byte[] ownerPubKey;
 
+    /** Public constructor for Output object. Sets default fields and allocates memory
+     *
+     */
+    public RTxOut() {
+        value = 0;
+        ownerPubKey = new byte[91];
+    }
+
+    /** Sets the coin value associated with this transaction output.
+     *
+     * @param val is the number of coins.
+     */
     public void setValue(int val){
         assert val > 0;
         value = val;
     }
 
-//  Sets the public key script to be the pubkey given
-//  Note that we are sticking with straight up public key for now.
-    public void setScriptpubkey(ByteBuffer pubkey) throws GeneralSecurityException {
-        assert pubkey.capacity() == 91;
-        scriptPubKey = ByteBuffer.wrap(pubkey.array());
+    /** Sets the public key script to be the pubkey given
+     * @param pubkey is the public key of the new owner of the coins.
+     * @throws GeneralSecurityException
+     */
+    public void setScriptpubkey(byte[] pubkey) throws GeneralSecurityException {
+        assert pubkey.length == 91;
+        ownerPubKey = pubkey.clone();
 
     }
 }

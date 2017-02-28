@@ -16,37 +16,59 @@ import java.security.*;
   * owning the funds, which will be signed using the associated Private Key
  */
 public class RTxIn {
-    ByteBuffer prevTxId;
+    byte[] prevTxId;
     int txIdx;
-    ByteBuffer script;
-    ByteBuffer signature;
+    byte[] newOwnerKey;
+    byte[] signature;
 
+    /** Public constructor for TxIn object, sets default fields and allocates memory.
+     *
+     */
     public RTxIn() {
-        prevTxId = ByteBuffer.allocate(32);
+        prevTxId = new byte[32];
         txIdx = 0;
-        script = ByteBuffer.allocate(32);
-        signature = ByteBuffer.allocate(32);
+        newOwnerKey = new byte[91];
+        signature = new byte[32];
     }
 
-//  Enforce TxID size of 32 Bytes.
-    void setPrevTxID(ByteBuffer TxID) throws AssertionError {
-        assert TxID.capacity() == 32;
-        prevTxId = TxID;
+    /** Sets the TxID to be referenced by this input.
+     *
+     * @param TxID is the previous transaction hash
+     * @throws AssertionError if TxID is not the proper size.
+     */
+    public void setPrevTxID(byte[] TxID) throws AssertionError {
+        assert TxID.length == 32;
+        prevTxId = TxID.clone();
     }
 
-    void setTxIndex(int idx) {
+    /** Sets the output index to be spent.
+     *
+     * @param idx is the corresponding output index in a previous transaction.
+     */
+    public void setTxIndex(int idx) {
         txIdx = idx;
     }
 
-//  PKeyScript should be the SHA256 hash of the public key holding the funds
-    void setPubkeyScript(ByteBuffer PKeyScript) {
-        assert PKeyScript.capacity() == 32;
-        script = PKeyScript;
+    /** Sets the public key of the new owner.
+     *
+     * @param PKeyScript is the public key of who the funds will be transferred to.
+     */
+    public void setPubkeyScript(byte[] PKeyScript) {
+        assert PKeyScript.length == 32;
+        newOwnerKey = PKeyScript.clone();
     }
 
-//  Signs pubkeyscript with Private Key passed in
-    byte[] produceSignature(PrivateKey PrKey) throws GeneralSecurityException {
-        signature = ByteBuffer.wrap(Crypto.sign(script.array(), PrKey));
-        return signature.array();
+    /** Signs the input with the provided private key. This takes the public key
+     * of who the funds are being transferred to, and signs it with the current
+     * coins owners private key. This private key corresponds to the public key
+     * in the previous transactions output.
+     *
+     * @param PrKey is the
+     * @return true if successful, throws exception otherwise
+     * @throws GeneralSecurityException
+     */
+    public boolean produceSignature(PrivateKey PrKey) throws GeneralSecurityException {
+        signature = Crypto.sign(newOwnerKey, PrKey);
+        return true;
     }
 }
