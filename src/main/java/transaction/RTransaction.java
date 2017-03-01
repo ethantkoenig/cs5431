@@ -4,6 +4,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
+import java.security.PublicKey;
 
 import utils.Crypto;
 
@@ -37,35 +38,36 @@ public class RTransaction {
     }
 
     private void setNumTxIn(int numinputs){
-        assert numInputs > 0;
+        assert numinputs > 0;
         numInputs = numinputs;
-        txIn = new RTxIn[numInputs];
+        txIn = new RTxIn[numInputs + 1];
     }
 
-    private boolean insertTxIn(byte[] txid, int idx, byte[] pubkey) throws GeneralSecurityException {
-        if (insertInputIdx == numInputs - 1) {
+    private boolean insertTxIn(byte[] txid, int idx, PublicKey pubkey) throws GeneralSecurityException {
+        if (insertInputIdx == numInputs) {
             return false;
         }
         txIn[insertInputIdx] = new RTxIn();
         txIn[insertInputIdx].setPrevTxID(txid);
         txIn[insertInputIdx].setTxIndex(idx);
-        txIn[insertInputIdx].setPubkeyScript(Crypto.sha256(pubkey));
+        txIn[insertInputIdx].createSignature(RSignature.OP_P2PK, pubkey.getEncoded(), new byte[0]);
         insertInputIdx++;
         return true;
     }
 
     private void setNumTxOut(int numoutputs) {
-        assert numOutputs > 0;
+        assert numoutputs > 0;
         numOutputs = numoutputs;
+        txOut = new RTxOut[numOutputs + 1];
     }
 
-    private boolean insertTxOut(int val, byte[] pubkey) throws GeneralSecurityException {
-        if (insertOutputIdx == numInputs - 1) {
+    private boolean insertTxOut(int val, PublicKey pubkey) throws GeneralSecurityException {
+        if (insertOutputIdx == numInputs) {
             return false;
         }
         txOut[insertOutputIdx] = new RTxOut();
         txOut[insertOutputIdx].setValue(val);
-        txOut[insertOutputIdx].setScriptpubkey(pubkey);
+        txOut[insertOutputIdx].setScriptpubkey(pubkey.getEncoded());
         insertOutputIdx++;
         return true;
     }
@@ -95,7 +97,7 @@ public class RTransaction {
      *
      * @return true in success, false otherwise
      */
-    public boolean addTxIns(int numinputs, byte[][] hashes, int[] idx, byte[][] pubkey) throws GeneralSecurityException{
+    public boolean addTxIns(int numinputs, byte[][] hashes, int[] idx, PublicKey[] pubkey) throws GeneralSecurityException{
         setNumTxIn(numinputs);
         boolean result = true;
         for (int i = 0; i < numinputs; i++) {
@@ -114,9 +116,26 @@ public class RTransaction {
     public boolean signInputs(PrivateKey key) throws GeneralSecurityException {
         assert numInputs > 0;
         for (int i = 0; i < numInputs; i++) {
-            txIn[i].produceSignature(key);
+            txIn[i].signSignature(key);
         }
         return true;
+    }
+
+    /**
+     * Verfies all signatures on the transaction given an array of corresponding
+     * public keys.
+     *
+     * @param keys is an array of public keys corresponding to which private key
+     *             signed each input.
+     * @return true if successful, false otherwise
+     * @throws GeneralSecurityException
+     */
+    public boolean verifySig(PublicKey[] keys) throws GeneralSecurityException {
+        boolean result = true;
+        for (int i = 0; i < numInputs; i++) {
+            result = result && txIn[i].verifySignature(keys[i]);
+        }
+        return result;
     }
 
     /** Public method for adding TxOut's to the transaction
@@ -128,7 +147,7 @@ public class RTransaction {
      * @return true in success, false otherwise.
      * @throws GeneralSecurityException
      */
-    public boolean addTxOuts(int numoutputs, int[] amts, byte[][] pubkeyscripts) throws GeneralSecurityException {
+    public boolean addTxOuts(int numoutputs, int[] amts, PublicKey[] pubkeyscripts) throws GeneralSecurityException {
         setNumTxOut(numoutputs);
         boolean result = true;
         for (int i = 0; i < numOutputs; i++) {

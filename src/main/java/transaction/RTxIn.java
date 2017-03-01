@@ -18,8 +18,7 @@ import java.security.*;
 public class RTxIn {
     byte[] prevTxId;
     int txIdx;
-    byte[] newOwnerKey;
-    byte[] signature;
+    RSignature signature;
 
     /** Public constructor for TxIn object, sets default fields and allocates memory.
      *
@@ -27,8 +26,7 @@ public class RTxIn {
     public RTxIn() {
         prevTxId = new byte[32];
         txIdx = 0;
-        newOwnerKey = new byte[91];
-        signature = new byte[32];
+        signature = new RSignature();
     }
 
     /** Sets the TxID to be referenced by this input.
@@ -49,26 +47,42 @@ public class RTxIn {
         txIdx = idx;
     }
 
-    /** Sets the public key of the new owner.
+    /**
+     * Method for creating the signature part of the transaction.
      *
-     * @param PKeyScript is the public key of who the funds will be transferred to.
+     * @param op is an opcode corresponding to the type of script. Only pay to pubkey
+     *           is supported at this time.
+     * @param script can be none - it is not used at this time
+     * @param newkey is the public key of the new owner of the coins.
      */
-    public void setPubkeyScript(byte[] PKeyScript) {
-        assert PKeyScript.length == 32;
-        newOwnerKey = PKeyScript.clone();
+    public void createSignature(byte op, byte[] newkey, byte[] script) {
+        signature = new RSignature();
+        signature.setOpCode(op);
+        signature.setOwnerKey(newkey);
+        signature.setScript(script);
     }
 
-    /** Signs the input with the provided private key. This takes the public key
-     * of who the funds are being transferred to, and signs it with the current
-     * coins owners private key. This private key corresponds to the public key
-     * in the previous transactions output.
+    /**
+     * Signs this input.
      *
-     * @param PrKey is the
-     * @return true if successful, throws exception otherwise
+     * @param key is the private key to be used to sign the transaction.
+     * @return true in success, raises exception otherwise.
      * @throws GeneralSecurityException
      */
-    public boolean produceSignature(PrivateKey PrKey) throws GeneralSecurityException {
-        signature = Crypto.sign(newOwnerKey, PrKey);
-        return true;
+    public boolean signSignature(PrivateKey key) throws GeneralSecurityException {
+        return signature.produceSignature(key);
     }
+
+    /**
+     * Verifies the signature on this input.
+     *
+     * @param key is the corresponding public key of who signed the input.
+     * @return true in success, false otherwise.
+     * @throws GeneralSecurityException
+     */
+    public boolean verifySignature(PublicKey key) throws GeneralSecurityException {
+        return signature.verifySignature(key);
+    }
+
+
 }
