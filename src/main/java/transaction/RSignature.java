@@ -12,17 +12,22 @@ import java.security.PublicKey;
 
 /** Signature Class for the Transaction. Serves to provide some flexibility for
  * transaction signatures, that way we can support types other than Pay-to-pubkey.
- *
+ * OpCode NONE is defined to be 0x00, and OpCode OP_P2PK, defined to be 0x01,
+ * is pay-to-pubkey. These OpCodes will be used to determine how to verify a transaction.
  */
 public class RSignature {
 
     public final static byte NONE = 0x00;
     public final static byte OP_P2PK = 0x01;
 
-    byte opCode;
-    byte[] script;
-    byte[] newOwnerKey;
-    byte[] signature;
+    public final static int SCRIPT_SIZE = 32;
+    public final static int PUBLIC_KEY_SIZE = 91;
+    public final static int SIGNATURE_SIZE = 32;
+
+    private byte opCode;
+    private byte[] script;
+    private byte[] newOwnerKey;
+    private byte[] signature;
 
     /**
      * Public constructor for the signature class. Sets the opcode to none at the start.
@@ -30,9 +35,9 @@ public class RSignature {
      */
     public RSignature() {
         opCode = NONE;
-        script = new byte[32];
-        newOwnerKey = new byte[91];
-        signature = new byte[32];
+        script = new byte[SCRIPT_SIZE];
+        newOwnerKey = new byte[PUBLIC_KEY_SIZE];
+        signature = new byte[SIGNATURE_SIZE];
     }
 
     /**
@@ -43,7 +48,7 @@ public class RSignature {
      * @return true if success, assertion failure otherwise.
      */
     public boolean setOpCode(byte op) {
-        assert op == OP_P2PK;
+        assert (op == OP_P2PK);
         opCode = op;
         return true;
     }
@@ -63,7 +68,7 @@ public class RSignature {
      * @param ownerkey is the public key of who the funds will be transferred to.
      */
     public void setOwnerKey(byte[] ownerkey) {
-        assert ownerkey.length == 91;
+        assert (ownerkey.length == PUBLIC_KEY_SIZE);
         newOwnerKey = ownerkey.clone();
     }
 
@@ -77,7 +82,7 @@ public class RSignature {
      * @throws GeneralSecurityException
      */
     public boolean produceSignature(PrivateKey PrKey) throws GeneralSecurityException {
-        assert opCode == OP_P2PK;
+        assert (opCode == OP_P2PK);
         signature = Crypto.sign(Crypto.sha256(newOwnerKey), PrKey);
         return true;
     }
@@ -91,9 +96,8 @@ public class RSignature {
      * @throws GeneralSecurityException
      */
     public boolean verifySignature(PublicKey key) throws GeneralSecurityException {
-        assert opCode == OP_P2PK;
+        assert (opCode == OP_P2PK);
         return Crypto.verify(Crypto.sha256(newOwnerKey), signature, key);
     }
-
 
 }

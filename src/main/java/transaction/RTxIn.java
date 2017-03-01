@@ -16,15 +16,18 @@ import java.security.*;
   * owning the funds, which will be signed using the associated Private Key
  */
 public class RTxIn {
-    byte[] prevTxId;
-    int txIdx;
-    RSignature signature;
+
+    public static final int HASH_SIZE = 32;
+
+    private byte[] prevTxId;
+    private int txIdx;
+    private RSignature signature;
 
     /** Public constructor for TxIn object, sets default fields and allocates memory.
      *
      */
     public RTxIn() {
-        prevTxId = new byte[32];
+        prevTxId = new byte[HASH_SIZE];
         txIdx = 0;
         signature = new RSignature();
     }
@@ -35,7 +38,7 @@ public class RTxIn {
      * @throws AssertionError if TxID is not the proper size.
      */
     public void setPrevTxID(byte[] TxID) throws AssertionError {
-        assert TxID.length == 32;
+        assert (TxID.length == HASH_SIZE);
         prevTxId = TxID.clone();
     }
 
@@ -83,6 +86,5 @@ public class RTxIn {
     public boolean verifySignature(PublicKey key) throws GeneralSecurityException {
         return signature.verifySignature(key);
     }
-
 
 }

@@ -40,7 +40,7 @@ public class RTransactionTestSimple {
         boolean add_txin = tx.addTxIns(1, hash, idx, pubkey);
         Assert.assertTrue(add_txin);
 
-        int[] amt = new int[1];
+        long[] amt = new long[1];
         amt[0] = 5;
         boolean add_txout = tx.addTxOuts(1, amt, pubkey);
         Assert.assertTrue(add_txout);

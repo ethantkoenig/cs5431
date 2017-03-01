@@ -3,7 +3,6 @@ package transaction;
 import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
 
-
 /**
  * Created by willronchetti on 2/22/17.
  */
@@ -13,23 +12,24 @@ import java.security.GeneralSecurityException;
  * and the public key script required to claim this output.
  */
 public class RTxOut {
-    int value;
-    byte[] ownerPubKey;
+
+    private long value;
+    private byte[] ownerPubKey;
 
     /** Public constructor for Output object. Sets default fields and allocates memory
      *
      */
     public RTxOut() {
         value = 0;
-        ownerPubKey = new byte[91];
+        ownerPubKey = new byte[RSignature.PUBLIC_KEY_SIZE];
     }
 
     /** Sets the coin value associated with this transaction output.
      *
      * @param val is the number of coins.
      */
-    public void setValue(int val){
-        assert val > 0;
+    public void setValue(long val){
+        assert (val > 0);
         value = val;
     }
 
@@ -38,7 +38,7 @@ public class RTxOut {
      * @throws GeneralSecurityException
      */
     public void setScriptpubkey(byte[] pubkey) throws GeneralSecurityException {
-        assert pubkey.length == 91;
+        assert (pubkey.length == RSignature.PUBLIC_KEY_SIZE);
         ownerPubKey = pubkey.clone();
 
     }

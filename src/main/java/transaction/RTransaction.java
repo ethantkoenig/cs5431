@@ -20,11 +20,11 @@ import utils.Crypto;
  */
 public class RTransaction {
     private int insertInputIdx;
-    int numInputs;
-    RTxIn[] txIn;
+    public int numInputs;
+    public RTxIn[] txIn;
     private int insertOutputIdx;
-    int numOutputs;
-    RTxOut[] txOut;
+    public int numOutputs;
+    public RTxOut[] txOut;
 
     /**
      * Constructor function for the Transaction class. Sets default values, users should
@@ -37,10 +37,10 @@ public class RTransaction {
         numOutputs = 0;
     }
 
-    private void setNumTxIn(int numinputs){
-        assert numinputs > 0;
-        numInputs = numinputs;
-        txIn = new RTxIn[numInputs + 1];
+    private void setNumTxIn(int num){
+        assert (num > 0);
+        numInputs = num;
+        txIn = new RTxIn[numInputs];
     }
 
     private boolean insertTxIn(byte[] txid, int idx, PublicKey pubkey) throws GeneralSecurityException {
@@ -55,14 +55,14 @@ public class RTransaction {
         return true;
     }
 
-    private void setNumTxOut(int numoutputs) {
-        assert numoutputs > 0;
-        numOutputs = numoutputs;
-        txOut = new RTxOut[numOutputs + 1];
+    private void setNumTxOut(int num) {
+        assert (num > 0);
+        numOutputs = num;
+        txOut = new RTxOut[numOutputs];
     }
 
-    private boolean insertTxOut(int val, PublicKey pubkey) throws GeneralSecurityException {
-        if (insertOutputIdx == numInputs) {
+    private boolean insertTxOut(long val, PublicKey pubkey) throws GeneralSecurityException {
+        if (insertOutputIdx == numOutputs) {
             return false;
         }
         txOut[insertOutputIdx] = new RTxOut();
@@ -84,7 +84,7 @@ public class RTransaction {
 
     /** Public method for adding TxIn's to the transaction.
      *
-     * @param numinputs is the number of inputs to be added
+     * @param num is the number of inputs to be added
      * @param hashes is a 2D-array of TxID's to be referenced
      * @param idx is a list of the corresponding indexes of the previous transaction.
      *    Note: hashes[i][] and idx[i] should go together in that one input is the txid
@@ -97,10 +97,10 @@ public class RTransaction {
      *
      * @return true in success, false otherwise
      */
-    public boolean addTxIns(int numinputs, byte[][] hashes, int[] idx, PublicKey[] pubkey) throws GeneralSecurityException{
-        setNumTxIn(numinputs);
+    public boolean addTxIns(int num, byte[][] hashes, int[] idx, PublicKey[] pubkey) throws GeneralSecurityException{
+        setNumTxIn(num);
         boolean result = true;
-        for (int i = 0; i < numinputs; i++) {
+        for (int i = 0; i < num; i++) {
             result = result && insertTxIn(hashes[i], idx[i], pubkey[i]);
         }
         return result;
@@ -114,7 +114,7 @@ public class RTransaction {
      * @throws GeneralSecurityException
      */
     public boolean signInputs(PrivateKey key) throws GeneralSecurityException {
-        assert numInputs > 0;
+        assert (numInputs > 0);
         for (int i = 0; i < numInputs; i++) {
             txIn[i].signSignature(key);
         }
@@ -140,17 +140,17 @@ public class RTransaction {
 
     /** Public method for adding TxOut's to the transaction
      *
-     * @param numoutputs is the number of outputs to be added.
+     * @param num is the number of outputs to be added.
      * @param amts is an array corresponding to the amounts.
      * @param pubkeyscripts is a 2D array of output addresses.
      *
      * @return true in success, false otherwise.
      * @throws GeneralSecurityException
      */
-    public boolean addTxOuts(int numoutputs, int[] amts, PublicKey[] pubkeyscripts) throws GeneralSecurityException {
-        setNumTxOut(numoutputs);
+    public boolean addTxOuts(int num, long[] amts, PublicKey[] pubkeyscripts) throws GeneralSecurityException {
+        setNumTxOut(num);
         boolean result = true;
-        for (int i = 0; i < numOutputs; i++) {
+        for (int i = 0; i < num; i++) {
             result = result && insertTxOut(amts[i], pubkeyscripts[i]);
         }
         return result;
