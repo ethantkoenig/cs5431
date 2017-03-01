@@ -72,16 +72,6 @@ public class RTransaction {
         return true;
     }
 
-    /** Takes in a hash as a string and returns a ByteBuffer containing the Byte representation
-     *  of the string. Hash should be either a TxId or a Public Key.
-     *
-     *  @param hash is a string representation of the previous transactions hash
-     *  @return A byte array containing the hash encoded from UTF8
-     */
-     public byte[] convertHashFromString(String hash) {
-        return hash.getBytes(Charset.forName("UTF8"));
-    }
-
     /** Public method for adding TxIn's to the transaction.
      *
      * @param num is the number of inputs to be added

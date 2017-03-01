@@ -72,8 +72,8 @@ public class RTxIn {
      * @return true in success, raises exception otherwise.
      * @throws GeneralSecurityException
      */
-    public boolean signSignature(PrivateKey key) throws GeneralSecurityException {
-        return signature.produceSignature(key);
+    public boolean signSignature( PrivateKey key) throws GeneralSecurityException {
+        return signature.produceSignature(prevTxId, txIdx, key);
     }
 
     /**
@@ -84,7 +84,7 @@ public class RTxIn {
      * @throws GeneralSecurityException
      */
     public boolean verifySignature(PublicKey key) throws GeneralSecurityException {
-        return signature.verifySignature(key);
+        return signature.verifySignature(prevTxId, txIdx, key);
     }
 
 }

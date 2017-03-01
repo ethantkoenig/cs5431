@@ -31,7 +31,7 @@ public class RTransactionTestSimple {
 
         RTransaction tx = new RTransaction();
         byte[][] hash = new byte[1][32];
-        hash[0] = tx.convertHashFromString("0000000000000000013332f3ad5c0b3311392a2d48449d560eed01ba23174d48");
+        hash[0] = Crypto.convertHashFromString("0000000000000000013332f3ad5c0b3311392a2d48449d560eed01ba23174d48");
         hash[0] = Crypto.sha256(hash[0]);
         int[] idx = new int[1];
         idx[0] = 0;

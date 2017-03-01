@@ -9,6 +9,7 @@ import utils.Crypto;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.nio.ByteBuffer;
 
 /** Signature Class for the Transaction. Serves to provide some flexibility for
  * transaction signatures, that way we can support types other than Pay-to-pubkey.
@@ -81,9 +82,14 @@ public class RSignature {
      * @return true if successful, throws exception otherwise
      * @throws GeneralSecurityException
      */
-    public boolean produceSignature(PrivateKey PrKey) throws GeneralSecurityException {
+    public boolean produceSignature(byte[] prevtxid, int idx, PrivateKey PrKey) throws GeneralSecurityException {
         assert (opCode == OP_P2PK);
-        signature = Crypto.sign(Crypto.sha256(newOwnerKey), PrKey);
+        byte[] idxBytes = ByteBuffer.allocate(4).putInt(idx).array();
+        ByteBuffer toSign = ByteBuffer.allocate(prevtxid.length + idxBytes.length + newOwnerKey.length);
+        toSign.put(prevtxid);
+        toSign.put(idxBytes);
+        toSign.put(newOwnerKey);
+        signature = Crypto.sign(Crypto.sha256(toSign.array()), PrKey);
         return true;
     }
 
@@ -95,9 +101,14 @@ public class RSignature {
      * @return true if the signature verifies, false otherwise.
      * @throws GeneralSecurityException
      */
-    public boolean verifySignature(PublicKey key) throws GeneralSecurityException {
+    public boolean verifySignature(byte[] prevtxid, int idx, PublicKey key) throws GeneralSecurityException {
         assert (opCode == OP_P2PK);
-        return Crypto.verify(Crypto.sha256(newOwnerKey), signature, key);
+        byte[] idxBytes = ByteBuffer.allocate(4).putInt(idx).array();
+        ByteBuffer toSign = ByteBuffer.allocate(prevtxid.length + idxBytes.length + newOwnerKey.length);
+        toSign.put(prevtxid);
+        toSign.put(idxBytes);
+        toSign.put(newOwnerKey);
+        return Crypto.verify(Crypto.sha256(toSign.array()), signature, key);
     }
 
 }

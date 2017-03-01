@@ -1,6 +1,5 @@
 package transaction;
 
-import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
 
 /**
