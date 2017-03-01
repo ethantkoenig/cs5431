@@ -17,6 +17,12 @@ import utils.Crypto;
  * transaction, such as the number of inputs, and outputs, the inputs and outputs
  * themselves, and some additional bookkeeping for proper insertion of input and
  * output classes
+ *
+ * insertInput/OutputIdx is a private identifier for insertion. Should probably use
+ * an Arraylist to support dynamic allocation.
+ * numInputs/Outputs is the number of inputs/outputs the transaction contains.
+ * txIn is an array of inputs to the transaction.
+ * txOut is an array of the outputs to the transaction.
  */
 public class RTransaction {
     private int insertInputIdx;
