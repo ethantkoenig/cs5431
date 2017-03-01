@@ -17,6 +17,8 @@ import java.util.logging.Logger;
 public class ConnectionThread extends Thread {
     private static final Logger LOGGER = Logger.getLogger(ConnectionThread.class.getName());
 
+    private static final int MAX_PAYLOAD_LEN = 33554432;
+
     private final Socket socket;
     private final BlockingQueue<Message> queue;
 
@@ -46,6 +48,7 @@ public class ConnectionThread extends Thread {
     public void run() {
         try {
             receive();
+            close();
         } catch (IOException | InterruptedException e) {
             LOGGER.severe(e.getMessage());
         }
@@ -55,7 +58,7 @@ public class ConnectionThread extends Thread {
     /**
      * Send the given output to this network.ConnectionThread
      *
-     * @param type the type of message to be sent
+     * @param type   the type of message to be sent
      * @param output the message to be sent
      * @throws IOException if out.checkError() returns true indicating that the connection has been closed.
      */
@@ -73,6 +76,10 @@ public class ConnectionThread extends Thread {
         while (true) {
             fill(headerBuffer);
             int payloadLen = ByteBuffer.wrap(headerBuffer, 0, Integer.BYTES).getInt();
+            if (payloadLen > MAX_PAYLOAD_LEN) {
+                LOGGER.severe(String.format("Received misformatted message (payloadLen=%d)", payloadLen));
+                return;
+            }
             byte payloadType = ByteBuffer.wrap(headerBuffer, Integer.BYTES, Byte.BYTES).get();
             Message message = Message.create(payloadType, payloadLen);
             fill(message.payload);
@@ -82,6 +89,7 @@ public class ConnectionThread extends Thread {
 
     /**
      * Fill the buffer with input from the socket
+     *
      * @param buffer buffer to fill
      * @throws IOException
      */
