@@ -58,10 +58,11 @@ public class RTxIn {
      * @param script can be none - it is not used at this time
      * @param newkey is the public key of the new owner of the coins.
      */
-    public void createSignature(byte op, byte[] newkey, byte[] script) {
+    public void createSignature(byte op, byte[] newkey, byte[] oldkey, byte[] script) {
         signature = new RSignature();
         signature.setOpCode(op);
-        signature.setOwnerKey(newkey);
+        signature.setNewOwnerKey(newkey);
+        signature.setOldOwnerKey(oldkey);
         signature.setScript(script);
     }
 

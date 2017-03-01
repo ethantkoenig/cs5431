@@ -35,14 +35,14 @@ public class RTransactionTestSimple {
         hash[0] = Crypto.sha256(hash[0]);
         int[] idx = new int[1];
         idx[0] = 0;
-        PublicKey[] pubkey = new PublicKey[1];
-        pubkey[0] = newPublicKey;
-        boolean add_txin = tx.addTxIns(1, hash, idx, pubkey);
+        PublicKey[] newpubkey = new PublicKey[1];
+        newpubkey[0] = newPublicKey;
+        boolean add_txin = tx.addTxIns(1, hash, idx, newpubkey, myPublicKey);
         Assert.assertTrue(add_txin);
 
         long[] amt = new long[1];
         amt[0] = 5;
-        boolean add_txout = tx.addTxOuts(1, amt, pubkey);
+        boolean add_txout = tx.addTxOuts(1, amt, newpubkey);
         Assert.assertTrue(add_txout);
 
         tx.signInputs(myPrivateKey);

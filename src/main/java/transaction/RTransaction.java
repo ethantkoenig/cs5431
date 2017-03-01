@@ -49,14 +49,14 @@ public class RTransaction {
         txIn = new RTxIn[numInputs];
     }
 
-    private boolean insertTxIn(byte[] txid, int idx, PublicKey pubkey) throws GeneralSecurityException {
+    private boolean insertTxIn(byte[] txid, int idx, PublicKey pubkey, PublicKey mykey) throws GeneralSecurityException {
         if (insertInputIdx == numInputs) {
             return false;
         }
         txIn[insertInputIdx] = new RTxIn();
         txIn[insertInputIdx].setPrevTxID(txid);
         txIn[insertInputIdx].setTxIndex(idx);
-        txIn[insertInputIdx].createSignature(RSignature.OP_P2PK, pubkey.getEncoded(), new byte[0]);
+        txIn[insertInputIdx].createSignature(RSignature.OP_P2PK, pubkey.getEncoded(), mykey.getEncoded(), new byte[0]);
         insertInputIdx++;
         return true;
     }
@@ -85,19 +85,19 @@ public class RTransaction {
      * @param idx is a list of the corresponding indexes of the previous transaction.
      *    Note: hashes[i][] and idx[i] should go together in that one input is the txid
      *    stored in hashes[i] and its location in the previous transaction is idx[i]
-     * @param pubkey is the new owners public key, which should correspond to a previous
+     * @param pubkeys is the new owners public key, which should correspond to a previous
      * transaction. The signature will be the hash of this public key signed by your
      * private key. It is also a 2D-array of bytearrays.
-     *
+     * @param mykey is your public key.
      * @throws GeneralSecurityException in the case of hashing failure.
      *
      * @return true in success, false otherwise
      */
-    public boolean addTxIns(int num, byte[][] hashes, int[] idx, PublicKey[] pubkey) throws GeneralSecurityException{
+    public boolean addTxIns(int num, byte[][] hashes, int[] idx, PublicKey[] pubkeys, PublicKey mykey) throws GeneralSecurityException{
         setNumTxIn(num);
         boolean result = true;
         for (int i = 0; i < num; i++) {
-            result = result && insertTxIn(hashes[i], idx[i], pubkey[i]);
+            result = result && insertTxIn(hashes[i], idx[i], pubkeys[i], mykey);
         }
         return result;
     }

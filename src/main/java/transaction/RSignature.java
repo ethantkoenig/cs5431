@@ -27,6 +27,7 @@ public class RSignature {
 
     private byte opCode;
     private byte[] script;
+    private byte[] oldOwnerKey;
     private byte[] newOwnerKey;
     private byte[] signature;
 
@@ -64,11 +65,20 @@ public class RSignature {
         script = redeemscript.clone();
     }
 
+    /** Sets the public key of the old owner.
+     *
+     * @param ownerkey is the public key of who the funds will be transferred to.
+     */
+    public void setOldOwnerKey(byte[] ownerkey) {
+        assert (ownerkey.length == PUBLIC_KEY_SIZE);
+        oldOwnerKey = ownerkey.clone();
+    }
+
     /** Sets the public key of the new owner.
      *
      * @param ownerkey is the public key of who the funds will be transferred to.
      */
-    public void setOwnerKey(byte[] ownerkey) {
+    public void setNewOwnerKey(byte[] ownerkey) {
         assert (ownerkey.length == PUBLIC_KEY_SIZE);
         newOwnerKey = ownerkey.clone();
     }
@@ -78,6 +88,8 @@ public class RSignature {
      * coins owners private key. This private key corresponds to the public key
      * in the previous transactions output.
      *
+     * @param prevtxid is the previous transactions TxID.
+     * @param idx is the previous transactions output index to be spent.
      * @param PrKey is the private key to be used to sign the input.
      * @return true if successful, throws exception otherwise
      * @throws GeneralSecurityException
@@ -85,9 +97,10 @@ public class RSignature {
     public boolean produceSignature(byte[] prevtxid, int idx, PrivateKey PrKey) throws GeneralSecurityException {
         assert (opCode == OP_P2PK);
         byte[] idxBytes = ByteBuffer.allocate(4).putInt(idx).array();
-        ByteBuffer toSign = ByteBuffer.allocate(prevtxid.length + idxBytes.length + newOwnerKey.length);
+        ByteBuffer toSign = ByteBuffer.allocate(prevtxid.length + idxBytes.length + oldOwnerKey.length + newOwnerKey.length);
         toSign.put(prevtxid);
         toSign.put(idxBytes);
+        toSign.put(oldOwnerKey);
         toSign.put(newOwnerKey);
         signature = Crypto.sign(Crypto.sha256(toSign.array()), PrKey);
         return true;
@@ -97,6 +110,8 @@ public class RSignature {
      * Verifies the transaction input signature. The signature takes the hash of the
      * new owner key as input and produces the signature in the signature field.
      *
+     * @param prevtxid is the previous transactions TxID.
+     * @param idx is the previous transactions output index to be spent.
      * @param key is the public key used to generate the signature.
      * @return true if the signature verifies, false otherwise.
      * @throws GeneralSecurityException
@@ -104,9 +119,10 @@ public class RSignature {
     public boolean verifySignature(byte[] prevtxid, int idx, PublicKey key) throws GeneralSecurityException {
         assert (opCode == OP_P2PK);
         byte[] idxBytes = ByteBuffer.allocate(4).putInt(idx).array();
-        ByteBuffer toSign = ByteBuffer.allocate(prevtxid.length + idxBytes.length + newOwnerKey.length);
+        ByteBuffer toSign = ByteBuffer.allocate(prevtxid.length + idxBytes.length + oldOwnerKey.length + newOwnerKey.length);
         toSign.put(prevtxid);
         toSign.put(idxBytes);
+        toSign.put(oldOwnerKey);
         toSign.put(newOwnerKey);
         return Crypto.verify(Crypto.sha256(toSign.array()), signature, key);
     }
