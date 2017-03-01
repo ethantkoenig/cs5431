@@ -1,6 +1,7 @@
 package network;
 
 import java.util.concurrent.BlockingQueue;
+import java.util.logging.Logger;
 
 /**
  * The network.HandleMessageThread is a background thread ran by the instantiated Node class
@@ -10,10 +11,11 @@ import java.util.concurrent.BlockingQueue;
  * @version 1.0, Feb 22 2017
  */
 public class HandleMessageThread extends Thread {
+    private static final Logger LOGGER = Logger.getLogger(HandleMessageThread.class.getName());
 
-    private BlockingQueue<String> queue;
+    private BlockingQueue<Message> queue;
 
-    public HandleMessageThread(BlockingQueue<String> queue) {
+    public HandleMessageThread(BlockingQueue<Message> queue) {
         this.queue = queue;
     }
 
@@ -24,13 +26,21 @@ public class HandleMessageThread extends Thread {
     @Override
     public void run() {
         try {
-            String message;
-            //consuming messages is just printing them for now
+            Message message;
             while ((message = queue.take()) != null) {
-                System.out.println("Consumed: " + message);
+                switch (message.type) {
+                    case Message.TRANSACTION:
+                        // TODO
+                        break;
+                    case Message.BLOCK:
+                        // TODO
+                        break;
+                    default:
+                        LOGGER.severe(String.format("Unexpected message type: %d", message.type));
+                }
             }
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            LOGGER.severe(e.getMessage());
         }
     }
 }

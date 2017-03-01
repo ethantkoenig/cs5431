@@ -23,7 +23,7 @@ public class Node {
     private ServerSocket serverSocket;
 
     // Synchronized blocking queue to hold incoming messages
-    protected BlockingQueue<String> messageQueue;
+    protected BlockingQueue<Message> messageQueue;
 
     // The connections list holds all of the Nodes current connections
     protected ArrayList<ConnectionThread> connections;
@@ -79,12 +79,13 @@ public class Node {
     /**
      * Sends a message to all other nodes in the network that you are connected to.
      *
-     * @param output is the message to be broadcasted.
+     * @param type the type of message to be broadcast
+     * @param output the message to be broadcast.
      */
-    public void broadcast(String output) {
+    public void broadcast(byte type, byte[] output) {
         for (ConnectionThread connectionThread : connections) {
             try {
-                connectionThread.send(output);
+                connectionThread.send(type, output);
             } catch (IOException e) {
                 LOGGER.warning(String.format(
                         "Lost connection to connectionThread: %s.%n", connectionThread));
