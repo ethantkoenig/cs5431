@@ -7,6 +7,11 @@ import java.util.Scanner;
 import java.util.HashMap;
 import java.util.Map;
 
+/*
+ * The ClinetInterface object is used to give the user a CLI based on a given
+ * input and output stream. These default to std.in and std.out when not
+ * explicitly declared.
+ */
 public class ClientInterface {
 
     /*
@@ -18,11 +23,15 @@ public class ClientInterface {
          * Takes in a Scanner which can parse the arguement, and perfrom the
          * corresponding actions. Returns a boolean to signal if the actions
          * was successful or not.
+         *
+         * @param args Scanner which contains the arguements from the user
          */
         boolean run(Scanner args);
 
         /*
          * Takes in a PrintStream, prints documentation of the command
+         *
+         * @param out PrintStream to display documentation to
          */
         void documentation(PrintStream out);
     }
@@ -105,6 +114,9 @@ public class ClientInterface {
         return new Command() {
             /*
              * Outputs the documentation for all commands
+             *
+             * @ param args Scanner that contains any arguments for the command
+             *    This command takes no arguments
              */
             @Override
             public boolean run(Scanner args) {
@@ -114,6 +126,11 @@ public class ClientInterface {
                 return true;
             }
 
+            /*
+             * Takes in a PrintStream, prints documentation of the command
+             *
+             * @param out PrintStream to display documentation to
+             */
             @Override
             public void documentation(PrintStream out) {
                 out.println("help - displays documentation for all commands");
@@ -128,12 +145,20 @@ public class ClientInterface {
         return new Command() {
             /*
              * Perform a noop. The main while loop will exit.
+             *
+             * @param args Scanner that contains any arguements for the command
+             *    This command takes no arguements
              */
             @Override
             public boolean run(Scanner args) {
                 return true;
             }
 
+            /*
+             * Takes in a PrintStream, prints documentation of the command
+             *
+             * @param out PrintStream to display documentation to
+             */
             @Override
             public void documentation(PrintStream out) {
                 out.println("quit - exits the program");
