@@ -4,3 +4,17 @@
 # cs5431
 
 Group Project for CS 5431
+
+### Building the project
+
+To simply compile the project, run 
+
+```$ ./gradlew assemble```
+
+To run the project, run
+
+```$ ./gradlew run```
+
+To fully build the project (compile, test, and run all checks), run
+
+```$./gradlew build```
