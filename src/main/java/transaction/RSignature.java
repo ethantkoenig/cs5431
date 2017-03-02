@@ -2,6 +2,9 @@ package transaction;
 
 import utils.Crypto;
 
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
@@ -14,67 +17,53 @@ import java.security.PublicKey;
  */
 public class RSignature {
 
-    public final static byte NONE = 0x00;
-    public final static byte OP_P2PK = 0x01;
+    private final byte[] signature;
 
-    public final static int SCRIPT_SIZE = 32;
-    public final static int PUBLIC_KEY_SIZE = 91;
-    public final static int SIGNATURE_SIZE = 32;
-
-    private byte opCode;
-    private byte[] signature;
-
-    /**
-     * Public constructor for the signature class. Sets the opcode to none at the start.
-     * If it remains this way, anyone can claim the output.
-     */
-    public RSignature() {
-        opCode = NONE;
-        signature = new byte[SIGNATURE_SIZE];
+    private RSignature(byte[] signature) {
+        this.signature = signature;
     }
 
     /**
-     * Sets opcode for the transaction signature.
-     *
-     * @param op is an opcode indicating the signature type. Only P2PK is supported
-     *           as of now.
-     * @return true if success, assertion failure otherwise.
+     * Sign a transaction body using a private key.
      */
-    public boolean setOpCode(byte op) {
-        assert (op == OP_P2PK);
-        opCode = op;
-        return true;
+    public static RSignature sign(byte[] body, PrivateKey key) throws GeneralSecurityException {
+        return new RSignature(Crypto.sign(body, key));
     }
 
     /**
-     * Signs the input with the provided private key. This takes the public key
-     * of who the funds are being transferred to, and signs it with the current
-     * coins owners private key. This private key corresponds to the public key
-     * in the previous transactions output.
+     * Deserialize a signature.
      *
-     * @param txbody is the serialized transaction body to be signed.
-     * @param PrKey  is the private key to be used to sign the input.
-     * @return true if successful, throws exception otherwise
-     * @throws GeneralSecurityException
+     * @param byteBuffer bytes to deserialize
+     * @return deserialized signature
      */
-    public boolean produceSignature(byte[] txbody, PrivateKey PrKey) throws GeneralSecurityException {
-        assert (opCode == OP_P2PK);
-        signature = Crypto.sign(txbody, PrKey);
-        return true;
+    public static RSignature deserialize(ByteBuffer byteBuffer) {
+        int signatureLen = byteBuffer.getInt();
+        byte[] signature = new byte[signatureLen];
+        byteBuffer.get(signature);
+        return new RSignature(signature);
+    }
+
+    /**
+     * Serialize a signature
+     *
+     * @param outputStream output to write serialized transaction to
+     * @throws IOException
+     */
+    public void serialize(DataOutputStream outputStream) throws IOException {
+        outputStream.writeInt(signature.length);
+        outputStream.write(signature);
     }
 
     /**
      * Verifies the transaction input signature. The signature takes the hash of the
      * new owner key as input and produces the signature in the signature field.
      *
-     * @param txbody is the serialized transaction body which was signed.
-     * @param key    is the public key used to generate the signature.
+     * @param body is the serialized transaction body which was signed.
+     * @param key  is the public key used to generate the signature.
      * @return true if the signature verifies, false otherwise.
      * @throws GeneralSecurityException
      */
-    public boolean verifySignature(byte[] txbody, PublicKey key) throws GeneralSecurityException {
-        assert (opCode == OP_P2PK);
-        return Crypto.verify(txbody, signature, key);
+    public boolean verify(byte[] body, PublicKey key) throws GeneralSecurityException {
+        return Crypto.verify(body, signature, key);
     }
-
 }
