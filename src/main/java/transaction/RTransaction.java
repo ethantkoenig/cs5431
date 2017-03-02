@@ -56,7 +56,7 @@ public class RTransaction {
         txIn[insertInputIdx] = new RTxIn();
         txIn[insertInputIdx].setPrevTxID(txid);
         txIn[insertInputIdx].setTxIndex(idx);
-        txIn[insertInputIdx].createSignature(RSignature.OP_P2PK, pubkey.getEncoded(), mykey.getEncoded(), new byte[0]);
+        txIn[insertInputIdx].createSignature(RSignature.OP_P2PK);
         insertInputIdx++;
         return true;
     }
@@ -76,6 +76,14 @@ public class RTransaction {
         txOut[insertOutputIdx].setScriptpubkey(pubkey.getEncoded());
         insertOutputIdx++;
         return true;
+    }
+
+    /** Serializes the transaction body to be signed.
+     *
+     * @return the serialized transaction body as a byte array to be signed.
+     */
+    private byte[] serializeBody() {
+        return new byte[0];
     }
 
     /** Public method for adding TxIn's to the transaction.
@@ -111,8 +119,9 @@ public class RTransaction {
      */
     public boolean signInputs(PrivateKey key) throws GeneralSecurityException {
         assert (numInputs > 0);
+        byte[] txSig = serializeBody();
         for (int i = 0; i < numInputs; i++) {
-            txIn[i].signSignature(key);
+            txIn[i].signSignature(txSig, key);
         }
         return true;
     }
@@ -128,8 +137,9 @@ public class RTransaction {
      */
     public boolean verifySig(PublicKey[] keys) throws GeneralSecurityException {
         boolean result = true;
+        byte[] txSig = serializeBody();
         for (int i = 0; i < numInputs; i++) {
-            result = result && txIn[i].verifySignature(keys[i]);
+            result = result && txIn[i].verifySignature(txSig, keys[i]);
         }
         return result;
     }

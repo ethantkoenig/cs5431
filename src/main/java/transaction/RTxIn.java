@@ -1,8 +1,6 @@
 package transaction;
 
-import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
-import utils.Crypto;
 import java.security.*;
 
 /**
@@ -55,37 +53,34 @@ public class RTxIn {
      *
      * @param op is an opcode corresponding to the type of script. Only pay to pubkey
      *           is supported at this time.
-     * @param script can be none - it is not used at this time
-     * @param newkey is the public key of the new owner of the coins.
      */
-    public void createSignature(byte op, byte[] newkey, byte[] oldkey, byte[] script) {
+    public void createSignature(byte op) {
         signature = new RSignature();
         signature.setOpCode(op);
-        signature.setNewOwnerKey(newkey);
-        signature.setOldOwnerKey(oldkey);
-        signature.setScript(script);
     }
 
     /**
      * Signs this input.
      *
+     * @param txbody is the serialized transaction body to be signed.
      * @param key is the private key to be used to sign the transaction.
      * @return true in success, raises exception otherwise.
      * @throws GeneralSecurityException
      */
-    public boolean signSignature( PrivateKey key) throws GeneralSecurityException {
-        return signature.produceSignature(prevTxId, txIdx, key);
+    public boolean signSignature(byte[] txbody, PrivateKey key) throws GeneralSecurityException {
+        return signature.produceSignature(txbody, key);
     }
 
     /**
      * Verifies the signature on this input.
      *
+     * @param txbody is the serialized transaction body that was signed.
      * @param key is the corresponding public key of who signed the input.
      * @return true in success, false otherwise.
      * @throws GeneralSecurityException
      */
-    public boolean verifySignature(PublicKey key) throws GeneralSecurityException {
-        return signature.verifySignature(prevTxId, txIdx, key);
+    public boolean verifySignature(byte[] txbody, PublicKey key) throws GeneralSecurityException {
+        return signature.verifySignature(txbody, key);
     }
 
 }
