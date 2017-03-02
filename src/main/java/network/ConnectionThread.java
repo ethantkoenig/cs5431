@@ -1,6 +1,10 @@
 package network;
 
-import java.io.*;
+import utils.IOUtils;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.util.concurrent.BlockingQueue;
@@ -71,10 +75,10 @@ public class ConnectionThread extends Thread {
     /**
      * Receives incoming messages, and put them onto the queue.
      */
-    public void receive() throws IOException, InterruptedException {
+    private void receive() throws IOException, InterruptedException {
         byte[] headerBuffer = new byte[Integer.BYTES + Byte.BYTES];
         while (true) {
-            fill(headerBuffer);
+            IOUtils.fill(in, headerBuffer);
             int payloadLen = ByteBuffer.wrap(headerBuffer, 0, Integer.BYTES).getInt();
             if (payloadLen > MAX_PAYLOAD_LEN) {
                 LOGGER.severe(String.format("Received misformatted message (payloadLen=%d)", payloadLen));
@@ -82,25 +86,8 @@ public class ConnectionThread extends Thread {
             }
             byte payloadType = ByteBuffer.wrap(headerBuffer, Integer.BYTES, Byte.BYTES).get();
             Message message = Message.create(payloadType, payloadLen);
-            fill(message.payload);
+            IOUtils.fill(in, message.payload);
             queue.put(message);
-        }
-    }
-
-    /**
-     * Fill the buffer with input from the socket
-     *
-     * @param buffer buffer to fill
-     * @throws IOException
-     */
-    private void fill(byte[] buffer) throws IOException {
-        int index = 0;
-        while (index < buffer.length) {
-            int numBytes = in.read(buffer, index, buffer.length - index);
-            if (numBytes <= 0) {
-                throw new IOException("Reached EOF from input socket");
-            }
-            index += numBytes;
         }
     }
 
