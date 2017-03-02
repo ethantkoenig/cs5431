@@ -1,23 +1,15 @@
 package transaction;
 
-import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-
-import utils.Crypto;
-
-/**
- * Created by willronchetti on 2/21/17.
- */
 
 /**
  * Main transaction class. Keeps track of several pieces of information key to the
  * transaction, such as the number of inputs, and outputs, the inputs and outputs
  * themselves, and some additional bookkeeping for proper insertion of input and
  * output classes
- *
+ * <p>
  * insertInput/OutputIdx is a private identifier for insertion. Should probably use
  * an Arraylist to support dynamic allocation.
  * numInputs/Outputs is the number of inputs/outputs the transaction contains.
@@ -43,7 +35,7 @@ public class RTransaction {
         numOutputs = 0;
     }
 
-    private void setNumTxIn(int num){
+    private void setNumTxIn(int num) {
         assert (num > 0);
         numInputs = num;
         txIn = new RTxIn[numInputs];
@@ -78,7 +70,8 @@ public class RTransaction {
         return true;
     }
 
-    /** Serializes the transaction body to be signed.
+    /**
+     * Serializes the transaction body to be signed.
      *
      * @return the serialized transaction body as a byte array to be signed.
      */
@@ -86,22 +79,22 @@ public class RTransaction {
         return new byte[0];
     }
 
-    /** Public method for adding TxIn's to the transaction.
+    /**
+     * Public method for adding TxIn's to the transaction.
      *
-     * @param num is the number of inputs to be added
-     * @param hashes is a 2D-array of TxID's to be referenced
-     * @param idx is a list of the corresponding indexes of the previous transaction.
-     *    Note: hashes[i][] and idx[i] should go together in that one input is the txid
-     *    stored in hashes[i] and its location in the previous transaction is idx[i]
+     * @param num     is the number of inputs to be added
+     * @param hashes  is a 2D-array of TxID's to be referenced
+     * @param idx     is a list of the corresponding indexes of the previous transaction.
+     *                Note: hashes[i][] and idx[i] should go together in that one input is the txid
+     *                stored in hashes[i] and its location in the previous transaction is idx[i]
      * @param pubkeys is the new owners public key, which should correspond to a previous
-     * transaction. The signature will be the hash of this public key signed by your
-     * private key. It is also a 2D-array of bytearrays.
-     * @param mykey is your public key.
-     * @throws GeneralSecurityException in the case of hashing failure.
-     *
+     *                transaction. The signature will be the hash of this public key signed by your
+     *                private key. It is also a 2D-array of bytearrays.
+     * @param mykey   is your public key.
      * @return true in success, false otherwise
+     * @throws GeneralSecurityException in the case of hashing failure.
      */
-    public boolean addTxIns(int num, byte[][] hashes, int[] idx, PublicKey[] pubkeys, PublicKey mykey) throws GeneralSecurityException{
+    public boolean addTxIns(int num, byte[][] hashes, int[] idx, PublicKey[] pubkeys, PublicKey mykey) throws GeneralSecurityException {
         setNumTxIn(num);
         boolean result = true;
         for (int i = 0; i < num; i++) {
@@ -110,10 +103,10 @@ public class RTransaction {
         return result;
     }
 
-    /**  Signs the users inputs to the transaction
+    /**
+     * Signs the users inputs to the transaction
      *
      * @param key is the Private key to be used to sign the input.
-     *
      * @return true in success, will throw exception otherwise.
      * @throws GeneralSecurityException
      */
@@ -144,12 +137,12 @@ public class RTransaction {
         return result;
     }
 
-    /** Public method for adding TxOut's to the transaction
+    /**
+     * Public method for adding TxOut's to the transaction
      *
-     * @param num is the number of outputs to be added.
-     * @param amts is an array corresponding to the amounts.
+     * @param num           is the number of outputs to be added.
+     * @param amts          is an array corresponding to the amounts.
      * @param pubkeyscripts is a 2D array of output addresses.
-     *
      * @return true in success, false otherwise.
      * @throws GeneralSecurityException
      */

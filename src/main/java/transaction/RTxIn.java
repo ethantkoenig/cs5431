@@ -1,17 +1,16 @@
 package transaction;
 
 import java.security.GeneralSecurityException;
-import java.security.*;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+
 
 /**
- * Created by willronchetti on 2/21/17.
- */
-
-/** Class representing the TxID, input index and Script triple.
-  * TxID is a hash corresponding to a previous transaction to be referenced
-  * in the new transaction. Input idex is the output number of the previous
-  * transaction. The script (for now) is the SHA256 hash of the public key
-  * owning the funds, which will be signed using the associated Private Key
+ * Class representing the TxID, input index and Script triple.
+ * TxID is a hash corresponding to a previous transaction to be referenced
+ * in the new transaction. Input idex is the output number of the previous
+ * transaction. The script (for now) is the SHA256 hash of the public key
+ * owning the funds, which will be signed using the associated Private Key
  */
 public class RTxIn {
 
@@ -21,8 +20,8 @@ public class RTxIn {
     private int txIdx;
     private RSignature signature;
 
-    /** Public constructor for TxIn object, sets default fields and allocates memory.
-     *
+    /**
+     * Public constructor for TxIn object, sets default fields and allocates memory.
      */
     public RTxIn() {
         prevTxId = new byte[HASH_SIZE];
@@ -30,7 +29,8 @@ public class RTxIn {
         signature = new RSignature();
     }
 
-    /** Sets the TxID to be referenced by this input.
+    /**
+     * Sets the TxID to be referenced by this input.
      *
      * @param TxID is the previous transaction hash
      * @throws AssertionError if TxID is not the proper size.
@@ -40,7 +40,8 @@ public class RTxIn {
         prevTxId = TxID.clone();
     }
 
-    /** Sets the output index to be spent.
+    /**
+     * Sets the output index to be spent.
      *
      * @param idx is the corresponding output index in a previous transaction.
      */
@@ -63,7 +64,7 @@ public class RTxIn {
      * Signs this input.
      *
      * @param txbody is the serialized transaction body to be signed.
-     * @param key is the private key to be used to sign the transaction.
+     * @param key    is the private key to be used to sign the transaction.
      * @return true in success, raises exception otherwise.
      * @throws GeneralSecurityException
      */
@@ -75,7 +76,7 @@ public class RTxIn {
      * Verifies the signature on this input.
      *
      * @param txbody is the serialized transaction body that was signed.
-     * @param key is the corresponding public key of who signed the input.
+     * @param key    is the corresponding public key of who signed the input.
      * @return true in success, false otherwise.
      * @throws GeneralSecurityException
      */

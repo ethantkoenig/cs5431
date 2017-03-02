@@ -12,7 +12,6 @@ import java.security.PublicKey;
 import utils.Crypto;
 
 /**
- * Created by willronchetti on 2/28/17.
  * Constructs a basic transaction between 2 peers, and signs and verifies (sig).
  */
 

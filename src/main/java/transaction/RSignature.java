@@ -1,17 +1,13 @@
 package transaction;
 
-/**
- * Created by willronchetti on 2/28/17.
- */
-
 import utils.Crypto;
 
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.nio.ByteBuffer;
 
-/** Signature Class for the Transaction. Serves to provide some flexibility for
+/**
+ * Signature Class for the Transaction. Serves to provide some flexibility for
  * transaction signatures, that way we can support types other than Pay-to-pubkey.
  * OpCode NONE is defined to be 0x00, and OpCode OP_P2PK, defined to be 0x01,
  * is pay-to-pubkey. These OpCodes will be used to determine how to verify a transaction.
@@ -50,13 +46,14 @@ public class RSignature {
         return true;
     }
 
-    /** Signs the input with the provided private key. This takes the public key
+    /**
+     * Signs the input with the provided private key. This takes the public key
      * of who the funds are being transferred to, and signs it with the current
      * coins owners private key. This private key corresponds to the public key
      * in the previous transactions output.
      *
      * @param txbody is the serialized transaction body to be signed.
-     * @param PrKey is the private key to be used to sign the input.
+     * @param PrKey  is the private key to be used to sign the input.
      * @return true if successful, throws exception otherwise
      * @throws GeneralSecurityException
      */
@@ -71,7 +68,7 @@ public class RSignature {
      * new owner key as input and produces the signature in the signature field.
      *
      * @param txbody is the serialized transaction body which was signed.
-     * @param key is the public key used to generate the signature.
+     * @param key    is the public key used to generate the signature.
      * @return true if the signature verifies, false otherwise.
      * @throws GeneralSecurityException
      */
