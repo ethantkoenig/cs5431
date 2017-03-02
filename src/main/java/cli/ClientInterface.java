@@ -89,47 +89,55 @@ public class ClientInterface {
      * Adds all of the commands to the HashMap of commands
      */
     private void populateCmdMap() {
-        commands.put("help", new HelpMenu());
-        commands.put("quit", new Quit());
+        commands.put("help", help());
+        commands.put("quit", quit());
     }
 
     /**************************************************************************
-     * Command classes are implemented below here                             *
+     * Command anonymous functions are implemented below here                             *
      **************************************************************************/
 
     /*
-     * HelpMenu class is for the "help" command. This outputs the documentation
+     * help function is for the "help" command. This outputs the documentation
      * for each command to the output stream.
      */
-    class HelpMenu implements Command {
-        /*
-         * Outputs the documentation for all commands
-         */
-        public boolean run(Scanner args) {
-            for (String s : commands.keySet()) {
-                commands.get(s).documentation(outputStream);
+    private Command help() {
+        return new Command() {
+            /*
+             * Outputs the documentation for all commands
+             */
+            @Override
+            public boolean run(Scanner args) {
+                for (String s : commands.keySet()) {
+                    commands.get(s).documentation(outputStream);
+                }
+                return true;
             }
-            return true;
-        }
 
-        public void documentation(PrintStream out) {
-            out.println("help - displays documentation for all commands");
-        }
+            @Override
+            public void documentation(PrintStream out) {
+                out.println("help - displays documentation for all commands");
+            }
+        };
     }
 
     /*
      * Quit exits the user from the CLI
      */
-    class Quit implements Command {
-        /*
-         * Perform a noop. The main while loop will exit.
-         */
-        public boolean run(Scanner args) {
-            return true;
-        }
+    private Command quit() {
+        return new Command() {
+            /*
+             * Perform a noop. The main while loop will exit.
+             */
+            @Override
+            public boolean run(Scanner args) {
+                return true;
+            }
 
-        public void documentation(PrintStream out) {
-            out.println("quit - exits the program");
-        }
+            @Override
+            public void documentation(PrintStream out) {
+                out.println("quit - exits the program");
+            }
+        };
     }
 }
