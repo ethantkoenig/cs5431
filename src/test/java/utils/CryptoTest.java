@@ -34,9 +34,7 @@ public class CryptoTest extends RandomizedTest {
 
     @Test
     public void testSign() throws Exception {
-        final int len = random.nextInt(1024);
-        byte[] content = new byte[len];
-        random.nextBytes(content);
+        byte[] content = randomBytes(random.nextInt(1024));
 
         KeyPair pair = Crypto.signatureKeyPair();
         byte[] signature = Crypto.sign(content, pair.getPrivate());
@@ -52,8 +50,7 @@ public class CryptoTest extends RandomizedTest {
 
     @Test
     public void testSha256() throws Exception {
-        final int len = random.nextInt(1024);
-        byte[] content = new byte[len];
+        byte[] content = randomBytes(random.nextInt(1024));
         byte[] hash = Crypto.sha256(content);
         Assert.assertEquals(errorMessage, 32, hash.length);
     }

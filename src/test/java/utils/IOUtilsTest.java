@@ -13,8 +13,7 @@ public class IOUtilsTest extends RandomizedTest {
 
     @Test
     public void testFillComplete() throws IOException {
-        byte[] content = new byte[random.nextInt(1024)];
-        random.nextBytes(content);
+        byte[] content = randomBytes(random.nextInt(1024));
         InputStream inputStream = new ByteArrayInputStream(content);
 
         byte[] dest = new byte[content.length];
@@ -24,8 +23,7 @@ public class IOUtilsTest extends RandomizedTest {
 
     @Test
     public void testFillPartial() throws IOException {
-        byte[] content = new byte[1 + random.nextInt(1024)];
-        random.nextBytes(content);
+        byte[] content = randomBytes(1 + random.nextInt(1024));
         InputStream inputStream = new ByteArrayInputStream(content);
 
         int index = 0;
@@ -40,8 +38,7 @@ public class IOUtilsTest extends RandomizedTest {
 
     @Test(expected = IOException.class)
     public void testFillUnderflow() throws IOException {
-        byte[] content = new byte[random.nextInt(1024)];
-        random.nextBytes(content);
+        byte[] content = randomBytes(random.nextInt(1024));
         InputStream inputStream = new ByteArrayInputStream(content);
 
         byte[] dest = new byte[content.length + 1];
