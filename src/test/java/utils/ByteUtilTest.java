@@ -41,8 +41,7 @@ public class ByteUtilTest extends RandomizedTest {
     public void testAddOneByteCarry() throws Exception {
         byte[] a = new byte[]{(byte) 0xa,(byte) 0xf};
         ByteUtil.addOne(a);
-        System.out.println(ByteUtil.bytesToHexString(a));
-        Assert.assertTrue(errorMessage, Arrays.equals(new byte[]{(byte) 0xb,(byte) 0x0}, a));
+        Assert.assertTrue(errorMessage, Arrays.equals(new byte[]{(byte) 0xa,(byte) 0x10}, a));
     }
 
     @Test
@@ -50,6 +49,15 @@ public class ByteUtilTest extends RandomizedTest {
         byte[] a = ByteUtil.hexStringToByteArray("0a2d808002b3030dd");
         byte[] b = ByteUtil.hexStringToByteArray("0a2d808002b30309d");
         Assert.assertTrue(errorMessage, ByteUtil.compare(a,b) == 1);
+    }
+
+    @Test
+    public void testHexStringToByteArray() throws Exception {
+        byte[] a = ByteUtil.hexStringToByteArray("0001");
+        String b = ByteUtil.bytesToHexString(a);
+        System.out.println(b);
+        byte[] c = ByteUtil.hexStringToByteArray(b);
+        Assert.assertTrue(errorMessage, Arrays.equals(a, c));
     }
 
 }

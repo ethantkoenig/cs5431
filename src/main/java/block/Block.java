@@ -9,6 +9,7 @@ import java.io.OutputStream;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
+import java.util.Arrays;
 import java.util.logging.Logger;
 
 /**
@@ -23,6 +24,8 @@ public class Block {
     public final ShaTwoFiftySix previousBlockHash;
     public final Transaction[] transactions = new Transaction[NUM_TRANSACTIONS_PER_BLOCK];
     public final byte[] nonce = new byte[NONCE_SIZE_IN_BYTES];
+
+    private int hashGoalZeros = 2;
 
     private Block(ShaTwoFiftySix previousBlockHash) {
         this.previousBlockHash = previousBlockHash;
@@ -59,13 +62,30 @@ public class Block {
     public void serialize(OutputStream outputStream) throws IOException {
         previousBlockHash.writeTo(outputStream);
         for (Transaction transaction : transactions) {
-            transaction.serialize(outputStream);
+            if (transaction != null)
+                transaction.serialize(outputStream);
         }
         outputStream.write(nonce);
     }
 
     public void nonceAddOne() throws Exception {
         ByteUtil.addOne(this.nonce);
+    }
+
+    public boolean checkHash() throws IOException {
+        ShaTwoFiftySix hash = null;
+        byte[] bytes = null;
+
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        this.serialize(os);
+        try {
+            bytes = ByteUtil.concatenate(os.toByteArray(), nonce);
+            hash = ShaTwoFiftySix.hashOf(bytes);
+        } catch (GeneralSecurityException e) {
+            LOGGER.severe("Unable to hash: " + Arrays.toString(bytes));
+            e.printStackTrace();
+        }
+        return (hash != null) ? hash.checkHashZeros(hashGoalZeros): false;
     }
 
     /**

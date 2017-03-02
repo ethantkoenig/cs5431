@@ -1,7 +1,7 @@
 apply plugin: 'application'
 apply plugin: 'findbugs'
 apply plugin: 'java'
-
+apply plugin: 'jacoco'
 
 repositories {
     mavenCentral()
@@ -19,6 +19,13 @@ jar {
         attributes(
                 'Main-Class': 'Main'
         )
+    }
+}
+
+jacocoTestReport {
+    reports {
+        xml.enabled true
+        html.enabled false
     }
 }
 

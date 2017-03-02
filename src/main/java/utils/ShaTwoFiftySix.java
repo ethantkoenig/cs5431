@@ -15,8 +15,8 @@ public final class ShaTwoFiftySix implements Comparable<ShaTwoFiftySix>{
 
     private final byte[] hash;
 
-    private ShaTwoFiftySix(byte[] hash) {
-        this.hash = hash;
+    public ShaTwoFiftySix(byte[] hash) {
+        this.hash =  Arrays.copyOf(hash, hash.length);
     }
 
     /**
@@ -31,6 +31,10 @@ public final class ShaTwoFiftySix implements Comparable<ShaTwoFiftySix>{
         byte[] hash = new byte[ShaTwoFiftySix.HASH_SIZE_IN_BYTES];
         input.get(hash);
         return new ShaTwoFiftySix(hash);
+    }
+
+    public byte[] getHash() {
+        return Arrays.copyOf(hash, hash.length);
     }
 
     /**
@@ -63,6 +67,24 @@ public final class ShaTwoFiftySix implements Comparable<ShaTwoFiftySix>{
      */
     public void writeTo(OutputStream outputStream) throws IOException {
         outputStream.write(hash);
+    }
+
+    /**
+     * Checks that the hash has numZeros zeros in its most significant places
+     *
+     * @param numZeros the number of zeros the hash should start with
+     * TODO: This does not work as intended yet
+     */
+    public boolean checkHashZeros(int numZeros){
+        int zeros = 0;
+        for (byte b : hash){
+            if (b == (byte) 0x00){
+                zeros++;
+            } else {
+                break;
+            }
+        }
+        return zeros >= numZeros;
     }
 
     @Override

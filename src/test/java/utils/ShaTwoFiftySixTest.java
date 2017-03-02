@@ -5,6 +5,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import testutils.RandomizedTest;
 
+import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
@@ -18,15 +19,15 @@ public class ShaTwoFiftySixTest extends RandomizedTest {
 
     @Test
     public void testDeserialize() throws GeneralSecurityException {
-        byte[] hash = new byte[32];
-        random.nextBytes(hash);
-        ShaTwoFiftySix sha256 = ShaTwoFiftySix.deserialize(ByteBuffer.wrap(hash));
+        byte[] hash = randomHash();
+        ShaTwoFiftySix sha256 = deserializeFrom(hash);
         Assert.assertTrue(errorMessage, Arrays.equals(hash, sha256.copyOfHash()));
     }
 
     @Test
     public void testHashOf() throws GeneralSecurityException {
         byte[] content = new byte[random.nextInt(1024)];
+        random.nextBytes(content);
         ShaTwoFiftySix sha256 = ShaTwoFiftySix.hashOf(content);
         Assert.assertTrue(errorMessage,
                 Arrays.equals(Crypto.sha256(content), sha256.copyOfHash()));
@@ -34,44 +35,64 @@ public class ShaTwoFiftySixTest extends RandomizedTest {
 
     @Test
     public void testCopyOfHash() {
-        byte[] hash = new byte[32];
-        random.nextBytes(hash);
-        ShaTwoFiftySix sha256 = ShaTwoFiftySix.deserialize(ByteBuffer.wrap(hash));
-        byte[] copy1 = sha256.copyOfHash();
-        copy1[0]++; // should not affect sha256 object
-        Assert.assertTrue(errorMessage,
-                Arrays.equals(hash, sha256.copyOfHash()));
+        byte[] hash = randomHash();
+        ShaTwoFiftySix sha256 = deserializeFrom(hash);
+        byte[] copy = sha256.copyOfHash();
+        Assert.assertTrue(errorMessage, Arrays.equals(hash, copy));
+        copy[0]++; // should not affect sha256 object
+        Assert.assertTrue(errorMessage, Arrays.equals(hash, sha256.copyOfHash()));
+    }
+
+    @Test
+    public void testWriteTo() throws Exception {
+        byte[] hash = randomHash();
+        ShaTwoFiftySix sha256 = deserializeFrom(hash);
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        sha256.writeTo(outputStream);
+        Assert.assertTrue(errorMessage, Arrays.equals(outputStream.toByteArray(), hash));
     }
 
     @Test
     public void testEquals() throws GeneralSecurityException {
-        byte[] hash = new byte[32];
-        random.nextBytes(hash);
-        ByteBuffer byteBuffer = ByteBuffer.allocate(32);
-        byteBuffer.put(hash);
+        byte[] hash = randomHash();
 
-        Assert.assertEquals(errorMessage,
-                ShaTwoFiftySix.deserialize(ByteBuffer.wrap(hash)),
-                ShaTwoFiftySix.deserialize(ByteBuffer.wrap(hash)));
+        ShaTwoFiftySix hash1 = deserializeFrom(hash);
+        ShaTwoFiftySix hash2 = deserializeFrom(hash);
 
-        byte[] anotherHash = new byte[32];
-        random.nextBytes(anotherHash);
+        Assert.assertEquals(errorMessage, hash1, hash1);
+        Assert.assertEquals(errorMessage, hash1, hash2);
+        Assert.assertNotEquals(errorMessage, hash1, null);
+
+        byte[] anotherHash = randomHash();
         if (Arrays.equals(hash, anotherHash)) { // sanity-check in case there is a collision
             anotherHash[0]++;
         }
         Assert.assertNotEquals(errorMessage,
-                ShaTwoFiftySix.deserialize(ByteBuffer.wrap(hash)),
-                ShaTwoFiftySix.deserialize(ByteBuffer.wrap(anotherHash)));
+                deserializeFrom(hash),
+                deserializeFrom(anotherHash));
     }
 
     @Test
     public void testHashCode() throws GeneralSecurityException {
+        byte[] hash = randomHash();
+        Assert.assertEquals(errorMessage,
+                deserializeFrom(hash).hashCode(),
+                deserializeFrom(hash).hashCode());
+    }
+
+    @Test
+    public void testCheckHashZeros() {
+//        ShaTwoFiftySix shaTwoFiftySix = new ShaTwoFiftySix(new byte[]{(byte) 0x00, (byte) 0x01});
+//        Assert.assertTrue(errorMessage, shaTwoFiftySix.checkHashZeros(3));
+    }
+
+    private byte[] randomHash() {
         byte[] hash = new byte[32];
         random.nextBytes(hash);
-        ByteBuffer byteBuffer = ByteBuffer.allocate(32);
-        byteBuffer.put(hash);
-        Assert.assertEquals(errorMessage,
-                ShaTwoFiftySix.deserialize(ByteBuffer.wrap(hash)).hashCode(),
-                ShaTwoFiftySix.deserialize(ByteBuffer.wrap(hash)).hashCode());
+        return hash;
+    }
+
+    private ShaTwoFiftySix deserializeFrom(byte[] hash) {
+        return ShaTwoFiftySix.deserialize(ByteBuffer.wrap(hash));
     }
 }

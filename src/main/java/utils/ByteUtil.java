@@ -9,7 +9,7 @@ import java.util.Arrays;
  * Byte Manipulation functions
  */
 public class ByteUtil {
-    final protected static char[] hexArray = "0123456789ABCDEF".toCharArray();
+    final private static char[] hexArray = "0123456789ABCDEF".toCharArray();
 
     public static void addOne(byte[] b) throws Exception {
         for (int i = b.length - 1; i >= 0; i--) {

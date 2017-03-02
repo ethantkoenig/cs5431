@@ -1,12 +1,9 @@
 package network;
 
 import block.Block;
-import utils.ByteUtil;
-import utils.ShaTwoFiftySix;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.security.GeneralSecurityException;
+import java.util.concurrent.Callable;
+import java.util.logging.Logger;
 
 /**
  * The MinerThread is run as a background thread by a Node and is responsible for mining.
@@ -16,56 +13,32 @@ import java.security.GeneralSecurityException;
  * @author Evan King
  * @version 1.0, Feb 22 2017
  */
-public class MinerThread extends Thread{
+public class MinerThread implements Callable<Block> {
 
-    private ShaTwoFiftySix hashGoal;
+    private static final Logger LOGGER = Logger.getLogger(MinerThread.class.getName());
     private Block block;
-    private final static byte[] MAX_NONCE = ByteUtil.hexStringToByteArray("100000000");
 
-    public MinerThread(ShaTwoFiftySix hashGoal, Block block) {
-        this.hashGoal = hashGoal;
+    public MinerThread(Block block) {
         this.block = block;
     }
 
-    public void setHashGoal(byte[] hashGoal) throws GeneralSecurityException {
-        this.hashGoal = ShaTwoFiftySix.hashOf(hashGoal);
-    }
-
-    public void setBlock(Block block){
-        this.block = block;
-    }
-
-    private static ShaTwoFiftySix computeHash(Block block) throws IOException {
-        ShaTwoFiftySix hash = null;
-        ByteArrayOutputStream os = new ByteArrayOutputStream();
-        block.serialize(os);
-        try {
-            byte[] bytes = ByteUtil.concatenate(os.toByteArray(), block.nonce);
-            hash = ShaTwoFiftySix.hashOf(bytes);
-        } catch (GeneralSecurityException e) {
-            //TODO: Logging
-            e.printStackTrace();
-        }
-        return hash;
-    }
-
-    private boolean checkHash(ShaTwoFiftySix hash){
-        return hash.compareTo(this.hashGoal) <= 0;
-    }
-
-    private Block tryNonces(Block block) throws Exception {
-        while (true){
-            ShaTwoFiftySix hash = computeHash(block);
-            if (checkHash(hash))
+    private Block tryNonces() throws Exception {
+        while (true) {
+            if (block.checkHash())
                 return block;
-
             block.nonceAddOne();
         }
     }
 
     @Override
-    public void run() {
-
+    public Block call() {
+        Block result = null;
+        try {
+            result = tryNonces();
+        } catch (Exception e) {
+            LOGGER.severe("Error hashing block: " + e.getMessage());
+        }
+        return result;
     }
 
 
