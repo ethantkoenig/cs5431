@@ -17,4 +17,6 @@ To run the project, run
 
 To fully build the project (compile, test, and run all checks), run
 
-```$./gradlew build```
+```$ ./gradlew build```
+
+Before issuing a pull request or pushing to master, please ensure that `./gradlew build` succeeds.
