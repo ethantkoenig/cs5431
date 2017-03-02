@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.util.Scanner;
 import java.util.HashMap;
 import java.util.Map;
+import java.io.UnsupportedEncodingException;
+import java.lang.IllegalArgumentException;
 
 /*
  * The ClinetInterface object is used to give the user a CLI based on a given
@@ -46,11 +48,11 @@ public class ClientInterface {
     protected Map<String, Command> commands = new HashMap<>();
 
     /*
-     * Create a new client interface which by default reads from System.in and
-     * outputs to System.out.
+     * Create a new client interface which by default reads from System.in as
+     * UTF8 encoding and outputs to System.out.
      */
     public ClientInterface() {
-        this(System.in, System.out);
+        this(System.in, System.out, "UTF8");
     }
 
     /*
@@ -58,10 +60,15 @@ public class ClientInterface {
      *
      * @param in InputStream to recieve data from user
      * @param out PrintStream to send data to the user
+     * @param encoding Charset which the input will be encoded as
      */
-    public ClientInterface(InputStream in, PrintStream out) {
+    public ClientInterface(InputStream in, PrintStream out, String encoding) {
         streamIn = in;
-        streamReader = new InputStreamReader(streamIn);
+        try {
+        streamReader = new InputStreamReader(streamIn, encoding);
+        } catch (UnsupportedEncodingException e){
+            throw new IllegalArgumentException("Not a valid encoding");
+        }
         buffer = new BufferedReader(streamReader);
         outputStream = out;
         populateCmdMap();
@@ -73,6 +80,7 @@ public class ClientInterface {
      */
     public void startInterface() {
         outputStream.println("Welcome!");
+        outputStream.println(streamReader.getEncoding());
         String cmd = "";
         // If previous command was quit no action was taken and we will now exit
         while (!cmd.equals("quit")) {
@@ -84,12 +92,18 @@ public class ClientInterface {
             } catch (IOException e) {
                 outputStream.println("Something went wrong");
             }
-            Scanner cmdScanner = new Scanner(cmd);
-            try {
-                // run given command, if invalid let user know
-                commands.get(cmdScanner.next()).run(cmdScanner);
-            } catch (NullPointerException e) {
-                outputStream.println("Invalid command");
+            // Make sure we did not read a null value
+            if (cmd != null) {
+                Scanner cmdScanner = new Scanner(cmd);
+                cmd = cmdScanner.next();
+                if (cmd != null && commands.containsKey(cmd)) {
+                    commands.get(cmd).run(cmdScanner);
+                } else {
+                    outputStream.println("Invalid command");
+                }
+            // In case cmd is null, set to empty string as we want to noop
+            } else {
+                cmd = "";
             }
         }
     }
