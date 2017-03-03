@@ -72,7 +72,7 @@ public class Block {
         ByteUtil.addOne(this.nonce);
     }
 
-    public boolean checkHash() throws IOException {
+    public boolean checkHash() throws IOException, GeneralSecurityException {
         ShaTwoFiftySix hash = null;
         byte[] bytes = null;
 

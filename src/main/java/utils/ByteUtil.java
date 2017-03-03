@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.Formatter;
 
 /**
  * Byte Manipulation functions
@@ -44,15 +45,12 @@ public class ByteUtil {
      * Useful for debugging and logging.
      **********************************************************************************************************/
 
-    // Credit: http://stackoverflow.com/questions/9655181/how-to-convert-a-byte-array-to-a-hex-string-in-java
     public static String bytesToHexString(byte[] bytes) {
-        char[] hexChars = new char[bytes.length * 2];
-        for (int j = 0; j < bytes.length; j++) {
-            int v = bytes[j] & 0xFF;
-            hexChars[j * 2] = hexArray[v >>> 4];
-            hexChars[j * 2 + 1] = hexArray[v & 0x0F];
+        Formatter formatter = new Formatter();
+        for (byte b : bytes) {
+            formatter.format("%02x", b);
         }
-        return new String(hexChars);
+        return formatter.toString();
     }
 
     public static byte[] hexStringToByteArray(String s) {

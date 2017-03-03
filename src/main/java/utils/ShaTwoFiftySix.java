@@ -73,7 +73,6 @@ public final class ShaTwoFiftySix implements Comparable<ShaTwoFiftySix>{
      * Checks that the hash has numZeros zeros in its most significant places
      *
      * @param numZeros the number of zeros the hash should start with
-     * TODO: This does not work as intended yet
      */
     public boolean checkHashZeros(int numZeros){
         int zeros = 0;

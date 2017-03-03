@@ -60,4 +60,13 @@ public class ByteUtilTest extends RandomizedTest {
         Assert.assertTrue(errorMessage, Arrays.equals(a, c));
     }
 
+    @Test
+    public void testByteInt() throws Exception {
+        byte b = (byte) 0xaf;
+        byte[] c = new byte[]{(byte) 0x00, (byte) 0x01,(byte) 0x02,(byte) 0x03};
+        System.out.println(Arrays.toString(c));
+        System.out.println(ByteUtil.bytesToHexString(c));
+
+        System.out.println(0xff&b);
+    }
 }
