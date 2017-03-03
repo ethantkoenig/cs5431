@@ -85,8 +85,9 @@ public class ConnectionThread extends Thread {
                 return;
             }
             byte payloadType = ByteBuffer.wrap(headerBuffer, Integer.BYTES, Byte.BYTES).get();
-            Message message = Message.create(payloadType, payloadLen);
-            IOUtils.fill(in, message.payload);
+            byte[] payload = new byte[payloadLen];
+            IOUtils.fill(in, payload);
+            Message message = Message.create(payloadType, payload);
             queue.put(message);
         }
     }
