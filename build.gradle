@@ -35,3 +35,7 @@ tasks.withType(FindBugs) {
         html.enabled true
     }
 }
+
+run {
+   standardInput = System.in
+}
