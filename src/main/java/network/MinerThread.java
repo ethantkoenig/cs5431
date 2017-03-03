@@ -2,7 +2,6 @@ package network;
 
 import block.Block;
 
-import java.util.concurrent.Callable;
 import java.util.logging.Logger;
 
 /**
@@ -13,7 +12,7 @@ import java.util.logging.Logger;
  * @author Evan King
  * @version 1.0, Feb 22 2017
  */
-public class MinerThread implements Callable<Block> {
+public class MinerThread extends Thread {
 
     private static final Logger LOGGER = Logger.getLogger(MinerThread.class.getName());
     private Block block;
@@ -31,14 +30,15 @@ public class MinerThread implements Callable<Block> {
     }
 
     @Override
-    public Block call() {
+    public void run() {
         Block result = null;
         try {
             result = tryNonces();
         } catch (Exception e) {
             LOGGER.severe("Error hashing block: " + e.getMessage());
         }
-        return result;
+
+
     }
 
 

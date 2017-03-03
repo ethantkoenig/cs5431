@@ -6,14 +6,16 @@ import org.junit.Test;
 import testutils.RandomizedTest;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.security.KeyPair;
 import java.security.PublicKey;
 
 public class CryptoTest extends RandomizedTest {
 
     @BeforeClass
-    public static void setUpBeforeClass() throws Exception {
+    public static void setUpBeforeClass() {
         Crypto.init();
     }
 
@@ -27,16 +29,14 @@ public class CryptoTest extends RandomizedTest {
     public void testDeserializePublicKey() throws Exception {
         PublicKey publicKey = Crypto.signatureKeyPair().getPublic();
 
-        InputStream serializedKey = new ByteArrayInputStream(publicKey.getEncoded());
+        ByteBuffer serializedKey = ByteBuffer.wrap(publicKey.getEncoded());
         PublicKey deserializedKey = Crypto.deserializePublicKey(serializedKey);
         Assert.assertEquals(publicKey, deserializedKey);
     }
 
     @Test
     public void testSign() throws Exception {
-        final int len = random.nextInt(1024);
-        byte[] content = new byte[len];
-        random.nextBytes(content);
+        byte[] content = randomBytes(random.nextInt(1024));
 
         KeyPair pair = Crypto.signatureKeyPair();
         byte[] signature = Crypto.sign(content, pair.getPrivate());
@@ -44,7 +44,7 @@ public class CryptoTest extends RandomizedTest {
                 Crypto.verify(content, signature, pair.getPublic()));
 
         // test that deserialized public keys can correctly verify
-        InputStream serializedKey = new ByteArrayInputStream(pair.getPublic().getEncoded());
+        ByteBuffer serializedKey = ByteBuffer.wrap(pair.getPublic().getEncoded());
         PublicKey deserializedKey = Crypto.deserializePublicKey(serializedKey);
         Assert.assertTrue(errorMessage,
                 Crypto.verify(content, signature, deserializedKey));
@@ -52,8 +52,7 @@ public class CryptoTest extends RandomizedTest {
 
     @Test
     public void testSha256() throws Exception {
-        final int len = random.nextInt(1024);
-        byte[] content = new byte[len];
+        byte[] content = randomBytes(random.nextInt(1024));
         byte[] hash = Crypto.sha256(content);
         Assert.assertEquals(errorMessage, 32, hash.length);
     }

@@ -1,10 +1,13 @@
 package transaction;
 
-import java.security.GeneralSecurityException;
+import utils.Crypto;
 
-/**
- * Created by willronchetti on 2/22/17.
- */
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.security.GeneralSecurityException;
+import java.security.PublicKey;
+
 
 /**
  * Transaction output class. Contains the value associated with this output
@@ -12,33 +15,22 @@ import java.security.GeneralSecurityException;
  */
 public class RTxOut {
 
-    private long value;
-    private byte[] ownerPubKey;
+    public final long value;
+    public final PublicKey ownerPubKey;
 
-    /** Public constructor for Output object. Sets default fields and allocates memory
-     *
-     */
-    public RTxOut() {
-        value = 0;
-        ownerPubKey = new byte[RSignature.PUBLIC_KEY_SIZE];
+    public RTxOut(long value, PublicKey ownerPubKey) {
+        this.value = value;
+        this.ownerPubKey = ownerPubKey;
     }
 
-    /** Sets the coin value associated with this transaction output.
-     *
-     * @param val is the number of coins.
-     */
-    public void setValue(long val){
-        assert (val > 0);
-        value = val;
+    public static RTxOut deserialize(ByteBuffer input) throws GeneralSecurityException {
+        PublicKey ownerKey = Crypto.deserializePublicKey(input);
+        long value = input.getLong();
+        return new RTxOut(value, ownerKey);
     }
 
-    /** Sets the public key script to be the pubkey given
-     * @param pubkey is the public key of the new owner of the coins.
-     * @throws GeneralSecurityException
-     */
-    public void setScriptpubkey(byte[] pubkey) throws GeneralSecurityException {
-        assert (pubkey.length == RSignature.PUBLIC_KEY_SIZE);
-        ownerPubKey = pubkey.clone();
-
+    public void serialize(DataOutputStream outputStream) throws IOException {
+        outputStream.write(ownerPubKey.getEncoded());
+        outputStream.writeLong(value);
     }
 }
