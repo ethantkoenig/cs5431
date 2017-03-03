@@ -25,4 +25,24 @@ public class IOUtils {
         }
     }
 
+    public static String toHex(byte[] bytes) {
+        StringBuilder builder = new StringBuilder();
+        for (byte b : bytes) {
+            builder.append(String.format("%02x", b));
+        }
+        return builder.toString();
+    }
+
+    public static byte[] parseHex(String hexString) {
+        if (hexString.length() % 2 != 0) {
+            throw new IllegalArgumentException("hex string must be of even length");
+        }
+        byte[] data = new byte[hexString.length() / 2];
+        for (int i = 0; i < data.length; i++) {
+            int n = 16 * Character.digit(hexString.charAt(2 * i), 16)
+                    + Character.digit(hexString.charAt(2 * i + 1), 16);
+            data[i] = (byte) n;
+        }
+        return data;
+    }
 }

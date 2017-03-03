@@ -33,6 +33,13 @@ public final class ShaTwoFiftySix {
         return new ShaTwoFiftySix(hash);
     }
 
+    public static ShaTwoFiftySix create(byte[] hash) {
+        if (hash.length != HASH_SIZE_IN_BYTES) {
+            throw new IllegalArgumentException("Mis-sized SHA-256 hash");
+        }
+        return new ShaTwoFiftySix(Arrays.copyOf(hash, HASH_SIZE_IN_BYTES));
+    }
+
     /**
      * Hashes {@code content}, and returns a corresponding {@code ShaTwoFiftySix} object
      *
