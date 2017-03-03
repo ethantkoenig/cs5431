@@ -44,21 +44,4 @@ public class HandleMessageThread extends Thread {
         }
     }
 
-//    public static Block startMinerThread(Block block) {
-//        final ExecutorService service;
-//        final Future<Block> minerTask;
-//
-//        service = Executors.newFixedThreadPool(1);
-//        minerTask = service.submit(new MinerThread(block));
-//        Block hashedBlock = null;
-//        try {
-//            hashedBlock = minerTask.get();
-//        } catch (InterruptedException | ExecutionException e) {
-//            LOGGER.severe("Miner Thread interrupted: " + e.getMessage());
-//        }
-//
-//        service.shutdownNow();
-//        return hashedBlock;
-//    }
-
 }

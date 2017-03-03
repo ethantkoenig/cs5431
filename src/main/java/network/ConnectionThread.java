@@ -50,12 +50,18 @@ public class ConnectionThread extends Thread {
      */
     @Override
     public void run() {
-        try {
-            receive();
-            close();
-        } catch (IOException | InterruptedException e) {
-            LOGGER.severe(e.getMessage());
-        }
+        new Thread() {
+            public void run() {
+                try {
+                    receive();
+                    close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }.start();
     }
 
 
