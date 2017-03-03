@@ -41,7 +41,7 @@ public class RTransaction {
         txIn = new RTxIn[numInputs];
     }
 
-    private boolean insertTxIn(byte[] txid, int idx, PublicKey pubkey, PublicKey mykey) throws GeneralSecurityException {
+    private boolean insertTxIn(byte[] txid, int idx) throws GeneralSecurityException {
         if (insertInputIdx == numInputs) {
             return false;
         }
@@ -87,18 +87,14 @@ public class RTransaction {
      * @param idx     is a list of the corresponding indexes of the previous transaction.
      *                Note: hashes[i][] and idx[i] should go together in that one input is the txid
      *                stored in hashes[i] and its location in the previous transaction is idx[i]
-     * @param pubkeys is the new owners public key, which should correspond to a previous
-     *                transaction. The signature will be the hash of this public key signed by your
-     *                private key. It is also a 2D-array of bytearrays.
-     * @param mykey   is your public key.
      * @return true in success, false otherwise
      * @throws GeneralSecurityException in the case of hashing failure.
      */
-    public boolean addTxIns(int num, byte[][] hashes, int[] idx, PublicKey[] pubkeys, PublicKey mykey) throws GeneralSecurityException {
+    public boolean addTxIns(int num, byte[][] hashes, int[] idx) throws GeneralSecurityException {
         setNumTxIn(num);
         boolean result = true;
         for (int i = 0; i < num; i++) {
-            result = result && insertTxIn(hashes[i], idx[i], pubkeys[i], mykey);
+            result = result && insertTxIn(hashes[i], idx[i]);
         }
         return result;
     }
@@ -114,6 +110,7 @@ public class RTransaction {
         assert (numInputs > 0);
         byte[] txSig = serializeBody();
         for (int i = 0; i < numInputs; i++) {
+
             txIn[i].signSignature(txSig, key);
         }
         return true;
