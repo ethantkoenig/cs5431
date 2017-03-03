@@ -4,6 +4,7 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.security.*;
 import java.security.spec.ECGenParameterSpec;
@@ -27,10 +28,10 @@ public class Crypto {
         return keyGen.generateKeyPair();
     }
 
-    public static PublicKey deserializePublicKey(InputStream inputStream)
-            throws GeneralSecurityException, IOException {
+    public static PublicKey deserializePublicKey(ByteBuffer input)
+            throws GeneralSecurityException {
         byte[] array = new byte[PUBLIC_KEY_LEN_IN_BYTES];
-        IOUtils.fill(inputStream, array);
+        input.get(array);
         return KeyFactory.getInstance("ECDSA", "BC").generatePublic(new X509EncodedKeySpec(array));
     }
 
