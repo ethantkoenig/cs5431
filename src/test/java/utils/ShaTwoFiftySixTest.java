@@ -25,6 +25,13 @@ public class ShaTwoFiftySixTest extends RandomizedTest {
     }
 
     @Test
+    public void testCreate() throws GeneralSecurityException {
+        byte[] hash = randomBytes(ShaTwoFiftySix.HASH_SIZE_IN_BYTES);
+        ShaTwoFiftySix sha256 = ShaTwoFiftySix.create(hash);
+        Assert.assertArrayEquals(errorMessage, hash, sha256.copyOfHash());
+    }
+
+    @Test
     public void testHashOf() throws GeneralSecurityException {
         byte[] content = randomBytes(random.nextInt(1024));
         ShaTwoFiftySix sha256 = ShaTwoFiftySix.hashOf(content);

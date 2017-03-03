@@ -2,10 +2,10 @@ package utils;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
 import java.security.*;
 import java.security.spec.ECGenParameterSpec;
 import java.security.spec.X509EncodedKeySpec;
@@ -32,7 +32,15 @@ public class Crypto {
             throws GeneralSecurityException {
         byte[] array = new byte[PUBLIC_KEY_LEN_IN_BYTES];
         input.get(array);
-        return KeyFactory.getInstance("ECDSA", "BC").generatePublic(new X509EncodedKeySpec(array));
+        return parsePublicKey(array);
+    }
+
+    public static PublicKey parsePublicKey(byte[] bytes) throws GeneralSecurityException {
+        return KeyFactory.getInstance("ECDSA", "BC").generatePublic(new X509EncodedKeySpec(bytes));
+    }
+
+    public static PrivateKey parsePrivateKey(byte[] bytes) throws GeneralSecurityException {
+        return KeyFactory.getInstance("ECDSA", "BC").generatePrivate(new X509EncodedKeySpec(bytes));
     }
 
     public static byte[] sign(byte[] toSign, PrivateKey key) throws GeneralSecurityException {
@@ -53,5 +61,21 @@ public class Crypto {
     public static byte[] sha256(byte[] content) throws GeneralSecurityException {
         MessageDigest digest = MessageDigest.getInstance("SHA-256");
         return digest.digest(content);
+    }
+
+    public static PublicKey loadPublicKey(String filename)
+            throws GeneralSecurityException, IOException {
+        InputStream inputStream = new FileInputStream(filename);
+        byte[] keyBytes = new byte[Crypto.PUBLIC_KEY_LEN_IN_BYTES];
+        IOUtils.fill(inputStream, keyBytes);
+        return parsePublicKey(keyBytes);
+    }
+
+    public static PrivateKey loadPrivateKey(String filename)
+            throws GeneralSecurityException, IOException {
+        InputStream inputStream = new FileInputStream(filename);
+        byte[] keyBytes = new byte[Crypto.PRIVATE_KEY_LEN_IN_BYTES];
+        IOUtils.fill(inputStream, keyBytes);
+        return parsePrivateKey(keyBytes);
     }
 }
