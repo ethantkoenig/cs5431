@@ -13,7 +13,7 @@ import java.util.Arrays;
 public class ShaTwoFiftySixTest extends RandomizedTest {
 
     @BeforeClass
-    public static void setUpBeforeClass() throws Exception {
+    public static void setUpBeforeClass() {
         Crypto.init();
     }
 

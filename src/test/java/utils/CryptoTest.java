@@ -13,7 +13,7 @@ import java.security.PublicKey;
 public class CryptoTest extends RandomizedTest {
 
     @BeforeClass
-    public static void setUpBeforeClass() throws Exception {
+    public static void setUpBeforeClass() {
         Crypto.init();
     }
 

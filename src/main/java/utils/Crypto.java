@@ -16,7 +16,7 @@ public class Crypto {
     public static final int PRIVATE_KEY_LEN_IN_BYTES = 150;
     public static final int PUBLIC_KEY_LEN_IN_BYTES = 91;
 
-    public static void init() throws Exception {
+    public static void init() {
         Security.addProvider(new BouncyCastleProvider());
     }
 
