@@ -18,4 +18,10 @@ public abstract class RandomizedTest {
         random = seededRandom.random();
         errorMessage = seededRandom.errorMessage();
     }
+
+    protected byte[] randomBytes(int length) {
+        byte[] bytes = new byte[length];
+        random.nextBytes(bytes);
+        return bytes;
+    }
 }
