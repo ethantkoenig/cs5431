@@ -1,5 +1,8 @@
 package block;
 
+import transaction.RTransaction;
+import transaction.RTxOut;
+import utils.Pair;
 import utils.ShaTwoFiftySix;
 
 import java.io.ByteArrayOutputStream;
@@ -8,6 +11,8 @@ import java.io.OutputStream;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Logger;
 
 /**
@@ -20,7 +25,7 @@ public class Block {
     public final static int NONCE_SIZE_IN_BYTES = 128;
 
     public final ShaTwoFiftySix previousBlockHash;
-    public final Transaction[] transactions = new Transaction[NUM_TRANSACTIONS_PER_BLOCK];
+    public final RTransaction[] transactions = new RTransaction[NUM_TRANSACTIONS_PER_BLOCK];
     public final byte[] nonce = new byte[NONCE_SIZE_IN_BYTES];
 
     private Block(ShaTwoFiftySix previousBlockHash) {
@@ -43,7 +48,7 @@ public class Block {
     public static Block deserialize(ByteBuffer input) throws BufferUnderflowException {
         Block block = new Block(ShaTwoFiftySix.deserialize(input));
         for (int i = 0; i < NUM_TRANSACTIONS_PER_BLOCK; i++) {
-            block.transactions[i] = Transaction.deserialize(input);
+            block.transactions[i] = RTransaction.deserialize(input);
         }
         input.get(block.nonce);
         return block;
@@ -57,7 +62,7 @@ public class Block {
      */
     public void serialize(OutputStream outputStream) throws IOException {
         previousBlockHash.writeTo(outputStream);
-        for (Transaction transaction : transactions) {
+        for (RTransaction transaction : transactions) {
             transaction.serialize(outputStream);
         }
         outputStream.write(nonce);
@@ -77,14 +82,25 @@ public class Block {
         }
     }
 
-    // TODO a placeholder for the real Transaction class
-    public static class Transaction {
-        public static Transaction deserialize(ByteBuffer input) {
-            return null;
-        }
+    /**
+     * Verifies the validity of {@code this} with respect to {@code blockchain}.
+     *
+     * A {@code Block} is said to be valid with respect to a set of unspent transactions if its inputs only contain
+     * outputs from that set, it contains no double spends, and every input has a valid signature.
+     *
+     * @param unspentTransactions A list of unspent {@code RTransaction}s that may be spent by {@code this Block}. This
+     *                            collection will not be modified.
+     * @return
+     */
+    public boolean verifyBlock(Map<Pair<ShaTwoFiftySix,Integer>, RTxOut> unspentTransactions) {
+        HashMap<Pair<ShaTwoFiftySix,Integer>, RTxOut> workingTxs = new HashMap<>(unspentTransactions);
 
-        public void serialize(OutputStream outputStream) {
+        for (RTransaction tx: transactions) {
+            if (!tx.verify(workingTxs)) {
+                return false;
+            }
         }
+        return true;
     }
 
 }
