@@ -14,10 +14,17 @@ public class HandleMessageThread extends Thread {
     private static final Logger LOGGER = Logger.getLogger(HandleMessageThread.class.getName());
 
     private BlockingQueue<Message> messageQueue;
+    private BlockingQueue<Message> broadcastQueue;
 
-    public HandleMessageThread(BlockingQueue<Message> messageQueue) {
+    private Node parentNode;
+
+    // Needs reference to parent in order to call Node.broadcast()
+    public HandleMessageThread(Node parentNode, BlockingQueue<Message> messageQueue, BlockingQueue<Message> broadcastQueue) {
+        this.parentNode = parentNode;
         this.messageQueue = messageQueue;
+        this.broadcastQueue = broadcastQueue;
     }
+
 
     /**
      * The run() function is ran when the thread is started. We pull off of the synchronized blocking messageQueue
@@ -30,7 +37,12 @@ public class HandleMessageThread extends Thread {
             while ((message = messageQueue.take()) != null) {
                 switch (message.type) {
                     case Message.TRANSACTION:
-                        // TODO
+                        // TODO: check that we haven't yet received this message then:
+                        // synchronized(parentNode) {
+                        // parentNode.broadcast(message);
+                        // }
+                        //TODO: add transaction to working block then starting mining thread with block
+                        // new MinerThread(block, broadcastQueue).start();
                         break;
                     case Message.BLOCK:
                         // TODO

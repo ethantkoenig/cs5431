@@ -1,8 +1,9 @@
 package network;
 
 import block.Block;
-import com.sun.xml.internal.messaging.saaj.util.ByteOutputStream;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
@@ -27,7 +28,14 @@ public class MinerThread extends Thread {
         this.broadcastQueue = broadcastQueue;
     }
 
+    /**
+     * Try a random nonce then increase by one after each unsuccessful hash until
+     * block mined successfully.
+     *
+     * @throws IOException if error hashing block
+     */
     private Block tryNonces() throws Exception {
+        block.setRandomNonce();
         while (true) {
             if (block.checkHash())
                 return block;
@@ -44,13 +52,15 @@ public class MinerThread extends Thread {
             LOGGER.severe("Error hashing block: " + e.getMessage());
         }
 
-        ByteOutputStream os = new ByteOutputStream();
+        assert finalBlock != null;
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         try {
-            finalBlock.serialize(os);
+            finalBlock.serialize(new DataOutputStream(outputStream));
         } catch (IOException e) {
-            LOGGER.severe("Unable to serialize block after completed mining: " + e.getMessage());
+            e.printStackTrace();
         }
-        Message message = Message.create((byte) 1, os.size());
+
+        Message message = new Message((byte) 1, outputStream.toByteArray());
 
         // Put message on broadcast queue
         try {

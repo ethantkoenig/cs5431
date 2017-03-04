@@ -24,11 +24,4 @@ public class HandleMessageThreadTest {
 
     }
 
-    @Test
-    public void testStartMinerThread() throws Exception {
-//        Block block = Block.empty(ShaTwoFiftySix.hashOf(ByteUtil.hexStringToByteArray("test")));
-//        Block b = HandleMessageThread.startMinerThread(block);
-//        b.checkHash();
-//        System.out.print(ByteUtil.bytesToHexString(b.nonce));
-    }
 }

@@ -54,7 +54,7 @@ public class Node {
         LOGGER.info("[+] Accepting connections");
 
         // Start network.HandleMessageThread
-        new HandleMessageThread(this.messageQueue).start();
+        new HandleMessageThread(this, this.messageQueue, this.broadcastQueue).start();
         // Start network.BroadcastThread
         new BroadcastThread(this, this.broadcastQueue).start();
 

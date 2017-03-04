@@ -1,10 +1,9 @@
 package block;
 
 
-import utils.ByteUtil;
-
 import transaction.RTransaction;
 import transaction.RTxOut;
+import utils.ByteUtil;
 import utils.Pair;
 import utils.ShaTwoFiftySix;
 
@@ -14,13 +13,12 @@ import java.io.IOException;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
-
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.Arrays;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-
 import java.util.logging.Logger;
 
 /**
@@ -82,18 +80,36 @@ public class Block {
         outputStream.write(nonce);
     }
 
+    /**
+     * Add one to the nonce byte array
+     */
     public void nonceAddOne() throws Exception {
         ByteUtil.addOne(this.nonce);
     }
 
+    /**
+     * Set the nonce to a random value
+     */
+    public void setRandomNonce() {
+        try {
+            SecureRandom.getInstanceStrong().nextBytes(nonce);
+        } catch (NoSuchAlgorithmException e) {
+            LOGGER.severe("Unable to get random bytes: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Check that hashing the block with the current nonce does in fact result in a hash
+     * with hashGoalZeros number of leading zeros.
+     */
     public boolean checkHash() throws IOException, GeneralSecurityException {
         ShaTwoFiftySix hash = null;
         byte[] bytes = null;
 
-        ByteArrayOutputStream os = new ByteArrayOutputStream();
-//        this.serialize(os);
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        serialize(new DataOutputStream(outputStream));
         try {
-            bytes = ByteUtil.concatenate(os.toByteArray(), nonce);
+            bytes = ByteUtil.concatenate(outputStream.toByteArray(), nonce);
             hash = ShaTwoFiftySix.hashOf(bytes);
         } catch (GeneralSecurityException e) {
             LOGGER.severe("Unable to hash: " + Arrays.toString(bytes));

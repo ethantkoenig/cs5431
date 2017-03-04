@@ -1,31 +1,5 @@
 package block;
 
-<<<<<<< HEAD
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
-/**
- * Created by EvanKing on 3/2/17.
- */
-public class BlockTest {
-
-    @Before
-    public void setUp() throws Exception {
-
-    }
-
-    @Test
-    public void testSerialize() throws Exception {
-
-    }
-
-    @After
-    public void tearDown() throws Exception {
-
-    }
-}
-=======
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -33,6 +7,7 @@ import testutils.RandomizedTest;
 import transaction.RTransaction;
 import transaction.RTxIn;
 import transaction.RTxOut;
+import utils.ByteUtil;
 import utils.Crypto;
 import utils.ShaTwoFiftySix;
 
@@ -51,7 +26,7 @@ public class BlockTest extends RandomizedTest {
     }
 
     @Test
-    public void testSerialize() throws Exception{
+    public void testSerialize() throws Exception {
         ShaTwoFiftySix previousBlockHash = ShaTwoFiftySix.hashOf(randomBytes(256));
         Block block = Block.empty(previousBlockHash);
         for (int i = 0; i < Block.NUM_TRANSACTIONS_PER_BLOCK; i++) {
@@ -78,5 +53,13 @@ public class BlockTest extends RandomizedTest {
                 .addOutput(new RTxOut(100, recipientPair.getPublic()))
                 .build();
     }
+
+    @Test
+    public void testSetRandomNonce() throws Exception {
+        ShaTwoFiftySix previousBlockHash = ShaTwoFiftySix.hashOf(randomBytes(256));
+        Block block = Block.empty(previousBlockHash);
+        block.setRandomNonce();
+        System.out.println(ByteUtil.bytesToHexString(block.nonce));
+    }
 }
->>>>>>> origin/master
+
