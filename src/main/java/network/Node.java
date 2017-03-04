@@ -35,6 +35,7 @@ public class Node {
     public Node() {
         this.connections = new ArrayList<>();
         this.messageQueue = new SynchronousQueue<>();
+        this.broadcastQueue = new SynchronousQueue<>();
     }
 
     /**
