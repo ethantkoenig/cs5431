@@ -6,8 +6,8 @@ import utils.Pair;
 import utils.ShaTwoFiftySix;
 
 import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
@@ -45,7 +45,8 @@ public class Block {
      * @return deserialized block
      * @throws BufferUnderflowException if the buffer is too short
      */
-    public static Block deserialize(ByteBuffer input) throws BufferUnderflowException {
+    public static Block deserialize(ByteBuffer input)
+            throws BufferUnderflowException, GeneralSecurityException {
         Block block = new Block(ShaTwoFiftySix.deserialize(input));
         for (int i = 0; i < NUM_TRANSACTIONS_PER_BLOCK; i++) {
             block.transactions[i] = RTransaction.deserialize(input);
@@ -57,13 +58,13 @@ public class Block {
     /**
      * Writes the serialization of this block to {@code outputStream}
      *
-     * @param outputStream {@code OutputStream} to write the serialized block to
+     * @param outputStream output to write the serialized block to
      * @throws IOException
      */
-    public void serialize(OutputStream outputStream) throws IOException {
+    public void serialize(DataOutputStream outputStream) throws IOException {
         previousBlockHash.writeTo(outputStream);
         for (RTransaction transaction : transactions) {
-            transaction.serialize(outputStream);
+            transaction.serializeWithSignatures(outputStream);
         }
         outputStream.write(nonce);
     }
@@ -74,7 +75,7 @@ public class Block {
     public ShaTwoFiftySix getShaTwoFiftySix() {
         try {
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            serialize(outputStream);
+            serialize(new DataOutputStream(outputStream));
             return ShaTwoFiftySix.hashOf(outputStream.toByteArray());
         } catch (IOException | GeneralSecurityException e) {
             LOGGER.severe(e.getMessage());
@@ -102,5 +103,4 @@ public class Block {
         }
         return true;
     }
-
 }
