@@ -16,11 +16,8 @@ public class HandleMessageThread extends Thread {
     private BlockingQueue<Message> messageQueue;
     private BlockingQueue<Message> broadcastQueue;
 
-    private Node parentNode;
-
     // Needs reference to parent in order to call Node.broadcast()
-    public HandleMessageThread(Node parentNode, BlockingQueue<Message> messageQueue, BlockingQueue<Message> broadcastQueue) {
-        this.parentNode = parentNode;
+    public HandleMessageThread(BlockingQueue<Message> messageQueue, BlockingQueue<Message> broadcastQueue) {
         this.messageQueue = messageQueue;
         this.broadcastQueue = broadcastQueue;
     }
@@ -38,10 +35,8 @@ public class HandleMessageThread extends Thread {
                 switch (message.type) {
                     case Message.TRANSACTION:
                         // TODO: check that we haven't yet received this message then:
-                        // synchronized(parentNode) {
-                        // parentNode.broadcast(message);
-                        // }
-                        //TODO: add transaction to working block then starting mining thread with block
+                        // broadcastQueue.put(message);
+                        // TODO: add transaction to working block then starting mining thread with block
                         // new MinerThread(block, broadcastQueue).start();
                         break;
                     case Message.BLOCK:
