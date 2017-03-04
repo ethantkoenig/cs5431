@@ -1,10 +1,11 @@
 package block;
 
+import transaction.RTransaction;
 import utils.ShaTwoFiftySix;
 
 import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
@@ -20,7 +21,7 @@ public class Block {
     public final static int NONCE_SIZE_IN_BYTES = 128;
 
     public final ShaTwoFiftySix previousBlockHash;
-    public final Transaction[] transactions = new Transaction[NUM_TRANSACTIONS_PER_BLOCK];
+    public final RTransaction[] transactions = new RTransaction[NUM_TRANSACTIONS_PER_BLOCK];
     public final byte[] nonce = new byte[NONCE_SIZE_IN_BYTES];
 
     private Block(ShaTwoFiftySix previousBlockHash) {
@@ -40,10 +41,11 @@ public class Block {
      * @return deserialized block
      * @throws BufferUnderflowException if the buffer is too short
      */
-    public static Block deserialize(ByteBuffer input) throws BufferUnderflowException {
+    public static Block deserialize(ByteBuffer input)
+            throws BufferUnderflowException, GeneralSecurityException {
         Block block = new Block(ShaTwoFiftySix.deserialize(input));
         for (int i = 0; i < NUM_TRANSACTIONS_PER_BLOCK; i++) {
-            block.transactions[i] = Transaction.deserialize(input);
+            block.transactions[i] = RTransaction.deserialize(input);
         }
         input.get(block.nonce);
         return block;
@@ -52,13 +54,13 @@ public class Block {
     /**
      * Writes the serialization of this block to {@code outputStream}
      *
-     * @param outputStream {@code OutputStream} to write the serialized block to
+     * @param outputStream output to write the serialized block to
      * @throws IOException
      */
-    public void serialize(OutputStream outputStream) throws IOException {
+    public void serialize(DataOutputStream outputStream) throws IOException {
         previousBlockHash.writeTo(outputStream);
-        for (Transaction transaction : transactions) {
-            transaction.serialize(outputStream);
+        for (RTransaction transaction : transactions) {
+            transaction.serializeWithSignatures(outputStream);
         }
         outputStream.write(nonce);
     }
@@ -69,22 +71,11 @@ public class Block {
     public ShaTwoFiftySix getShaTwoFiftySix() {
         try {
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            serialize(outputStream);
+            serialize(new DataOutputStream(outputStream));
             return ShaTwoFiftySix.hashOf(outputStream.toByteArray());
         } catch (IOException | GeneralSecurityException e) {
             LOGGER.severe(e.getMessage());
             throw new RuntimeException(e);
         }
     }
-
-    // TODO a placeholder for the real Transaction class
-    public static class Transaction {
-        public static Transaction deserialize(ByteBuffer input) {
-            return null;
-        }
-
-        public void serialize(OutputStream outputStream) {
-        }
-    }
-
 }
