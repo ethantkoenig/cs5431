@@ -13,6 +13,7 @@ import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.logging.Logger;
 
 /**
@@ -91,19 +92,20 @@ public class Block {
      *
      * @param unspentTransactions A list of unspent {@code RTransaction}s that may be spent by {@code this Block}. This
      *                            collection will not be modified.
-     * @return Whether this {@code Block} is valid.
+     * @return The new {@code Map} with spent transactions removed, if verification passes. Otherwise {@code Optional.empty()}.
      * @throws GeneralSecurityException
      * @throws IOException
      */
-    public boolean verifyBlock(Map<Pair<ShaTwoFiftySix,Integer>, RTxOut> unspentTransactions)
+    public Optional<HashMap<Pair<ShaTwoFiftySix,Integer>,RTxOut>>
+    verifyBlock(Map<Pair<ShaTwoFiftySix,Integer>, RTxOut> unspentTransactions)
             throws GeneralSecurityException, IOException {
         HashMap<Pair<ShaTwoFiftySix,Integer>, RTxOut> workingTxs = new HashMap<>(unspentTransactions);
 
         for (RTransaction tx: transactions) {
             if (!tx.verify(workingTxs)) {
-                return false;
+                return Optional.empty();
             }
         }
-        return true;
+        return Optional.of(workingTxs);
     }
 }
