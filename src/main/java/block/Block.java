@@ -84,16 +84,19 @@ public class Block {
     }
 
     /**
-     * Verifies the validity of {@code this} with respect to {@code blockchain}.
+     * Verifies the validity of {@code this} with respect to {@code unspentTransactions}.
      *
      * A {@code Block} is said to be valid with respect to a set of unspent transactions if its inputs only contain
      * outputs from that set, it contains no double spends, and every input has a valid signature.
      *
      * @param unspentTransactions A list of unspent {@code RTransaction}s that may be spent by {@code this Block}. This
      *                            collection will not be modified.
-     * @return
+     * @return Whether this {@code Block} is valid.
+     * @throws GeneralSecurityException
+     * @throws IOException
      */
-    public boolean verifyBlock(Map<Pair<ShaTwoFiftySix,Integer>, RTxOut> unspentTransactions) {
+    public boolean verifyBlock(Map<Pair<ShaTwoFiftySix,Integer>, RTxOut> unspentTransactions)
+            throws GeneralSecurityException, IOException {
         HashMap<Pair<ShaTwoFiftySix,Integer>, RTxOut> workingTxs = new HashMap<>(unspentTransactions);
 
         for (RTransaction tx: transactions) {

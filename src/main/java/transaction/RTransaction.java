@@ -138,8 +138,11 @@ public class RTransaction {
      *                       that are spent by {@code this RTransaction} will be removed. If verification fails, there
      *                       are no guarantees as to the state of this {@code Map}.
      * @return Whether this {@code RTransaction} was successfully verified.
+     * @throws GeneralSecurityException
+     * @throws IOException
      */
-    public boolean verify(Map<Pair<ShaTwoFiftySix,Integer>,RTxOut> unspentOutputs) {
+    public boolean verify(Map<Pair<ShaTwoFiftySix,Integer>,RTxOut> unspentOutputs)
+            throws GeneralSecurityException, IOException {
         for(int i = 0; i < txIn.length; ++i) {
             RTxIn in = txIn[i];
             Pair<ShaTwoFiftySix,Integer> outputId = new Pair<>(in.previousTxn, in.txIdx);
@@ -147,15 +150,8 @@ public class RTransaction {
                 return false;
             }
             RTxOut out = unspentOutputs.remove(outputId);
-            try {
-                if (!verifySignature(i, out.ownerPubKey)) {
-                    return false;
-                }
-            } catch (GeneralSecurityException e) {
+            if (!verifySignature(i, out.ownerPubKey)) {
                 return false;
-            } catch (IOException e) {
-                // TODO: Hook up to logger, try not to crash
-                e.printStackTrace();
             }
         }
         return true;
