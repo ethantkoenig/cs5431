@@ -1,7 +1,10 @@
 package network;
 
 import block.Block;
+import com.sun.xml.internal.messaging.saaj.util.ByteOutputStream;
 
+import java.io.IOException;
+import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
 /**
@@ -17,8 +20,11 @@ public class MinerThread extends Thread {
     private static final Logger LOGGER = Logger.getLogger(MinerThread.class.getName());
     private Block block;
 
-    public MinerThread(Block block) {
+    private final BlockingQueue<Message> broadcastQueue;
+
+    public MinerThread(Block block, BlockingQueue<Message> broadcastQueue) {
         this.block = block;
+        this.broadcastQueue = broadcastQueue;
     }
 
     private Block tryNonces() throws Exception {
@@ -31,13 +37,27 @@ public class MinerThread extends Thread {
 
     @Override
     public void run() {
-        Block result = null;
+        Block finalBlock = null;
         try {
-            result = tryNonces();
+            finalBlock = tryNonces();
         } catch (Exception e) {
             LOGGER.severe("Error hashing block: " + e.getMessage());
         }
 
+        ByteOutputStream os = new ByteOutputStream();
+        try {
+            finalBlock.serialize(os);
+        } catch (IOException e) {
+            LOGGER.severe("Unable to serialize block after completed mining: " + e.getMessage());
+        }
+        Message message = Message.create((byte) 1, os.size());
+
+        // Put message on broadcast queue
+        try {
+            broadcastQueue.put(message);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
     }
 

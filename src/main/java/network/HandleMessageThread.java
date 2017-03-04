@@ -13,21 +13,21 @@ import java.util.logging.Logger;
 public class HandleMessageThread extends Thread {
     private static final Logger LOGGER = Logger.getLogger(HandleMessageThread.class.getName());
 
-    private BlockingQueue<Message> queue;
+    private BlockingQueue<Message> messageQueue;
 
-    public HandleMessageThread(BlockingQueue<Message> queue) {
-        this.queue = queue;
+    public HandleMessageThread(BlockingQueue<Message> messageQueue) {
+        this.messageQueue = messageQueue;
     }
 
     /**
-     * The run() function is ran when the thread is started. We pull off of the synchronized blocking queue
+     * The run() function is ran when the thread is started. We pull off of the synchronized blocking messageQueue
      * whenever there is a message to be pulled. We then consume this message appropriately.
      */
     @Override
     public void run() {
         try {
             Message message;
-            while ((message = queue.take()) != null) {
+            while ((message = messageQueue.take()) != null) {
                 switch (message.type) {
                     case Message.TRANSACTION:
                         // TODO
