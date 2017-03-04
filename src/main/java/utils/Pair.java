@@ -3,7 +3,7 @@ package utils;
 import java.util.Arrays;
 
 /**
- * Created by eperdew on 3/3/17.
+ * An immutable pair/tuple
  */
 public class Pair<L, R> {
     private final L left;
@@ -36,7 +36,7 @@ public class Pair<L, R> {
 
     @Override public boolean equals(Object other) {
         if (other instanceof Pair) {
-            Pair<L,R> o = (Pair) other;
+            Pair o = (Pair) other;
             return o.left.equals(left) && o.right.equals(right);
         }
         return false;

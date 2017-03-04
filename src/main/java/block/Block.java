@@ -96,16 +96,15 @@ public class Block {
      * @throws GeneralSecurityException
      * @throws IOException
      */
-    public Optional<HashMap<Pair<ShaTwoFiftySix,Integer>,RTxOut>>
-    verifyBlock(Map<Pair<ShaTwoFiftySix,Integer>, RTxOut> unspentTransactions)
+    public Optional<UnspentTransactions> verify(UnspentTransactions unspentTransactions)
             throws GeneralSecurityException, IOException {
-        HashMap<Pair<ShaTwoFiftySix,Integer>, RTxOut> workingTxs = new HashMap<>(unspentTransactions);
+        UnspentTransactions copy = unspentTransactions.copy();
 
         for (RTransaction tx: transactions) {
-            if (!tx.verify(workingTxs)) {
+            if (!tx.verify(copy)) {
                 return Optional.empty();
             }
         }
-        return Optional.of(workingTxs);
+        return Optional.of(copy);
     }
 }
