@@ -1,15 +1,26 @@
 package block;
 
+
 import utils.ByteUtil;
+
+import transaction.RTransaction;
+import transaction.RTxOut;
+import utils.Pair;
 import utils.ShaTwoFiftySix;
 
 import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
+
 import java.util.Arrays;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
 import java.util.logging.Logger;
 
 /**
@@ -22,7 +33,7 @@ public class Block {
     public final static int NONCE_SIZE_IN_BYTES = 128;
 
     public final ShaTwoFiftySix previousBlockHash;
-    public final Transaction[] transactions = new Transaction[NUM_TRANSACTIONS_PER_BLOCK];
+    public final RTransaction[] transactions = new RTransaction[NUM_TRANSACTIONS_PER_BLOCK];
     public final byte[] nonce = new byte[NONCE_SIZE_IN_BYTES];
 
     private int hashGoalZeros = 2;
@@ -44,10 +55,11 @@ public class Block {
      * @return deserialized block
      * @throws BufferUnderflowException if the buffer is too short
      */
-    public static Block deserialize(ByteBuffer input) throws BufferUnderflowException {
+    public static Block deserialize(ByteBuffer input)
+            throws BufferUnderflowException, GeneralSecurityException {
         Block block = new Block(ShaTwoFiftySix.deserialize(input));
         for (int i = 0; i < NUM_TRANSACTIONS_PER_BLOCK; i++) {
-            block.transactions[i] = Transaction.deserialize(input);
+            block.transactions[i] = RTransaction.deserialize(input);
         }
         input.get(block.nonce);
         return block;
@@ -56,14 +68,16 @@ public class Block {
     /**
      * Writes the serialization of this block to {@code outputStream}
      *
-     * @param outputStream {@code OutputStream} to write the serialized block to
+     * @param outputStream output to write the serialized block to
      * @throws IOException
      */
-    public void serialize(OutputStream outputStream) throws IOException {
+    public void serialize(DataOutputStream outputStream) throws IOException {
         previousBlockHash.writeTo(outputStream);
-        for (Transaction transaction : transactions) {
+
+        for (RTransaction transaction : transactions) {
             if (transaction != null)
                 transaction.serialize(outputStream);
+
         }
         outputStream.write(nonce);
     }
@@ -77,7 +91,7 @@ public class Block {
         byte[] bytes = null;
 
         ByteArrayOutputStream os = new ByteArrayOutputStream();
-        this.serialize(os);
+//        this.serialize(os);
         try {
             bytes = ByteUtil.concatenate(os.toByteArray(), nonce);
             hash = ShaTwoFiftySix.hashOf(bytes);
@@ -94,7 +108,7 @@ public class Block {
     public ShaTwoFiftySix getShaTwoFiftySix() {
         try {
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            serialize(outputStream);
+            serialize(new DataOutputStream(outputStream));
             return ShaTwoFiftySix.hashOf(outputStream.toByteArray());
         } catch (IOException | GeneralSecurityException e) {
             LOGGER.severe(e.getMessage());
@@ -102,14 +116,30 @@ public class Block {
         }
     }
 
-    // TODO a placeholder for the real Transaction class
-    public static class Transaction {
-        public static Transaction deserialize(ByteBuffer input) {
-            return null;
-        }
+    /**
+     * Verifies the validity of {@code this} with respect to {@code unspentTransactions}.
+     *
+     * A {@code Block} is said to be valid with respect to a set of unspent transactions if its inputs only contain
+     * outputs from that set, it contains no double spends, and every input has a valid signature.
+     *
+     * @param unspentTransactions A list of unspent {@code RTransaction}s that may be spent by {@code this Block}. This
+     *                            collection will not be modified.
+     * @return The new {@code Map} with spent transactions removed, if verification passes. Otherwise {@code Optional.empty()}.
+     * @throws GeneralSecurityException
+     * @throws IOException
+     */
+    public Optional<HashMap<Pair<ShaTwoFiftySix,Integer>,RTxOut>>
+    verifyBlock(Map<Pair<ShaTwoFiftySix,Integer>, RTxOut> unspentTransactions)
+            throws GeneralSecurityException, IOException {
+        HashMap<Pair<ShaTwoFiftySix,Integer>, RTxOut> workingTxs = new HashMap<>(unspentTransactions);
 
-        public void serialize(OutputStream outputStream) {
+        for (RTransaction tx: transactions) {
+            if (!tx.verify(workingTxs)) {
+                return Optional.empty();
+            }
         }
+        return Optional.of(workingTxs);
     }
 
 }
+

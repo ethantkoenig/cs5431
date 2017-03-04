@@ -16,10 +16,11 @@ public class BlockChain {
     private HashMap<ShaTwoFiftySix, Block> blocks;
 
     /**
-     * Creates a new empty {@code BlockChain}
+     * Creates a new {@code BlockChain} with {@code genesisBlock} as its root.
      */
-    public BlockChain() {
+    public BlockChain(Block genesisBlock) {
         blocks = new HashMap<>();
+        blocks.put(genesisBlock.getShaTwoFiftySix(), genesisBlock);
     }
 
     /**
@@ -31,12 +32,19 @@ public class BlockChain {
     }
 
     /**
-     * Inserts {@code Block b} into this {@BlockChain}
+     * Inserts {@code Block b} into this {@code BlockChain}, if possible.
+     *
+     * Fails if {@code Block b}'s parent is not in {@code this}.
      *
      * @param b The {@code Block} to insert
+     * @return Whether the insertion was successful.
      */
-    public void insertBlock(Block b) {
-        blocks.put(b.getShaTwoFiftySix(), b);
+    public boolean insertBlock(Block b) {
+        if (blocks.containsKey(b.previousBlockHash)) {
+            blocks.put(b.getShaTwoFiftySix(), b);
+            return true;
+        }
+        return false;
     }
 
     /**
