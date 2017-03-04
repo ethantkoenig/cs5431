@@ -74,7 +74,7 @@ public class Block {
 
         for (RTransaction transaction : transactions) {
             if (transaction != null)
-                transaction.serialize(outputStream);
+                transaction.serializeWithSignatures(outputStream);
 
         }
         outputStream.write(nonce);
@@ -115,7 +115,7 @@ public class Block {
             LOGGER.severe("Unable to hash: " + Arrays.toString(bytes));
             e.printStackTrace();
         }
-        return (hash != null) ? hash.checkHashZeros(hashGoalZeros): false;
+        return (hash != null) ? hash.checkHashZeros(hashGoalZeros) : false;
     }
 
     /**
@@ -133,8 +133,37 @@ public class Block {
     }
 
     /**
-     * Verifies the validity of {@code this} with respect to {@code unspentTransactions}.
+     * @return true if block has all NUM_TRANSACTIONS_PER_BLOCK filled
+     */
+    public boolean isFull() {
+        for (RTransaction transaction : transactions) {
+            if (transaction == null)
+                return false;
+        }
+        return true;
+    }
+
+    /**
+     * Add a transaction to the block
      *
+     * @param transaction the transaction to be added
+     * @return true if successful
+     */
+    public boolean addTransaction(RTransaction newTransaction) {
+        if (this.isFull()) return false;
+        for (int i = 0; i < transactions.length; i++) {
+            if (transactions[i] == null) {
+                transactions[i] = newTransaction;
+                return true;
+            }
+        }
+        // Should never get here
+        return false;
+    }
+
+    /**
+     * Verifies the validity of {@code this} with respect to {@code unspentTransactions}.
+     * <p>
      * A {@code Block} is said to be valid with respect to a set of unspent transactions if its inputs only contain
      * outputs from that set, it contains no double spends, and every input has a valid signature.
      *
@@ -144,12 +173,12 @@ public class Block {
      * @throws GeneralSecurityException
      * @throws IOException
      */
-    public Optional<HashMap<Pair<ShaTwoFiftySix,Integer>,RTxOut>>
-    verifyBlock(Map<Pair<ShaTwoFiftySix,Integer>, RTxOut> unspentTransactions)
+    public Optional<HashMap<Pair<ShaTwoFiftySix, Integer>, RTxOut>>
+    verifyBlock(Map<Pair<ShaTwoFiftySix, Integer>, RTxOut> unspentTransactions)
             throws GeneralSecurityException, IOException {
-        HashMap<Pair<ShaTwoFiftySix,Integer>, RTxOut> workingTxs = new HashMap<>(unspentTransactions);
+        HashMap<Pair<ShaTwoFiftySix, Integer>, RTxOut> workingTxs = new HashMap<>(unspentTransactions);
 
-        for (RTransaction tx: transactions) {
+        for (RTransaction tx : transactions) {
             if (!tx.verify(workingTxs)) {
                 return Optional.empty();
             }
