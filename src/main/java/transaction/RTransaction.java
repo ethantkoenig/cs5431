@@ -1,5 +1,8 @@
 package transaction;
 
+import utils.ShaTwoFiftySix;
+import utils.Pair;
+
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -9,6 +12,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Main transaction class. Keeps track of several pieces of information key to the
@@ -123,6 +127,34 @@ public class RTransaction {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         serialize(new DataOutputStream(outputStream));
         return signatures[inputIndex].verify(outputStream.toByteArray(), key);
+    }
+
+    /**
+     * Verifies {@code this RTransaction} with respect to {@code unspentOutputs}.
+     *
+     * This will check that all signatures are valid and that there are no double spends.
+     *
+     * @param unspentOutputs A {@code Map} containing all of the unspent outputs that {@code this} may refer to. Entries
+     *                       that are spent by {@code this RTransaction} will be removed. If verification fails, there
+     *                       are no guarantees as to the state of this {@code Map}.
+     * @return Whether this {@code RTransaction} was successfully verified.
+     * @throws GeneralSecurityException
+     * @throws IOException
+     */
+    public boolean verify(Map<Pair<ShaTwoFiftySix,Integer>,RTxOut> unspentOutputs)
+            throws GeneralSecurityException, IOException {
+        for(int i = 0; i < txIn.length; ++i) {
+            RTxIn in = txIn[i];
+            Pair<ShaTwoFiftySix,Integer> outputId = new Pair<>(in.previousTxn, in.txIdx);
+            if (!unspentOutputs.containsKey(outputId)) {
+                return false;
+            }
+            RTxOut out = unspentOutputs.remove(outputId);
+            if (!verifySignature(i, out.ownerPubKey)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public static class Builder {

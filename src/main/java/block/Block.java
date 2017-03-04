@@ -1,6 +1,8 @@
 package block;
 
 import transaction.RTransaction;
+import transaction.RTxOut;
+import utils.Pair;
 import utils.ShaTwoFiftySix;
 
 import java.io.ByteArrayOutputStream;
@@ -9,6 +11,9 @@ import java.io.IOException;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 import java.util.logging.Logger;
 
 /**
@@ -77,5 +82,30 @@ public class Block {
             LOGGER.severe(e.getMessage());
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * Verifies the validity of {@code this} with respect to {@code unspentTransactions}.
+     *
+     * A {@code Block} is said to be valid with respect to a set of unspent transactions if its inputs only contain
+     * outputs from that set, it contains no double spends, and every input has a valid signature.
+     *
+     * @param unspentTransactions A list of unspent {@code RTransaction}s that may be spent by {@code this Block}. This
+     *                            collection will not be modified.
+     * @return The new {@code Map} with spent transactions removed, if verification passes. Otherwise {@code Optional.empty()}.
+     * @throws GeneralSecurityException
+     * @throws IOException
+     */
+    public Optional<HashMap<Pair<ShaTwoFiftySix,Integer>,RTxOut>>
+    verifyBlock(Map<Pair<ShaTwoFiftySix,Integer>, RTxOut> unspentTransactions)
+            throws GeneralSecurityException, IOException {
+        HashMap<Pair<ShaTwoFiftySix,Integer>, RTxOut> workingTxs = new HashMap<>(unspentTransactions);
+
+        for (RTransaction tx: transactions) {
+            if (!tx.verify(workingTxs)) {
+                return Optional.empty();
+            }
+        }
+        return Optional.of(workingTxs);
     }
 }
