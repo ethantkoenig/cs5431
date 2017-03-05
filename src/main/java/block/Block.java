@@ -15,10 +15,7 @@ import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.logging.Logger;
 
 /**
@@ -159,6 +156,27 @@ public class Block {
         }
         // Should never get here
         return false;
+    }
+
+    /**
+     * Returns the list of transactions that are in block other but not in this block
+     *
+     * @param other the block that we are comparing against
+     * @return ArrayList the list of transactions that are in block other but not in this block
+     */
+    public ArrayList<RTransaction> getTransactionDifferences(Block other){
+        //TODO: override equals for RTransaction
+        ArrayList<RTransaction> result = new ArrayList<>();
+        HashSet<RTransaction> transSet = new HashSet<>();
+        for (RTransaction thisTransaction : transactions){
+            transSet.add(thisTransaction);
+        }
+        for (RTransaction otherTransaction : other.transactions){
+            if (!transSet.contains(otherTransaction)){
+                result.add(otherTransaction);
+            }
+        }
+        return result;
     }
 
     /**
