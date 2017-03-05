@@ -60,7 +60,7 @@ public class HandleMessageThread extends Thread {
                     case Message.TRANSACTION:
                         RTransaction transaction = RTransaction.deserialize(ByteBuffer.wrap(message.payload));
                         // TODO: override transaction equals method
-                        if (!recentTransactionsRecieved.contains(transaction)){
+                        if (!recentTransactionsRecieved.contains(transaction)) {
                             broadcastQueue.put(message);
                         }
                         recentTransactionsRecieved.add(transaction);
@@ -89,6 +89,8 @@ public class HandleMessageThread extends Thread {
 
 
     private void startMiningThread() {
+        if (miningQueue.isEmpty()) return;
+
         Block block = miningQueue.removeLast();
         // If there is no current miner thread then start a new one.
         if (minerThread != null && !minerThread.isAlive()) {
@@ -134,6 +136,7 @@ public class HandleMessageThread extends Thread {
 
         //TODO: add to chain here
 
+        startMiningThread();
     }
 
 }

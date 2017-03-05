@@ -74,8 +74,6 @@ public class MinerThread extends Thread {
             e.printStackTrace();
         }
 
-
-
     }
 
 
