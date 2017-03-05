@@ -92,7 +92,6 @@ public class Block {
                 throw new IllegalStateException("Cannot serialize non-full block");
             }
             transaction.serializeWithSignatures(outputStream);
-
         }
         if (reward == null) {
             throw new IllegalStateException("Cannot serialize block without reward");
@@ -169,7 +168,7 @@ public class Block {
     /**
      * Add a transaction to the block
      *
-     * @param transaction the transaction to be added
+     * @param newTransaction the transaction to be added
      * @return true if successful
      */
     public boolean addTransaction(RTransaction newTransaction) {
