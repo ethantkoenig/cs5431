@@ -87,7 +87,6 @@ public class HandleMessageThread extends Thread {
         }
     }
 
-    //TODO: working on queue
 
     private void startMiningThread() {
         Block block = miningQueue.removeLast();
