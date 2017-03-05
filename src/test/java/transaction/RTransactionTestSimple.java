@@ -42,6 +42,7 @@ public class RTransactionTestSimple extends RandomizedTest {
         ByteBuffer serialized = ByteBuffer.wrap(outputStream.toByteArray());
         RTransaction deserialized = RTransaction.deserialize(serialized);
 
+        Assert.assertTrue(tx.equals(deserialized));
         Assert.assertTrue(deserialized.verifySignature(0, senderPair.getPublic()));
     }
 
@@ -77,6 +78,12 @@ public class RTransactionTestSimple extends RandomizedTest {
                 .addOutput(new RTxOut(300, recipientPair3.getPublic()))
                 .build();
 
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        txn.serializeWithSignatures(new DataOutputStream(outputStream));
+        ByteBuffer serialized = ByteBuffer.wrap(outputStream.toByteArray());
+        RTransaction deserialized = RTransaction.deserialize(serialized);
+
+        Assert.assertTrue(txn.equals(deserialized));
         Assert.assertTrue(errorMessage,
                 txn.verifySignature(0, senderPair.getPublic()));
     }
@@ -100,6 +107,13 @@ public class RTransactionTestSimple extends RandomizedTest {
                 .addOutput(new RTxOut(200, recipientPair2.getPublic()))
                 .addOutput(new RTxOut(300, recipientPair3.getPublic()))
                 .build();
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        txn.serializeWithSignatures(new DataOutputStream(outputStream));
+        ByteBuffer serialized = ByteBuffer.wrap(outputStream.toByteArray());
+        RTransaction deserialized = RTransaction.deserialize(serialized);
+
+        Assert.assertTrue(txn.equals(deserialized));
 
         Assert.assertTrue(errorMessage,
                 txn.verifySignature(0, senderPair1.getPublic()));
