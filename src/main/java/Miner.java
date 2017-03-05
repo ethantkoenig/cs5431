@@ -1,3 +1,4 @@
+import block.Block;
 import block.BlockChain;
 import network.Node;
 
@@ -24,14 +25,17 @@ public class Miner extends Node {
 
     public  void startMiner(){
 
-        // TODO: Start the necessary threads here. Can't do until merge in network
+        // TODO: Start the necessary threads here. Can't do until merge in network.
 
-        // TODO: create genesis block and initialize blockChain
+        // create genesis block and initialize blockChain
+        Block genesis = Block.genesis();
+        blockChain = new BlockChain(genesis);
 
+        // Start accepting incoming connections from other miners
         try {
             accept();
         } catch (IOException e) {
-            LOGGER.severe("Error accepting incoming connections in Miner.");
+            LOGGER.severe("Error accepting incoming connections in Miner: " + e.getMessage());
         }
     }
 }

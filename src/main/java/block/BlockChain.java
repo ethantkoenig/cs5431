@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.List;
 import java.util.ArrayList;
 
+import utils.Pair;
 import utils.ShaTwoFiftySix;
 
 /**
@@ -13,14 +14,18 @@ import utils.ShaTwoFiftySix;
  * Created by eperdew on 2/25/17.
  */
 public class BlockChain {
-    private HashMap<ShaTwoFiftySix, Block> blocks;
+    private HashMap<ShaTwoFiftySix, Pair<Block,Integer>> blocks;
+    private Block currentHead;
+    private int headDepth;
 
     /**
      * Creates a new {@code BlockChain} with {@code genesisBlock} as its root.
      */
     public BlockChain(Block genesisBlock) {
         blocks = new HashMap<>();
-        blocks.put(genesisBlock.getShaTwoFiftySix(), genesisBlock);
+        blocks.put(genesisBlock.getShaTwoFiftySix(), new Pair<>(genesisBlock,0));
+        currentHead = genesisBlock;
+        headDepth = 0;
     }
 
     /**
@@ -28,7 +33,8 @@ public class BlockChain {
      * @return The block corresponding to {@code hash} if it exists, or {@code Optional.empty} otherwise
      */
     public Optional<Block> getBlockWithHash(ShaTwoFiftySix hash) {
-        return Optional.ofNullable(blocks.get(hash));
+        return Optional.ofNullable(blocks.get(hash))
+                .map(p -> p.getLeft());
     }
 
     /**
@@ -41,10 +47,24 @@ public class BlockChain {
      */
     public boolean insertBlock(Block b) {
         if (blocks.containsKey(b.previousBlockHash)) {
-            blocks.put(b.getShaTwoFiftySix(), b);
+            Integer depth = blocks.get(b.previousBlockHash).getRight() + 1;
+            blocks.put(b.getShaTwoFiftySix(), new Pair<>(b, depth));
+            if (depth > headDepth) {
+                currentHead = b;
+                headDepth = depth;
+            }
             return true;
         }
         return false;
+    }
+
+    /** Returns the current head {@code Block} of {@code this}. The head {@code Block} is the most recent node in the
+     * longest chain of {@code Block}s.
+     *
+     * @return The current head {@code Block} of {@code this}.
+     */
+    public Block getCurrentHead() {
+        return currentHead;
     }
 
     /**
@@ -61,7 +81,7 @@ public class BlockChain {
         if (hash == null) return result;
 
         while (blocks.containsKey(hash)) {
-            Block current = blocks.get(hash);
+            Block current = blocks.get(hash).getLeft();
             result.add(current);
             hash = current.previousBlockHash;
         }
