@@ -1,5 +1,8 @@
 import block.Block;
 import block.BlockChain;
+import block.UnspentTransactions;
+import network.BroadcastThread;
+import network.HandleMessageThread;
 import network.Node;
 
 import java.io.IOException;
@@ -13,6 +16,8 @@ public class Miner extends Node {
 
     private BlockChain blockChain;
 
+    private UnspentTransactions unspentTransactions;
+
     public Miner() {
     }
 
@@ -25,11 +30,16 @@ public class Miner extends Node {
 
     public  void startMiner(){
 
-        // TODO: Start the necessary threads here. Can't do until merge in network.
-
         // create genesis block and initialize blockChain
         Block genesis = Block.genesis();
         blockChain = new BlockChain(genesis);
+
+        unspentTransactions = UnspentTransactions.empty();
+
+        // Start network.HandleMessageThread
+        new HandleMessageThread(this.messageQueue, this.broadcastQueue, blockChain, unspentTransactions).start();
+        // Start network.BroadcastThread
+        new BroadcastThread(this, this.broadcastQueue).start();
 
         // Start accepting incoming connections from other miners
         try {

@@ -54,11 +54,6 @@ public class Node {
 
         LOGGER.info("[+] Accepting connections");
 
-        // Start network.HandleMessageThread
-        new HandleMessageThread(this.messageQueue, this.broadcastQueue).start();
-        // Start network.BroadcastThread
-        new BroadcastThread(this, this.broadcastQueue).start();
-
         //Accepting connections must be done by a background thread so that we can still broadcast, etc.
         new Thread(() -> {
             while (true) {

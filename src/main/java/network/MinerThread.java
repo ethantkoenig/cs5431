@@ -1,6 +1,7 @@
 package network;
 
 import block.Block;
+import block.BlockChain;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;

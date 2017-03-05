@@ -1,6 +1,8 @@
 package network;
 
 import block.Block;
+import block.BlockChain;
+import block.UnspentTransactions;
 import transaction.RTransaction;
 import utils.ByteUtil;
 import utils.ShaTwoFiftySix;
@@ -35,14 +37,20 @@ public class HandleMessageThread extends Thread {
 
     private MinerThread minerThread;
 
+    private BlockChain blockChain;
+
+    private UnspentTransactions unspentTransactions;
+
     private FixedSizeSet<RTransaction> recentTransactionsReceived;
 
     // Needs reference to parent in order to call Node.broadcast()
-    public HandleMessageThread(BlockingQueue<Message> messageQueue, BlockingQueue<Message> broadcastQueue) {
+    public HandleMessageThread(BlockingQueue<Message> messageQueue, BlockingQueue<Message> broadcastQueue, BlockChain blockChain, UnspentTransactions unspentTransactions) {
         this.messageQueue = messageQueue;
         this.broadcastQueue = broadcastQueue;
         this.miningQueue = new LinkedList<>();
         this.recentTransactionsReceived = new FixedSizeSet<>();
+        this.blockChain = blockChain;
+        this.unspentTransactions = unspentTransactions;
     }
 
     /**
@@ -98,7 +106,7 @@ public class HandleMessageThread extends Thread {
         }
     }
 
-    private void addTransactionToBlock(RTransaction transaction) {
+    private void addTransactionToBlock(RTransaction transaction) throws GeneralSecurityException, IOException {
         if (currentAddToBlock == null) {
             ShaTwoFiftySix previousBlockHash = null;
             try {
@@ -117,8 +125,8 @@ public class HandleMessageThread extends Thread {
             startMiningThread();
             addTransactionToBlock(transaction);
         } else {
-            //currentAddToBlock is not full, so add the transaction
-            //TODO: verify transaction
+            //verify transaction
+            transaction.verify(unspentTransactions);
             currentAddToBlock.addTransaction(transaction);
         }
     }
@@ -132,7 +140,8 @@ public class HandleMessageThread extends Thread {
             currentAddToBlock.addTransaction(transaction);
         }
 
-        //TODO: add to chain here
+        // Add block to chain
+        blockChain.insertBlock(block);
 
         startMiningThread();
     }
