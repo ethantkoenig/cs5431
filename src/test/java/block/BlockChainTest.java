@@ -48,7 +48,41 @@ public class BlockChainTest extends RandomizedTest {
 
     @Test
     public void getCurrentHead() throws Exception {
-        // TODO
+        Block genesis = Block.genesis();
+        genesis.addReward(Crypto.signatureKeyPair().getPublic());
+        BlockChain bc = new BlockChain(genesis);
+
+        assertEquals(bc.getCurrentHead(), genesis);
+
+        Block prev = genesis;
+
+        for (int i = 0; i < 5; ++i) {
+            Block next = randomBlock(prev.getShaTwoFiftySix());
+            bc.insertBlock(next);
+            prev = next;
+        }
+
+        Block newHead = prev;
+        assertEquals(bc.getCurrentHead(), newHead);
+
+        prev = genesis;
+
+        for (int i = 0; i < 3; ++i) {
+            Block next = randomBlock(prev.getShaTwoFiftySix());
+            bc.insertBlock(next);
+            prev = next;
+        }
+
+        assertEquals(bc.getCurrentHead(), newHead);
+
+        for (int i = 0; i < 3; ++i) {
+            Block next = randomBlock(prev.getShaTwoFiftySix());
+            bc.insertBlock(next);
+            prev = next;
+        }
+
+        assertEquals(bc.getCurrentHead(), prev);
+        assertNotEquals(bc.getCurrentHead(), newHead);
     }
 
     @Test
