@@ -19,7 +19,7 @@ import java.util.logging.Logger;
 public class Node {
     private static final Logger LOGGER = Logger.getLogger(Node.class.getName());
 
-    private static final int PORT = 4444;
+    private int port;
     private ServerSocket serverSocket;
 
     // Synchronized blocking queue to hold incoming messages
@@ -32,10 +32,11 @@ public class Node {
     // The connections list holds all of the Nodes current connections
     protected ArrayList<ConnectionThread> connections;
 
-    public Node() {
+    public Node(int port) {
         this.connections = new ArrayList<>();
         this.messageQueue = new SynchronousQueue<>();
         this.broadcastQueue = new SynchronousQueue<>();
+        this.port = port;
     }
 
     /**
@@ -47,9 +48,9 @@ public class Node {
      */
     public void accept() throws IOException {
         try {
-            serverSocket = new ServerSocket(PORT);
+            serverSocket = new ServerSocket(port);
         } catch (IOException e) {
-            LOGGER.severe(String.format("Could not listen on port: %s.%n", PORT));
+            LOGGER.severe(String.format("Could not listen on port: %s.%n", port));
         }
 
         LOGGER.info("[+] Accepting connections");
@@ -75,10 +76,10 @@ public class Node {
      *
      * @param host is the ip address of the remote Node you wish to connect to.
      */
-    public void connect(String host) {
+    public void connect(String host, int port) {
         LOGGER.info(String.format("[+] Connecting to host: %s.%n", host));
         try {
-            Socket socket = new Socket(host, PORT);
+            Socket socket = new Socket(host, port);
             ConnectionThread connectionThread = new ConnectionThread(socket, this.messageQueue);
             connectionThread.start();
             this.connections.add(connectionThread);
