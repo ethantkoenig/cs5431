@@ -45,6 +45,11 @@ public class MinerThread extends Thread {
 
     @Override
     public void run() {
+        // If thread interrupted by parent just return
+        if(this.interrupted()){
+            return;
+        }
+
         Block finalBlock = null;
         try {
             finalBlock = tryNonces();
@@ -68,6 +73,8 @@ public class MinerThread extends Thread {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
+
 
     }
 
