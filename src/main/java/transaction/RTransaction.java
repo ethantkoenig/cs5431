@@ -6,7 +6,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import block.UnspentTransactions;
 import utils.ShaTwoFiftySix;
-import utils.Pair;
+
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -14,7 +14,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
+import java.util.logging.Logger;
 
 /**
  * Main transaction class. Keeps track of several pieces of information key to the
@@ -23,6 +23,8 @@ import java.util.Map;
  * output classes
  */
 public class RTransaction {
+    private final static Logger LOGGER = Logger.getLogger(Logger.class.getName());
+
 
     private final RTxIn[] txIn;
     private final RTxOut[] txOut;
@@ -133,7 +135,7 @@ public class RTransaction {
 
     /**
      * Verifies {@code this RTransaction} with respect to {@code unspentOutputs}.
-     *
+     * <p>
      * This will check that all signatures are valid and that there are no double spends.
      *
      * @param unspentOutputs A {@code Map} containing all of the unspent outputs that {@code this} may refer to. Entries
@@ -147,25 +149,42 @@ public class RTransaction {
             throws GeneralSecurityException, IOException {
         int inputsum = 0;
         int outputsum = 0;
-        for(int i = 0; i < txIn.length; ++i) {
+        for (int i = 0; i < txIn.length; ++i) {
             RTxIn in = txIn[i];
             if (!unspentOutputs.contains(in.previousTxn, in.txIdx)) {
+                LOGGER.warning("Invalid input");
                 return false;
             }
             RTxOut out = unspentOutputs.remove(in.previousTxn, in.txIdx);
             inputsum += out.value;
             if (!verifySignature(i, out.ownerPubKey)) {
+                LOGGER.warning("Invalid signature");
                 return false;
             }
         }
         for (int j = 0; j < txOut.length; j++) {
             RTxOut out = txOut[j];
             outputsum += out.value;
+            unspentOutputs.put(getShaTwoFiftySix(), j, out);
         }
         if (outputsum > inputsum) {
             return false;
         }
         return true;
+    }
+
+    /**
+     * @return The SHA-256 hash of the serialization of {@code this}
+     */
+    public ShaTwoFiftySix getShaTwoFiftySix() {
+        try {
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            serialize(new DataOutputStream(outputStream));
+            return ShaTwoFiftySix.hashOf(outputStream.toByteArray());
+        } catch (IOException | GeneralSecurityException e) {
+            LOGGER.severe(e.getMessage());
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
