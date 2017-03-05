@@ -2,7 +2,7 @@ package block;
 
 import transaction.RTransaction;
 import transaction.RTxOut;
-import utils.Pair;
+import utils.Crypto;
 import utils.ShaTwoFiftySix;
 
 import java.io.ByteArrayOutputStream;
@@ -11,8 +11,7 @@ import java.io.IOException;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
-import java.util.HashMap;
-import java.util.Map;
+import java.security.PublicKey;
 import java.util.Optional;
 import java.util.logging.Logger;
 
@@ -24,13 +23,23 @@ public class Block {
 
     public final static int NUM_TRANSACTIONS_PER_BLOCK = 4;
     public final static int NONCE_SIZE_IN_BYTES = 128;
+    public final static int REWARD_AMOUNT = 50000;
 
     public final ShaTwoFiftySix previousBlockHash;
-    public final RTransaction[] transactions = new RTransaction[NUM_TRANSACTIONS_PER_BLOCK];
+    public final RTransaction[] transactions;
+    public RTxOut reward;
     public final byte[] nonce = new byte[NONCE_SIZE_IN_BYTES];
 
-    private Block(ShaTwoFiftySix previousBlockHash) {
+    private Block(ShaTwoFiftySix previousBlockHash, int numTransactions) {
         this.previousBlockHash = previousBlockHash;
+        this.transactions = new RTransaction[numTransactions];
+    }
+
+    /**
+     * @return a genesis block
+     */
+    public static Block genesis() {
+        return new Block(ShaTwoFiftySix.zero(), 0);
     }
 
     /**
@@ -38,7 +47,7 @@ public class Block {
      * @return an empty block.
      */
     public static Block empty(ShaTwoFiftySix previousBlockHash) {
-        return new Block(previousBlockHash);
+        return new Block(previousBlockHash, NUM_TRANSACTIONS_PER_BLOCK);
     }
 
     /**
@@ -48,10 +57,15 @@ public class Block {
      */
     public static Block deserialize(ByteBuffer input)
             throws BufferUnderflowException, GeneralSecurityException {
-        Block block = new Block(ShaTwoFiftySix.deserialize(input));
-        for (int i = 0; i < NUM_TRANSACTIONS_PER_BLOCK; i++) {
+        ShaTwoFiftySix hash = ShaTwoFiftySix.deserialize(input);
+        int numBlocks = input.getInt();
+        Block block = new Block(hash, numBlocks);
+
+        for (int i = 0; i < numBlocks; i++) {
             block.transactions[i] = RTransaction.deserialize(input);
         }
+        PublicKey rewardKey = Crypto.deserializePublicKey(input);
+        block.reward = new RTxOut(REWARD_AMOUNT, rewardKey);
         input.get(block.nonce);
         return block;
     }
@@ -64,9 +78,11 @@ public class Block {
      */
     public void serialize(DataOutputStream outputStream) throws IOException {
         previousBlockHash.writeTo(outputStream);
+        outputStream.writeInt(transactions.length);
         for (RTransaction transaction : transactions) {
             transaction.serializeWithSignatures(outputStream);
         }
+        outputStream.write(reward.ownerPubKey.getEncoded());
         outputStream.write(nonce);
     }
 
@@ -82,6 +98,16 @@ public class Block {
             LOGGER.severe(e.getMessage());
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * Add a reward transaction
+     */
+    public void addReward(PublicKey publicKey) {
+        if (reward != null) {
+            throw new IllegalStateException("Cannot reset block's reward");
+        }
+        reward = new RTxOut(REWARD_AMOUNT, publicKey);
     }
 
     /**

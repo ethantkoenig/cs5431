@@ -31,6 +31,7 @@ public class BlockTest extends RandomizedTest {
         for (int i = 0; i < Block.NUM_TRANSACTIONS_PER_BLOCK; i++) {
             block.transactions[i] = randomTransaction();
         }
+        block.addReward(Crypto.signatureKeyPair().getPublic());
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         block.serialize(new DataOutputStream(outputStream));

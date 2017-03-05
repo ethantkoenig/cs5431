@@ -20,6 +20,14 @@ public final class ShaTwoFiftySix {
     }
 
     /**
+     * A "zero" SHA-256 hash
+     */
+    public static ShaTwoFiftySix zero() {
+        byte[] hash = new byte[HASH_SIZE_IN_BYTES];
+        return new ShaTwoFiftySix(hash);
+    }
+
+    /**
      * Reads a SHA-256 hash from {@code input}, and returns the corresponding
      * {@code ShaTwoFiftySix} object
      *
@@ -28,7 +36,7 @@ public final class ShaTwoFiftySix {
      * @throws BufferUnderflowException
      */
     public static ShaTwoFiftySix deserialize(ByteBuffer input) throws BufferUnderflowException {
-        byte[] hash = new byte[ShaTwoFiftySix.HASH_SIZE_IN_BYTES];
+        byte[] hash = new byte[HASH_SIZE_IN_BYTES];
         input.get(hash);
         return new ShaTwoFiftySix(hash);
     }
