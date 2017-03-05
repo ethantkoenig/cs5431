@@ -79,6 +79,18 @@ public class ShaTwoFiftySixTest extends RandomizedTest {
                 deserializeFrom(hash).hashCode());
     }
 
+    @Test
+    public void testCheckHashZeros() {
+        ShaTwoFiftySix shaTwoFiftySix = new ShaTwoFiftySix(new byte[]{(byte) 0x00, (byte) 0x01});
+        Assert.assertTrue(errorMessage, shaTwoFiftySix.checkHashZeros(1));
+    }
+
+    private byte[] randomHash() {
+        byte[] hash = new byte[32];
+        random.nextBytes(hash);
+        return hash;
+    }
+
     private ShaTwoFiftySix deserializeFrom(byte[] hash) {
         return ShaTwoFiftySix.deserialize(ByteBuffer.wrap(hash));
     }

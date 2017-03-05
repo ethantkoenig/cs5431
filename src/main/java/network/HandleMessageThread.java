@@ -1,5 +1,16 @@
 package network;
 
+import block.Block;
+import block.BlockChain;
+import block.UnspentTransactions;
+import transaction.RTransaction;
+import utils.ShaTwoFiftySix;
+
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.security.GeneralSecurityException;
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
@@ -13,27 +24,59 @@ import java.util.logging.Logger;
 public class HandleMessageThread extends Thread {
     private static final Logger LOGGER = Logger.getLogger(HandleMessageThread.class.getName());
 
-    private BlockingQueue<Message> queue;
+    private BlockingQueue<Message> messageQueue;
+    private BlockingQueue<Message> broadcastQueue;
+    private LinkedList<Block> miningQueue;
 
-    public HandleMessageThread(BlockingQueue<Message> queue) {
-        this.queue = queue;
+    // The incomplete block to add incoming transactions to
+    private Block currentAddToBlock;
+
+    // The block currently being mined by the mining thread
+    private Block currentHashingBlock;
+
+    private MinerThread minerThread;
+
+    private BlockChain blockChain;
+
+    private UnspentTransactions unspentTransactions;
+
+    private FixedSizeSet<RTransaction> recentTransactionsReceived;
+
+    // Needs reference to parent in order to call Node.broadcast()
+    public HandleMessageThread(BlockingQueue<Message> messageQueue, BlockingQueue<Message> broadcastQueue, BlockChain blockChain, UnspentTransactions unspentTransactions) {
+        this.messageQueue = messageQueue;
+        this.broadcastQueue = broadcastQueue;
+        this.miningQueue = new LinkedList<>();
+        this.recentTransactionsReceived = new FixedSizeSet<>();
+        this.blockChain = blockChain;
+        this.unspentTransactions = unspentTransactions;
     }
 
     /**
-     * The run() function is ran when the thread is started. We pull off of the synchronized blocking queue
+     * The run() function is ran when the thread is started. We pull off of the synchronized blocking messageQueue
      * whenever there is a message to be pulled. We then consume this message appropriately.
      */
     @Override
     public void run() {
         try {
             Message message;
-            while ((message = queue.take()) != null) {
+            while ((message = messageQueue.take()) != null) {
                 switch (message.type) {
                     case Message.TRANSACTION:
-                        // TODO
+                        RTransaction transaction = RTransaction.deserialize(ByteBuffer.wrap(message.payload));
+                        if (!recentTransactionsReceived.contains(transaction)) {
+                            broadcastQueue.put(message);
+                        }
+                        recentTransactionsReceived.add(transaction);
+                        addTransactionToBlock(transaction);
                         break;
                     case Message.BLOCK:
-                        // TODO
+                        Block block = Block.deserialize(ByteBuffer.wrap(message.payload));
+                        if (block.checkHash()) {
+                            addBlockToChain(block);
+                        } else {
+                            LOGGER.info("Received block that does not pass hash check. Not adding to block chain.");
+                        }
                         break;
                     default:
                         LOGGER.severe(String.format("Unexpected message type: %d", message.type));
@@ -41,6 +84,58 @@ public class HandleMessageThread extends Thread {
             }
         } catch (InterruptedException e) {
             LOGGER.severe(e.getMessage());
+        } catch (GeneralSecurityException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
+
+
+    private void startMiningThread() {
+        if (miningQueue.isEmpty()) return;
+
+        Block block = miningQueue.removeLast();
+        // If there is no current miner thread then start a new one.
+        if (minerThread != null && !minerThread.isAlive()) {
+            currentHashingBlock = block;
+            minerThread = new MinerThread(block, broadcastQueue);
+            minerThread.start();
+        }
+    }
+
+    private void addTransactionToBlock(RTransaction transaction) throws GeneralSecurityException, IOException {
+        if (currentAddToBlock == null) {
+            ShaTwoFiftySix previousBlockHash = blockChain.getCurrentHead().getShaTwoFiftySix();
+            currentAddToBlock = Block.empty(previousBlockHash);
+        }
+
+        if (currentAddToBlock.isFull()) {
+            // currentAddToBlock is full, so start mining it
+            miningQueue.addFirst(currentAddToBlock);
+            currentAddToBlock = null;
+            startMiningThread();
+            addTransactionToBlock(transaction);
+        } else {
+            //verify transaction
+            transaction.verify(unspentTransactions);
+            currentAddToBlock.addTransaction(transaction);
+        }
+    }
+
+    private void addBlockToChain(Block block) {
+        ArrayList<RTransaction> difference = block.getTransactionDifferences(currentHashingBlock);
+
+        //interrupt the mining thread
+        minerThread.interrupt();
+        for (RTransaction transaction : difference) {
+            currentAddToBlock.addTransaction(transaction);
+        }
+
+        // Add block to chain
+        blockChain.insertBlock(block);
+
+        startMiningThread();
+    }
+
 }

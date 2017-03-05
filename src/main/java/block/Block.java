@@ -1,7 +1,9 @@
 package block;
 
+
 import transaction.RTransaction;
 import transaction.RTxOut;
+import utils.ByteUtil;
 import utils.Crypto;
 import utils.ShaTwoFiftySix;
 
@@ -11,6 +13,9 @@ import java.io.IOException;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.util.*;
 import java.security.PublicKey;
 import java.util.Optional;
 import java.util.logging.Logger;
@@ -29,6 +34,8 @@ public class Block {
     public final RTransaction[] transactions;
     public RTxOut reward;
     public final byte[] nonce = new byte[NONCE_SIZE_IN_BYTES];
+
+    private int hashGoalZeros = 2;
 
     private Block(ShaTwoFiftySix previousBlockHash, int numTransactions) {
         this.previousBlockHash = previousBlockHash;
@@ -79,11 +86,52 @@ public class Block {
     public void serialize(DataOutputStream outputStream) throws IOException {
         previousBlockHash.writeTo(outputStream);
         outputStream.writeInt(transactions.length);
+
         for (RTransaction transaction : transactions) {
-            transaction.serializeWithSignatures(outputStream);
+            if (transaction != null)
+                transaction.serializeWithSignatures(outputStream);
+
         }
         outputStream.write(reward.ownerPubKey.getEncoded());
         outputStream.write(nonce);
+    }
+
+    /**
+     * Add one to the nonce byte array
+     */
+    public void nonceAddOne() throws Exception {
+        ByteUtil.addOne(this.nonce);
+    }
+
+    /**
+     * Set the nonce to a random value
+     */
+    public void setRandomNonce() {
+        try {
+            SecureRandom.getInstanceStrong().nextBytes(nonce);
+        } catch (NoSuchAlgorithmException e) {
+            LOGGER.severe("Unable to get random bytes: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Check that hashing the block with the current nonce does in fact result in a hash
+     * with hashGoalZeros number of leading zeros.
+     */
+    public boolean checkHash() throws IOException, GeneralSecurityException {
+        ShaTwoFiftySix hash = null;
+        byte[] bytes = null;
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        serialize(new DataOutputStream(outputStream));
+        try {
+            bytes = ByteUtil.concatenate(outputStream.toByteArray(), nonce);
+            hash = ShaTwoFiftySix.hashOf(bytes);
+        } catch (GeneralSecurityException e) {
+            LOGGER.severe("Unable to hash: " + Arrays.toString(bytes));
+            e.printStackTrace();
+        }
+        return (hash != null) ? hash.checkHashZeros(hashGoalZeros) : false;
     }
 
     /**
@@ -101,6 +149,58 @@ public class Block {
     }
 
     /**
+     * <<<<<<< HEAD
+     *
+     * @return true if block has all NUM_TRANSACTIONS_PER_BLOCK filled
+     */
+    public boolean isFull() {
+        for (RTransaction transaction : transactions) {
+            if (transaction == null)
+                return false;
+        }
+        return true;
+    }
+
+    /**
+     * Add a transaction to the block
+     *
+     * @param transaction the transaction to be added
+     * @return true if successful
+     */
+    public boolean addTransaction(RTransaction newTransaction) {
+        if (this.isFull()) return false;
+        for (int i = 0; i < transactions.length; i++) {
+            if (transactions[i] == null) {
+                transactions[i] = newTransaction;
+                return true;
+            }
+        }
+        // Should never get here
+        return false;
+    }
+
+    /**
+     * Returns the list of transactions that are in block other but not in this block
+     *
+     * @param other the block that we are comparing against
+     * @return ArrayList the list of transactions that are in block other but not in this block
+     */
+    public ArrayList<RTransaction> getTransactionDifferences(Block other) {
+        //TODO: override equals for RTransaction
+        ArrayList<RTransaction> result = new ArrayList<>();
+        HashSet<RTransaction> transSet = new HashSet<>();
+        for (RTransaction thisTransaction : transactions) {
+            transSet.add(thisTransaction);
+        }
+        for (RTransaction otherTransaction : other.transactions) {
+            if (!transSet.contains(otherTransaction)) {
+                result.add(otherTransaction);
+            }
+        }
+        return result;
+    }
+
+    /*
      * Add a reward transaction
      */
     public void addReward(PublicKey publicKey) {
@@ -108,11 +208,12 @@ public class Block {
             throw new IllegalStateException("Cannot reset block's reward");
         }
         reward = new RTxOut(REWARD_AMOUNT, publicKey);
+
     }
 
     /**
      * Verifies the validity of {@code this} with respect to {@code unspentTransactions}.
-     *
+     * <p>
      * A {@code Block} is said to be valid with respect to a set of unspent transactions if its inputs only contain
      * outputs from that set, it contains no double spends, and every input has a valid signature.
      *
@@ -126,11 +227,14 @@ public class Block {
             throws GeneralSecurityException, IOException {
         UnspentTransactions copy = unspentTransactions.copy();
 
-        for (RTransaction tx: transactions) {
+        for (RTransaction tx : transactions) {
             if (!tx.verify(copy)) {
                 return Optional.empty();
             }
         }
         return Optional.of(copy);
     }
+
+
 }
+

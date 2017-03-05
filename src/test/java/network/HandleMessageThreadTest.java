@@ -23,4 +23,5 @@ public class HandleMessageThreadTest {
     public void testRun() throws Exception {
 
     }
+
 }

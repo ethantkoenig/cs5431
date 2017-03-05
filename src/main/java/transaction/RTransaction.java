@@ -1,16 +1,16 @@
 package transaction;
 
+
+import java.security.GeneralSecurityException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import block.UnspentTransactions;
 import utils.ShaTwoFiftySix;
 import utils.Pair;
-
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.security.GeneralSecurityException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;

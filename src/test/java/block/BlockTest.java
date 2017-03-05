@@ -7,6 +7,7 @@ import testutils.RandomizedTest;
 import transaction.RTransaction;
 import transaction.RTxIn;
 import transaction.RTxOut;
+import utils.ByteUtil;
 import utils.Crypto;
 import utils.ShaTwoFiftySix;
 
@@ -25,7 +26,7 @@ public class BlockTest extends RandomizedTest {
     }
 
     @Test
-    public void testSerialize() throws Exception{
+    public void testSerialize() throws Exception {
         ShaTwoFiftySix previousBlockHash = ShaTwoFiftySix.hashOf(randomBytes(256));
         Block block = Block.empty(previousBlockHash);
         for (int i = 0; i < Block.NUM_TRANSACTIONS_PER_BLOCK; i++) {
@@ -53,4 +54,13 @@ public class BlockTest extends RandomizedTest {
                 .addOutput(new RTxOut(100, recipientPair.getPublic()))
                 .build();
     }
+
+    @Test
+    public void testSetRandomNonce() throws Exception {
+        ShaTwoFiftySix previousBlockHash = ShaTwoFiftySix.hashOf(randomBytes(256));
+        Block block = Block.empty(previousBlockHash);
+        block.setRandomNonce();
+        System.out.println(ByteUtil.bytesToHexString(block.nonce));
+    }
 }
+

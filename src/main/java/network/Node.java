@@ -25,12 +25,17 @@ public class Node {
     // Synchronized blocking queue to hold incoming messages
     protected BlockingQueue<Message> messageQueue;
 
+    // Synchronized blocking queue to hold outgoing broadcast messages
+    protected BlockingQueue<Message> broadcastQueue;
+
+
     // The connections list holds all of the Nodes current connections
     protected ArrayList<ConnectionThread> connections;
 
     public Node() {
         this.connections = new ArrayList<>();
         this.messageQueue = new SynchronousQueue<>();
+        this.broadcastQueue = new SynchronousQueue<>();
     }
 
     /**
@@ -49,14 +54,20 @@ public class Node {
 
         LOGGER.info("[+] Accepting connections");
 
-        // Start network.HandleMessageThread
-        new HandleMessageThread(this.messageQueue).start();
-
-        while (true) {
-            ConnectionThread connectionThread = new ConnectionThread(serverSocket.accept(), this.messageQueue);
-            connectionThread.start();
-            this.connections.add(connectionThread);
+        //Accepting connections must be done by a background thread so that we can still broadcast, etc.
+        new Thread(() -> {
+            while (true) {
+                ConnectionThread connectionThread = null;
+                try {
+                    connectionThread = new ConnectionThread(serverSocket.accept(), this.messageQueue);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                connectionThread.start();
+                this.connections.add(connectionThread);
+            }
         }
+        ).start();
     }
 
     /**
@@ -79,10 +90,11 @@ public class Node {
     /**
      * Sends a message to all other nodes in the network that you are connected to.
      *
-     * @param type the type of message to be broadcast
-     * @param output the message to be broadcast.
+     * @param message   the type message object containing type and payload
      */
-    public void broadcast(byte type, byte[] output) {
+    public void broadcast(Message message) {
+        byte type = message.type;
+        byte[] output = message.payload;
         for (ConnectionThread connectionThread : connections) {
             try {
                 connectionThread.send(type, output);

@@ -24,7 +24,7 @@ public class ConnectionThread extends Thread {
     private static final int MAX_PAYLOAD_LEN = 33554432;
 
     private final Socket socket;
-    private final BlockingQueue<Message> queue;
+    private final BlockingQueue<Message> messageQueue;
 
     // The out buffer to write to this network.ConnectionThread
     private OutputStream out;
@@ -32,9 +32,9 @@ public class ConnectionThread extends Thread {
     // The in buffer to read incoming messages to this network.ConnectionThread
     private InputStream in;
 
-    public ConnectionThread(Socket socket, BlockingQueue<Message> queue) {
+    public ConnectionThread(Socket socket, BlockingQueue<Message> messageQueue) {
         this.socket = socket;
-        this.queue = queue;
+        this.messageQueue = messageQueue;
         try {
             this.out = socket.getOutputStream();
             this.in = socket.getInputStream();
@@ -52,10 +52,12 @@ public class ConnectionThread extends Thread {
     public void run() {
         try {
             receive();
-            close();
-        } catch (IOException | InterruptedException e) {
-            LOGGER.severe(e.getMessage());
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
+        close();
     }
 
 
@@ -73,7 +75,10 @@ public class ConnectionThread extends Thread {
     }
 
     /**
-     * Receives incoming messages, and put them onto the queue.
+     * Ran by a background thread as seen in the run() function. Receives and handles all incoming messages.
+     * Puts messages on the messageQueue to be consumed by the HandleMessageThread
+     *
+     * Receives incoming messages, and put them onto the messageQueue.
      */
     private void receive() throws IOException, InterruptedException {
         byte[] headerBuffer = new byte[Integer.BYTES + Byte.BYTES];
@@ -88,7 +93,7 @@ public class ConnectionThread extends Thread {
             byte[] payload = new byte[payloadLen];
             IOUtils.fill(in, payload);
             Message message = new Message(payloadType, payload);
-            queue.put(message);
+            messageQueue.put(message);
         }
     }
 
