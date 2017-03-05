@@ -66,7 +66,7 @@ public abstract class RandomizedTest {
             b.addTransaction(randomTransaction());
         }
         b.addReward(Crypto.signatureKeyPair().getPublic());
-        b.setRandomNonce();
+        b.setRandomNonce(random);
         return b;
     }
 

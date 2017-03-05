@@ -110,12 +110,8 @@ public class Block {
     /**
      * Set the nonce to a random value
      */
-    public void setRandomNonce() {
-        try {
-            SecureRandom.getInstanceStrong().nextBytes(nonce);
-        } catch (NoSuchAlgorithmException e) {
-            LOGGER.severe("Unable to get random bytes: " + e.getMessage());
-        }
+    public void setRandomNonce(Random random) {
+        random.nextBytes(nonce);
     }
 
     /**
