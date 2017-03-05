@@ -149,7 +149,6 @@ public class Block {
     }
 
     /**
-     * <<<<<<< HEAD
      *
      * @return true if block has all NUM_TRANSACTIONS_PER_BLOCK filled
      */
@@ -164,7 +163,7 @@ public class Block {
     /**
      * Add a transaction to the block
      *
-     * @param transaction the transaction to be added
+     * @param newTransaction the transaction to be added
      * @return true if successful
      */
     public boolean addTransaction(RTransaction newTransaction) {
@@ -235,6 +234,15 @@ public class Block {
         return Optional.of(copy);
     }
 
+    @Override
+    public boolean equals(Object other) {
+        if (other instanceof Block) {
+            Block b = (Block) other;
+            return Arrays.equals(transactions, b.transactions) && Arrays.equals(nonce, b.nonce)
+                    && previousBlockHash.equals(b.previousBlockHash) && reward.equals(b.reward);
+        }
+        return false;
+    }
 
 }
 

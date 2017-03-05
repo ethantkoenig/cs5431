@@ -44,17 +44,6 @@ public class BlockTest extends RandomizedTest {
         );
     }
 
-    private RTransaction randomTransaction() throws GeneralSecurityException, IOException {
-        KeyPair senderPair = Crypto.signatureKeyPair();
-        KeyPair recipientPair = Crypto.signatureKeyPair();
-
-        ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(randomBytes(256));
-        return new RTransaction.Builder()
-                .addInput(new RTxIn(hash, 0), senderPair.getPrivate())
-                .addOutput(new RTxOut(100, recipientPair.getPublic()))
-                .build();
-    }
-
     @Test
     public void testSetRandomNonce() throws Exception {
         ShaTwoFiftySix previousBlockHash = ShaTwoFiftySix.hashOf(randomBytes(256));
