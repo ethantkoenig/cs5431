@@ -4,7 +4,6 @@ import block.Block;
 import block.BlockChain;
 import block.UnspentTransactions;
 import transaction.RTransaction;
-import utils.ByteUtil;
 import utils.ShaTwoFiftySix;
 
 import java.io.IOException;
@@ -65,7 +64,6 @@ public class HandleMessageThread extends Thread {
                 switch (message.type) {
                     case Message.TRANSACTION:
                         RTransaction transaction = RTransaction.deserialize(ByteBuffer.wrap(message.payload));
-                        // TODO: override transaction equals method
                         if (!recentTransactionsReceived.contains(transaction)) {
                             broadcastQueue.put(message);
                         }
@@ -108,13 +106,7 @@ public class HandleMessageThread extends Thread {
 
     private void addTransactionToBlock(RTransaction transaction) throws GeneralSecurityException, IOException {
         if (currentAddToBlock == null) {
-            ShaTwoFiftySix previousBlockHash = null;
-            try {
-                //TODO: where to get actual previous blocks hash?
-                previousBlockHash = ShaTwoFiftySix.hashOf(ByteUtil.hexStringToByteArray("test"));
-            } catch (GeneralSecurityException e) {
-                e.printStackTrace();
-            }
+            ShaTwoFiftySix previousBlockHash = blockChain.getCurrentHead().getShaTwoFiftySix();
             currentAddToBlock = Block.empty(previousBlockHash);
         }
 
