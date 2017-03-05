@@ -244,5 +244,12 @@ public class Block {
         return false;
     }
 
+    @Override
+    public int hashCode() {
+        // TODO not completely right, since transactions can be .equals() even if they
+        // have different signatures
+        return getShaTwoFiftySix().hashCode();
+    }
+
 }
 

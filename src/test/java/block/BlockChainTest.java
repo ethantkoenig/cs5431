@@ -37,7 +37,7 @@ public class BlockChainTest extends RandomizedTest {
         Block genesis = Block.genesis();
         genesis.addReward(Crypto.signatureKeyPair().getPublic());
         BlockChain bc = new BlockChain(genesis);
-
+        assertNotNull(bc); // TODO temporarily add this for findbugs
 
 
     }
