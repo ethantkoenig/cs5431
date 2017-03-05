@@ -7,7 +7,6 @@ import testutils.RandomizedTest;
 import transaction.RTransaction;
 import transaction.RTxIn;
 import transaction.RTxOut;
-import utils.ByteUtil;
 import utils.Crypto;
 import utils.ShaTwoFiftySix;
 
@@ -79,17 +78,6 @@ public class BlockTest extends RandomizedTest {
         unspent.put(initialTransactionHash, 0, initialOut);
 
         Assert.assertTrue(block.verify(unspent).isPresent());
-    }
-
-    private RTransaction randomTransaction() throws GeneralSecurityException, IOException {
-        KeyPair senderPair = Crypto.signatureKeyPair();
-        KeyPair recipientPair = Crypto.signatureKeyPair();
-
-        ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(randomBytes(256));
-        return new RTransaction.Builder()
-                .addInput(new RTxIn(hash, 0), senderPair.getPrivate())
-                .addOutput(new RTxOut(1 + random.nextInt(1024), recipientPair.getPublic()))
-                .build();
     }
 
     private void populate(
