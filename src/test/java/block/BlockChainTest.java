@@ -34,6 +34,11 @@ public class BlockChainTest extends RandomizedTest {
 
     @Test
     public void insertBlock() throws Exception {
+        Block genesis = Block.genesis();
+        genesis.addReward(Crypto.signatureKeyPair().getPublic());
+        BlockChain bc = new BlockChain(genesis);
+
+
 
     }
 

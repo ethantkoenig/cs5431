@@ -69,4 +69,8 @@ public abstract class RandomizedTest {
         b.setRandomNonce();
         return b;
     }
+
+    protected ShaTwoFiftySix randomShaTwoFiftySix() {
+        return new ShaTwoFiftySix(randomBytes(ShaTwoFiftySix.HASH_SIZE_IN_BYTES));
+    }
 }
