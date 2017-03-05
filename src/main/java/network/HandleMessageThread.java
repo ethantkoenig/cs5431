@@ -35,14 +35,14 @@ public class HandleMessageThread extends Thread {
 
     private MinerThread minerThread;
 
-    private FixedSizeSet<RTransaction> recentTransactionsRecieved;
+    private FixedSizeSet<RTransaction> recentTransactionsReceived;
 
     // Needs reference to parent in order to call Node.broadcast()
     public HandleMessageThread(BlockingQueue<Message> messageQueue, BlockingQueue<Message> broadcastQueue) {
         this.messageQueue = messageQueue;
         this.broadcastQueue = broadcastQueue;
         this.miningQueue = new LinkedList<>();
-        this.recentTransactionsRecieved = new FixedSizeSet<>();
+        this.recentTransactionsReceived = new FixedSizeSet<>();
     }
 
     /**
@@ -51,8 +51,6 @@ public class HandleMessageThread extends Thread {
      */
     @Override
     public void run() {
-        // TODO: be notified by completed miner thread to check miningQueue
-
         try {
             Message message;
             while ((message = messageQueue.take()) != null) {
@@ -60,10 +58,10 @@ public class HandleMessageThread extends Thread {
                     case Message.TRANSACTION:
                         RTransaction transaction = RTransaction.deserialize(ByteBuffer.wrap(message.payload));
                         // TODO: override transaction equals method
-                        if (!recentTransactionsRecieved.contains(transaction)) {
+                        if (!recentTransactionsReceived.contains(transaction)) {
                             broadcastQueue.put(message);
                         }
-                        recentTransactionsRecieved.add(transaction);
+                        recentTransactionsReceived.add(transaction);
                         addTransactionToBlock(transaction);
                         break;
                     case Message.BLOCK:
