@@ -92,6 +92,9 @@ public class Block {
                 transaction.serializeWithSignatures(outputStream);
 
         }
+        if (reward == null) {
+            throw new IllegalStateException("Cannot serialize block without reward");
+        }
         outputStream.write(reward.ownerPubKey.getEncoded());
         outputStream.write(nonce);
     }
