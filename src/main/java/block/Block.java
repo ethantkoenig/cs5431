@@ -4,7 +4,7 @@ package block;
 import transaction.RTransaction;
 import transaction.RTxOut;
 import utils.ByteUtil;
-import utils.Pair;
+import utils.Crypto;
 import utils.ShaTwoFiftySix;
 
 import java.io.ByteArrayOutputStream;
@@ -16,6 +16,8 @@ import java.security.GeneralSecurityException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.*;
+import java.security.PublicKey;
+import java.util.Optional;
 import java.util.logging.Logger;
 
 /**
@@ -26,15 +28,25 @@ public class Block {
 
     public final static int NUM_TRANSACTIONS_PER_BLOCK = 4;
     public final static int NONCE_SIZE_IN_BYTES = 128;
+    public final static int REWARD_AMOUNT = 50000;
 
     public final ShaTwoFiftySix previousBlockHash;
-    public final RTransaction[] transactions = new RTransaction[NUM_TRANSACTIONS_PER_BLOCK];
+    public final RTransaction[] transactions;
+    public RTxOut reward;
     public final byte[] nonce = new byte[NONCE_SIZE_IN_BYTES];
 
     private int hashGoalZeros = 2;
 
-    private Block(ShaTwoFiftySix previousBlockHash) {
+    private Block(ShaTwoFiftySix previousBlockHash, int numTransactions) {
         this.previousBlockHash = previousBlockHash;
+        this.transactions = new RTransaction[numTransactions];
+    }
+
+    /**
+     * @return a genesis block
+     */
+    public static Block genesis() {
+        return new Block(ShaTwoFiftySix.zero(), 0);
     }
 
     /**
@@ -42,7 +54,7 @@ public class Block {
      * @return an empty block.
      */
     public static Block empty(ShaTwoFiftySix previousBlockHash) {
-        return new Block(previousBlockHash);
+        return new Block(previousBlockHash, NUM_TRANSACTIONS_PER_BLOCK);
     }
 
     /**
@@ -52,10 +64,15 @@ public class Block {
      */
     public static Block deserialize(ByteBuffer input)
             throws BufferUnderflowException, GeneralSecurityException {
-        Block block = new Block(ShaTwoFiftySix.deserialize(input));
-        for (int i = 0; i < NUM_TRANSACTIONS_PER_BLOCK; i++) {
+        ShaTwoFiftySix hash = ShaTwoFiftySix.deserialize(input);
+        int numBlocks = input.getInt();
+        Block block = new Block(hash, numBlocks);
+
+        for (int i = 0; i < numBlocks; i++) {
             block.transactions[i] = RTransaction.deserialize(input);
         }
+        PublicKey rewardKey = Crypto.deserializePublicKey(input);
+        block.reward = new RTxOut(REWARD_AMOUNT, rewardKey);
         input.get(block.nonce);
         return block;
     }
@@ -68,12 +85,14 @@ public class Block {
      */
     public void serialize(DataOutputStream outputStream) throws IOException {
         previousBlockHash.writeTo(outputStream);
+        outputStream.writeInt(transactions.length);
 
         for (RTransaction transaction : transactions) {
             if (transaction != null)
                 transaction.serializeWithSignatures(outputStream);
 
         }
+        outputStream.write(reward.ownerPubKey.getEncoded());
         outputStream.write(nonce);
     }
 
@@ -130,6 +149,8 @@ public class Block {
     }
 
     /**
+     * <<<<<<< HEAD
+     *
      * @return true if block has all NUM_TRANSACTIONS_PER_BLOCK filled
      */
     public boolean isFull() {
@@ -164,24 +185,35 @@ public class Block {
      * @param other the block that we are comparing against
      * @return ArrayList the list of transactions that are in block other but not in this block
      */
-    public ArrayList<RTransaction> getTransactionDifferences(Block other){
+    public ArrayList<RTransaction> getTransactionDifferences(Block other) {
         //TODO: override equals for RTransaction
         ArrayList<RTransaction> result = new ArrayList<>();
         HashSet<RTransaction> transSet = new HashSet<>();
-        for (RTransaction thisTransaction : transactions){
+        for (RTransaction thisTransaction : transactions) {
             transSet.add(thisTransaction);
         }
-        for (RTransaction otherTransaction : other.transactions){
-            if (!transSet.contains(otherTransaction)){
+        for (RTransaction otherTransaction : other.transactions) {
+            if (!transSet.contains(otherTransaction)) {
                 result.add(otherTransaction);
             }
         }
         return result;
     }
 
+    /*
+     * Add a reward transaction
+     */
+    public void addReward(PublicKey publicKey) {
+        if (reward != null) {
+            throw new IllegalStateException("Cannot reset block's reward");
+        }
+        reward = new RTxOut(REWARD_AMOUNT, publicKey);
+
+    }
+
     /**
      * Verifies the validity of {@code this} with respect to {@code unspentTransactions}.
-     *
+     * <p>
      * A {@code Block} is said to be valid with respect to a set of unspent transactions if its inputs only contain
      * outputs from that set, it contains no double spends, and every input has a valid signature.
      *
@@ -195,7 +227,7 @@ public class Block {
             throws GeneralSecurityException, IOException {
         UnspentTransactions copy = unspentTransactions.copy();
 
-        for (RTransaction tx: transactions) {
+        for (RTransaction tx : transactions) {
             if (!tx.verify(copy)) {
                 return Optional.empty();
             }
