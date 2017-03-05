@@ -1,5 +1,6 @@
 package transaction;
 
+import block.UnspentTransactions;
 import utils.ShaTwoFiftySix;
 import utils.Pair;
 
@@ -141,15 +142,14 @@ public class RTransaction {
      * @throws GeneralSecurityException
      * @throws IOException
      */
-    public boolean verify(Map<Pair<ShaTwoFiftySix,Integer>,RTxOut> unspentOutputs)
+    public boolean verify(UnspentTransactions unspentOutputs)
             throws GeneralSecurityException, IOException {
         for(int i = 0; i < txIn.length; ++i) {
             RTxIn in = txIn[i];
-            Pair<ShaTwoFiftySix,Integer> outputId = new Pair<>(in.previousTxn, in.txIdx);
-            if (!unspentOutputs.containsKey(outputId)) {
+            if (!unspentOutputs.contains(in.previousTxn, in.txIdx)) {
                 return false;
             }
-            RTxOut out = unspentOutputs.remove(outputId);
+            RTxOut out = unspentOutputs.remove(in.previousTxn, in.txIdx);
             if (!verifySignature(i, out.ownerPubKey)) {
                 return false;
             }
