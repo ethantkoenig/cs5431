@@ -88,9 +88,13 @@ public class Block {
         outputStream.writeInt(transactions.length);
 
         for (RTransaction transaction : transactions) {
-            if (transaction != null)
-                transaction.serializeWithSignatures(outputStream);
-
+            if (transaction == null) {
+                throw new IllegalStateException("Cannot serialize non-full block");
+            }
+            transaction.serializeWithSignatures(outputStream);
+        }
+        if (reward == null) {
+            throw new IllegalStateException("Cannot serialize block without reward");
         }
         outputStream.write(reward.ownerPubKey.getEncoded());
         outputStream.write(nonce);
