@@ -3,6 +3,7 @@ package block;
 import org.junit.Test;
 import testutils.RandomizedTest;
 import utils.Crypto;
+import utils.ShaTwoFiftySix;
 
 import java.security.PublicKey;
 import java.util.Optional;
@@ -38,27 +39,30 @@ public class BlockChainTest extends RandomizedTest {
         genesis.addReward(Crypto.signatureKeyPair().getPublic());
         BlockChain bc = new BlockChain(genesis);
 
+        ShaTwoFiftySix randomHash = randomShaTwoFiftySix();
+        Block b = randomBlock(randomHash);
 
-
+        assertEquals(bc.insertBlock(b), false);
+        assertEquals(bc.getBlockWithHash(b.getShaTwoFiftySix()), Optional.empty());
     }
 
     @Test
     public void getCurrentHead() throws Exception {
-
+        // TODO
     }
 
     @Test
     public void getAncestorsStartingAt() throws Exception {
-
+        // TODO
     }
 
     @Test
     public void containsBlockWithHash() throws Exception {
-
+        // TODO
     }
 
     @Test
     public void containsBlock() throws Exception {
-
+        // TODO
     }
 }
