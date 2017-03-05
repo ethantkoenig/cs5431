@@ -1,5 +1,7 @@
 package network;
 
+import utils.ByteUtil;
+
 import java.util.Arrays;
 
 /**
@@ -16,5 +18,13 @@ public class Message {
     public Message(byte type, byte[] payload) {
         this.type = type;
         this.payload = Arrays.copyOf(payload, payload.length);
+    }
+
+    @Override
+    public String toString() {
+        return "Message{" +
+                "type=" + type +
+                ", payload=" + ByteUtil.bytesToHexString(payload) +
+                '}';
     }
 }
