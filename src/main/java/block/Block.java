@@ -181,7 +181,7 @@ public class Block {
 
     /**
      * Verifies the validity of {@code this} with respect to {@code unspentTransactions}.
-     * <p>
+     *
      * A {@code Block} is said to be valid with respect to a set of unspent transactions if its inputs only contain
      * outputs from that set, it contains no double spends, and every input has a valid signature.
      *
@@ -191,18 +191,18 @@ public class Block {
      * @throws GeneralSecurityException
      * @throws IOException
      */
-    public Optional<HashMap<Pair<ShaTwoFiftySix, Integer>, RTxOut>>
-    verifyBlock(Map<Pair<ShaTwoFiftySix, Integer>, RTxOut> unspentTransactions)
+    public Optional<UnspentTransactions> verify(UnspentTransactions unspentTransactions)
             throws GeneralSecurityException, IOException {
-        HashMap<Pair<ShaTwoFiftySix, Integer>, RTxOut> workingTxs = new HashMap<>(unspentTransactions);
+        UnspentTransactions copy = unspentTransactions.copy();
 
-        for (RTransaction tx : transactions) {
-            if (!tx.verify(workingTxs)) {
+        for (RTransaction tx: transactions) {
+            if (!tx.verify(copy)) {
                 return Optional.empty();
             }
         }
-        return Optional.of(workingTxs);
+        return Optional.of(copy);
     }
+
 
 }
 
