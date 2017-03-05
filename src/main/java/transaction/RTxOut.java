@@ -4,9 +4,11 @@ import utils.Crypto;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.ObjectInput;
 import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
 import java.security.PublicKey;
+import java.util.Arrays;
 
 
 /**
@@ -33,4 +35,18 @@ public class RTxOut {
         outputStream.write(ownerPubKey.getEncoded());
         outputStream.writeLong(value);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        } else if (o == null || !(o instanceof RTxOut)) {
+            return false;
+        }
+        RTxOut other = (RTxOut) o;
+        return ((this.value == other.value) && (this.ownerPubKey.equals(other.ownerPubKey)));
+    }
+
+    @Override
+    public int hashCode() {return Arrays.hashCode(new Object[] { value, ownerPubKey });}
 }

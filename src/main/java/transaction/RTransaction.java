@@ -12,6 +12,7 @@ import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -144,18 +145,54 @@ public class RTransaction {
      */
     public boolean verify(UnspentTransactions unspentOutputs)
             throws GeneralSecurityException, IOException {
+        int inputsum = 0;
+        int outputsum = 0;
         for(int i = 0; i < txIn.length; ++i) {
             RTxIn in = txIn[i];
             if (!unspentOutputs.contains(in.previousTxn, in.txIdx)) {
                 return false;
             }
             RTxOut out = unspentOutputs.remove(in.previousTxn, in.txIdx);
+            inputsum += out.value;
             if (!verifySignature(i, out.ownerPubKey)) {
                 return false;
             }
         }
+        for (int j = 0; j < txOut.length; j++) {
+            RTxOut out = txOut[j];
+            outputsum += out.value;
+        }
+        if (outputsum > inputsum) {
+            return false;
+        }
         return true;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        } else if (o == null || !(o instanceof RTransaction)) {
+            return false;
+        }
+        RTransaction other = (RTransaction) o;
+        boolean result = true;
+        if ((this.txIn.length == other.txIn.length) && (this.txOut.length == other.txOut.length)) {
+            for (int i = 0; i < this.txIn.length; i++) {
+                result = result && this.txIn[i].equals(other.txIn[i]);
+            }
+            for (int j = 0; j < this.txOut.length; j++) {
+                result = result && this.txOut[j].equals(other.txOut[j]);
+            }
+        }
+        else {
+            return false;
+        }
+        return result;
+    }
+
+    @Override
+    public int hashCode() {return Arrays.hashCode(new Object[] { txIn, txOut });}
 
     public static class Builder {
         List<RTxIn> inputs = new ArrayList<>();

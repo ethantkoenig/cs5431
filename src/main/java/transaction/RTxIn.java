@@ -2,9 +2,11 @@ package transaction;
 
 import utils.ShaTwoFiftySix;
 
+import javax.swing.text.rtf.RTFEditorKit;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 
 /**
@@ -34,4 +36,18 @@ public class RTxIn {
         previousTxn.writeTo(outputStream);
         outputStream.writeInt(txIdx);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        } else if (o == null || !(o instanceof RTxIn)) {
+            return false;
+        }
+        RTxIn other = (RTxIn) o;
+        return (other.previousTxn.equals(this.previousTxn)) && (this.txIdx == other.txIdx);
+    }
+
+    @Override
+    public int hashCode() {return Arrays.hashCode(new Object[] { previousTxn, txIdx });}
 }
