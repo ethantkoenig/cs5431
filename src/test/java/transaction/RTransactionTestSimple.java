@@ -58,6 +58,14 @@ public class RTransactionTestSimple extends RandomizedTest {
                 .addOutput(new RTxOut(1000, recipientPair.getPublic()))
                 .build();
 
+        ShaTwoFiftySix hash2 = ShaTwoFiftySix.hashOf(randomBytes(256));
+        RTransaction tx = new RTransaction.Builder()
+                .addInput(new RTxIn(hash2, 2), senderPair.getPrivate())
+                .addOutput(new RTxOut(100, recipientPair.getPublic()))
+                .build();
+
+        Assert.assertFalse(errorMessage, tx.equals(txn));
+
         Assert.assertFalse(errorMessage,
                 txn.verifySignature(0, recipientPair.getPublic()));
     }

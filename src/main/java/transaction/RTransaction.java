@@ -191,23 +191,14 @@ public class RTransaction {
     public boolean equals(Object o) {
         if (o == this) {
             return true;
-        } else if (o == null || !(o instanceof RTransaction)) {
+        } else if (!(o instanceof RTransaction)) {
             return false;
         }
         RTransaction other = (RTransaction) o;
-        boolean result = true;
         if ((this.txIn.length == other.txIn.length) && (this.txOut.length == other.txOut.length)) {
-            for (int i = 0; i < this.txIn.length; i++) {
-                result = result && this.txIn[i].equals(other.txIn[i]);
-            }
-            for (int j = 0; j < this.txOut.length; j++) {
-                result = result && this.txOut[j].equals(other.txOut[j]);
-            }
+            return Arrays.equals(txIn, other.txIn) && Arrays.equals(txOut, other.txOut);
         }
-        else {
-            return false;
-        }
-        return result;
+        return false;
     }
 
     @Override
