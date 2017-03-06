@@ -6,6 +6,7 @@ import block.BlockChain;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.Random;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
@@ -36,7 +37,7 @@ public class MinerThread extends Thread {
      * @throws IOException if error hashing block
      */
     private Block tryNonces() throws Exception {
-        block.setRandomNonce();
+        block.setRandomNonce(new Random());
         while (true) {
             if (block.checkHash())
                 return block;
