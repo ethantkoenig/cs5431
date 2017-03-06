@@ -17,6 +17,7 @@ import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PrivateKey;
+import java.util.Collections;
 
 public class BlockTest extends RandomizedTest {
 
@@ -78,6 +79,29 @@ public class BlockTest extends RandomizedTest {
         unspent.put(initialTransactionHash, 0, initialOut);
 
         Assert.assertTrue(block.verify(unspent).isPresent());
+    }
+
+    @Test
+    public void testGetTransactionDifferences() throws Exception {
+        ShaTwoFiftySix previousBlockHash = ShaTwoFiftySix.hashOf(randomBytes(256));
+        Block block1 = Block.empty(previousBlockHash);
+        Block block2 = Block.empty(previousBlockHash);
+
+        RTransaction txn1 = randomTransaction();
+        RTransaction txn2 = randomTransaction();
+        RTransaction txn3 = randomTransaction();
+
+        block1.addTransaction(txn1);
+        block1.addTransaction(txn2);
+        block2.addTransaction(txn2);
+        block2.addTransaction(txn3);
+
+        Assert.assertEquals(errorMessage,
+                block1.getTransactionDifferences(block2),
+                Collections.singletonList(txn3));
+        Assert.assertEquals(errorMessage,
+                block2.getTransactionDifferences(block1),
+                Collections.singletonList(txn1));
     }
 
     private void populate(

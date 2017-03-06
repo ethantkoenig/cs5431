@@ -185,12 +185,12 @@ public class Block {
      * @return ArrayList the list of transactions that are in block other but not in this block
      */
     public ArrayList<RTransaction> getTransactionDifferences(Block other) {
-        //TODO: override equals for RTransaction
-        ArrayList<RTransaction> result = new ArrayList<>();
         HashSet<RTransaction> transSet = new HashSet<>();
         for (RTransaction thisTransaction : transactions) {
             transSet.add(thisTransaction);
         }
+
+        ArrayList<RTransaction> result = new ArrayList<>();
         for (RTransaction otherTransaction : other.transactions) {
             if (!transSet.contains(otherTransaction)) {
                 result.add(otherTransaction);
