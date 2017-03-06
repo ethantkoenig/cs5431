@@ -18,6 +18,13 @@ import java.security.KeyPair;
 
 public class RTransactionTestSimple extends RandomizedTest {
 
+    @Test
+    public void testToString() throws Exception {
+        for (int i = 0; i < 5; ++i) {
+            System.out.println(randomTransaction().toString());
+        }
+    }
+
     @BeforeClass
     public static void setupClass() {
         Crypto.init();

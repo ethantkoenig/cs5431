@@ -57,8 +57,13 @@ public class Transact {
 
     private void runTransaction(List<Socket> sockets) throws GeneralSecurityException, IOException {
         RTransaction.Builder builder = new RTransaction.Builder();
-        getInputs(builder);
-        getOutputs(builder);
+        try {
+            getInputs(builder);
+            getOutputs(builder);
+        } catch (InvalidInputException e) {
+            System.err.println(e.getMessage());
+            return;
+        }
         RTransaction transaction = builder.build();
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();

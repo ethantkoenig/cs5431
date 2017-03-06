@@ -5,6 +5,7 @@ import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import block.UnspentTransactions;
+import utils.ByteUtil;
 import utils.ShaTwoFiftySix;
 
 import java.io.ByteArrayOutputStream;
@@ -211,6 +212,23 @@ public class RTransaction {
         }
         RTransaction other = (RTransaction) o;
         return Arrays.equals(txIn, other.txIn) && Arrays.equals(txOut, other.txOut);
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("Tx: " + ByteUtil.bytesToHexString(getShaTwoFiftySix().copyOfHash()) + "\n");
+        builder.append("----TxIn----\n");
+        for (int i = 0; i < txIn.length; ++i) {
+            builder.append("prevId: " + ByteUtil.bytesToHexString(txIn[i].previousTxn.copyOfHash()));
+            builder.append(", txIdx: " + txIn[i].txIdx + "\n");
+        }
+        builder.append("----TxOut----\n");
+        for (int i = 0; i < txOut.length; ++i) {
+            builder.append("value: " + txOut[i].value);
+            builder.append(", toKey: " + ByteUtil.bytesToHexString(txOut[i].ownerPubKey.getEncoded()) + "\n");
+        }
+        return builder.toString();
     }
 
     @Override
