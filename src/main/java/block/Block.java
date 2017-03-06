@@ -110,12 +110,8 @@ public class Block {
     /**
      * Set the nonce to a random value
      */
-    public void setRandomNonce() {
-        try {
-            SecureRandom.getInstanceStrong().nextBytes(nonce);
-        } catch (NoSuchAlgorithmException e) {
-            LOGGER.severe("Unable to get random bytes: " + e.getMessage());
-        }
+    public void setRandomNonce(Random random) {
+        random.nextBytes(nonce);
     }
 
     /**
@@ -246,6 +242,13 @@ public class Block {
                     && previousBlockHash.equals(b.previousBlockHash) && reward.equals(b.reward);
         }
         return false;
+    }
+
+    @Override
+    public int hashCode() {
+        // TODO not completely right, since transactions can be .equals() even if they
+        // have different signatures
+        return getShaTwoFiftySix().hashCode();
     }
 
 }

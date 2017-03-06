@@ -5,6 +5,7 @@ import block.Block;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.Random;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
@@ -36,7 +37,8 @@ public class MinerThread extends Thread {
      */
     private Block tryNonces() throws Exception {
         System.out.println("Trying nonces!!");
-        block.setRandomNonce();
+        block.setRandomNonce(new Random());
+
         while (true) {
             if (block.checkHash())
                 return block;

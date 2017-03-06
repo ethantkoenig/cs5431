@@ -66,7 +66,11 @@ public abstract class RandomizedTest {
             b.addTransaction(randomTransaction());
         }
         b.addReward(Crypto.signatureKeyPair().getPublic());
-        b.setRandomNonce();
+        b.setRandomNonce(random);
         return b;
+    }
+
+    protected ShaTwoFiftySix randomShaTwoFiftySix() {
+        return new ShaTwoFiftySix(randomBytes(ShaTwoFiftySix.HASH_SIZE_IN_BYTES));
     }
 }
