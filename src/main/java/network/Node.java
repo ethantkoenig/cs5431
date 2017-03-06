@@ -57,21 +57,18 @@ public class Node {
 
         new ConnectionThread( new Socket("localhost", port) ,this.messageQueue).start();
 
-        //Accepting connections must be done by a background thread so that we can still broadcast, etc.
-        new Thread(() -> {
-            while (true) {
-                ConnectionThread connectionThread = null;
-                try {
-                    connectionThread = new ConnectionThread(serverSocket.accept(), this.messageQueue);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                LOGGER.info("[+] Received connection!");
-                connectionThread.start();
-                this.connections.add(connectionThread);
+        while (true) {
+            ConnectionThread connectionThread = null;
+            try {
+                connectionThread = new ConnectionThread(serverSocket.accept(), this.messageQueue);
+            } catch (IOException e) {
+                e.printStackTrace();
+                continue;
             }
+            LOGGER.info("[+] Received connection!");
+            connectionThread.start();
+            this.connections.add(connectionThread);
         }
-        ).start();
     }
 
     /**
