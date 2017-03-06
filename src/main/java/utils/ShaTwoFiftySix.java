@@ -41,8 +41,11 @@ public final class ShaTwoFiftySix implements Comparable<ShaTwoFiftySix>{
         return new ShaTwoFiftySix(hash);
     }
 
-    public byte[] getHash() {
-        return Arrays.copyOf(hash, hash.length);
+    public static ShaTwoFiftySix create(byte[] hash) {
+        if (hash.length != HASH_SIZE_IN_BYTES) {
+            throw new IllegalArgumentException("Mis-sized SHA-256 hash");
+        }
+        return new ShaTwoFiftySix(Arrays.copyOf(hash, HASH_SIZE_IN_BYTES));
     }
 
     /**

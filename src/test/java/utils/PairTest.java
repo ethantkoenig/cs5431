@@ -40,10 +40,14 @@ public class PairTest extends RandomizedTest {
                 new Pair<>("hello", "world"),
                 new Pair<>("goodbye", "mars")
         );
+        Assert.assertNotEquals(
+                new Pair<>("hello", "world"),
+                null
+        );
     }
 
     @Test
-    public void testHashcode() {
+    public void testHashCode() {
         String left = randomAsciiString(random.nextInt(16));
         String right = randomAsciiString(random.nextInt(16));
         Pair<String, String> pair1 = new Pair<>(left, right);

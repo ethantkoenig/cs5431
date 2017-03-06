@@ -54,7 +54,7 @@ public class Miner extends Node {
         // Start network.HandleMessageThread
         new HandleMessageThread(this.messageQueue, this.broadcastQueue, miningBundle).start();
         // Start network.BroadcastThread
-        new BroadcastThread(this, this.broadcastQueue).start();
+        new BroadcastThread(this::broadcast, this.broadcastQueue).start();
 
         // Start accepting incoming connections from other miners
         try {

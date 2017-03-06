@@ -12,6 +12,11 @@ dependencies {
     testCompile 'junit:junit:4.12'
 }
 
+findbugs {
+    effort = "max"
+    reportLevel = "low"
+}
+
 mainClassName = "Main"
 
 jar {
