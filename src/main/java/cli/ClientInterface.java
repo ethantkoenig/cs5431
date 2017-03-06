@@ -14,7 +14,7 @@ import java.lang.IllegalArgumentException;
 import java.security.GeneralSecurityException;
 
 /**
- * The ClinetInterface object is used to give the user a CLI based on a given
+ * The ClientInterface object is used to give the user a CLI based on a given
  * input and output stream. These default to std.in and std.out when not
  * explicitly declared.
  */
@@ -26,11 +26,11 @@ public class ClientInterface {
      */
     interface Command {
         /**
-         * Takes in a Scanner which can parse the arguement, and perfrom the
+         * Takes in a Scanner which can parse the argument, and perfrom the
          * corresponding actions. Returns a boolean to signal if the actions
          * was successful or not.
          *
-         * @param args Scanner which contains the arguements from the user
+         * @param args Scanner which contains the arguments from the user
          */
         boolean run(Scanner args);
 
@@ -140,7 +140,7 @@ public class ClientInterface {
              * Creates a Node object and allows it to start accepting incoming
              * connections and processing data
              *
-             * @param args this command takes in no additional arguements
+             * @param args this command takes in no additional arguments
              */
             @Override
             public boolean run(Scanner args) {
@@ -305,8 +305,8 @@ public class ClientInterface {
             /**
              * Perform a noop. The main while loop will exit.
              *
-             * @param args Scanner that contains any arguements for the command
-             *    This command takes no arguements
+             * @param args Scanner that contains any arguments for the command
+             *    This command takes no arguments
              */
             @Override
             public boolean run(Scanner args) {
