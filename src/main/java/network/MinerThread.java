@@ -1,7 +1,6 @@
 package network;
 
 import block.Block;
-import block.BlockChain;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
@@ -36,6 +35,7 @@ public class MinerThread extends Thread {
      * @throws IOException if error hashing block
      */
     private Block tryNonces() throws Exception {
+        System.out.println("Trying nonces!!");
         block.setRandomNonce();
         while (true) {
             if (block.checkHash())
@@ -46,8 +46,9 @@ public class MinerThread extends Thread {
 
     @Override
     public void run() {
+        LOGGER.info("[+] MiningThread started");
         // If thread interrupted by parent just return
-        if(this.interrupted()){
+        if (this.interrupted()) {
             return;
         }
 
@@ -65,11 +66,10 @@ public class MinerThread extends Thread {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        Message message = new Message((byte) 1, outputStream.toByteArray());
-
+        LOGGER.info("[+] Successfully mined block! Broadcasting to other nodes.");
         // Put message on broadcast queue
         try {
+            Message message = new Message((byte) 1, outputStream.toByteArray());
             broadcastQueue.put(message);
         } catch (InterruptedException e) {
             e.printStackTrace();

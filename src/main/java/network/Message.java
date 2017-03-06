@@ -27,4 +27,23 @@ public class Message {
                 ", payload=" + ByteUtil.bytesToHexString(payload) +
                 '}';
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Message message = (Message) o;
+
+        if (type != message.type) return false;
+        return Arrays.equals(payload, message.payload);
+
+    }
+
+    @Override
+    public int hashCode() {
+        int result = (int) type;
+        result = 31 * result + Arrays.hashCode(payload);
+        return result;
+    }
 }

@@ -3,6 +3,7 @@ import block.BlockChain;
 import block.UnspentTransactions;
 import network.BroadcastThread;
 import network.HandleMessageThread;
+import network.MiningBundle;
 import network.Node;
 import utils.Crypto;
 
@@ -18,9 +19,7 @@ public class Miner extends Node {
 
     private final static Logger LOGGER = Logger.getLogger(Miner.class.getName());
 
-    private BlockChain blockChain;
-
-    private UnspentTransactions unspentTransactions;
+    private MiningBundle miningBundle;
 
     public Miner(int port) {
         super(port);
@@ -35,21 +34,30 @@ public class Miner extends Node {
 
     public void startMiner(){
         Crypto.init();
-        KeyPair keyPair;
+        KeyPair keyPair = null;
+        BlockChain blockChain = null;
+        UnspentTransactions unspentTransactions;
+
         try {
             keyPair = Crypto.signatureKeyPair();
             Block genesis = Block.genesis();
             genesis.addReward(keyPair.getPublic());
             blockChain = new BlockChain(genesis);
+            unspentTransactions = UnspentTransactions.empty();
+            miningBundle = new MiningBundle(blockChain, keyPair, unspentTransactions);
+
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
         }
         // create genesis block and initialize blockChain
 
-        unspentTransactions = UnspentTransactions.empty();
+
+
+
+
 
         // Start network.HandleMessageThread
-        new HandleMessageThread(this.messageQueue, this.broadcastQueue, blockChain, unspentTransactions).start();
+        new HandleMessageThread(this.messageQueue, this.broadcastQueue, miningBundle).start();
         // Start network.BroadcastThread
         new BroadcastThread(this, this.broadcastQueue).start();
 

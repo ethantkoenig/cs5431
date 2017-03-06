@@ -7,7 +7,6 @@ import testutils.RandomizedTest;
 import transaction.RTransaction;
 import transaction.RTxIn;
 import transaction.RTxOut;
-import utils.ByteUtil;
 import utils.Crypto;
 import utils.ShaTwoFiftySix;
 
@@ -81,7 +80,7 @@ public class BlockTest extends RandomizedTest {
         Assert.assertTrue(block.verify(unspent).isPresent());
     }
 
-    private RTransaction randomTransaction() throws GeneralSecurityException, IOException {
+    protected RTransaction randomTransaction() throws GeneralSecurityException, IOException {
         KeyPair senderPair = Crypto.signatureKeyPair();
         KeyPair recipientPair = Crypto.signatureKeyPair();
 

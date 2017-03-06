@@ -55,6 +55,8 @@ public class Node {
 
         LOGGER.info("[+] Accepting connections");
 
+        new ConnectionThread( new Socket("localhost", port) ,this.messageQueue).start();
+
         //Accepting connections must be done by a background thread so that we can still broadcast, etc.
         new Thread(() -> {
             while (true) {

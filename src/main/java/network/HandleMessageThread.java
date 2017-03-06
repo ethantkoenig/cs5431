@@ -1,8 +1,6 @@
 package network;
 
 import block.Block;
-import block.BlockChain;
-import block.UnspentTransactions;
 import transaction.RTransaction;
 import utils.ShaTwoFiftySix;
 
@@ -36,20 +34,17 @@ public class HandleMessageThread extends Thread {
 
     private MinerThread minerThread;
 
-    private BlockChain blockChain;
+    private MiningBundle miningBundle;
 
-    private UnspentTransactions unspentTransactions;
-
-    private FixedSizeSet<RTransaction> recentTransactionsReceived;
+    private FixedSizeSet<Message> recentTransactionsReceived;
 
     // Needs reference to parent in order to call Node.broadcast()
-    public HandleMessageThread(BlockingQueue<Message> messageQueue, BlockingQueue<Message> broadcastQueue, BlockChain blockChain, UnspentTransactions unspentTransactions) {
+    public HandleMessageThread(BlockingQueue<Message> messageQueue, BlockingQueue<Message> broadcastQueue, MiningBundle miningBundle) {
         this.messageQueue = messageQueue;
         this.broadcastQueue = broadcastQueue;
         this.miningQueue = new LinkedList<>();
         this.recentTransactionsReceived = new FixedSizeSet<>();
-        this.blockChain = blockChain;
-        this.unspentTransactions = unspentTransactions;
+        this.miningBundle = miningBundle;
     }
 
     /**
@@ -64,10 +59,12 @@ public class HandleMessageThread extends Thread {
                 switch (message.type) {
                     case Message.TRANSACTION:
                         RTransaction transaction = RTransaction.deserialize(ByteBuffer.wrap(message.payload));
-                        if (!recentTransactionsReceived.contains(transaction)) {
+                        System.out.println("Received transaction!");
+                        if (!recentTransactionsReceived.contains(message)) {
+                            System.out.println("Received transaction and am broadcasting it!");
                             broadcastQueue.put(message);
                         }
-                        recentTransactionsReceived.add(transaction);
+                        recentTransactionsReceived.add(message);
                         addTransactionToBlock(transaction);
                         break;
                     case Message.BLOCK:
@@ -97,8 +94,9 @@ public class HandleMessageThread extends Thread {
 
         Block block = miningQueue.removeLast();
         // If there is no current miner thread then start a new one.
-        if (minerThread != null && !minerThread.isAlive()) {
+        if (minerThread == null || !minerThread.isAlive()) {
             currentHashingBlock = block;
+            block.addReward(miningBundle.getKeyPair().getPublic());
             minerThread = new MinerThread(block, broadcastQueue);
             minerThread.start();
         }
@@ -106,20 +104,29 @@ public class HandleMessageThread extends Thread {
 
     private void addTransactionToBlock(RTransaction transaction) throws GeneralSecurityException, IOException {
         if (currentAddToBlock == null) {
-            ShaTwoFiftySix previousBlockHash = blockChain.getCurrentHead().getShaTwoFiftySix();
+            System.out.println("Creating block to put transaction on.");
+            ShaTwoFiftySix previousBlockHash = miningBundle.getBlockChain().getCurrentHead().getShaTwoFiftySix();
             currentAddToBlock = Block.empty(previousBlockHash);
         }
 
         if (currentAddToBlock.isFull()) {
+            System.out.println("currentAddToBlock is Full!!");
             // currentAddToBlock is full, so start mining it
+            System.out.println("starting mining thread");
+
             miningQueue.addFirst(currentAddToBlock);
             currentAddToBlock = null;
             startMiningThread();
             addTransactionToBlock(transaction);
         } else {
             //verify transaction
-            transaction.verify(unspentTransactions);
-            currentAddToBlock.addTransaction(transaction);
+            System.out.println("verifying transaction.");
+            if (transaction.verify(miningBundle.getUnspentTransactions())){
+                System.out.println("adding transaction to block.");
+                currentAddToBlock.addTransaction(transaction);
+            } else {
+                LOGGER.severe("The received transaction was not verified! Not adding to block.");
+            }
         }
     }
 
@@ -133,7 +140,7 @@ public class HandleMessageThread extends Thread {
         }
 
         // Add block to chain
-        blockChain.insertBlock(block);
+        miningBundle.getBlockChain().insertBlock(block);
 
         startMiningThread();
     }
