@@ -120,12 +120,12 @@ public class HandleMessageThread extends Thread {
         } else {
             //verify transaction
             LOGGER.info("[!] Verifying transaction.");
-            if (transaction.verify(miningBundle.getUnspentTransactions())){
+//            if (transaction.verify(miningBundle.getUnspentTransactions())){
                 LOGGER.info("[!] Transaction verified. Adding transaction to block.");
                 currentAddToBlock.addTransaction(transaction);
-            } else {
-                LOGGER.severe("The received transaction was not verified! Not adding to block.");
-            }
+//            } else {
+//                LOGGER.severe("The received transaction was not verified! Not adding to block.");
+//            }
         }
     }
 
@@ -133,7 +133,10 @@ public class HandleMessageThread extends Thread {
         ArrayList<RTransaction> difference = block.getTransactionDifferences(currentHashingBlock);
 
         //interrupt the mining thread
-        minerThread.interrupt();
+        if (minerThread != null && minerThread.isAlive()) {
+            minerThread.stopMining();
+        }
+
         for (RTransaction transaction : difference) {
             currentAddToBlock.addTransaction(transaction);
         }
