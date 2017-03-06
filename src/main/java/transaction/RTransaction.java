@@ -210,10 +210,7 @@ public class RTransaction {
             return false;
         }
         RTransaction other = (RTransaction) o;
-        if ((this.txIn.length == other.txIn.length) && (this.txOut.length == other.txOut.length)) {
-            return Arrays.equals(txIn, other.txIn) && Arrays.equals(txOut, other.txOut);
-        }
-        return false;
+        return Arrays.equals(txIn, other.txIn) && Arrays.equals(txOut, other.txOut);
     }
 
     @Override
