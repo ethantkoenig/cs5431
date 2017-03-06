@@ -87,6 +87,7 @@ public class ConnectionThread extends Thread {
                 IOUtils.fill(in, headerBuffer);
             }catch (IOException e){
                 LOGGER.info("[-] Lost connection to Node: " + socket.getInetAddress().getHostAddress());
+                // TODO: need to tell node to remove it from connection list
             }
             int payloadLen = ByteBuffer.wrap(headerBuffer, 0, Integer.BYTES).getInt();
             if (payloadLen > MAX_PAYLOAD_LEN) {
@@ -95,7 +96,12 @@ public class ConnectionThread extends Thread {
             }
             byte payloadType = ByteBuffer.wrap(headerBuffer, Integer.BYTES, Byte.BYTES).get();
             byte[] payload = new byte[payloadLen];
-            IOUtils.fill(in, payload);
+            try {
+                IOUtils.fill(in, headerBuffer);
+            }catch (IOException e){
+                LOGGER.info("[-] Lost connection to Node: " + socket.getInetAddress().getHostAddress());
+                // TODO: need to tell node to remove it from connection list
+            }
             Message message = new Message(payloadType, payload);
             LOGGER.info("Putting message on messageQueue: " + message.toString());
             messageQueue.put(message);
