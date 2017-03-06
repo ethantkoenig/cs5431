@@ -2,7 +2,6 @@ package transaction;
 
 import utils.ShaTwoFiftySix;
 
-import javax.swing.text.rtf.RTFEditorKit;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;

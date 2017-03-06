@@ -1,12 +1,12 @@
 package block;
 
-import java.util.HashMap;
-import java.util.Optional;
-import java.util.List;
-import java.util.ArrayList;
-
 import utils.Pair;
 import utils.ShaTwoFiftySix;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * A {@code BlockChain} represents a forest of related {@code Blocks} which together represent a secure public ledger.
