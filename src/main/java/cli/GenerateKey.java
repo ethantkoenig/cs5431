@@ -11,19 +11,6 @@ import java.security.KeyPair;
 
 public class GenerateKey {
 
-    public static void run(String[] args) {
-        if (args.length != 3) {
-            System.err.println("usage: generate <private-key-filename> <public-key-filename>");
-            System.exit(1);
-        }
-        try {
-            generateKey(args[1], args[2]);
-        } catch (GeneralSecurityException | IOException e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
-    }
-
     public static void generateKey(String privateFilename, String publicFilename)
             throws GeneralSecurityException, IOException {
         KeyPair pair = Crypto.signatureKeyPair();
