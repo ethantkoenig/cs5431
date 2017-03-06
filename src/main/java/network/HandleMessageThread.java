@@ -116,12 +116,12 @@ public class HandleMessageThread extends Thread {
         } else {
             //verify transaction
             LOGGER.info("[!] Verifying transaction.");
-//            if (transaction.verify(miningBundle.getUnspentTransactions())){
+            if (transaction.verify(miningBundle.getUnspentTransactions())){
                 LOGGER.info("[!] Transaction verified. Adding transaction to block.");
                 currentAddToBlock.addTransaction(transaction);
-//            } else {
-//                LOGGER.severe("The received transaction was not verified! Not adding to block.");
-//            }
+            } else {
+                LOGGER.severe("The received transaction was not verified! Not adding to block.");
+            }
         }
     }
 
