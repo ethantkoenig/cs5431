@@ -5,6 +5,7 @@ import network.Message;
 import transaction.RTransaction;
 import transaction.RTxIn;
 import transaction.RTxOut;
+import utils.ByteUtil;
 import utils.Crypto;
 import utils.IOUtils;
 import utils.ShaTwoFiftySix;
@@ -27,7 +28,7 @@ public class Transact {
 
     public static void run(String nodeListPath) throws IOException {
         InputStreamReader streamIn =
-            new InputStreamReader(new FileInputStream(nodeListPath), "UTF8");
+                new InputStreamReader(new FileInputStream(nodeListPath), "UTF8");
         BufferedReader nodeReader = new BufferedReader(streamIn);
         List<Socket> sockets = new ArrayList<Socket>();
         String line;
@@ -36,9 +37,9 @@ public class Transact {
             // Check to ensure we only have IP and Port
             if (IPandPort.length == 2) {
                 sockets.add(new Socket(
-                                       InetAddress.getByName(IPandPort[0]),
-                                       Integer.parseInt(IPandPort[1]))
-                            );
+                        InetAddress.getByName(IPandPort[0]),
+                        Integer.parseInt(IPandPort[1]))
+                );
             }
         }
         nodeReader.close();
@@ -82,7 +83,7 @@ public class Transact {
             String privateFilename = promptUser("Filename for private key");
 
             builder.addInput(
-                    new RTxIn(ShaTwoFiftySix.create(IOUtils.parseHex(hexHash)), index),
+                    new RTxIn(ShaTwoFiftySix.create(ByteUtil.hexStringToByteArray(hexHash)), index),
                     Crypto.loadPrivateKey(privateFilename)
             );
         }
@@ -96,7 +97,7 @@ public class Transact {
             String hexHash = promptUser("Public key of recipient");
             long amount = promptUserInt("Amount to send to recipient");
 
-            builder.addOutput(new RTxOut(amount, Crypto.parsePublicKey(IOUtils.parseHex(hexHash))));
+            builder.addOutput(new RTxOut(amount, Crypto.parsePublicKey(ByteUtil.hexStringToByteArray(hexHash))));
         }
     }
 

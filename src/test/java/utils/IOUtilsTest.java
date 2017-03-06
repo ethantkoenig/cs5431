@@ -45,26 +45,6 @@ public class IOUtilsTest extends RandomizedTest {
     }
 
     @Test
-    public void testToHex() {
-        byte[] bytes = new byte[]{0x00, 0x34, (byte) 0xab};
-        Assert.assertEquals("0034ab", IOUtils.toHex(bytes));
-    }
-
-    @Test
-    public void testParseHex() {
-        byte[] bytes = IOUtils.parseHex("0034ab");
-        Assert.assertArrayEquals(bytes, new byte[]{0x00, 0x34, (byte) 0xab});
-    }
-
-    @Test
-    public void testHex() {
-        byte[] bytes = randomBytes(2 * random.nextInt(128));
-        String hex = IOUtils.toHex(bytes);
-        byte[] parsedBytes = IOUtils.parseHex(hex);
-        Assert.assertArrayEquals(errorMessage, bytes, parsedBytes);
-    }
-
-    @Test
     public void testSendMessage() throws IOException {
         byte[] payload = randomBytes(random.nextInt(1024));
         byte type = (byte) random.nextInt(Byte.MAX_VALUE + 1);
