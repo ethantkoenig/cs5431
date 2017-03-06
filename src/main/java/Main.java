@@ -15,6 +15,9 @@ import java.util.ArrayList;
 import java.util.Random;
 
 public class Main {
+
+    private static final Random RANDOM = new Random();
+
     public static void main(String[] args) throws Exception {
         // Just junk example of testing
 
@@ -51,7 +54,7 @@ public class Main {
     protected static byte[] randomBytes(int length) {
 
         byte[] bytes = new byte[length];
-        new Random().nextBytes(bytes);
+        RANDOM.nextBytes(bytes);
         return bytes;
     }
 }
