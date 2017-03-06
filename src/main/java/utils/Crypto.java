@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.security.*;
 import java.security.spec.ECGenParameterSpec;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 
 /* Various crypto-related functions
@@ -40,7 +41,7 @@ public class Crypto {
     }
 
     public static PrivateKey parsePrivateKey(byte[] bytes) throws GeneralSecurityException {
-        return KeyFactory.getInstance("ECDSA", "BC").generatePrivate(new X509EncodedKeySpec(bytes));
+        return KeyFactory.getInstance("ECDSA", "BC").generatePrivate(new PKCS8EncodedKeySpec(bytes));
     }
 
     public static byte[] sign(byte[] toSign, PrivateKey key) throws GeneralSecurityException {
