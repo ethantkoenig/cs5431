@@ -115,7 +115,7 @@ public class ClientInterface {
         commands.put("quit", quit());
         commands.put("generate", generate());
         commands.put("transact", transact());
-        commands.put("setNodelist", setNodeList());
+        commands.put("setNodeList", setNodeList());
     }
 
     /* *************************************************************************

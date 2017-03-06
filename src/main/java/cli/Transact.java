@@ -105,8 +105,8 @@ public class Transact {
         String text = promptUser(prompt);
         try {
             long n = Long.parseLong(text);
-            if (n <= 0) {
-                throw new InvalidInputException("Number must be positive");
+            if (n < 0) {
+                throw new InvalidInputException("Number must be non-negative");
             }
             return n;
         } catch (NumberFormatException e) {
