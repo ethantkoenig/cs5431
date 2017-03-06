@@ -95,4 +95,18 @@ public class BlockTest extends RandomizedTest {
                 block2.getTransactionDifferences(block1),
                 Collections.singletonList(txn1));
     }
+
+    @Test
+    public void testCheckHash() throws Exception {
+        Block block = randomBlock(randomShaTwoFiftySix());
+        for (int i = 0; i < 1000; i++) {
+            block.nonceAddOne();
+            if (block.checkHashWith(1)) {
+                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                block.serialize(new DataOutputStream(outputStream));
+                ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(outputStream.toByteArray());
+                Assert.assertTrue(hash.checkHashZeros(1));
+            }
+        }
+    }
 }
