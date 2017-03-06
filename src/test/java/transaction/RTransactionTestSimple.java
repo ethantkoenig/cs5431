@@ -24,6 +24,32 @@ public class RTransactionTestSimple extends RandomizedTest {
     }
 
     @Test
+    public void testEqualsHashCode() throws Exception {
+        KeyPair senderPair = Crypto.signatureKeyPair();
+        KeyPair recipientPair = Crypto.signatureKeyPair();
+
+        ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(randomBytes(256));
+        long value = random.nextInt(Integer.MAX_VALUE);
+        RTransaction tx1 = new RTransaction.Builder()
+                .addInput(new RTxIn(hash, 2), senderPair.getPrivate())
+                .addOutput(new RTxOut(value, recipientPair.getPublic()))
+                .build();
+
+        RTransaction tx2 = new RTransaction.Builder()
+                .addInput(new RTxIn(hash, 2), senderPair.getPrivate())
+                .addOutput(new RTxOut(value, recipientPair.getPublic()))
+                .build();
+
+        RTransaction anotherTx = randomTransaction();
+
+        Assert.assertEquals(errorMessage, tx1, tx1);
+        Assert.assertEquals(errorMessage, tx1, tx2);
+        Assert.assertEquals(errorMessage, tx1.hashCode(), tx2.hashCode());
+        Assert.assertNotEquals(errorMessage, tx1, anotherTx);
+        Assert.assertNotEquals(errorMessage, tx1, null);
+    }
+
+    @Test
     public void doTransaction() throws Exception {
         KeyPair senderPair = Crypto.signatureKeyPair();
         KeyPair recipientPair = Crypto.signatureKeyPair();
