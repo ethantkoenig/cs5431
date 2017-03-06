@@ -1,5 +1,6 @@
 package utils;
 
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -25,4 +26,10 @@ public class IOUtils {
         }
     }
 
+    public static void sendMessage(DataOutputStream outputStream, byte type, byte[] payload)
+            throws IOException {
+        outputStream.writeInt(payload.length);
+        outputStream.write(type);
+        outputStream.write(payload);
+    }
 }

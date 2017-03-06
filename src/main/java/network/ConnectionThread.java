@@ -2,6 +2,7 @@ package network;
 
 import utils.IOUtils;
 
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -27,7 +28,7 @@ public class ConnectionThread extends Thread {
     private final BlockingQueue<Message> messageQueue;
 
     // The out buffer to write to this network.ConnectionThread
-    private OutputStream out;
+    private DataOutputStream out;
 
     // The in buffer to read incoming messages to this network.ConnectionThread
     private InputStream in;
@@ -36,7 +37,7 @@ public class ConnectionThread extends Thread {
         this.socket = socket;
         this.messageQueue = messageQueue;
         try {
-            this.out = socket.getOutputStream();
+            this.out = new DataOutputStream(socket.getOutputStream());
             this.in = socket.getInputStream();
         } catch (IOException e) {
             LOGGER.severe("Unable to establish two way connection between nodes.%n");
@@ -68,10 +69,8 @@ public class ConnectionThread extends Thread {
      * @param output the message to be sent
      * @throws IOException if out.checkError() returns true indicating that the connection has been closed.
      */
-    public void send(byte type, byte[] output) throws IOException {
-        out.write(ByteBuffer.allocate(Integer.BYTES).putInt(output.length).array());
-        out.write(type);
-        out.write(output);
+    public void send(byte type, byte[] payload) throws IOException {
+        IOUtils.sendMessage(out, type, payload);
     }
 
     /**
