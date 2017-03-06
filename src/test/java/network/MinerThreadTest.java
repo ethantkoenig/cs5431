@@ -31,4 +31,15 @@ public class MinerThreadTest extends RandomizedTest {
                 msg.payload,
                 outputStream.toByteArray());
     }
+
+    @Test
+    public void testStop() throws Exception {
+        Block block = randomBlock(randomShaTwoFiftySix());
+        BlockingQueue<Message> queue = new ArrayBlockingQueue<>(5);
+        MinerThread minerThread = new MinerThread(block, queue);
+
+        minerThread.start();
+        minerThread.stopMining();
+        minerThread.join();
+    }
 }

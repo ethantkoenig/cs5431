@@ -40,6 +40,10 @@ public class PairTest extends RandomizedTest {
                 new Pair<>("hello", "world"),
                 new Pair<>("goodbye", "mars")
         );
+        Assert.assertNotEquals(
+                new Pair<>("hello", "world"),
+                null
+        );
     }
 
     @Test
