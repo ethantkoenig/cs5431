@@ -48,5 +48,7 @@ public class RTxIn {
     }
 
     @Override
-    public int hashCode() {return Arrays.hashCode(new Object[] { previousTxn, txIdx });}
+    public int hashCode() {
+        return Arrays.hashCode(new Object[]{previousTxn, txIdx});
+    }
 }
