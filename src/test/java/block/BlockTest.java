@@ -5,19 +5,15 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import testutils.RandomizedTest;
 import transaction.RTransaction;
-import transaction.RTxIn;
-import transaction.RTxOut;
 import utils.Crypto;
+import utils.Pair;
 import utils.ShaTwoFiftySix;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
-import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.security.GeneralSecurityException;
-import java.security.KeyPair;
-import java.security.PrivateKey;
 import java.util.Collections;
+import java.util.Optional;
 
 public class BlockTest extends RandomizedTest {
 
@@ -63,22 +59,18 @@ public class BlockTest extends RandomizedTest {
     @Test
     public void testVerify() throws Exception {
         ShaTwoFiftySix previousBlockHash = ShaTwoFiftySix.hashOf(randomBytes(256));
-        Block block = Block.empty(previousBlockHash);
-
-
-        ShaTwoFiftySix initialTransactionHash = ShaTwoFiftySix.hashOf(randomBytes(256));
-        KeyPair initialPair = Crypto.signatureKeyPair();
-        RTxOut initialOut = new RTxOut(1 + random.nextInt(1024), initialPair.getPublic());
-
-        populate(block, initialTransactionHash,
-                 initialOut, 0,
-                 initialPair.getPrivate());
+        Pair<Block, UnspentTransactions> pair = randomValidBlock(previousBlockHash);
+        Block block = pair.getLeft();
         block.addReward(Crypto.signatureKeyPair().getPublic());
 
-        UnspentTransactions unspent = UnspentTransactions.empty();
-        unspent.put(initialTransactionHash, 0, initialOut);
+        Optional<UnspentTransactions> result = block.verify(pair.getRight());
+        Assert.assertTrue(errorMessage, result.isPresent());
 
-        Assert.assertTrue(block.verify(unspent).isPresent());
+        UnspentTransactions expected = UnspentTransactions.empty();
+        RTransaction lastTxn = block.transactions[Block.NUM_TRANSACTIONS_PER_BLOCK - 1];
+        // TODO currently assumes that last transaction will only have one output
+        expected.put(lastTxn.getShaTwoFiftySix(), 0, lastTxn.getOutput(0));
+        Assert.assertEquals(errorMessage, result.get(), expected);
     }
 
     @Test
@@ -103,32 +95,4 @@ public class BlockTest extends RandomizedTest {
                 block2.getTransactionDifferences(block1),
                 Collections.singletonList(txn1));
     }
-
-    private void populate(
-            Block block,
-            ShaTwoFiftySix initialHash,
-            RTxOut initialInput,
-            int initialInputIndex,
-            PrivateKey initialInputKey) throws GeneralSecurityException, IOException {
-        KeyPair recipientPair = Crypto.signatureKeyPair();
-        block.transactions[0] = new RTransaction.Builder()
-                .addInput(new RTxIn(initialHash, initialInputIndex), initialInputKey)
-                .addOutput(new RTxOut(initialInput.value, recipientPair.getPublic()))
-                .build();
-
-        for (int i = 1; i < Block.NUM_TRANSACTIONS_PER_BLOCK; i++) {
-            KeyPair senderPair = recipientPair;
-            recipientPair = Crypto.signatureKeyPair();
-            block.transactions[i] = new RTransaction.Builder()
-                    .addInput(
-                            new RTxIn(
-                                    block.transactions[i-1].getShaTwoFiftySix(),
-                                    0
-                            ),
-                            senderPair.getPrivate()
-                    )
-                    .addOutput(new RTxOut(initialInput.value, recipientPair.getPublic()))
-                    .build();
-        }
-    }
- }
+}

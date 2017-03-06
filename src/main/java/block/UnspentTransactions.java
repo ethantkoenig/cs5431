@@ -46,4 +46,20 @@ public class UnspentTransactions {
     public RTxOut remove(ShaTwoFiftySix hash, int index) {
         return map.remove(new Pair<>(hash, index));
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        } else if (!(o instanceof UnspentTransactions)) {
+            return false;
+        }
+        UnspentTransactions other = (UnspentTransactions) o;
+        return map.equals(other.map);
+    }
+
+    @Override
+    public int hashCode() {
+        return map.hashCode();
+    }
 }

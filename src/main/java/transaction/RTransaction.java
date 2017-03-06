@@ -25,7 +25,6 @@ import java.util.logging.Logger;
 public class RTransaction {
     private final static Logger LOGGER = Logger.getLogger(Logger.class.getName());
 
-
     private final RTxIn[] txIn;
     private final RTxOut[] txOut;
     private final RSignature[] signatures;
@@ -105,6 +104,22 @@ public class RTransaction {
         for (RSignature signature : signatures) {
             signature.serialize(outputStream);
         }
+    }
+
+    public RTxIn getInput(int index) {
+        if (index < 0 || index >= txIn.length) {
+            String msg = String.format("Invalid index %d", index);
+            throw new IllegalArgumentException(msg);
+        }
+        return txIn[index];
+    }
+
+    public RTxOut getOutput(int index) {
+        if (index < 0 || index >= txOut.length) {
+            String msg = String.format("Invalid index %d", index);
+            throw new IllegalArgumentException(msg);
+        }
+        return txOut[index];
     }
 
     /**

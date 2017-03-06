@@ -1,12 +1,14 @@
 package testutils;
 
 import block.Block;
+import block.UnspentTransactions;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import transaction.RTransaction;
 import transaction.RTxIn;
 import transaction.RTxOut;
 import utils.Crypto;
+import utils.Pair;
 import utils.ShaTwoFiftySix;
 
 import java.io.IOException;
@@ -68,6 +70,39 @@ public abstract class RandomizedTest {
         b.addReward(Crypto.signatureKeyPair().getPublic());
         b.setRandomNonce(random);
         return b;
+    }
+
+    protected Pair<Block, UnspentTransactions> randomValidBlock(ShaTwoFiftySix previousHash)
+            throws GeneralSecurityException, IOException {
+        KeyPair senderPair = Crypto.signatureKeyPair();
+        KeyPair recipientPair = Crypto.signatureKeyPair();
+
+        RTxOut output = new RTxOut(1 + random.nextInt(1024), recipientPair.getPublic());
+        RTransaction initTransaction = new RTransaction.Builder()
+                .addInput(new RTxIn(randomShaTwoFiftySix(), 0), senderPair.getPrivate())
+                .addOutput(output)
+                .build();
+
+        Block block = Block.empty(randomShaTwoFiftySix());
+
+        for (int i = 0; i < Block.NUM_TRANSACTIONS_PER_BLOCK; i++) {
+            senderPair = recipientPair;
+            recipientPair = Crypto.signatureKeyPair();
+
+            RTransaction previous = i > 0 ? block.transactions[i-1] : initTransaction;
+
+            block.transactions[i] = new RTransaction.Builder()
+                    .addInput(
+                            new RTxIn(previous.getShaTwoFiftySix(), 0),
+                            senderPair.getPrivate()
+                    )
+                    .addOutput(new RTxOut(output.value, recipientPair.getPublic()))
+                    .build();
+        }
+
+        UnspentTransactions unspent = UnspentTransactions.empty();
+        unspent.put(initTransaction.getShaTwoFiftySix(), 0, output);
+        return new Pair<>(block, unspent);
     }
 
     protected ShaTwoFiftySix randomShaTwoFiftySix() {

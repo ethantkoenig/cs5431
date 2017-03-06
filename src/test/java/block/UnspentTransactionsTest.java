@@ -65,9 +65,10 @@ public class UnspentTransactionsTest extends RandomizedTest {
         RTxOut out = new RTxOut(1024, pair.getPublic());
         ut.put(hash, 0, out);
 
-
         UnspentTransactions copy = ut.copy();
 
+        Assert.assertEquals(errorMessage, copy, ut);
+        Assert.assertEquals(errorMessage, copy.hashCode(), ut.hashCode());
         Assert.assertTrue(copy.contains(hash, 0));
         Assert.assertFalse(copy.contains(hash, 1));
         RTxOut got = copy.get(hash, 0);
