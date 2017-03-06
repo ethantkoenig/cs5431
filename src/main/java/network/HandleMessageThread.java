@@ -79,12 +79,8 @@ public class HandleMessageThread extends Thread {
                         LOGGER.severe(String.format("Unexpected message type: %d", message.type));
                 }
             }
-        } catch (InterruptedException e) {
-            LOGGER.severe(e.getMessage());
-        } catch (GeneralSecurityException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (InterruptedException |GeneralSecurityException | IOException e) {
+            LOGGER.severe("Error receiving and/or handling message: " + e.getMessage());
         }
     }
 
@@ -133,7 +129,10 @@ public class HandleMessageThread extends Thread {
         ArrayList<RTransaction> difference = block.getTransactionDifferences(currentHashingBlock);
 
         //interrupt the mining thread
-        minerThread.interrupt();
+        if (minerThread != null && minerThread.isAlive()) {
+            minerThread.stopMining();
+        }
+
         for (RTransaction transaction : difference) {
             currentAddToBlock.addTransaction(transaction);
         }

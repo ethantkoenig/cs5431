@@ -21,6 +21,7 @@ public class MinerThread extends Thread {
 
     private static final Logger LOGGER = Logger.getLogger(MinerThread.class.getName());
     private Block block;
+    private boolean stopMining = false;
 
     private final BlockingQueue<Message> broadcastQueue;
 
@@ -36,23 +37,25 @@ public class MinerThread extends Thread {
      * @throws IOException if error hashing block
      */
     private Block tryNonces() throws Exception {
-        System.out.println("Trying nonces!!");
+        LOGGER.info("[!] Trying nonces...");
         block.setRandomNonce(new Random());
 
         while (true) {
+            if (stopMining)
+                return null;
             if (block.checkHash())
                 return block;
             block.nonceAddOne();
         }
     }
 
+    public void stopMining(){
+        stopMining = true;
+    }
+
     @Override
     public void run() {
         LOGGER.info("[+] MiningThread started");
-        // If thread interrupted by parent just return
-        if (this.interrupted()) {
-            return;
-        }
 
         Block finalBlock = null;
         try {
@@ -61,7 +64,11 @@ public class MinerThread extends Thread {
             LOGGER.severe("Error hashing block: " + e.getMessage());
         }
 
-        assert finalBlock != null;
+        // The thread was told to stop by parent so get out.
+        if (finalBlock == null){
+            return;
+        }
+
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         try {
             finalBlock.serialize(new DataOutputStream(outputStream));

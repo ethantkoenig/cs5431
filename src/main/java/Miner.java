@@ -23,6 +23,24 @@ public class Miner extends Node {
 
     public Miner(int port) {
         super(port);
+        Crypto.init();
+        KeyPair keyPair = null;
+
+        try {
+            keyPair = Crypto.signatureKeyPair();
+        } catch (GeneralSecurityException e) {
+            LOGGER.severe(e.getMessage());
+        }
+
+        assert keyPair != null;
+
+        Block genesis = Block.genesis();
+        genesis.addReward(keyPair.getPublic());
+        BlockChain blockChain = new BlockChain(genesis);
+        UnspentTransactions unspentTransactions = UnspentTransactions.empty();
+
+        miningBundle = new MiningBundle(blockChain, keyPair, unspentTransactions);
+
     }
 
 
@@ -33,29 +51,6 @@ public class Miner extends Node {
     }
 
     public void startMiner(){
-        Crypto.init();
-        KeyPair keyPair = null;
-        BlockChain blockChain = null;
-        UnspentTransactions unspentTransactions;
-
-        try {
-            keyPair = Crypto.signatureKeyPair();
-            Block genesis = Block.genesis();
-            genesis.addReward(keyPair.getPublic());
-            blockChain = new BlockChain(genesis);
-            unspentTransactions = UnspentTransactions.empty();
-            miningBundle = new MiningBundle(blockChain, keyPair, unspentTransactions);
-
-        } catch (GeneralSecurityException e) {
-            e.printStackTrace();
-        }
-        // create genesis block and initialize blockChain
-
-
-
-
-
-
         // Start network.HandleMessageThread
         new HandleMessageThread(this.messageQueue, this.broadcastQueue, miningBundle).start();
         // Start network.BroadcastThread
