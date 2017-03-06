@@ -22,13 +22,13 @@ public class Transact {
 
     private final BufferedReader input;
 
-    private Transact() {
-        input = new BufferedReader(new InputStreamReader(System.in, Charset.defaultCharset()));
+    private Transact(BufferedReader input) {
+        this.input = input;
     }
 
-    public static void run(String nodeListPath) throws GeneralSecurityException, IOException {
+    public static void run(BufferedReader input, String nodeListPath) throws GeneralSecurityException, IOException {
         InputStreamReader streamIn =
-                new InputStreamReader(new FileInputStream(nodeListPath), "UTF8");
+                new InputStreamReader(new FileInputStream(nodeListPath), Charset.defaultCharset());
         BufferedReader nodeReader = new BufferedReader(streamIn);
         List<Socket> sockets = new ArrayList<Socket>();
         String line;
@@ -44,14 +44,11 @@ public class Transact {
                     );
                 }
             }
-            transact = new Transact();
+            transact = new Transact(input);
             transact.runTransaction(sockets);
         } finally {
             nodeReader.close();
             streamIn.close();
-            if (transact != null) {
-                transact.input.close();
-            }
         }
     }
 
@@ -99,10 +96,10 @@ public class Transact {
         int numOutputs = (int) promptUserInt("Number of outputs");
         for (int i = 0; i < numOutputs; i++) {
             System.out.println(String.format("[Output %d]", i));
-            String hexHash = promptUser("Public key of recipient");
+            String publicKeyFilename = promptUser("Public key of recipient");
             long amount = promptUserInt("Amount to send to recipient");
 
-            builder.addOutput(new RTxOut(amount, Crypto.parsePublicKey(ByteUtil.hexStringToByteArray(hexHash))));
+            builder.addOutput(new RTxOut(amount, Crypto.loadPublicKey(publicKeyFilename)));
         }
     }
 

@@ -187,7 +187,7 @@ public class ClientInterface {
                     return false;
                 }
                 try {
-                    Transact.run(nodeListPath);
+                    Transact.run(buffer, nodeListPath);
                 } catch(GeneralSecurityException | IOException e) {
                     e.printStackTrace();
                     return false;
