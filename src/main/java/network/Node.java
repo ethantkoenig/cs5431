@@ -66,6 +66,7 @@ public class Node {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+                LOGGER.info("[+] Received connection!");
                 connectionThread.start();
                 this.connections.add(connectionThread);
             }
