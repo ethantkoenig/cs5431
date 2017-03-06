@@ -116,19 +116,14 @@ public class Block {
      * with hashGoalZeros number of leading zeros.
      */
     public boolean checkHash() throws IOException, GeneralSecurityException {
-        ShaTwoFiftySix hash = null;
-        byte[] bytes = null;
+        return checkHashWith(hashGoalZeros);
+    }
 
+    boolean checkHashWith(int goal) throws IOException, GeneralSecurityException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         serialize(new DataOutputStream(outputStream));
-        try {
-            bytes = ByteUtil.concatenate(outputStream.toByteArray(), nonce);
-            hash = ShaTwoFiftySix.hashOf(bytes);
-        } catch (GeneralSecurityException e) {
-            LOGGER.severe("Unable to hash: " + Arrays.toString(bytes));
-            e.printStackTrace();
-        }
-        return (hash != null) ? hash.checkHashZeros(hashGoalZeros) : false;
+        ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(outputStream.toByteArray());
+        return hash.checkHashZeros(goal);
     }
 
     /**
