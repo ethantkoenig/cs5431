@@ -47,7 +47,7 @@ public class ClientInterface {
     private InputStreamReader streamReader;
     private InputStream streamIn;
     protected PrintStream outputStream;
-    private String nodeListPath;
+    private String nodeListPath = null;
 
     // A HashMap off all the commands
     protected Map<String, Command> commands = new HashMap<>();
@@ -76,7 +76,6 @@ public class ClientInterface {
         }
         buffer = new BufferedReader(streamReader);
         outputStream = out;
-        nodeListPath = "";
         populateCmdMap();
     }
 
@@ -86,30 +85,33 @@ public class ClientInterface {
      */
     public void startInterface() {
         outputStream.println("Welcome!");
-        outputStream.println(streamReader.getEncoding());
-        String cmd = "";
-        // If previous command was quit no action was taken and we will now exit
-        while (!cmd.equals("quit")) {
+
+        String inputLine = null; // line read from input
+        while (true) {
             try {
-                // Make sure that buffered stream is ready
-                while (!buffer.ready()) {}
-                // Get command from buffer
-                cmd = buffer.readLine();
+                outputStream.print("> ");
+                inputLine = buffer.readLine();
             } catch (IOException e) {
                 outputStream.println("Something went wrong");
             }
-            // Make sure we did not read a null value
-            if (cmd != null) {
-                Scanner cmdScanner = new Scanner(cmd);
-                cmd = cmdScanner.next();
+
+            if (inputLine != null) {
+                Scanner cmdScanner = new Scanner(inputLine);
+                if (!cmdScanner.hasNext()) {
+                    continue;
+                }
+                String cmd = cmdScanner.next();
                 if (cmd != null && commands.containsKey(cmd)) {
                     commands.get(cmd).run(cmdScanner);
-                } else {
-                    outputStream.println("Invalid command");
+                    if (cmd.equals("quit")) {
+                        break;
+                    }
+                } else if (cmd != null){
+                    String msg = String.format(
+                            "Unrecognized command %s; use the \"help\" command to list all commands",
+                            cmd);
+                    outputStream.println(msg);
                 }
-            // In case cmd is null, set to empty string as we want to noop
-            } else {
-                cmd = "";
             }
         }
     }
@@ -221,6 +223,10 @@ public class ClientInterface {
              */
             @Override
             public boolean run(Scanner args) {
+                if (nodeListPath == null) {
+                    outputStream.println("No nodes have been specified");
+                    return false;
+                }
                 try {
                     Transact.run(nodeListPath);
                 } catch(IOException e) {

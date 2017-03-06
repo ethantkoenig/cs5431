@@ -1,3 +1,4 @@
+import cli.ClientInterface;
 import transaction.RTransaction;
 import transaction.RTxIn;
 import transaction.RTxOut;
@@ -16,6 +17,27 @@ public class Main {
     private static final Random RANDOM = new Random();
 
     public static void main(String[] args) throws Exception {
+        if (args.length == 0) {
+            System.err.println("No command specified");
+            System.exit(1);
+        }
+        Crypto.init();
+        switch (args[0]) {
+            case "node":
+                // TODO eventually replace with actual code
+                junkExampleTest();
+                break;
+            case "client":
+                new ClientInterface().startInterface();
+                break;
+            default:
+                String msg = String.format("Unrecognized command %s", args[0]);
+                System.err.println(msg);
+                System.exit(1);
+        }
+    }
+
+    public static void junkExampleTest() {
         // Just junk example of testing
 
         Miner miner = new Miner(4446);
