@@ -80,17 +80,6 @@ public class BlockTest extends RandomizedTest {
         Assert.assertTrue(block.verify(unspent).isPresent());
     }
 
-    protected RTransaction randomTransaction() throws GeneralSecurityException, IOException {
-        KeyPair senderPair = Crypto.signatureKeyPair();
-        KeyPair recipientPair = Crypto.signatureKeyPair();
-
-        ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(randomBytes(256));
-        return new RTransaction.Builder()
-                .addInput(new RTxIn(hash, 0), senderPair.getPrivate())
-                .addOutput(new RTxOut(1 + random.nextInt(1024), recipientPair.getPublic()))
-                .build();
-    }
-
     private void populate(
             Block block,
             ShaTwoFiftySix initialHash,
