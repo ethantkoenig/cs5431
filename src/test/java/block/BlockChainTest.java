@@ -44,9 +44,6 @@ public class BlockChainTest extends RandomizedTest {
         ShaTwoFiftySix randomHash = randomShaTwoFiftySix();
         Block b = randomBlock(randomHash);
 
-        assertNotNull(bc); // TODO temporarily add this for findbugs
-
-
         assertEquals(bc.insertBlock(b), false);
         assertEquals(bc.getBlockWithHash(b.getShaTwoFiftySix()), Optional.empty());
     }
