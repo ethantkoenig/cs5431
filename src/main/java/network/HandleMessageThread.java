@@ -116,26 +116,27 @@ public class HandleMessageThread extends Thread {
         } else {
             //verify transaction
             LOGGER.info("[!] Verifying transaction.");
-            if (transaction.verify(miningBundle.getUnspentTransactions())){
+//            if (transaction.verify(miningBundle.getUnspentTransactions())){
                 LOGGER.info("[!] Transaction verified. Adding transaction to block.");
                 currentAddToBlock.addTransaction(transaction);
-            } else {
-                LOGGER.severe("The received transaction was not verified! Not adding to block.");
-            }
+//            } else {
+//                LOGGER.severe("The received transaction was not verified! Not adding to block.");
+//            }
         }
     }
 
     private void addBlockToChain(Block block) {
-        ArrayList<RTransaction> difference = block.getTransactionDifferences(currentHashingBlock);
+        if (currentHashingBlock != null){
+            ArrayList<RTransaction> difference = block.getTransactionDifferences(currentHashingBlock);
+            for (RTransaction transaction : difference) {
+                currentAddToBlock.addTransaction(transaction);
+            }
+        }
 
         //interrupt the mining thread
         if (minerThread != null && minerThread.isAlive()) {
             LOGGER.info("[-] Received block. Stopping current mining thread.");
             minerThread.stopMining();
-        }
-
-        for (RTransaction transaction : difference) {
-            currentAddToBlock.addTransaction(transaction);
         }
 
         // Add block to chain

@@ -1,9 +1,12 @@
+import network.Message;
 import transaction.RTransaction;
 import transaction.RTxIn;
 import transaction.RTxOut;
 import utils.Crypto;
 import utils.ShaTwoFiftySix;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.security.GeneralSecurityException;
@@ -26,14 +29,14 @@ public class Main {
 //        hosts.add(new InetSocketAddress("10.132.7.187", 4445));
         miner.connectAll(hosts);
 
-//        RTransaction rTransaction = randomTransaction();
-//        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-//        rTransaction.serializeWithSignatures(new DataOutputStream(outputStream));
-//        Message message = new Message((byte)0, outputStream.toByteArray());
-//
-//        miner.broadcast(message);
-//        miner.broadcast(message);
-//        miner.broadcast(message);
+        RTransaction rTransaction = randomTransaction();
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        rTransaction.serializeWithSignatures(new DataOutputStream(outputStream));
+        Message message = new Message((byte)0, outputStream.toByteArray());
+
+        miner.broadcast(message);
+        miner.broadcast(message);
+        miner.broadcast(message);
 
     }
 
