@@ -81,14 +81,12 @@ public class ShaTwoFiftySixTest extends RandomizedTest {
 
     @Test
     public void testCheckHashZeros() {
-        ShaTwoFiftySix shaTwoFiftySix = new ShaTwoFiftySix(new byte[]{(byte) 0x00, (byte) 0x01});
+        byte[] hash = new byte[ShaTwoFiftySix.HASH_SIZE_IN_BYTES];
+        hash[2] = 0x01;
+        ShaTwoFiftySix shaTwoFiftySix = new ShaTwoFiftySix(hash);
         Assert.assertTrue(errorMessage, shaTwoFiftySix.checkHashZeros(1));
-    }
-
-    private byte[] randomHash() {
-        byte[] hash = new byte[32];
-        random.nextBytes(hash);
-        return hash;
+        Assert.assertTrue(errorMessage, shaTwoFiftySix.checkHashZeros(2));
+        Assert.assertFalse(errorMessage, shaTwoFiftySix.checkHashZeros(3));
     }
 
     private ShaTwoFiftySix deserializeFrom(byte[] hash) {
