@@ -5,7 +5,6 @@ import utils.IOUtils;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.util.concurrent.BlockingQueue;
@@ -66,7 +65,7 @@ public class ConnectionThread extends Thread {
      * Send the given output to this network.ConnectionThread
      *
      * @param type   the type of message to be sent
-     * @param output the message to be sent
+     * @param payload the message to be sent
      * @throws IOException if out.checkError() returns true indicating that the connection has been closed.
      */
     public void send(byte type, byte[] payload) throws IOException {
@@ -86,21 +85,16 @@ public class ConnectionThread extends Thread {
                 IOUtils.fill(in, headerBuffer);
             }catch (IOException e){
                 LOGGER.info("[-] Lost connection to Node: " + socket.getInetAddress().getHostAddress());
-                // TODO: need to tell node to remove it from connection list
+                close();
+                break;
             }
             int payloadLen = ByteBuffer.wrap(headerBuffer, 0, Integer.BYTES).getInt();
             if (payloadLen > MAX_PAYLOAD_LEN) {
                 LOGGER.severe(String.format("Received misformatted message (payloadLen=%d)", payloadLen));
-                return;
             }
             byte payloadType = ByteBuffer.wrap(headerBuffer, Integer.BYTES, Byte.BYTES).get();
             byte[] payload = new byte[payloadLen];
-            try {
-                IOUtils.fill(in, headerBuffer);
-            }catch (IOException e){
-                LOGGER.info("[-] Lost connection to Node: " + socket.getInetAddress().getHostAddress());
-                // TODO: need to tell node to remove it from connection list
-            }
+            IOUtils.fill(in, headerBuffer);
             Message message = new Message(payloadType, payload);
             LOGGER.info("Putting message on messageQueue: " + message.toString());
             messageQueue.put(message);
