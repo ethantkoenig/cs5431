@@ -162,18 +162,18 @@ public class RTransaction {
      */
     public boolean verify(UnspentTransactions unspentOutputs)
             throws GeneralSecurityException, IOException {
-        int inputsum = 0;
-        int outputsum = 0;
+        long inputsum = 0;
+        long outputsum = 0;
         for (int i = 0; i < txIn.length; ++i) {
             RTxIn in = txIn[i];
             if (!unspentOutputs.contains(in.previousTxn, in.txIdx)) {
-                LOGGER.warning("Invalid input");
+                LOGGER.warning("Invalid input: " + in.previousTxn + "," + in.txIdx);
                 return false;
             }
             RTxOut out = unspentOutputs.remove(in.previousTxn, in.txIdx);
             inputsum += out.value;
             if (!verifySignature(i, out.ownerPubKey)) {
-                LOGGER.warning("Invalid signature");
+                LOGGER.warning("Invalid signature: " + out.ownerPubKey + "," + signatures[i]);
                 return false;
             }
         }
@@ -217,7 +217,9 @@ public class RTransaction {
     }
 
     @Override
-    public int hashCode() {return Arrays.hashCode(new Object[] { txIn, txOut });}
+    public int hashCode() {
+        return Arrays.deepHashCode(new Object[] { txIn, txOut });
+    }
 
     public static class Builder {
         List<RTxIn> inputs = new ArrayList<>();
