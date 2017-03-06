@@ -82,6 +82,7 @@ public class HandleMessageThread extends Thread {
                 }
             }
         } catch (InterruptedException |GeneralSecurityException | IOException e) {
+            e.printStackTrace();
             LOGGER.severe("Error receiving and/or handling message: " + e.getMessage());
         }
     }
@@ -102,6 +103,10 @@ public class HandleMessageThread extends Thread {
 
     private void addTransactionToBlock(RTransaction transaction) throws GeneralSecurityException, IOException {
         if (currentAddToBlock == null) {
+            if (miningBundle.getBlockChain().getCurrentHead() == null) {
+                LOGGER.warning("Received transaction before genesis block received");
+                return;
+            }
             LOGGER.info("[!] Creating block to put transaction on.");
             ShaTwoFiftySix previousBlockHash = miningBundle.getBlockChain().getCurrentHead().getShaTwoFiftySix();
             currentAddToBlock = Block.empty(previousBlockHash);
@@ -120,6 +125,7 @@ public class HandleMessageThread extends Thread {
             LOGGER.info("[!] Verifying transaction.");
             if (transaction.verify(miningBundle.getUnspentTransactions())){
                 LOGGER.info("[!] Transaction verified. Adding transaction to block.");
+                LOGGER.info(transaction.toString());
                 currentAddToBlock.addTransaction(transaction);
             } else {
                 LOGGER.severe("The received transaction was not verified! Not adding to block.");
@@ -128,7 +134,22 @@ public class HandleMessageThread extends Thread {
     }
 
     private void addBlockToChain(Block block) {
-        if (currentHashingBlock != null){
+        if (currentAddToBlock == null) {
+            if (block.verifyGenesis(miningBundle.privilegedKey)) {
+                LOGGER.info("Received the genesis block");
+                LOGGER.info(String.format("Genesis hash: %s", block.getShaTwoFiftySix().toString()));
+                miningBundle.getBlockChain().insertBlock(block);
+                currentHashingBlock = miningBundle.getBlockChain().getCurrentHead();
+                LOGGER.info("[!] Creating block to put transaction on.");
+                ShaTwoFiftySix previousBlockHash = miningBundle.getBlockChain().getCurrentHead().getShaTwoFiftySix();
+                currentAddToBlock = Block.empty(previousBlockHash);
+                miningBundle.getUnspentTransactions().put(block.getShaTwoFiftySix(), 0, block.reward);
+            } else {
+                LOGGER.info("Received invalid genesis block");
+            }
+            return;
+        }
+        if (currentHashingBlock != null) {
             ArrayList<RTransaction> difference = block.getTransactionDifferences(currentHashingBlock);
             for (RTransaction transaction : difference) {
                 currentAddToBlock.addTransaction(transaction);

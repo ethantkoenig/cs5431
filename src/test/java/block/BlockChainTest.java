@@ -1,5 +1,6 @@
 package block;
 
+import org.junit.Assert;
 import org.junit.Test;
 import testutils.RandomizedTest;
 import utils.Crypto;
@@ -46,6 +47,18 @@ public class BlockChainTest extends RandomizedTest {
 
         assertEquals(bc.insertBlock(b), false);
         assertEquals(bc.getBlockWithHash(b.getShaTwoFiftySix()), Optional.empty());
+    }
+
+    @Test
+    public void insertBlockEmpty() throws Exception {
+        BlockChain bc = new BlockChain();
+        assertFalse(errorMessage, bc.insertBlock(randomBlock(randomShaTwoFiftySix())));
+
+        Block genesis = Block.genesis();
+        genesis.addReward(Crypto.signatureKeyPair().getPublic());
+        assertTrue(errorMessage, bc.insertBlock(genesis));
+        assertTrue(errorMessage, bc.containsBlock(genesis));
+        assertEquals(errorMessage, bc.getCurrentHead(), genesis);
     }
 
     @Test

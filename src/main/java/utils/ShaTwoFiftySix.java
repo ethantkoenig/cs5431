@@ -117,4 +117,9 @@ public final class ShaTwoFiftySix implements Comparable<ShaTwoFiftySix>{
     public int hashCode() {
         return Arrays.hashCode(hash);
     }
+
+    @Override
+    public String toString() {
+        return ByteUtil.bytesToHexString(hash);
+    }
 }

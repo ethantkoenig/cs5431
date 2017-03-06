@@ -10,19 +10,22 @@ import java.util.Optional;
 
 /**
  * A {@code BlockChain} represents a forest of related {@code Blocks} which together represent a secure public ledger.
- *
+ * <p>
  * Created by eperdew on 2/25/17.
  */
 public class BlockChain {
-    private HashMap<ShaTwoFiftySix, Pair<Block,Integer>> blocks;
+    private HashMap<ShaTwoFiftySix, Pair<Block, Integer>> blocks = new HashMap<>();
     private Block currentHead;
     private int headDepth;
+
+    public BlockChain() {
+        // no-op
+    }
 
     /**
      * Creates a new {@code BlockChain} with {@code genesisBlock} as its root.
      */
     public BlockChain(Block genesisBlock) {
-        blocks = new HashMap<>();
         blocks.put(genesisBlock.getShaTwoFiftySix(), new Pair<>(genesisBlock,0));
         currentHead = genesisBlock;
         headDepth = 0;
@@ -39,7 +42,7 @@ public class BlockChain {
 
     /**
      * Inserts {@code Block b} into this {@code BlockChain}, if possible.
-     *
+     * <p>
      * Fails if {@code Block b}'s parent is not in {@code this}.
      *
      * @param b The {@code Block} to insert
@@ -53,6 +56,14 @@ public class BlockChain {
                 currentHead = b;
                 headDepth = depth;
             }
+            return true;
+        } else if (b.previousBlockHash.equals(ShaTwoFiftySix.zero())) { // genesis block
+            if (!blocks.isEmpty()) {
+                throw new IllegalStateException("Cannot insert genesis block into non-empty blockchain");
+            }
+            blocks.put(b.getShaTwoFiftySix(), new Pair<>(b, 0));
+            currentHead = b;
+            headDepth = 0;
             return true;
         }
         return false;
