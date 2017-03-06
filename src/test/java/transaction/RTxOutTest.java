@@ -32,4 +32,28 @@ public class RTxOutTest extends RandomizedTest {
         Assert.assertEquals(output.ownerPubKey, deserialized.ownerPubKey);
         Assert.assertEquals(output.value, deserialized.value);
     }
+
+    @Test
+    public void testEquals() throws Exception {
+        KeyPair pair = Crypto.signatureKeyPair();
+        long value = random.nextInt(Integer.MAX_VALUE);
+        RTxOut output1 = new RTxOut(value, pair.getPublic());
+        RTxOut output2 = new RTxOut(value, pair.getPublic());
+
+        KeyPair otherPair = Crypto.signatureKeyPair();
+        RTxOut anotherOutput = new RTxOut(random.nextInt(Integer.MAX_VALUE), otherPair.getPublic());
+
+        Assert.assertEquals(errorMessage, output1, output2);
+        Assert.assertNotEquals(errorMessage, output1, anotherOutput);
+        Assert.assertNotEquals(errorMessage, output1, null);
+    }
+
+    @Test
+    public void testHashCode() throws Exception {
+        KeyPair pair = Crypto.signatureKeyPair();
+        long value = random.nextInt(Integer.MAX_VALUE);
+        RTxOut output1 = new RTxOut(value, pair.getPublic());
+        RTxOut output2 = new RTxOut(value, pair.getPublic());
+        Assert.assertEquals(errorMessage, output1.hashCode(), output2.hashCode());
+    }
 }
