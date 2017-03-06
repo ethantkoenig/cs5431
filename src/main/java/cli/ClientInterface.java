@@ -1,17 +1,10 @@
 package cli;
-import network.Node;
 
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.BufferedReader;
-import java.io.PrintStream;
-import java.io.IOException;
-import java.util.Scanner;
+import java.io.*;
+import java.security.GeneralSecurityException;
 import java.util.HashMap;
 import java.util.Map;
-import java.io.UnsupportedEncodingException;
-import java.lang.IllegalArgumentException;
-import java.security.GeneralSecurityException;
+import java.util.Scanner;
 
 /**
  * The ClientInterface object is used to give the user a CLI based on a given
@@ -48,6 +41,7 @@ public class ClientInterface {
     private InputStream streamIn;
     protected PrintStream outputStream;
     private String nodeListPath = null;
+    private boolean quit = false;
 
     // A HashMap off all the commands
     protected Map<String, Command> commands = new HashMap<>();
@@ -87,7 +81,7 @@ public class ClientInterface {
         outputStream.println("Welcome!");
 
         String inputLine = null; // line read from input
-        while (true) {
+        while (!quit) {
             try {
                 outputStream.print("> ");
                 inputLine = buffer.readLine();
@@ -101,12 +95,9 @@ public class ClientInterface {
                     continue;
                 }
                 String cmd = cmdScanner.next();
-                if (cmd != null && commands.containsKey(cmd)) {
+                if (commands.containsKey(cmd)) {
                     commands.get(cmd).run(cmdScanner);
-                    if (cmd.equals("quit")) {
-                        break;
-                    }
-                } else if (cmd != null){
+                } else {
                     String msg = String.format(
                             "Unrecognized command %s; use the \"help\" command to list all commands",
                             cmd);
@@ -122,46 +113,14 @@ public class ClientInterface {
     private void populateCmdMap() {
         commands.put("help", help());
         commands.put("quit", quit());
-        commands.put("node", node());
         commands.put("generate", generate());
         commands.put("transact", transact());
         commands.put("setNodelist", setNodeList());
     }
 
-    /**************************************************************************
-     * Command anonymous functions are implemented below here                             *
-     **************************************************************************/
-
-    /**
-     * helper function for "node" command. Sets up a node on the machine
-     */
-    private Command node() {
-        return new Command() {
-
-            /**
-             * Creates a Node object and allows it to start accepting incoming
-             * connections and processing data
-             *
-             * @param args this command takes in no additional arguments
-             */
-            @Override
-            public boolean run(Scanner args) {
-                int port = args.nextInt();
-                try {
-                    new Node(port).accept();
-                } catch(IOException e) {
-                    e.printStackTrace();
-                }
-                return true;
-            }
-
-            @Override
-            public void documentation(PrintStream out) {
-                out.println("node - Launch a ledger-keeping, block-mining node.");
-                out.println("This node will use a generated private/public key pair.");
-            }
-        };
-    }
+    /* *************************************************************************
+     * Command anonymous functions are implemented below here                  *
+     * *************************************************************************/
 
     /**
      * helper function for the "generate" command. Generate a public/private key
@@ -229,8 +188,9 @@ public class ClientInterface {
                 }
                 try {
                     Transact.run(nodeListPath);
-                } catch(IOException e) {
+                } catch(GeneralSecurityException | IOException e) {
                     e.printStackTrace();
+                    return false;
                 }
                 return true;
             }
@@ -309,13 +269,14 @@ public class ClientInterface {
     private Command quit() {
         return new Command() {
             /**
-             * Perform a noop. The main while loop will exit.
+             * Quit the interactive shell.
              *
              * @param args Scanner that contains any arguments for the command
              *    This command takes no arguments
              */
             @Override
             public boolean run(Scanner args) {
+                quit = true;
                 return true;
             }
 

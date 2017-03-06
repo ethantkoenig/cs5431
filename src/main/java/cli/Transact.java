@@ -26,32 +26,32 @@ public class Transact {
         input = new BufferedReader(new InputStreamReader(System.in, Charset.defaultCharset()));
     }
 
-    public static void run(String nodeListPath) throws IOException {
+    public static void run(String nodeListPath) throws GeneralSecurityException, IOException {
         InputStreamReader streamIn =
                 new InputStreamReader(new FileInputStream(nodeListPath), "UTF8");
         BufferedReader nodeReader = new BufferedReader(streamIn);
         List<Socket> sockets = new ArrayList<Socket>();
         String line;
-        while ((line = nodeReader.readLine()) != null) {
-            String[] IPandPort = line.split(" ");
-            // Check to ensure we only have IP and Port
-            if (IPandPort.length == 2) {
-                sockets.add(new Socket(
-                        InetAddress.getByName(IPandPort[0]),
-                        Integer.parseInt(IPandPort[1]))
-                );
-            }
-        }
-        nodeReader.close();
-        streamIn.close();
-
-        Transact transact = new Transact();
+        Transact transact = null;
         try {
+            while ((line = nodeReader.readLine()) != null) {
+                String[] IPandPort = line.split(" ");
+                // Check to ensure we only have IP and Port
+                if (IPandPort.length == 2) {
+                    sockets.add(new Socket(
+                            InetAddress.getByName(IPandPort[0]),
+                            Integer.parseInt(IPandPort[1]))
+                    );
+                }
+            }
+            transact = new Transact();
             transact.runTransaction(sockets);
-            transact.input.close();
-        } catch (GeneralSecurityException | IOException e) {
-            e.printStackTrace();
-            System.exit(1);
+        } finally {
+            nodeReader.close();
+            streamIn.close();
+            if (transact != null) {
+                transact.input.close();
+            }
         }
     }
 

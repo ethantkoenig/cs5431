@@ -47,7 +47,7 @@ public class PairTest extends RandomizedTest {
     }
 
     @Test
-    public void testHashcode() {
+    public void testHashCode() {
         String left = randomAsciiString(random.nextInt(16));
         String right = randomAsciiString(random.nextInt(16));
         Pair<String, String> pair1 = new Pair<>(left, right);
