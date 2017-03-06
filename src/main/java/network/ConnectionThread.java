@@ -83,7 +83,11 @@ public class ConnectionThread extends Thread {
     private void receive() throws IOException, InterruptedException {
         byte[] headerBuffer = new byte[Integer.BYTES + Byte.BYTES];
         while (true) {
-            IOUtils.fill(in, headerBuffer);
+            try {
+                IOUtils.fill(in, headerBuffer);
+            }catch (IOException e){
+                LOGGER.info("[-] Lost connection to Node: " + socket.getInetAddress().getHostAddress());
+            }
             int payloadLen = ByteBuffer.wrap(headerBuffer, 0, Integer.BYTES).getInt();
             if (payloadLen > MAX_PAYLOAD_LEN) {
                 LOGGER.severe(String.format("Received misformatted message (payloadLen=%d)", payloadLen));
