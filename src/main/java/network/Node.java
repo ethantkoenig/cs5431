@@ -93,7 +93,7 @@ public class Node {
      *
      * @param message   the type message object containing type and payload
      */
-    public void broadcast(Message message) {
+    public synchronized void broadcast(Message message) {
         byte type = message.type;
         byte[] output = message.payload;
         for (ConnectionThread connectionThread : connections) {
