@@ -222,6 +222,9 @@ public class Block implements Iterable<Transaction> {
                 return Optional.empty();
             }
         }
+        if (this.reward.value != REWARD_AMOUNT) {
+            return Optional.empty();
+        }
         return Optional.of(copy);
     }
 
