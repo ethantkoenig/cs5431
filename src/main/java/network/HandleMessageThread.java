@@ -1,6 +1,7 @@
 package network;
 
 import block.Block;
+import block.UnspentTransactions;
 import transaction.RTransaction;
 import utils.ShaTwoFiftySix;
 
@@ -123,7 +124,9 @@ public class HandleMessageThread extends Thread {
         } else {
             //verify transaction
             LOGGER.info("[!] Verifying transaction.");
-            if (transaction.verify(miningBundle.getUnspentTransactions())){
+            UnspentTransactions copy = miningBundle.getUnspentTransactions().copy();
+            if (transaction.verify(copy)){
+                miningBundle.setUnspentTransactions(copy);
                 LOGGER.info("[!] Transaction verified. Adding transaction to block.");
                 LOGGER.info(transaction.toString());
                 currentAddToBlock.addTransaction(transaction);
