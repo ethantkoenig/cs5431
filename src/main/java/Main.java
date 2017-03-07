@@ -41,7 +41,7 @@ public class Main {
         }
     }
 
-    public static boolean runNode(String[] args) throws GeneralSecurityException, IOException {
+    private static boolean runNode(String[] args) throws GeneralSecurityException, IOException {
         if (args.length < 5) {
             System.err.println("usage: node <port> <public-key> <private-key> <privileged-key> (<ip-address>:<port>)*");
             return false;
@@ -63,45 +63,5 @@ public class Main {
         }
         miner.startMiner();
         return true;
-    }
-
-    public static void junkExampleTest() {
-        // Just junk example of testing
-
-        Miner miner = new Miner(4446, null, null); // TODO
-        miner.startMiner();
-
-        ArrayList<InetSocketAddress> hosts = new ArrayList<>();
-        hosts.add(new InetSocketAddress("10.132.4.134", 4444));
-//        hosts.add(new InetSocketAddress("10.132.7.187", 4445));
-        miner.connectAll(hosts);
-
-//        Transaction rTransaction = randomTransaction();
-//        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-//        rTransaction.serializeWithSignatures(new DataOutputStream(outputStream));
-//        Message message = new Message((byte)0, outputStream.toByteArray());
-//
-//        miner.broadcast(message);
-//        miner.broadcast(message);
-//        miner.broadcast(message);
-
-    }
-
-    protected static Transaction randomTransaction() throws GeneralSecurityException, IOException {
-        KeyPair senderPair = Crypto.signatureKeyPair();
-        KeyPair recipientPair = Crypto.signatureKeyPair();
-
-        ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(randomBytes(256));
-        return new Transaction.Builder()
-                .addInput(new TxIn(hash, 0), senderPair.getPrivate())
-                .addOutput(new TxOut(100, recipientPair.getPublic()))
-                .build();
-    }
-
-    protected static byte[] randomBytes(int length) {
-
-        byte[] bytes = new byte[length];
-        RANDOM.nextBytes(bytes);
-        return bytes;
     }
 }
