@@ -7,7 +7,7 @@ import java.security.KeyPair;
 import java.security.PublicKey;
 
 /**
- * A wrapper object to pass from the Miner object to the miner HandleMessageThread
+ * A wrapper object to pass from the network.Miner object to the miner HandleMessageThread
  *
  * @version 1.0, March 7 2017
  */

@@ -1,10 +1,9 @@
+package network;
+
 import block.Block;
 import block.BlockChain;
 import block.UnspentTransactions;
-import network.*;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.security.KeyPair;

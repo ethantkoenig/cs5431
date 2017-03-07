@@ -1,4 +1,5 @@
 import cli.ClientInterface;
+import network.Miner;
 import transaction.Transaction;
 import transaction.TxIn;
 import transaction.TxOut;
