@@ -15,11 +15,11 @@ public class GenerateKey {
             throws GeneralSecurityException, IOException {
         KeyPair pair = Crypto.signatureKeyPair();
 
-        OutputStream privateOuput = new FileOutputStream(privateFilename);
+        OutputStream privateOutput = new FileOutputStream(privateFilename);
         try {
-            privateOuput.write(pair.getPrivate().getEncoded());
+            privateOutput.write(pair.getPrivate().getEncoded());
         } finally {
-            privateOuput.close();
+            privateOutput.close();
         }
 
         OutputStream publicOutput = new FileOutputStream(publicFilename);
