@@ -226,6 +226,16 @@ public class Block {
         return Optional.of(copy);
     }
 
+    public boolean verifyGenesis(PublicKey privilegedKey) {
+        if (this.transactions.length > 0) {
+            return false;
+        }
+        if (this.reward.value != REWARD_AMOUNT) {
+            return false;
+        }
+        return this.reward.ownerPubKey.equals(privilegedKey);
+    }
+
     @Override
     public boolean equals(Object other) {
         if (other instanceof Block) {

@@ -12,6 +12,7 @@ import utils.ShaTwoFiftySix;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.nio.ByteBuffer;
+import java.security.KeyPair;
 import java.util.Collections;
 import java.util.Optional;
 
@@ -71,6 +72,17 @@ public class BlockTest extends RandomizedTest {
         // TODO currently assumes that last transaction will only have one output
         expected.put(lastTxn.getShaTwoFiftySix(), 0, lastTxn.getOutput(0));
         Assert.assertEquals(errorMessage, result.get(), expected);
+    }
+
+    @Test
+    public void testVerifyGenesis() throws Exception {
+        KeyPair pair = Crypto.signatureKeyPair();
+        Assert.assertFalse(errorMessage,
+                randomBlock(randomShaTwoFiftySix()).verifyGenesis(pair.getPublic()));
+
+        Block genesis = Block.genesis();
+        genesis.addReward(pair.getPublic());
+        Assert.assertTrue(errorMessage, genesis.verifyGenesis(pair.getPublic()));
     }
 
     @Test
