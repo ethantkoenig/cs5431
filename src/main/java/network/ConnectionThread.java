@@ -94,7 +94,7 @@ public class ConnectionThread extends Thread {
             }
             byte payloadType = ByteBuffer.wrap(headerBuffer, Integer.BYTES, Byte.BYTES).get();
             byte[] payload = new byte[payloadLen];
-            IOUtils.fill(in, headerBuffer);
+            IOUtils.fill(in, payload);
             Message message = new Message(payloadType, payload);
             LOGGER.info("Putting message on messageQueue: " + message.toString());
             messageQueue.put(message);
