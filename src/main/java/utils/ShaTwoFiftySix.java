@@ -15,7 +15,7 @@ public final class ShaTwoFiftySix implements Comparable<ShaTwoFiftySix>{
 
     private final byte[] hash;
 
-    public ShaTwoFiftySix(byte[] hash) {
+    private ShaTwoFiftySix(byte[] hash) {
         this.hash =  Arrays.copyOf(hash, hash.length);
     }
 

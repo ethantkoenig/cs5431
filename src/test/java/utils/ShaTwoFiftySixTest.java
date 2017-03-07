@@ -90,7 +90,7 @@ public class ShaTwoFiftySixTest extends RandomizedTest {
     public void testCheckHashZeros() {
         byte[] hash = new byte[ShaTwoFiftySix.HASH_SIZE_IN_BYTES];
         hash[2] = 0x01;
-        ShaTwoFiftySix shaTwoFiftySix = new ShaTwoFiftySix(hash);
+        ShaTwoFiftySix shaTwoFiftySix = ShaTwoFiftySix.create(hash);
         Assert.assertTrue(errorMessage, shaTwoFiftySix.checkHashZeros(1));
         Assert.assertTrue(errorMessage, shaTwoFiftySix.checkHashZeros(2));
         Assert.assertFalse(errorMessage, shaTwoFiftySix.checkHashZeros(3));

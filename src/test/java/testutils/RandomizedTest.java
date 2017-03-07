@@ -106,6 +106,6 @@ public abstract class RandomizedTest {
     }
 
     protected ShaTwoFiftySix randomShaTwoFiftySix() {
-        return new ShaTwoFiftySix(randomBytes(ShaTwoFiftySix.HASH_SIZE_IN_BYTES));
+        return ShaTwoFiftySix.create(randomBytes(ShaTwoFiftySix.HASH_SIZE_IN_BYTES));
     }
 }
