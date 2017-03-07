@@ -10,10 +10,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 
 /**
- * Signature Class for the Transaction. Serves to provide some flexibility for
- * transaction signatures, that way we can support types other than Pay-to-pubkey.
- * OpCode NONE is defined to be 0x00, and OpCode OP_P2PK, defined to be 0x01,
- * is pay-to-pubkey. These OpCodes will be used to determine how to verify a transaction.
+ * Represents a signature for a transaction.
  */
 public class RSignature {
 
