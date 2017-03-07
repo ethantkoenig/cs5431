@@ -55,7 +55,7 @@ public class Node {
 
         LOGGER.info("[+] Accepting connections");
 
-        new ConnectionThread( new Socket("localhost", port) ,this.messageQueue).start();
+        new ConnectionThread(new Socket("localhost", port), this.messageQueue).start();
 
         while (true) {
             ConnectionThread connectionThread = null;
@@ -91,7 +91,7 @@ public class Node {
     /**
      * Sends a message to all other nodes in the network that you are connected to.
      *
-     * @param message   the type message object containing type and payload
+     * @param message the type message object containing type and payload
      */
     public synchronized void broadcast(Message message) {
         byte type = message.type;

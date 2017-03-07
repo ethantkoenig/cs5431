@@ -48,7 +48,7 @@ public class MinerThread extends Thread {
         }
     }
 
-    public void stopMining(){
+    public void stopMining() {
         stopMining = true;
     }
 
@@ -64,7 +64,7 @@ public class MinerThread extends Thread {
         }
 
         // The thread was told to stop by parent so get out.
-        if (finalBlock == null){
+        if (finalBlock == null) {
             return;
         }
 

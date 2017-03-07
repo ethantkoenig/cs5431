@@ -29,13 +29,13 @@ public class Miner extends Node {
     }
 
 
-    public  void connectAll(ArrayList<InetSocketAddress> hosts) {
+    public void connectAll(ArrayList<InetSocketAddress> hosts) {
         for (InetSocketAddress address : hosts) {
             connect(address.getHostString(), address.getPort());
         }
     }
 
-    public void startMiner(){
+    public void startMiner() {
         // Start network.HandleMessageThread
         new HandleMessageThread(this.messageQueue, this.broadcastQueue, miningBundle).start();
         // Start network.BroadcastThread

@@ -1,19 +1,12 @@
 import cli.ClientInterface;
 import network.Miner;
-import transaction.Transaction;
-import transaction.TxIn;
-import transaction.TxOut;
 import utils.Crypto;
-import utils.ShaTwoFiftySix;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.util.ArrayList;
-import java.util.Random;
 
 public class Main {
 
@@ -27,7 +20,8 @@ public class Main {
             case "node":
                 if (!runNode(args)) {
                     System.exit(1);
-                };
+                }
+                ;
                 break;
             case "client":
                 new ClientInterface().startInterface();

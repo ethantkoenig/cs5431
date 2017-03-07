@@ -57,15 +57,15 @@ public class ClientInterface {
     /**
      * Creates a new client interface with a custom input stream.
      *
-     * @param in InputStream to recieve data from user
-     * @param out PrintStream to send data to the user
+     * @param in       InputStream to recieve data from user
+     * @param out      PrintStream to send data to the user
      * @param encoding Charset which the input will be encoded as
      */
     public ClientInterface(InputStream in, PrintStream out, String encoding) {
         streamIn = in;
         try {
-        streamReader = new InputStreamReader(streamIn, encoding);
-        } catch (UnsupportedEncodingException e){
+            streamReader = new InputStreamReader(streamIn, encoding);
+        } catch (UnsupportedEncodingException e) {
             throw new IllegalArgumentException("Not a valid encoding");
         }
         buffer = new BufferedReader(streamReader);
@@ -151,8 +151,8 @@ public class ClientInterface {
                     return false;
                 }
                 try {
-                GenerateKey.generateKey(privateFid, publicFid);
-                } catch(GeneralSecurityException | IOException e) {
+                    GenerateKey.generateKey(privateFid, publicFid);
+                } catch (GeneralSecurityException | IOException e) {
                     e.printStackTrace();
                 }
                 return true;
@@ -188,7 +188,7 @@ public class ClientInterface {
                 }
                 try {
                     Transact.run(buffer, nodeListPath);
-                } catch(GeneralSecurityException | IOException e) {
+                } catch (GeneralSecurityException | IOException e) {
                     e.printStackTrace();
                     return false;
                 }

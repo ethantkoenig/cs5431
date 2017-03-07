@@ -141,7 +141,6 @@ public class Block implements Iterable<Transaction> {
     }
 
     /**
-     *
      * @return true if block has all NUM_TRANSACTIONS_PER_BLOCK filled
      */
     public boolean isFull() {

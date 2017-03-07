@@ -12,7 +12,10 @@ import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import java.util.logging.Logger;
 
 /**
@@ -124,6 +127,7 @@ public class Transaction {
 
     /**
      * Returns the output at position 'index' in the transaction.
+     *
      * @param index is the output number to be returned.
      * @return an TxOut object of this transaction at the requested index.
      */
@@ -206,7 +210,7 @@ public class Transaction {
      * reflect the state before this transaction was applied.
      *
      * @param unspentTransactions map of unspent transactions to update
-     * @param lookup way to lookup previous transactions
+     * @param lookup              way to lookup previous transactions
      * @return whether the rollback was successful
      */
     public boolean rollback(UnspentTransactions unspentTransactions, TransactionLookup lookup) {
@@ -217,7 +221,7 @@ public class Transaction {
             }
             unspentTransactions.remove(hash, i);
         }
-        for (TxIn input: txIn) {
+        for (TxIn input : txIn) {
             if (unspentTransactions.contains(input.previousTxn, input.txIdx)) {
                 return false;
             }
@@ -277,7 +281,7 @@ public class Transaction {
 
     @Override
     public int hashCode() {
-        return Arrays.deepHashCode(new Object[] { txIn, txOut });
+        return Arrays.deepHashCode(new Object[]{txIn, txOut});
     }
 
     public static class Builder {

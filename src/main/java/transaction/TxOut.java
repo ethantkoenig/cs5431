@@ -48,5 +48,7 @@ public class TxOut {
     }
 
     @Override
-    public int hashCode() {return Arrays.hashCode(new Object[] { value, ownerPubKey });}
+    public int hashCode() {
+        return Arrays.hashCode(new Object[]{value, ownerPubKey});
+    }
 }

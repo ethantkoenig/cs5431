@@ -12,7 +12,7 @@ public class Pair<L, R> {
     /**
      * Creates a new {@code Pair} object containing {@code left} and {@code right}.
      *
-     * @param left The first item to be stored in the {@code Pair}.
+     * @param left  The first item to be stored in the {@code Pair}.
      * @param right The second item to be stored in the {@code Pair}.
      */
     public Pair(L left, R right) {
@@ -34,7 +34,8 @@ public class Pair<L, R> {
         return right;
     }
 
-    @Override public boolean equals(Object other) {
+    @Override
+    public boolean equals(Object other) {
         if (other instanceof Pair) {
             Pair o = (Pair) other;
             return o.left.equals(left) && o.right.equals(right);
@@ -42,7 +43,8 @@ public class Pair<L, R> {
         return false;
     }
 
-    @Override public int hashCode() {
-        return Arrays.hashCode(new Object[]{ left, right });
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(new Object[]{left, right});
     }
 }

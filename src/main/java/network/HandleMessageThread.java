@@ -132,7 +132,7 @@ public class HandleMessageThread extends Thread {
             startMiningThread();
             addTransactionToBlock(transaction);
         }
-}
+    }
 
     private void addBlockToChain(Block block) {
         if (currentAddToBlock == null) {

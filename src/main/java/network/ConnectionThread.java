@@ -62,7 +62,7 @@ public class ConnectionThread extends Thread {
     /**
      * Send the given output to this network.ConnectionThread
      *
-     * @param type   the type of message to be sent
+     * @param type    the type of message to be sent
      * @param payload the message to be sent
      * @throws IOException if out.checkError() returns true indicating that the connection has been closed.
      */
@@ -73,7 +73,7 @@ public class ConnectionThread extends Thread {
     /**
      * Ran by a background thread as seen in the run() function. Receives and handles all incoming messages.
      * Puts messages on the messageQueue to be consumed by the HandleMessageThread
-     *
+     * <p>
      * Receives incoming messages, and put them onto the messageQueue.
      */
     private void receive() throws IOException, InterruptedException {
@@ -81,7 +81,7 @@ public class ConnectionThread extends Thread {
         while (true) {
             try {
                 IOUtils.fill(in, headerBuffer);
-            }catch (IOException e){
+            } catch (IOException e) {
                 LOGGER.info("[-] Lost connection to Node: " + socket.getInetAddress().getHostAddress());
                 close();
                 break;

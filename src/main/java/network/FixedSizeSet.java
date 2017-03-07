@@ -14,7 +14,7 @@ import java.util.Set;
 public class FixedSizeSet<T> {
     private final static int MAX_ENTRIES = 100;
 
-    private Set<T> set = Collections.newSetFromMap(new LinkedHashMap<T, Boolean>(){
+    private Set<T> set = Collections.newSetFromMap(new LinkedHashMap<T, Boolean>() {
         protected boolean removeEldestEntry(Map.Entry<T, Boolean> eldest) {
             return size() > MAX_ENTRIES;
         }
@@ -23,11 +23,11 @@ public class FixedSizeSet<T> {
     public FixedSizeSet() {
     }
 
-    public void add(T element){
+    public void add(T element) {
         set.add(element);
     }
 
-    public boolean contains(T element){
+    public boolean contains(T element) {
         return set.contains(element);
     }
 }
