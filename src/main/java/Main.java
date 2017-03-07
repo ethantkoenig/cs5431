@@ -42,7 +42,7 @@ public class Main {
 
     public static boolean runNode(String[] args) throws GeneralSecurityException, IOException {
         if (args.length < 5) {
-            System.err.println("usage: node <port> <public-key> <private-key> <privileged-key>");
+            System.err.println("usage: node <port> <public-key> <private-key> <privileged-key> (<ip-address>:<port>)*");
             return false;
         }
         int port = Integer.parseInt(args[1]);
