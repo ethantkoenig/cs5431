@@ -63,6 +63,8 @@ public class HandleMessageThread extends Thread {
                         if (!recentTransactionsReceived.contains(message)) {
                             LOGGER.info("[!] New transaction, so I am broadcasting to all other miners.");
                             broadcastQueue.put(message);
+                        } else {
+                            continue;
                         }
                         recentTransactionsReceived.add(message);
                         addTransactionToBlock(transaction);
