@@ -14,9 +14,7 @@ import java.util.logging.Logger;
  * The network.Node class represents an arbitrary node in the network that can communicate
  * with all other nodes through the use of the broadcast function.
  *
- * @author Evan King
  * @version 1.0, Feb 16 2017
- * @todo error handling will need to be thoroughly tested in regards to lost connections
  */
 public class Node {
     private static final Logger LOGGER = Logger.getLogger(Node.class.getName());

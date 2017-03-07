@@ -9,7 +9,6 @@ import java.util.Set;
  * The FixedSizeSet is a set that holds MAX_ENTRIES and deletes the oldest element if one tries to
  * add another elements. Similar to a circular queue, but with O(1) lookup.
  *
- * @author Evan King
  * @version 1.0, March 5 2017
  */
 public class FixedSizeSet<T> {

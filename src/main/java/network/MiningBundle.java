@@ -7,7 +7,9 @@ import java.security.KeyPair;
 import java.security.PublicKey;
 
 /**
- * Created by EvanKing on 3/5/17.
+ * A wrapper object to pass from the Miner object to the miner HandleMessageThread
+ *
+ * @version 1.0, March 7 2017
  */
 public class MiningBundle {
 

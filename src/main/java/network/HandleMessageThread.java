@@ -17,7 +17,6 @@ import java.util.logging.Logger;
  * The network.HandleMessageThread is a background thread ran by the instantiated Node class
  * in order to process incoming messages from all connected nodes.
  *
- * @author Evan King
  * @version 1.0, Feb 22 2017
  */
 public class HandleMessageThread extends Thread {
