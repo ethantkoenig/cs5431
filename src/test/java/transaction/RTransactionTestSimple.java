@@ -1,5 +1,6 @@
 package transaction;
 
+import block.UnspentTransactions;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -11,6 +12,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.nio.ByteBuffer;
 import java.security.KeyPair;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * Constructs a basic transaction between 2 peers, and signs and verifies (sig).
@@ -54,6 +58,44 @@ public class RTransactionTestSimple extends RandomizedTest {
         Assert.assertEquals(errorMessage, tx1.hashCode(), tx2.hashCode());
         Assert.assertNotEquals(errorMessage, tx1, anotherTx);
         Assert.assertNotEquals(errorMessage, tx1, null);
+    }
+
+    @Test
+    public void testRollback() throws Exception {
+        KeyPair initialPair = Crypto.signatureKeyPair();
+        KeyPair middlePair = Crypto.signatureKeyPair();
+        KeyPair finalPair = Crypto.signatureKeyPair();
+
+        RTxOut middleOut0 = new RTxOut(100, middlePair.getPublic());
+        RTxOut middleOut1 = new RTxOut(200, middlePair.getPublic());
+        RTransaction transaction1 = new RTransaction.Builder()
+                .addInput(new RTxIn(randomShaTwoFiftySix(), 0), initialPair.getPrivate())
+                .addOutput(middleOut0)
+                .addOutput(middleOut1)
+                .build();
+
+        RTxOut finalOut0 = new RTxOut(300, finalPair.getPublic());
+        RTransaction transaction2 = new RTransaction.Builder()
+                .addInput(new RTxIn(transaction1.getShaTwoFiftySix(), 0), middlePair.getPrivate())
+                .addInput(new RTxIn(transaction1.getShaTwoFiftySix(), 1), middlePair.getPrivate())
+                .addOutput(finalOut0)
+                .build();
+
+        Map<ShaTwoFiftySix, RTransaction> transactions = new HashMap<>();
+        transactions.put(transaction1.getShaTwoFiftySix(), transaction1);
+        transactions.put(transaction2.getShaTwoFiftySix(), transaction2);
+        TransactionLookup lookup = hash -> Optional.ofNullable(transactions.get(hash));
+
+        UnspentTransactions unspentTransactions = UnspentTransactions.empty();
+        unspentTransactions.put(transaction2.getShaTwoFiftySix(), 0, finalOut0);
+        Assert.assertTrue(errorMessage, transaction2.rollback(unspentTransactions, lookup));
+
+        Assert.assertTrue(unspentTransactions.contains(transaction1.getShaTwoFiftySix(), 0));
+        Assert.assertTrue(unspentTransactions.contains(transaction1.getShaTwoFiftySix(), 1));
+        Assert.assertFalse(unspentTransactions.contains(transaction2.getShaTwoFiftySix(), 0));
+
+        Assert.assertFalse(errorMessage, transaction2.rollback(unspentTransactions, lookup));
+        Assert.assertFalse(errorMessage, transaction1.rollback(unspentTransactions, lookup));
     }
 
     @Test

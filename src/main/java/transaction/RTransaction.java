@@ -15,6 +15,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Logger;
 
 /**
@@ -185,6 +186,38 @@ public class RTransaction {
         }
         if (outputsum > inputsum) {
             return false;
+        }
+        return true;
+    }
+
+    /**
+     * "Rollbacks" this transaction, by updating {@code unspentTransactions} to
+     * reflect the state before this transaction was applied.
+     *
+     * @param unspentTransactions map of unspent transactions to update
+     * @param lookup way to lookup previous transactions
+     * @return whether the rollback was successful
+     */
+    public boolean rollback(UnspentTransactions unspentTransactions, TransactionLookup lookup) {
+        ShaTwoFiftySix hash = getShaTwoFiftySix();
+        for (int i = 0; i < txOut.length; i++) {
+            if (!unspentTransactions.contains(hash, i)) {
+                return false;
+            }
+            unspentTransactions.remove(hash, i);
+        }
+        for (RTxIn input: txIn) {
+            if (unspentTransactions.contains(input.previousTxn, input.txIdx)) {
+                return false;
+            }
+
+            Optional<RTransaction> opt = lookup.lookup(input.previousTxn);
+            if (!opt.isPresent()) {
+                return false;
+            }
+
+            RTxOut output = opt.get().getOutput(input.txIdx);
+            unspentTransactions.put(input.previousTxn, input.txIdx, output);
         }
         return true;
     }
