@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.SynchronousQueue;
 import java.util.logging.Logger;
@@ -96,15 +98,17 @@ public class Node {
     public synchronized void broadcast(Message message) {
         byte type = message.type;
         byte[] output = message.payload;
+        Set<ConnectionThread> toRemove = new HashSet<>();
         for (ConnectionThread connectionThread : connections) {
             try {
                 connectionThread.send(type, output);
             } catch (IOException e) {
                 LOGGER.warning(String.format(
                         "Lost connection to connectionThread: %s.%n", connectionThread));
-                this.connections.remove(connectionThread);
+                toRemove.add(connectionThread);
             }
         }
+        connections.removeAll(toRemove);
     }
 
     /**
