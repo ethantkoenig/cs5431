@@ -1,9 +1,6 @@
 package transaction;
 
 
-import java.security.GeneralSecurityException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
 import block.UnspentTransactions;
 import utils.ByteUtil;
 import utils.ShaTwoFiftySix;
@@ -12,6 +9,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.security.GeneralSecurityException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -19,10 +19,8 @@ import java.util.Optional;
 import java.util.logging.Logger;
 
 /**
- * Main transaction class. Keeps track of several pieces of information key to the
- * transaction, such as the number of inputs, and outputs, the inputs and outputs
- * themselves, and some additional bookkeeping for proper insertion of input and
- * output classes
+ * Main transaction class.
+ * Contains an array of inputs, outputs and signatures.
  */
 public class RTransaction {
     private final static Logger LOGGER = Logger.getLogger(Logger.class.getName());
@@ -108,6 +106,12 @@ public class RTransaction {
         }
     }
 
+    /**
+     * Returns the input at position 'index' in the transaction.
+     *
+     * @param index is the input number to be returned.
+     * @return an RTxIn object of this transaction at the requested index.
+     */
     public RTxIn getInput(int index) {
         if (index < 0 || index >= txIn.length) {
             String msg = String.format("Invalid index %d", index);
@@ -116,6 +120,11 @@ public class RTransaction {
         return txIn[index];
     }
 
+    /**
+     * Returns the output at position 'index' in the transaction.
+     * @param index is the output number to be returned.
+     * @return an RTxOut object of this transaction at the requested index.
+     */
     public RTxOut getOutput(int index) {
         if (index < 0 || index >= txOut.length) {
             String msg = String.format("Invalid index %d", index);

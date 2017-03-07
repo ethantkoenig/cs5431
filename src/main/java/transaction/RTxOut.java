@@ -11,8 +11,9 @@ import java.util.Arrays;
 
 
 /**
- * Transaction output class. Contains the value associated with this output
- * and the public key script required to claim this output.
+ * Transaction output class.
+ * Contains the value associated with this output and the public key
+ * required to claim this output.
  */
 public class RTxOut {
 
