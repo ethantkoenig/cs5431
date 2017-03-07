@@ -91,6 +91,8 @@ public class ConnectionThread extends Thread {
             int payloadLen = ByteBuffer.wrap(headerBuffer, 0, Integer.BYTES).getInt();
             if (payloadLen > MAX_PAYLOAD_LEN) {
                 LOGGER.severe(String.format("Received misformatted message (payloadLen=%d)", payloadLen));
+                close();
+                return;
             }
             byte payloadType = ByteBuffer.wrap(headerBuffer, Integer.BYTES, Byte.BYTES).get();
             byte[] payload = new byte[payloadLen];
