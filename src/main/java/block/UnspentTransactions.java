@@ -1,6 +1,6 @@
 package block;
 
-import transaction.RTxOut;
+import transaction.TxOut;
 import utils.Pair;
 import utils.ShaTwoFiftySix;
 
@@ -11,9 +11,9 @@ import java.util.Map;
  * A map from (SHA-256, index) pairs to unspent transaction outputs.
  */
 public class UnspentTransactions {
-    private final Map<Pair<ShaTwoFiftySix, Integer>, RTxOut> map;
+    private final Map<Pair<ShaTwoFiftySix, Integer>, TxOut> map;
 
-    private UnspentTransactions(Map<Pair<ShaTwoFiftySix, Integer>, RTxOut> map) {
+    private UnspentTransactions(Map<Pair<ShaTwoFiftySix, Integer>, TxOut> map) {
         this.map = map;
     }
 
@@ -35,15 +35,15 @@ public class UnspentTransactions {
         return map.containsKey(new Pair<>(hash, index));
     }
 
-    public RTxOut put(ShaTwoFiftySix hash, int index, RTxOut out) {
+    public TxOut put(ShaTwoFiftySix hash, int index, TxOut out) {
         return map.put(new Pair<>(hash, index), out);
     }
 
-    public RTxOut get(ShaTwoFiftySix hash, int index) {
+    public TxOut get(ShaTwoFiftySix hash, int index) {
         return map.get(new Pair<>(hash, index));
     }
 
-    public RTxOut remove(ShaTwoFiftySix hash, int index) {
+    public TxOut remove(ShaTwoFiftySix hash, int index) {
         return map.remove(new Pair<>(hash, index));
     }
 

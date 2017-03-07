@@ -19,17 +19,17 @@ import java.util.logging.Logger;
  * Main transaction class.
  * Contains an array of inputs, outputs and signatures.
  */
-public class RTransaction {
+public class Transaction {
     private final static Logger LOGGER = Logger.getLogger(Logger.class.getName());
 
-    private final RTxIn[] txIn;
-    private final RTxOut[] txOut;
-    private final RSignature[] signatures;
+    private final TxIn[] txIn;
+    private final TxOut[] txOut;
+    private final Signature[] signatures;
 
     public final int numInputs;
     public final int numOutputs;
 
-    private RTransaction(RTxIn[] txIn, RTxOut[] txOut, RSignature[] signatures) {
+    private Transaction(TxIn[] txIn, TxOut[] txOut, Signature[] signatures) {
         this.txIn = txIn;
         this.txOut = txOut;
         this.signatures = signatures;
@@ -37,41 +37,41 @@ public class RTransaction {
         numOutputs = txOut.length;
     }
 
-    private static RTransaction createAndSign(RTxIn[] inputs, RTxOut[] outputs, PrivateKey[] keys)
+    private static Transaction createAndSign(TxIn[] inputs, TxOut[] outputs, PrivateKey[] keys)
             throws IOException, GeneralSecurityException {
         if (inputs.length != keys.length) {
             throw new IllegalStateException();
         }
-        RTransaction txn = new RTransaction(inputs, outputs, null);
+        Transaction txn = new Transaction(inputs, outputs, null);
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         txn.serialize(new DataOutputStream(outputStream));
         byte[] body = outputStream.toByteArray();
 
-        RSignature[] signatures = new RSignature[keys.length];
+        Signature[] signatures = new Signature[keys.length];
         for (int i = 0; i < keys.length; i++) {
-            signatures[i] = RSignature.sign(body, keys[i]);
+            signatures[i] = Signature.sign(body, keys[i]);
         }
 
-        return new RTransaction(inputs, outputs, signatures);
+        return new Transaction(inputs, outputs, signatures);
     }
 
-    public static RTransaction deserialize(ByteBuffer input) throws GeneralSecurityException {
+    public static Transaction deserialize(ByteBuffer input) throws GeneralSecurityException {
         final int numInputs = input.getInt();
-        RTxIn[] inputs = new RTxIn[numInputs];
+        TxIn[] inputs = new TxIn[numInputs];
         for (int i = 0; i < numInputs; i++) {
-            inputs[i] = RTxIn.deserialize(input);
+            inputs[i] = TxIn.deserialize(input);
         }
 
         final int numOutputs = input.getInt();
-        RTxOut[] outputs = new RTxOut[numOutputs];
+        TxOut[] outputs = new TxOut[numOutputs];
         for (int i = 0; i < numOutputs; i++) {
-            outputs[i] = RTxOut.deserialize(input);
+            outputs[i] = TxOut.deserialize(input);
         }
-        RSignature[] signatures = new RSignature[numInputs];
+        Signature[] signatures = new Signature[numInputs];
         for (int i = 0; i < numInputs; i++) {
-            signatures[i] = RSignature.deserialize(input);
+            signatures[i] = Signature.deserialize(input);
         }
-        return new RTransaction(inputs, outputs, signatures);
+        return new Transaction(inputs, outputs, signatures);
     }
 
     /**
@@ -82,12 +82,12 @@ public class RTransaction {
      */
     public void serialize(DataOutputStream outputStream) throws IOException {
         outputStream.writeInt(txIn.length);
-        for (RTxIn input : txIn) {
+        for (TxIn input : txIn) {
             input.serialize(outputStream);
         }
 
         outputStream.writeInt(txOut.length);
-        for (RTxOut output : txOut) {
+        for (TxOut output : txOut) {
             output.serialize(outputStream);
         }
     }
@@ -103,7 +103,7 @@ public class RTransaction {
             throw new IllegalStateException("Cannot fully serialize unsigned transaction");
         }
         serialize(outputStream);
-        for (RSignature signature : signatures) {
+        for (Signature signature : signatures) {
             signature.serialize(outputStream);
         }
     }
@@ -112,9 +112,9 @@ public class RTransaction {
      * Returns the input at position 'index' in the transaction.
      *
      * @param index is the input number to be returned.
-     * @return an RTxIn object of this transaction at the requested index.
+     * @return an TxIn object of this transaction at the requested index.
      */
-    public RTxIn getInput(int index) {
+    public TxIn getInput(int index) {
         if (index < 0 || index >= txIn.length) {
             String msg = String.format("Invalid index %d", index);
             throw new IllegalArgumentException(msg);
@@ -125,9 +125,9 @@ public class RTransaction {
     /**
      * Returns the output at position 'index' in the transaction.
      * @param index is the output number to be returned.
-     * @return an RTxOut object of this transaction at the requested index.
+     * @return an TxOut object of this transaction at the requested index.
      */
-    public RTxOut getOutput(int index) {
+    public TxOut getOutput(int index) {
         if (index < 0 || index >= txOut.length) {
             String msg = String.format("Invalid index %d", index);
             throw new IllegalArgumentException(msg);
@@ -162,14 +162,14 @@ public class RTransaction {
     }
 
     /**
-     * Verifies {@code this RTransaction} with respect to {@code unspentOutputs}.
+     * Verifies {@code this Transaction} with respect to {@code unspentOutputs}.
      * <p>
      * This will check that all signatures are valid and that there are no double spends.
      *
      * @param unspentOutputs A {@code Map} containing all of the unspent outputs that {@code this} may refer to. Entries
-     *                       that are spent by {@code this RTransaction} will be removed. If verification fails, there
+     *                       that are spent by {@code this Transaction} will be removed. If verification fails, there
      *                       are no guarantees as to the state of this {@code Map}.
-     * @return Whether this {@code RTransaction} was successfully verified.
+     * @return Whether this {@code Transaction} was successfully verified.
      * @throws GeneralSecurityException
      * @throws IOException
      */
@@ -178,12 +178,12 @@ public class RTransaction {
         long inputsum = 0;
         long outputsum = 0;
         for (int i = 0; i < txIn.length; ++i) {
-            RTxIn in = txIn[i];
+            TxIn in = txIn[i];
             if (!unspentOutputs.contains(in.previousTxn, in.txIdx)) {
                 LOGGER.warning("Invalid input: " + in.previousTxn + "," + in.txIdx);
                 return false;
             }
-            RTxOut out = unspentOutputs.remove(in.previousTxn, in.txIdx);
+            TxOut out = unspentOutputs.remove(in.previousTxn, in.txIdx);
             inputsum += out.value;
             if (!verifySignature(i, out.ownerPubKey)) {
                 LOGGER.warning("Invalid signature: " + out.ownerPubKey + "," + signatures[i]);
@@ -191,7 +191,7 @@ public class RTransaction {
             }
         }
         for (int j = 0; j < txOut.length; j++) {
-            RTxOut out = txOut[j];
+            TxOut out = txOut[j];
             outputsum += out.value;
             unspentOutputs.put(getShaTwoFiftySix(), j, out);
         }
@@ -217,17 +217,17 @@ public class RTransaction {
             }
             unspentTransactions.remove(hash, i);
         }
-        for (RTxIn input: txIn) {
+        for (TxIn input: txIn) {
             if (unspentTransactions.contains(input.previousTxn, input.txIdx)) {
                 return false;
             }
 
-            Optional<RTransaction> opt = lookup.lookup(input.previousTxn);
+            Optional<Transaction> opt = lookup.lookup(input.previousTxn);
             if (!opt.isPresent()) {
                 return false;
             }
 
-            RTxOut output = opt.get().getOutput(input.txIdx);
+            TxOut output = opt.get().getOutput(input.txIdx);
             unspentTransactions.put(input.previousTxn, input.txIdx, output);
         }
         return true;
@@ -251,10 +251,10 @@ public class RTransaction {
     public boolean equals(Object o) {
         if (o == this) {
             return true;
-        } else if (!(o instanceof RTransaction)) {
+        } else if (!(o instanceof Transaction)) {
             return false;
         }
-        RTransaction other = (RTransaction) o;
+        Transaction other = (Transaction) o;
         return Arrays.equals(txIn, other.txIn) && Arrays.equals(txOut, other.txOut);
     }
 
@@ -281,25 +281,25 @@ public class RTransaction {
     }
 
     public static class Builder {
-        List<RTxIn> inputs = new ArrayList<>();
+        List<TxIn> inputs = new ArrayList<>();
         List<PrivateKey> privateKeys = new ArrayList<>();
-        List<RTxOut> outputs = new ArrayList<>();
+        List<TxOut> outputs = new ArrayList<>();
 
-        public Builder addInput(RTxIn input, PrivateKey key) {
+        public Builder addInput(TxIn input, PrivateKey key) {
             inputs.add(input);
             privateKeys.add(key);
             return this;
         }
 
-        public Builder addOutput(RTxOut output) {
+        public Builder addOutput(TxOut output) {
             outputs.add(output);
             return this;
         }
 
-        public RTransaction build() throws IOException, GeneralSecurityException {
-            return RTransaction.createAndSign(
-                    inputs.toArray(new RTxIn[inputs.size()]),
-                    outputs.toArray(new RTxOut[outputs.size()]),
+        public Transaction build() throws IOException, GeneralSecurityException {
+            return Transaction.createAndSign(
+                    inputs.toArray(new TxIn[inputs.size()]),
+                    outputs.toArray(new TxOut[outputs.size()]),
                     privateKeys.toArray(new PrivateKey[privateKeys.size()])
             );
         }

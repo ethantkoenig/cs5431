@@ -41,17 +41,17 @@ public class RTransactionTestSimple extends RandomizedTest {
 
         ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(randomBytes(256));
         long value = random.nextInt(Integer.MAX_VALUE);
-        RTransaction tx1 = new RTransaction.Builder()
-                .addInput(new RTxIn(hash, 2), senderPair.getPrivate())
-                .addOutput(new RTxOut(value, recipientPair.getPublic()))
+        Transaction tx1 = new Transaction.Builder()
+                .addInput(new TxIn(hash, 2), senderPair.getPrivate())
+                .addOutput(new TxOut(value, recipientPair.getPublic()))
                 .build();
 
-        RTransaction tx2 = new RTransaction.Builder()
-                .addInput(new RTxIn(hash, 2), senderPair.getPrivate())
-                .addOutput(new RTxOut(value, recipientPair.getPublic()))
+        Transaction tx2 = new Transaction.Builder()
+                .addInput(new TxIn(hash, 2), senderPair.getPrivate())
+                .addOutput(new TxOut(value, recipientPair.getPublic()))
                 .build();
 
-        RTransaction anotherTx = randomTransaction();
+        Transaction anotherTx = randomTransaction();
 
         Assert.assertEquals(errorMessage, tx1, tx1);
         Assert.assertEquals(errorMessage, tx1, tx2);
@@ -66,22 +66,22 @@ public class RTransactionTestSimple extends RandomizedTest {
         KeyPair middlePair = Crypto.signatureKeyPair();
         KeyPair finalPair = Crypto.signatureKeyPair();
 
-        RTxOut middleOut0 = new RTxOut(100, middlePair.getPublic());
-        RTxOut middleOut1 = new RTxOut(200, middlePair.getPublic());
-        RTransaction transaction1 = new RTransaction.Builder()
-                .addInput(new RTxIn(randomShaTwoFiftySix(), 0), initialPair.getPrivate())
+        TxOut middleOut0 = new TxOut(100, middlePair.getPublic());
+        TxOut middleOut1 = new TxOut(200, middlePair.getPublic());
+        Transaction transaction1 = new Transaction.Builder()
+                .addInput(new TxIn(randomShaTwoFiftySix(), 0), initialPair.getPrivate())
                 .addOutput(middleOut0)
                 .addOutput(middleOut1)
                 .build();
 
-        RTxOut finalOut0 = new RTxOut(300, finalPair.getPublic());
-        RTransaction transaction2 = new RTransaction.Builder()
-                .addInput(new RTxIn(transaction1.getShaTwoFiftySix(), 0), middlePair.getPrivate())
-                .addInput(new RTxIn(transaction1.getShaTwoFiftySix(), 1), middlePair.getPrivate())
+        TxOut finalOut0 = new TxOut(300, finalPair.getPublic());
+        Transaction transaction2 = new Transaction.Builder()
+                .addInput(new TxIn(transaction1.getShaTwoFiftySix(), 0), middlePair.getPrivate())
+                .addInput(new TxIn(transaction1.getShaTwoFiftySix(), 1), middlePair.getPrivate())
                 .addOutput(finalOut0)
                 .build();
 
-        Map<ShaTwoFiftySix, RTransaction> transactions = new HashMap<>();
+        Map<ShaTwoFiftySix, Transaction> transactions = new HashMap<>();
         transactions.put(transaction1.getShaTwoFiftySix(), transaction1);
         transactions.put(transaction2.getShaTwoFiftySix(), transaction2);
         TransactionLookup lookup = hash -> Optional.ofNullable(transactions.get(hash));
@@ -104,9 +104,9 @@ public class RTransactionTestSimple extends RandomizedTest {
         KeyPair recipientPair = Crypto.signatureKeyPair();
 
         ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(randomBytes(256));
-        RTransaction tx = new RTransaction.Builder()
-                .addInput(new RTxIn(hash, 2), senderPair.getPrivate())
-                .addOutput(new RTxOut(100, recipientPair.getPublic()))
+        Transaction tx = new Transaction.Builder()
+                .addInput(new TxIn(hash, 2), senderPair.getPrivate())
+                .addOutput(new TxOut(100, recipientPair.getPublic()))
                 .build();
 
         Assert.assertTrue(errorMessage,
@@ -115,7 +115,7 @@ public class RTransactionTestSimple extends RandomizedTest {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         tx.serializeWithSignatures(new DataOutputStream(outputStream));
         ByteBuffer serialized = ByteBuffer.wrap(outputStream.toByteArray());
-        RTransaction deserialized = RTransaction.deserialize(serialized);
+        Transaction deserialized = Transaction.deserialize(serialized);
 
         Assert.assertTrue(tx.equals(deserialized));
         Assert.assertTrue(deserialized.verifySignature(0, senderPair.getPublic()));
@@ -128,15 +128,15 @@ public class RTransactionTestSimple extends RandomizedTest {
         KeyPair recipientPair = Crypto.signatureKeyPair();
 
         ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(randomBytes(256));
-        RTransaction txn = new RTransaction.Builder()
-                .addInput(new RTxIn(hash, 1), senderPair.getPrivate())
-                .addOutput(new RTxOut(1000, recipientPair.getPublic()))
+        Transaction txn = new Transaction.Builder()
+                .addInput(new TxIn(hash, 1), senderPair.getPrivate())
+                .addOutput(new TxOut(1000, recipientPair.getPublic()))
                 .build();
 
         ShaTwoFiftySix hash2 = ShaTwoFiftySix.hashOf(randomBytes(256));
-        RTransaction tx = new RTransaction.Builder()
-                .addInput(new RTxIn(hash2, 2), senderPair.getPrivate())
-                .addOutput(new RTxOut(100, recipientPair.getPublic()))
+        Transaction tx = new Transaction.Builder()
+                .addInput(new TxIn(hash2, 2), senderPair.getPrivate())
+                .addOutput(new TxOut(100, recipientPair.getPublic()))
                 .build();
 
         Assert.assertFalse(errorMessage, tx.equals(txn));
@@ -154,17 +154,17 @@ public class RTransactionTestSimple extends RandomizedTest {
         KeyPair recipientPair3 = Crypto.signatureKeyPair();
 
         ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(randomBytes(256));
-        RTransaction txn = new RTransaction.Builder()
-                .addInput(new RTxIn(hash, 4), senderPair.getPrivate())
-                .addOutput(new RTxOut(100, recipientPair1.getPublic()))
-                .addOutput(new RTxOut(200, recipientPair2.getPublic()))
-                .addOutput(new RTxOut(300, recipientPair3.getPublic()))
+        Transaction txn = new Transaction.Builder()
+                .addInput(new TxIn(hash, 4), senderPair.getPrivate())
+                .addOutput(new TxOut(100, recipientPair1.getPublic()))
+                .addOutput(new TxOut(200, recipientPair2.getPublic()))
+                .addOutput(new TxOut(300, recipientPair3.getPublic()))
                 .build();
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         txn.serializeWithSignatures(new DataOutputStream(outputStream));
         ByteBuffer serialized = ByteBuffer.wrap(outputStream.toByteArray());
-        RTransaction deserialized = RTransaction.deserialize(serialized);
+        Transaction deserialized = Transaction.deserialize(serialized);
 
         Assert.assertTrue(txn.equals(deserialized));
         Assert.assertTrue(errorMessage,
@@ -182,19 +182,19 @@ public class RTransactionTestSimple extends RandomizedTest {
         KeyPair recipientPair3 = Crypto.signatureKeyPair();
 
         ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(randomBytes(256));
-        RTransaction txn = new RTransaction.Builder()
-                .addInput(new RTxIn(hash, 0), senderPair1.getPrivate())
-                .addInput(new RTxIn(hash, 2), senderPair2.getPrivate())
-                .addInput(new RTxIn(hash, 5), senderPair3.getPrivate())
-                .addOutput(new RTxOut(100, recipientPair1.getPublic()))
-                .addOutput(new RTxOut(200, recipientPair2.getPublic()))
-                .addOutput(new RTxOut(300, recipientPair3.getPublic()))
+        Transaction txn = new Transaction.Builder()
+                .addInput(new TxIn(hash, 0), senderPair1.getPrivate())
+                .addInput(new TxIn(hash, 2), senderPair2.getPrivate())
+                .addInput(new TxIn(hash, 5), senderPair3.getPrivate())
+                .addOutput(new TxOut(100, recipientPair1.getPublic()))
+                .addOutput(new TxOut(200, recipientPair2.getPublic()))
+                .addOutput(new TxOut(300, recipientPair3.getPublic()))
                 .build();
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         txn.serializeWithSignatures(new DataOutputStream(outputStream));
         ByteBuffer serialized = ByteBuffer.wrap(outputStream.toByteArray());
-        RTransaction deserialized = RTransaction.deserialize(serialized);
+        Transaction deserialized = Transaction.deserialize(serialized);
 
         Assert.assertTrue(txn.equals(deserialized));
 

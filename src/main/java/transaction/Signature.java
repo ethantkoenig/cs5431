@@ -12,19 +12,19 @@ import java.security.PublicKey;
 /**
  * Represents a signature for a transaction.
  */
-public class RSignature {
+public class Signature {
 
     private final byte[] signature;
 
-    private RSignature(byte[] signature) {
+    private Signature(byte[] signature) {
         this.signature = signature;
     }
 
     /**
      * Sign a transaction body using a private key.
      */
-    public static RSignature sign(byte[] body, PrivateKey key) throws GeneralSecurityException {
-        return new RSignature(Crypto.sign(body, key));
+    public static Signature sign(byte[] body, PrivateKey key) throws GeneralSecurityException {
+        return new Signature(Crypto.sign(body, key));
     }
 
     /**
@@ -33,11 +33,11 @@ public class RSignature {
      * @param byteBuffer bytes to deserialize
      * @return deserialized signature
      */
-    public static RSignature deserialize(ByteBuffer byteBuffer) {
+    public static Signature deserialize(ByteBuffer byteBuffer) {
         int signatureLen = byteBuffer.getInt();
         byte[] signature = new byte[signatureLen];
         byteBuffer.get(signature);
-        return new RSignature(signature);
+        return new Signature(signature);
     }
 
     /**

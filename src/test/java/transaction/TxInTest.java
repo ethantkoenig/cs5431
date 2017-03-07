@@ -13,7 +13,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
 
-public class RTxInTest extends RandomizedTest {
+public class TxInTest extends RandomizedTest {
 
     @BeforeClass
     public static void setupClass() {
@@ -23,11 +23,11 @@ public class RTxInTest extends RandomizedTest {
     @Test
     public void testSerialize() throws GeneralSecurityException, IOException {
         ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(randomBytes(256));
-        RTxIn input = new RTxIn(hash, 4);
+        TxIn input = new TxIn(hash, 4);
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         input.serialize(new DataOutputStream(outputStream));
-        RTxIn deserialized = RTxIn.deserialize(ByteBuffer.wrap(outputStream.toByteArray()));
+        TxIn deserialized = TxIn.deserialize(ByteBuffer.wrap(outputStream.toByteArray()));
 
         Assert.assertEquals(errorMessage, input.previousTxn, deserialized.previousTxn);
         Assert.assertEquals(errorMessage, input.txIdx, deserialized.txIdx);
@@ -36,9 +36,9 @@ public class RTxInTest extends RandomizedTest {
     @Test
     public void testEquals() throws Exception {
         ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(randomBytes(256));
-        RTxIn input1 = new RTxIn(hash, 4);
-        RTxIn input2 = new RTxIn(hash, 4);
-        RTxIn anotherInput = new RTxIn(randomShaTwoFiftySix(), random.nextInt(10));
+        TxIn input1 = new TxIn(hash, 4);
+        TxIn input2 = new TxIn(hash, 4);
+        TxIn anotherInput = new TxIn(randomShaTwoFiftySix(), random.nextInt(10));
 
         Assert.assertEquals(errorMessage, input1, input1);
         Assert.assertEquals(errorMessage, input1, input2);
@@ -50,8 +50,8 @@ public class RTxInTest extends RandomizedTest {
     public void testHashCode() throws Exception {
         ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(randomBytes(256));
         int index = random.nextInt(16);
-        RTxIn input1 = new RTxIn(hash, index);
-        RTxIn input2 = new RTxIn(hash, index);
+        TxIn input1 = new TxIn(hash, index);
+        TxIn input2 = new TxIn(hash, index);
         Assert.assertEquals(errorMessage, input1.hashCode(), input2.hashCode());
     }
 }

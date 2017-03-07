@@ -15,20 +15,20 @@ import java.util.Arrays;
  * Contains the value associated with this output and the public key
  * required to claim this output.
  */
-public class RTxOut {
+public class TxOut {
 
     public final long value;
     public final PublicKey ownerPubKey;
 
-    public RTxOut(long value, PublicKey ownerPubKey) {
+    public TxOut(long value, PublicKey ownerPubKey) {
         this.value = value;
         this.ownerPubKey = ownerPubKey;
     }
 
-    public static RTxOut deserialize(ByteBuffer input) throws GeneralSecurityException {
+    public static TxOut deserialize(ByteBuffer input) throws GeneralSecurityException {
         PublicKey ownerKey = Crypto.deserializePublicKey(input);
         long value = input.getLong();
-        return new RTxOut(value, ownerKey);
+        return new TxOut(value, ownerKey);
     }
 
     public void serialize(DataOutputStream outputStream) throws IOException {
@@ -40,10 +40,10 @@ public class RTxOut {
     public boolean equals(Object o) {
         if (o == this) {
             return true;
-        } else if (o == null || !(o instanceof RTxOut)) {
+        } else if (o == null || !(o instanceof TxOut)) {
             return false;
         }
-        RTxOut other = (RTxOut) o;
+        TxOut other = (TxOut) o;
         return ((this.value == other.value) && (this.ownerPubKey.equals(other.ownerPubKey)));
     }
 

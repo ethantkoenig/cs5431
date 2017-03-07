@@ -4,7 +4,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import testutils.RandomizedTest;
-import transaction.RTransaction;
+import transaction.Transaction;
 import utils.Crypto;
 import utils.Pair;
 import utils.ShaTwoFiftySix;
@@ -68,7 +68,7 @@ public class BlockTest extends RandomizedTest {
         Assert.assertTrue(errorMessage, result.isPresent());
 
         UnspentTransactions expected = UnspentTransactions.empty();
-        RTransaction lastTxn = block.transactions[Block.NUM_TRANSACTIONS_PER_BLOCK - 1];
+        Transaction lastTxn = block.transactions[Block.NUM_TRANSACTIONS_PER_BLOCK - 1];
         // TODO currently assumes that last transaction will only have one output
         expected.put(lastTxn.getShaTwoFiftySix(), 0, lastTxn.getOutput(0));
         Assert.assertEquals(errorMessage, result.get(), expected);
@@ -91,9 +91,9 @@ public class BlockTest extends RandomizedTest {
         Block block1 = Block.empty(previousBlockHash);
         Block block2 = Block.empty(previousBlockHash);
 
-        RTransaction txn1 = randomTransaction();
-        RTransaction txn2 = randomTransaction();
-        RTransaction txn3 = randomTransaction();
+        Transaction txn1 = randomTransaction();
+        Transaction txn2 = randomTransaction();
+        Transaction txn3 = randomTransaction();
 
         block1.addTransaction(txn1);
         block1.addTransaction(txn2);

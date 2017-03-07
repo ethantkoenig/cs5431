@@ -10,5 +10,5 @@ import java.util.Optional;
 @FunctionalInterface
 public interface TransactionLookup {
     // boolean contains(ShaTwoFiftySix hash);
-    Optional<RTransaction> lookup(ShaTwoFiftySix hash);
+    Optional<Transaction> lookup(ShaTwoFiftySix hash);
 }

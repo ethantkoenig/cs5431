@@ -4,9 +4,9 @@ import block.Block;
 import block.UnspentTransactions;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import transaction.RTransaction;
-import transaction.RTxIn;
-import transaction.RTxOut;
+import transaction.Transaction;
+import transaction.TxIn;
+import transaction.TxOut;
 import utils.Crypto;
 import utils.Pair;
 import utils.ShaTwoFiftySix;
@@ -51,14 +51,14 @@ public abstract class RandomizedTest {
         return builder.toString();
     }
 
-    protected RTransaction randomTransaction() throws GeneralSecurityException, IOException {
+    protected Transaction randomTransaction() throws GeneralSecurityException, IOException {
         KeyPair senderPair = Crypto.signatureKeyPair();
         KeyPair recipientPair = Crypto.signatureKeyPair();
 
         ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(randomBytes(256));
-        return new RTransaction.Builder()
-                .addInput(new RTxIn(hash, 0), senderPair.getPrivate())
-                .addOutput(new RTxOut(100, recipientPair.getPublic()))
+        return new Transaction.Builder()
+                .addInput(new TxIn(hash, 0), senderPair.getPrivate())
+                .addOutput(new TxOut(100, recipientPair.getPublic()))
                 .build();
     }
 
@@ -77,9 +77,9 @@ public abstract class RandomizedTest {
         KeyPair senderPair = Crypto.signatureKeyPair();
         KeyPair recipientPair = Crypto.signatureKeyPair();
 
-        RTxOut output = new RTxOut(1 + random.nextInt(1024), recipientPair.getPublic());
-        RTransaction initTransaction = new RTransaction.Builder()
-                .addInput(new RTxIn(randomShaTwoFiftySix(), 0), senderPair.getPrivate())
+        TxOut output = new TxOut(1 + random.nextInt(1024), recipientPair.getPublic());
+        Transaction initTransaction = new Transaction.Builder()
+                .addInput(new TxIn(randomShaTwoFiftySix(), 0), senderPair.getPrivate())
                 .addOutput(output)
                 .build();
 
@@ -89,14 +89,14 @@ public abstract class RandomizedTest {
             senderPair = recipientPair;
             recipientPair = Crypto.signatureKeyPair();
 
-            RTransaction previous = i > 0 ? block.transactions[i-1] : initTransaction;
+            Transaction previous = i > 0 ? block.transactions[i-1] : initTransaction;
 
-            block.transactions[i] = new RTransaction.Builder()
+            block.transactions[i] = new Transaction.Builder()
                     .addInput(
-                            new RTxIn(previous.getShaTwoFiftySix(), 0),
+                            new TxIn(previous.getShaTwoFiftySix(), 0),
                             senderPair.getPrivate()
                     )
-                    .addOutput(new RTxOut(output.value, recipientPair.getPublic()))
+                    .addOutput(new TxOut(output.value, recipientPair.getPublic()))
                     .build();
         }
 

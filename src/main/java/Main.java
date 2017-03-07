@@ -1,7 +1,7 @@
 import cli.ClientInterface;
-import transaction.RTransaction;
-import transaction.RTxIn;
-import transaction.RTxOut;
+import transaction.Transaction;
+import transaction.TxIn;
+import transaction.TxOut;
 import utils.Crypto;
 import utils.ShaTwoFiftySix;
 
@@ -75,7 +75,7 @@ public class Main {
 //        hosts.add(new InetSocketAddress("10.132.7.187", 4445));
         miner.connectAll(hosts);
 
-//        RTransaction rTransaction = randomTransaction();
+//        Transaction rTransaction = randomTransaction();
 //        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 //        rTransaction.serializeWithSignatures(new DataOutputStream(outputStream));
 //        Message message = new Message((byte)0, outputStream.toByteArray());
@@ -86,14 +86,14 @@ public class Main {
 
     }
 
-    protected static RTransaction randomTransaction() throws GeneralSecurityException, IOException {
+    protected static Transaction randomTransaction() throws GeneralSecurityException, IOException {
         KeyPair senderPair = Crypto.signatureKeyPair();
         KeyPair recipientPair = Crypto.signatureKeyPair();
 
         ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(randomBytes(256));
-        return new RTransaction.Builder()
-                .addInput(new RTxIn(hash, 0), senderPair.getPrivate())
-                .addOutput(new RTxOut(100, recipientPair.getPublic()))
+        return new Transaction.Builder()
+                .addInput(new TxIn(hash, 0), senderPair.getPrivate())
+                .addOutput(new TxOut(100, recipientPair.getPublic()))
                 .build();
     }
 

@@ -1,8 +1,8 @@
 package block;
 
 
-import transaction.RTransaction;
-import transaction.RTxOut;
+import transaction.Transaction;
+import transaction.TxOut;
 import utils.ByteUtil;
 import utils.Crypto;
 import utils.ShaTwoFiftySix;
@@ -20,7 +20,7 @@ import java.util.logging.Logger;
 /**
  * Represents a block of transactions in the ledger
  */
-public class Block implements Iterable<RTransaction> {
+public class Block implements Iterable<Transaction> {
     private final static Logger LOGGER = Logger.getLogger(Block.class.getName());
 
     public final static int NUM_TRANSACTIONS_PER_BLOCK = 2;
@@ -28,15 +28,15 @@ public class Block implements Iterable<RTransaction> {
     public final static int REWARD_AMOUNT = 50000;
 
     public final ShaTwoFiftySix previousBlockHash;
-    public final RTransaction[] transactions;
-    public RTxOut reward;
+    public final Transaction[] transactions;
+    public TxOut reward;
     public final byte[] nonce = new byte[NONCE_SIZE_IN_BYTES];
 
     private int hashGoalZeros = 2;
 
     private Block(ShaTwoFiftySix previousBlockHash, int numTransactions) {
         this.previousBlockHash = previousBlockHash;
-        this.transactions = new RTransaction[numTransactions];
+        this.transactions = new Transaction[numTransactions];
     }
 
     /**
@@ -66,10 +66,10 @@ public class Block implements Iterable<RTransaction> {
         Block block = new Block(hash, numBlocks);
 
         for (int i = 0; i < numBlocks; i++) {
-            block.transactions[i] = RTransaction.deserialize(input);
+            block.transactions[i] = Transaction.deserialize(input);
         }
         PublicKey rewardKey = Crypto.deserializePublicKey(input);
-        block.reward = new RTxOut(REWARD_AMOUNT, rewardKey);
+        block.reward = new TxOut(REWARD_AMOUNT, rewardKey);
         input.get(block.nonce);
         return block;
     }
@@ -84,7 +84,7 @@ public class Block implements Iterable<RTransaction> {
         previousBlockHash.writeTo(outputStream);
         outputStream.writeInt(transactions.length);
 
-        for (RTransaction transaction : transactions) {
+        for (Transaction transaction : transactions) {
             if (transaction == null) {
                 throw new IllegalStateException("Cannot serialize non-full block");
             }
@@ -145,7 +145,7 @@ public class Block implements Iterable<RTransaction> {
      * @return true if block has all NUM_TRANSACTIONS_PER_BLOCK filled
      */
     public boolean isFull() {
-        for (RTransaction transaction : transactions) {
+        for (Transaction transaction : transactions) {
             if (transaction == null)
                 return false;
         }
@@ -158,7 +158,7 @@ public class Block implements Iterable<RTransaction> {
      * @param newTransaction the transaction to be added
      * @return true if successful
      */
-    public boolean addTransaction(RTransaction newTransaction) {
+    public boolean addTransaction(Transaction newTransaction) {
         if (this.isFull()) return false;
         for (int i = 0; i < transactions.length; i++) {
             if (transactions[i] == null) {
@@ -176,14 +176,14 @@ public class Block implements Iterable<RTransaction> {
      * @param other the block that we are comparing against
      * @return ArrayList the list of transactions that are in block other but not in this block
      */
-    public ArrayList<RTransaction> getTransactionDifferences(Block other) {
-        HashSet<RTransaction> transSet = new HashSet<>();
-        for (RTransaction thisTransaction : transactions) {
+    public ArrayList<Transaction> getTransactionDifferences(Block other) {
+        HashSet<Transaction> transSet = new HashSet<>();
+        for (Transaction thisTransaction : transactions) {
             transSet.add(thisTransaction);
         }
 
-        ArrayList<RTransaction> result = new ArrayList<>();
-        for (RTransaction otherTransaction : other.transactions) {
+        ArrayList<Transaction> result = new ArrayList<>();
+        for (Transaction otherTransaction : other.transactions) {
             if (!transSet.contains(otherTransaction)) {
                 result.add(otherTransaction);
             }
@@ -198,7 +198,7 @@ public class Block implements Iterable<RTransaction> {
         if (reward != null) {
             throw new IllegalStateException("Cannot reset block's reward");
         }
-        reward = new RTxOut(REWARD_AMOUNT, publicKey);
+        reward = new TxOut(REWARD_AMOUNT, publicKey);
 
     }
 
@@ -208,7 +208,7 @@ public class Block implements Iterable<RTransaction> {
      * A {@code Block} is said to be valid with respect to a set of unspent transactions if its inputs only contain
      * outputs from that set, it contains no double spends, and every input has a valid signature.
      *
-     * @param unspentTransactions A list of unspent {@code RTransaction}s that may be spent by {@code this Block}. This
+     * @param unspentTransactions A list of unspent {@code Transaction}s that may be spent by {@code this Block}. This
      *                            collection will not be modified.
      * @return The new {@code Map} with spent transactions removed, if verification passes. Otherwise {@code Optional.empty()}.
      * @throws GeneralSecurityException
@@ -218,7 +218,7 @@ public class Block implements Iterable<RTransaction> {
             throws GeneralSecurityException, IOException {
         UnspentTransactions copy = unspentTransactions.copy();
 
-        for (RTransaction tx : transactions) {
+        for (Transaction tx : transactions) {
             if (!tx.verify(copy)) {
                 return Optional.empty();
             }
@@ -254,7 +254,7 @@ public class Block implements Iterable<RTransaction> {
     }
 
     @Override
-    public Iterator<RTransaction> iterator() {
+    public Iterator<Transaction> iterator() {
         return Arrays.stream(transactions).iterator();
     }
 }

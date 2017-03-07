@@ -13,7 +13,7 @@ import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 
-public class RTxOutTest extends RandomizedTest {
+public class TxOutTest extends RandomizedTest {
 
     @BeforeClass
     public static void setupClass() {
@@ -23,11 +23,11 @@ public class RTxOutTest extends RandomizedTest {
     @Test
     public void testSerialize() throws GeneralSecurityException, IOException {
         KeyPair pair = Crypto.signatureKeyPair();
-        RTxOut output = new RTxOut(100, pair.getPublic());
+        TxOut output = new TxOut(100, pair.getPublic());
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         output.serialize(new DataOutputStream(outputStream));
-        RTxOut deserialized = RTxOut.deserialize(ByteBuffer.wrap(outputStream.toByteArray()));
+        TxOut deserialized = TxOut.deserialize(ByteBuffer.wrap(outputStream.toByteArray()));
 
         Assert.assertEquals(output.ownerPubKey, deserialized.ownerPubKey);
         Assert.assertEquals(output.value, deserialized.value);
@@ -37,11 +37,11 @@ public class RTxOutTest extends RandomizedTest {
     public void testEquals() throws Exception {
         KeyPair pair = Crypto.signatureKeyPair();
         long value = random.nextInt(Integer.MAX_VALUE);
-        RTxOut output1 = new RTxOut(value, pair.getPublic());
-        RTxOut output2 = new RTxOut(value, pair.getPublic());
+        TxOut output1 = new TxOut(value, pair.getPublic());
+        TxOut output2 = new TxOut(value, pair.getPublic());
 
         KeyPair otherPair = Crypto.signatureKeyPair();
-        RTxOut anotherOutput = new RTxOut(random.nextInt(Integer.MAX_VALUE), otherPair.getPublic());
+        TxOut anotherOutput = new TxOut(random.nextInt(Integer.MAX_VALUE), otherPair.getPublic());
 
         Assert.assertEquals(errorMessage, output1, output2);
         Assert.assertNotEquals(errorMessage, output1, anotherOutput);
@@ -52,8 +52,8 @@ public class RTxOutTest extends RandomizedTest {
     public void testHashCode() throws Exception {
         KeyPair pair = Crypto.signatureKeyPair();
         long value = random.nextInt(Integer.MAX_VALUE);
-        RTxOut output1 = new RTxOut(value, pair.getPublic());
-        RTxOut output2 = new RTxOut(value, pair.getPublic());
+        TxOut output1 = new TxOut(value, pair.getPublic());
+        TxOut output2 = new TxOut(value, pair.getPublic());
         Assert.assertEquals(errorMessage, output1.hashCode(), output2.hashCode());
     }
 }

@@ -2,9 +2,9 @@ package cli;
 
 
 import network.Message;
-import transaction.RTransaction;
-import transaction.RTxIn;
-import transaction.RTxOut;
+import transaction.Transaction;
+import transaction.TxIn;
+import transaction.TxOut;
 import utils.ByteUtil;
 import utils.Crypto;
 import utils.IOUtils;
@@ -53,7 +53,7 @@ public class Transact {
     }
 
     private void runTransaction(List<Socket> sockets) throws GeneralSecurityException, IOException {
-        RTransaction.Builder builder = new RTransaction.Builder();
+        Transaction.Builder builder = new Transaction.Builder();
         try {
             getInputs(builder);
             getOutputs(builder);
@@ -61,7 +61,7 @@ public class Transact {
             System.err.println(e.getMessage());
             return;
         }
-        RTransaction transaction = builder.build();
+        Transaction transaction = builder.build();
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         transaction.serializeWithSignatures(new DataOutputStream(outputStream));
@@ -75,7 +75,7 @@ public class Transact {
         }
     }
 
-    private void getInputs(RTransaction.Builder builder)
+    private void getInputs(Transaction.Builder builder)
             throws IOException, GeneralSecurityException {
         int numInputs = (int) promptUserInt("Number of inputs");
         for (int i = 0; i < numInputs; i++) {
@@ -85,13 +85,13 @@ public class Transact {
             String privateFilename = promptUser("Filename for private key");
 
             builder.addInput(
-                    new RTxIn(ShaTwoFiftySix.create(ByteUtil.hexStringToByteArray(hexHash)), index),
+                    new TxIn(ShaTwoFiftySix.create(ByteUtil.hexStringToByteArray(hexHash)), index),
                     Crypto.loadPrivateKey(privateFilename)
             );
         }
     }
 
-    private void getOutputs(RTransaction.Builder builder)
+    private void getOutputs(Transaction.Builder builder)
             throws IOException, GeneralSecurityException {
         int numOutputs = (int) promptUserInt("Number of outputs");
         for (int i = 0; i < numOutputs; i++) {
@@ -99,7 +99,7 @@ public class Transact {
             String publicKeyFilename = promptUser("Public key of recipient");
             long amount = promptUserInt("Amount to send to recipient");
 
-            builder.addOutput(new RTxOut(amount, Crypto.loadPublicKey(publicKeyFilename)));
+            builder.addOutput(new TxOut(amount, Crypto.loadPublicKey(publicKeyFilename)));
         }
     }
 

@@ -2,7 +2,7 @@ package network;
 
 import block.Block;
 import block.UnspentTransactions;
-import transaction.RTransaction;
+import transaction.Transaction;
 import utils.ShaTwoFiftySix;
 
 import java.io.IOException;
@@ -58,7 +58,7 @@ public class HandleMessageThread extends Thread {
             while ((message = messageQueue.take()) != null) {
                 switch (message.type) {
                     case Message.TRANSACTION:
-                        RTransaction transaction = RTransaction.deserialize(ByteBuffer.wrap(message.payload));
+                        Transaction transaction = Transaction.deserialize(ByteBuffer.wrap(message.payload));
                         LOGGER.info("[!] Received transaction!");
                         if (!recentTransactionsReceived.contains(message)) {
                             LOGGER.info("[!] New transaction, so I am broadcasting to all other miners.");
@@ -101,7 +101,7 @@ public class HandleMessageThread extends Thread {
         }
     }
 
-    private void addTransactionToBlock(RTransaction transaction) throws GeneralSecurityException, IOException {
+    private void addTransactionToBlock(Transaction transaction) throws GeneralSecurityException, IOException {
         if (currentAddToBlock == null) {
             if (miningBundle.getBlockChain().getCurrentHead() == null) {
                 LOGGER.warning("Received transaction before genesis block received");
@@ -151,8 +151,8 @@ public class HandleMessageThread extends Thread {
             return;
         }
         if (currentHashingBlock != null) {
-            ArrayList<RTransaction> difference = block.getTransactionDifferences(currentHashingBlock);
-            for (RTransaction transaction : difference) {
+            ArrayList<Transaction> difference = block.getTransactionDifferences(currentHashingBlock);
+            for (Transaction transaction : difference) {
                 currentAddToBlock.addTransaction(transaction);
             }
         }

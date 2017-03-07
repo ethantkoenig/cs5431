@@ -13,20 +13,20 @@ import java.util.Arrays;
  * Contains a reference to a previous transactions output in the form
  * of a SHA256 hash of the transaction, and the output index to be spent.
  */
-public class RTxIn {
+public class TxIn {
 
     public final ShaTwoFiftySix previousTxn;
     public final int txIdx;
 
-    public RTxIn(ShaTwoFiftySix previousTxn, int index) {
+    public TxIn(ShaTwoFiftySix previousTxn, int index) {
         this.previousTxn = previousTxn;
         txIdx = index;
     }
 
-    public static RTxIn deserialize(ByteBuffer input) {
+    public static TxIn deserialize(ByteBuffer input) {
         ShaTwoFiftySix sha = ShaTwoFiftySix.deserialize(input);
         int index = input.getInt();
-        return new RTxIn(sha, index);
+        return new TxIn(sha, index);
     }
 
     public void serialize(DataOutputStream outputStream) throws IOException {
@@ -38,10 +38,10 @@ public class RTxIn {
     public boolean equals(Object o) {
         if (o == this) {
             return true;
-        } else if (o == null || !(o instanceof RTxIn)) {
+        } else if (o == null || !(o instanceof TxIn)) {
             return false;
         }
-        RTxIn other = (RTxIn) o;
+        TxIn other = (TxIn) o;
         return (other.previousTxn.equals(this.previousTxn)) && (this.txIdx == other.txIdx);
     }
 

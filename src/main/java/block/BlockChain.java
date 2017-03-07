@@ -1,8 +1,7 @@
 package block;
 
-import transaction.RTransaction;
-import transaction.RTxIn;
-import transaction.RTxOut;
+import transaction.Transaction;
+import transaction.TxOut;
 import utils.Pair;
 import utils.ShaTwoFiftySix;
 
@@ -31,7 +30,7 @@ public class BlockChain {
      * Creates a new {@code BlockChain} with {@code genesisBlock} as its root.
      */
     public BlockChain(Block genesisBlock) {
-        blocks.put(genesisBlock.getShaTwoFiftySix(), new Pair<>(genesisBlock,0));
+        blocks.put(genesisBlock.getShaTwoFiftySix(), new Pair<>(genesisBlock, 0));
         currentHead = genesisBlock;
         headDepth = 0;
     }
@@ -74,7 +73,8 @@ public class BlockChain {
         return false;
     }
 
-    /** Returns the current head {@code Block} of {@code this}. The head {@code Block} is the most recent node in the
+    /**
+     * Returns the current head {@code Block} of {@code this}. The head {@code Block} is the most recent node in the
      * longest chain of {@code Block}s.
      *
      * @return The current head {@code Block} of {@code this}.
@@ -117,13 +117,16 @@ public class BlockChain {
         UnspentTransactions unspentTxs = UnspentTransactions.empty();
 
         for (int i = ancestors.size() - 1; i >= 0; --i) {
-            for (RTransaction tx: ancestors.get(i)) {
+
+            for (Transaction tx : ancestors.get(i)) {
+
                 for (int j = 0; j < tx.numInputs; ++j) {
-                    unspentTxs.remove(tx.getShaTwoFiftySix(),j);
+                    unspentTxs.remove(tx.getShaTwoFiftySix(), j);
                 }
                 for (int j = 0; j < tx.numOutputs; ++j) {
-                    RTxOut out = tx.getOutput(j);
-                    unspentTxs.put(tx.getShaTwoFiftySix(),j,out);
+
+                    TxOut out = tx.getOutput(j);
+                    unspentTxs.put(tx.getShaTwoFiftySix(), j, out);
                 }
             }
         }
