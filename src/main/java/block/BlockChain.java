@@ -6,6 +6,8 @@ import transaction.RTxOut;
 import utils.Pair;
 import utils.ShaTwoFiftySix;
 
+import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -116,17 +118,33 @@ public class BlockChain {
 
         for (int i = ancestors.size() - 1; i >= 0; --i) {
             for (RTransaction tx: ancestors.get(i)) {
-                for (int i = 0; i < tx.numInputs; ++i) {
-                    unspentTxs.remove(tx.getShaTwoFiftySix(),i);
+                for (int j = 0; j < tx.numInputs; ++j) {
+                    unspentTxs.remove(tx.getShaTwoFiftySix(),j);
                 }
-                for (int i = 0; i < tx.numOutputs; ++i) {
-                    RTxOut out = tx.getOutput(i);
-                    unspentTxs.put(tx.getShaTwoFiftySix(),i,out);
+                for (int j = 0; j < tx.numOutputs; ++j) {
+                    RTxOut out = tx.getOutput(j);
+                    unspentTxs.put(tx.getShaTwoFiftySix(),j,out);
                 }
             }
         }
 
         return unspentTxs;
+    }
+
+    /**
+     * Verifies a {@code Block} w.r.t. {@code this BlockChain}.
+     *
+     * @param block The {@code Block} to verify. It may or may not be in {@code this BlockChain}
+     * @return The {@code UnspentTransactions} of {@code block}, or {@code Optional.empty()} if verification failed
+     */
+    public Optional<UnspentTransactions> verifyBlock(Block block) throws GeneralSecurityException, IOException {
+        Optional<Block> optParent = getBlockWithHash(block.previousBlockHash);
+        if (optParent.isPresent()) {
+            Block parent = optParent.get();
+            return block.verify(getUnspentTransactionsAt(parent));
+        }
+
+        return Optional.empty();
     }
 
     /**
