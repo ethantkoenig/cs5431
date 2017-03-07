@@ -17,8 +17,6 @@ import java.util.Random;
 
 public class Main {
 
-    private static final Random RANDOM = new Random();
-
     public static void main(String[] args) throws Exception {
         if (args.length == 0) {
             System.err.println("No command specified");
