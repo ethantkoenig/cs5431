@@ -1,46 +1,41 @@
 package network;
 
-import org.junit.After;
-import org.junit.Before;
+import org.junit.Assert;
 import org.junit.Test;
+import testutils.RandomizedTest;
+import testutils.TestUtils;
+import utils.Pair;
 
-/**
- * Created by EvanKing on 2/22/17.
- */
-public class ConnectionThreadTest {
+import java.net.Socket;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
-    @Before
-    public void setUp() throws Exception {
-
-    }
-
-    @After
-    public void tearDown() throws Exception {
-
-    }
+public class ConnectionThreadTest extends RandomizedTest {
 
     @Test
     public void testRun() throws Exception {
+        Pair<Socket, Socket> pair = TestUtils.sockets(10000);
 
-    }
+        BlockingQueue<Message> leftQueue = new ArrayBlockingQueue<Message>(5);
+        ConnectionThread leftThread = new ConnectionThread(pair.getLeft(), leftQueue);
+        leftThread.start();
 
-    @Test
-    public void testSend() throws Exception {
+        BlockingQueue<Message> rightQueue = new ArrayBlockingQueue<Message>(5);
+        ConnectionThread rightThread = new ConnectionThread(pair.getRight(), rightQueue);
+        rightThread.start();
 
-    }
+        Message m1 = new Message(Message.BLOCK, randomBytes(random.nextInt(1024)));
+        Message m2 = new Message(Message.BLOCK, randomBytes(random.nextInt(1024)));
+        Message m3 = new Message(Message.TRANSACTION, randomBytes(random.nextInt(1024)));
+        leftThread.send(m1.type, m1.payload);
+        rightThread.send(m2.type, m2.payload);
+        leftThread.send(m3.type, m3.payload);
 
-    @Test
-    public void testReceive() throws Exception {
+        Assert.assertEquals(errorMessage, rightQueue.take(), m1);
+        Assert.assertEquals(errorMessage, leftQueue.take(), m2);
+        Assert.assertEquals(errorMessage, rightQueue.take(), m3);
 
-    }
-
-    @Test
-    public void testClose() throws Exception {
-
-    }
-
-    @Test
-    public void testToString() throws Exception {
-
+        leftThread.close();
+        rightThread.close();
     }
 }
