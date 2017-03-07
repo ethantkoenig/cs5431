@@ -12,10 +12,7 @@ import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.logging.Logger;
 
 /**
@@ -29,10 +26,15 @@ public class RTransaction {
     private final RTxOut[] txOut;
     private final RSignature[] signatures;
 
+    public final int numInputs;
+    public final int numOutputs;
+
     private RTransaction(RTxIn[] txIn, RTxOut[] txOut, RSignature[] signatures) {
         this.txIn = txIn;
         this.txOut = txOut;
         this.signatures = signatures;
+        numInputs = txIn.length;
+        numOutputs = txOut.length;
     }
 
     private static RTransaction createAndSign(RTxIn[] inputs, RTxOut[] outputs, PrivateKey[] keys)

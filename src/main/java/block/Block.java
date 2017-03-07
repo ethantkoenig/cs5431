@@ -20,7 +20,7 @@ import java.util.logging.Logger;
 /**
  * Represents a block of transactions in the ledger
  */
-public class Block {
+public class Block implements Iterable<RTransaction> {
     private final static Logger LOGGER = Logger.getLogger(Block.class.getName());
 
     public final static int NUM_TRANSACTIONS_PER_BLOCK = 2;
@@ -253,5 +253,9 @@ public class Block {
         return getShaTwoFiftySix().hashCode();
     }
 
+    @Override
+    public Iterator<RTransaction> iterator() {
+        return Arrays.stream(transactions).iterator();
+    }
 }
 

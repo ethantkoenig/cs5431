@@ -1,5 +1,8 @@
 package block;
 
+import transaction.RTransaction;
+import transaction.RTxIn;
+import transaction.RTxOut;
 import utils.Pair;
 import utils.ShaTwoFiftySix;
 
@@ -98,6 +101,32 @@ public class BlockChain {
         }
 
         return result;
+    }
+
+    /**
+     * Gets a set of {@code UnspentTransactions} with respect to a {@code Block} in {@code this BlockChain}.
+     *
+     * @param block The {@code block} for which to generate unspent transactions
+     * @return The set of unspent transactions with respect to {@code Block}
+     */
+    public UnspentTransactions getUnspentTransactionsAt(Block block) {
+        List<Block> ancestors = getAncestorsStartingAt(block.getShaTwoFiftySix());
+
+        UnspentTransactions unspentTxs = UnspentTransactions.empty();
+
+        for (int i = ancestors.size() - 1; i >= 0; --i) {
+            for (RTransaction tx: ancestors.get(i)) {
+                for (int i = 0; i < tx.numInputs; ++i) {
+                    unspentTxs.remove(tx.getShaTwoFiftySix(),i);
+                }
+                for (int i = 0; i < tx.numOutputs; ++i) {
+                    RTxOut out = tx.getOutput(i);
+                    unspentTxs.put(tx.getShaTwoFiftySix(),i,out);
+                }
+            }
+        }
+
+        return unspentTxs;
     }
 
     /**
