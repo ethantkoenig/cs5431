@@ -82,7 +82,7 @@ public class HandleMessageThread extends Thread {
                         LOGGER.severe(String.format("Unexpected message type: %d", message.type));
                 }
             }
-        } catch (InterruptedException |GeneralSecurityException | IOException e) {
+        } catch (InterruptedException | GeneralSecurityException | IOException e) {
             e.printStackTrace();
             LOGGER.severe("Error receiving and/or handling message: " + e.getMessage());
         }
@@ -113,6 +113,17 @@ public class HandleMessageThread extends Thread {
             currentAddToBlock = Block.empty(previousBlockHash);
         }
 
+        //verify transaction
+        LOGGER.info("[!] Verifying transaction.");
+        UnspentTransactions copy = miningBundle.getUnspentTransactions().copy();
+        if (transaction.verify(copy)) {
+            miningBundle.setUnspentTransactions(copy);
+            LOGGER.info("[!] Transaction verified. Adding transaction to block.");
+            LOGGER.info(transaction.toString());
+            currentAddToBlock.addTransaction(transaction);
+        } else {
+            LOGGER.severe("The received transaction was not verified! Not adding to block.");
+        }
         if (currentAddToBlock.isFull()) {
             // currentAddToBlock is full, so start mining it
             LOGGER.info("[+] Starting mining thread");
@@ -121,20 +132,8 @@ public class HandleMessageThread extends Thread {
             currentAddToBlock = null;
             startMiningThread();
             addTransactionToBlock(transaction);
-        } else {
-            //verify transaction
-            LOGGER.info("[!] Verifying transaction.");
-            UnspentTransactions copy = miningBundle.getUnspentTransactions().copy();
-            if (transaction.verify(copy)){
-                miningBundle.setUnspentTransactions(copy);
-                LOGGER.info("[!] Transaction verified. Adding transaction to block.");
-                LOGGER.info(transaction.toString());
-                currentAddToBlock.addTransaction(transaction);
-            } else {
-                LOGGER.severe("The received transaction was not verified! Not adding to block.");
-            }
         }
-    }
+}
 
     private void addBlockToChain(Block block) {
         if (currentAddToBlock == null) {
