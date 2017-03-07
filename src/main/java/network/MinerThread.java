@@ -14,7 +14,6 @@ import java.util.logging.Logger;
  * This entails constantly looking for the correct nonce in order to generate a sufficiently small
  * hash value.
  *
- * @author Evan King
  * @version 1.0, Feb 22 2017
  */
 public class MinerThread extends Thread {

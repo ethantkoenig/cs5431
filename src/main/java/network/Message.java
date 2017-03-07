@@ -6,6 +6,8 @@ import java.util.Arrays;
 
 /**
  * Represents a message sent or received on the network
+ *
+ * @version 1.0, Feb 28 2017
  */
 public class Message {
     /* Message kinds */

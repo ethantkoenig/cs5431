@@ -14,9 +14,7 @@ import java.util.logging.Logger;
  * The network.ConnectionThread class extends Thread and represents another node in the network that one is connected to.
  * The class allows one to send and receive messages to/from other nodes.
  *
- * @author Evan King
  * @version 1.0, Feb 16 2017
- * @todo error handling will need to be thoroughly tested in regards to lost connections
  */
 public class ConnectionThread extends Thread {
     private static final Logger LOGGER = Logger.getLogger(ConnectionThread.class.getName());

@@ -9,7 +9,6 @@ import java.util.logging.Logger;
  * It pulls messages off of a synchronized queue broadcastQueue which has messages put on it by both the
  * network.MinerThread and the network.HandleMessageThread.
  *
- * @author Evan King
  * @version 1.0, March 1 2017
  */
 public class BroadcastThread extends Thread {
