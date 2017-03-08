@@ -44,6 +44,12 @@ public class TestUtils {
         );
     }
 
+    /**
+     * Write to a file, and assert that there are no errors.
+     *
+     * @param path     path of file to write
+     * @param contents contents to write
+     */
     public static void writeFile(String path, String contents) {
         try (Writer writer = new OutputStreamWriter(
                 new FileOutputStream(path), StandardCharsets.UTF_8

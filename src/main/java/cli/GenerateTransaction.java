@@ -28,6 +28,14 @@ public class GenerateTransaction {
         this.input = input;
     }
 
+    /**
+     * Constructs a transaction based on the content read from {@code input},
+     * and sends the transaction to each socket address in {@code socketAddresses}
+     *
+     * @param input           presumably a wrapper around {@code System.in}, will be read
+     *                        to construct the transaction.
+     * @param socketAddresses list of addresses to send transaction to
+     */
     public static void run(BufferedReader input, List<InetSocketAddress> socketAddresses)
             throws GeneralSecurityException, IOException {
         new GenerateTransaction(input).runTransaction(socketAddresses);

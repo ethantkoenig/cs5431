@@ -11,6 +11,12 @@ import java.security.KeyPair;
 
 public class GenerateKey {
 
+    /**
+     * Generate a public/private key pair, and write the keys to
+     * {@code privateFilename} and {@code publicFilename}
+     * @param privateFilename filename/path for private key
+     * @param publicFilename filename/path for public key
+     */
     public static void generateKey(String privateFilename, String publicFilename)
             throws GeneralSecurityException, IOException {
         KeyPair pair = Crypto.signatureKeyPair();
