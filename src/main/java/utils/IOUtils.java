@@ -1,11 +1,12 @@
 package utils;
 
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -48,6 +49,23 @@ public class IOUtils {
             return Optional.of(new InetSocketAddress(addr, port));
         } catch (UnknownHostException | NumberFormatException e) {
             return Optional.empty();
+        }
+    }
+
+    public static List<InetSocketAddress> parseAddresses(String path) throws IOException {
+        try (BufferedReader nodeReader = new BufferedReader(
+                new InputStreamReader(new FileInputStream(path), StandardCharsets.UTF_8)
+        )) {
+            List<InetSocketAddress> result = new ArrayList<>();
+            while (true) {
+                String line = nodeReader.readLine();
+                if (line == null || line.length() == 0) {
+                    return result;
+                }
+                result.add(IOUtils.parseAddress(line).orElseThrow(() ->
+                    new IOException(String.format("Invalid address: %s", line))
+                ));
+            }
         }
     }
 }

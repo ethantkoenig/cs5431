@@ -3,12 +3,14 @@ package utils;
 import org.junit.Assert;
 import org.junit.Test;
 import testutils.RandomizedTest;
+import testutils.TestUtils;
 
 import java.io.*;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 public class IOUtilsTest extends RandomizedTest {
@@ -93,4 +95,27 @@ public class IOUtilsTest extends RandomizedTest {
         optAddr = IOUtils.parseAddress("localhost:notANumber");
         Assert.assertFalse(optAddr.isPresent());
     }
+
+    @Test
+    public void testParseAddresses() throws IOException {
+        File temp = File.createTempFile("test", ".tmp");
+        TestUtils.writeFile(temp.getAbsolutePath(), "localhost:9801\n168.192.0.1:80\n");
+        List<InetSocketAddress> addresses = IOUtils.parseAddresses(temp.getAbsolutePath());
+        Assert.assertEquals(
+                Arrays.asList(
+                        new InetSocketAddress(InetAddress.getByName("localhost"), 9801),
+                        new InetSocketAddress(InetAddress.getByName("168.192.0.1"), 80)
+                ),
+                addresses
+        );
+
+        TestUtils.writeFile(temp.getAbsolutePath(), "localhost:9801\nnotValid:80\n");
+        try {
+            IOUtils.parseAddresses(temp.getAbsolutePath());
+            Assert.fail("Expected IOException");
+        } catch (IOException e) {
+            // success
+        }
+    }
+
 }

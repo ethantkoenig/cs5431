@@ -1,11 +1,12 @@
 package cli;
 
+import utils.IOUtils;
+
 import java.io.*;
+import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Scanner;
+import java.util.*;
 
 /**
  * The ClientInterface object is used to give the user a CLI based on a given
@@ -39,7 +40,7 @@ public class ClientInterface {
     // Reader which reads the input stream reader, buffers for efficiency
     private BufferedReader buffer;
     protected PrintStream outputStream;
-    private String nodeListPath = null;
+    private List<InetSocketAddress> socketAddresses = null;
     private boolean quit = false;
 
     // A HashMap off all the commands
@@ -88,7 +89,9 @@ public class ClientInterface {
                 }
                 String cmd = cmdScanner.next();
                 if (commands.containsKey(cmd)) {
-                    commands.get(cmd).run(cmdScanner);
+                    if (!commands.get(cmd).run(cmdScanner)) {
+                        outputStream.println("Command unsuccessful");
+                    }
                 } else {
                     String msg = String.format(
                             "Unrecognized command %s; use the \"help\" command to list all commands",
@@ -176,12 +179,12 @@ public class ClientInterface {
              */
             @Override
             public boolean run(Scanner args) {
-                if (nodeListPath == null) {
+                if (socketAddresses == null) {
                     outputStream.println("No nodes have been specified");
                     return false;
                 }
                 try {
-                    Transact.run(buffer, nodeListPath);
+                    GenerateTransaction.run(buffer, socketAddresses);
                 } catch (GeneralSecurityException | IOException e) {
                     e.printStackTrace();
                     return false;
@@ -212,9 +215,15 @@ public class ClientInterface {
             @Override
             public boolean run(Scanner args) {
                 if (args.hasNext()) {
-                    nodeListPath = args.next();
+                    String path = args.next();
+                    try {
+                        socketAddresses = IOUtils.parseAddresses(path);
+                    } catch (IOException e) {
+                        outputStream.println(String.format("Error: %s", e.getMessage()));
+                        return false;
+                    }
                 } else {
-                    outputStream.println("Not enough arguments");
+                    outputStream.println("usage: setNodeList <filepath>");
                     return false;
                 }
                 return true;
