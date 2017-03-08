@@ -10,67 +10,60 @@ import utils.Crypto;
 import utils.IOUtils;
 import utils.ShaTwoFiftySix;
 
-import java.io.*;
-import java.net.InetAddress;
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class Transact {
+public class GenerateTransaction {
 
     private final BufferedReader input;
 
-    private Transact(BufferedReader input) {
+    private GenerateTransaction(BufferedReader input) {
         this.input = input;
     }
 
-    public static void run(BufferedReader input, String nodeListPath) throws GeneralSecurityException, IOException {
-        InputStreamReader streamIn =
-                new InputStreamReader(new FileInputStream(nodeListPath), Charset.defaultCharset());
-        BufferedReader nodeReader = new BufferedReader(streamIn);
-        List<Socket> sockets = new ArrayList<Socket>();
-        String line;
-        Transact transact = null;
-        try {
-            while ((line = nodeReader.readLine()) != null) {
-                Optional<InetSocketAddress> optAddr = IOUtils.parseAddress(line);
-                if (optAddr.isPresent()) {
-                    InetSocketAddress addr = optAddr.get();
-                    sockets.add(new Socket(addr.getAddress(), addr.getPort()));
-                }
-            }
-            transact = new Transact(input);
-            transact.runTransaction(sockets);
-        } finally {
-            nodeReader.close();
-            streamIn.close();
-        }
+    public static void run(BufferedReader input, List<InetSocketAddress> socketAddresses)
+            throws GeneralSecurityException, IOException {
+        new GenerateTransaction(input).runTransaction(socketAddresses);
     }
 
-    private void runTransaction(List<Socket> sockets) throws GeneralSecurityException, IOException {
+    private void runTransaction(List<InetSocketAddress> addresses) throws GeneralSecurityException, IOException {
+        Optional<Transaction> transaction = getTransaction();
+        if (!transaction.isPresent()) {
+            return;
+        }
+        sendTransaction(transaction.get(), addresses);
+    }
+
+    private Optional<Transaction> getTransaction() throws GeneralSecurityException, IOException {
         Transaction.Builder builder = new Transaction.Builder();
         try {
             getInputs(builder);
             getOutputs(builder);
         } catch (InvalidInputException e) {
             System.err.println(e.getMessage());
-            return;
+            return Optional.empty();
         }
-        Transaction transaction = builder.build();
+        return Optional.of(builder.build());
+    }
 
+    private void sendTransaction(Transaction transaction, List<InetSocketAddress> addresses)
+            throws IOException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         transaction.serializeWithSignatures(new DataOutputStream(outputStream));
         byte[] payload = outputStream.toByteArray();
 
-        for (Socket socket : sockets) {
-            DataOutputStream socketOut = new DataOutputStream(socket.getOutputStream());
-            IOUtils.sendMessage(socketOut, Message.TRANSACTION, payload);
-            socketOut.close();
-            socket.close();
+        for (InetSocketAddress address : addresses) {
+            try (Socket socket = new Socket(address.getAddress(), address.getPort())) {
+                DataOutputStream socketOut = new DataOutputStream(socket.getOutputStream());
+                IOUtils.sendMessage(socketOut, Message.TRANSACTION, payload);
+            }
         }
     }
 
