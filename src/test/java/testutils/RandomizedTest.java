@@ -83,7 +83,7 @@ public abstract class RandomizedTest {
                 .addOutput(output)
                 .build();
 
-        Block block = Block.empty(randomShaTwoFiftySix());
+        Block block = Block.empty(previousHash);
 
         for (int i = 0; i < Block.NUM_TRANSACTIONS_PER_BLOCK; i++) {
             senderPair = recipientPair;

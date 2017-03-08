@@ -1,6 +1,7 @@
 package block;
 
 import transaction.Transaction;
+import transaction.TxIn;
 import transaction.TxOut;
 import utils.Pair;
 import utils.ShaTwoFiftySix;
@@ -108,7 +109,7 @@ public class BlockChain {
     /**
      * Gets a set of {@code UnspentTransactions} with respect to a {@code Block} in {@code this BlockChain}.
      *
-     * @param block The {@code block} for which to generate unspent transactions
+     * @param block The {@code block} for which to generate unspent transactions. Must be in {@code this BlockChain}.
      * @return The set of unspent transactions with respect to {@code Block}
      */
     public UnspentTransactions getUnspentTransactionsAt(Block block) {
@@ -117,11 +118,12 @@ public class BlockChain {
         UnspentTransactions unspentTxs = UnspentTransactions.empty();
 
         for (int i = ancestors.size() - 1; i >= 0; --i) {
-
-            for (Transaction tx : ancestors.get(i)) {
+            Block b = ancestors.get(i);
+            for (Transaction tx : b) {
 
                 for (int j = 0; j < tx.numInputs; ++j) {
-                    unspentTxs.remove(tx.getShaTwoFiftySix(), j);
+                    TxIn inRef = tx.getInput(j);
+                    unspentTxs.remove(inRef.previousTxn, inRef.txIdx);
                 }
                 for (int j = 0; j < tx.numOutputs; ++j) {
 
@@ -129,6 +131,7 @@ public class BlockChain {
                     unspentTxs.put(tx.getShaTwoFiftySix(), j, out);
                 }
             }
+            unspentTxs.put(b.getShaTwoFiftySix(), 0, b.reward);
         }
 
         return unspentTxs;
@@ -142,9 +145,16 @@ public class BlockChain {
      */
     public Optional<UnspentTransactions> verifyBlock(Block block) throws GeneralSecurityException, IOException {
         Optional<Block> optParent = getBlockWithHash(block.previousBlockHash);
+
         if (optParent.isPresent()) {
             Block parent = optParent.get();
             return block.verify(getUnspentTransactionsAt(parent));
+        } else if (block.isGenesisBlock()) {
+            if (block.verifyGenesis(block.reward.ownerPubKey)) {
+                UnspentTransactions unspentTxs = UnspentTransactions.empty();
+                unspentTxs.put(block.getShaTwoFiftySix(), 0, block.reward);
+                return Optional.of(unspentTxs);
+            }
         }
 
         return Optional.empty();
