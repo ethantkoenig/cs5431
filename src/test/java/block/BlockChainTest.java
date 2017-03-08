@@ -60,10 +60,10 @@ public class BlockChainTest extends RandomizedTest {
                 next.transactions[Block.NUM_TRANSACTIONS_PER_BLOCK-1].getOutput(0));
         unspentTxs.put(next.getShaTwoFiftySix(), 0, next.reward);
 
-        Assert.assertTrue(bc.verifyBlock(next).isPresent());
+        Assert.assertTrue(errorMessage, bc.verifyBlock(next).isPresent());
         bc.insertBlock(next);
-        Assert.assertTrue(bc.verifyBlock(next).isPresent());
-        assertEquals(unspentTxs, bc.getUnspentTransactionsAt(next));
+        Assert.assertTrue(errorMessage, bc.verifyBlock(next).isPresent());
+        assertEquals(errorMessage, unspentTxs, bc.getUnspentTransactionsAt(next));
     }
 
     @Test
@@ -93,8 +93,8 @@ public class BlockChainTest extends RandomizedTest {
         ShaTwoFiftySix randomHash = randomShaTwoFiftySix();
         Block b = randomBlock(randomHash);
 
-        assertEquals(false, bc.insertBlock(b));
-        assertEquals(Optional.empty(), bc.getBlockWithHash(b.getShaTwoFiftySix()));
+        Assert.assertFalse(errorMessage, bc.insertBlock(b));
+        assertEquals(errorMessage, Optional.empty(), bc.getBlockWithHash(b.getShaTwoFiftySix()));
     }
 
     @Test
