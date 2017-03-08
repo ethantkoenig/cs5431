@@ -157,6 +157,7 @@ public class HandleMessageThread extends Thread {
             }
         }
 
+        LOGGER.info(String.format("Received valid block: hash=%s", block.getShaTwoFiftySix()));
         //interrupt the mining thread
         if (minerThread != null && minerThread.isAlive()) {
             LOGGER.info("[-] Received block. Stopping current mining thread.");
@@ -166,6 +167,7 @@ public class HandleMessageThread extends Thread {
         // Add block to chain
         LOGGER.info("[+] Adding completed block to block chain");
         miningBundle.getBlockChain().insertBlock(block);
+        miningBundle.getUnspentTransactions().put(block.getShaTwoFiftySix(), 0, block.reward);
 
         startMiningThread();
     }
