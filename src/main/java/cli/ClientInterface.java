@@ -1,6 +1,7 @@
 package cli;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,8 +38,6 @@ public class ClientInterface {
 
     // Reader which reads the input stream reader, buffers for efficiency
     private BufferedReader buffer;
-    private InputStreamReader streamReader;
-    private InputStream streamIn;
     protected PrintStream outputStream;
     private String nodeListPath = null;
     private boolean quit = false;
@@ -51,24 +50,17 @@ public class ClientInterface {
      * UTF8 encoding and outputs to System.out.
      */
     public ClientInterface() {
-        this(System.in, System.out, "UTF8");
+        this(new InputStreamReader(System.in, StandardCharsets.UTF_8), System.out);
     }
 
     /**
      * Creates a new client interface with a custom input stream.
      *
-     * @param in       InputStream to recieve data from user
-     * @param out      PrintStream to send data to the user
-     * @param encoding Charset which the input will be encoded as
+     * @param in  InputStream to recieve data from user
+     * @param out PrintStream to send data to the user
      */
-    public ClientInterface(InputStream in, PrintStream out, String encoding) {
-        streamIn = in;
-        try {
-            streamReader = new InputStreamReader(streamIn, encoding);
-        } catch (UnsupportedEncodingException e) {
-            throw new IllegalArgumentException("Not a valid encoding");
-        }
-        buffer = new BufferedReader(streamReader);
+    public ClientInterface(Reader in, PrintStream out) {
+        buffer = new BufferedReader(in);
         outputStream = out;
         populateCmdMap();
     }
@@ -138,22 +130,24 @@ public class ClientInterface {
             public boolean run(Scanner args) {
                 String publicFid;
                 String privateFid;
+
                 if (args.hasNext()) {
                     publicFid = args.next();
                 } else {
-                    outputStream.println("Not enough arguments");
+                    outputStream.println("usage: generate <public-filename> <private-filename>");
                     return false;
                 }
                 if (args.hasNext()) {
                     privateFid = args.next();
                 } else {
-                    outputStream.println("Not enough arguments");
+                    outputStream.println("usage: generate <public-filename> <private-filename>");
                     return false;
                 }
                 try {
                     GenerateKey.generateKey(privateFid, publicFid);
                 } catch (GeneralSecurityException | IOException e) {
                     e.printStackTrace();
+                    return false;
                 }
                 return true;
             }
