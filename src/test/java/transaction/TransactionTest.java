@@ -20,7 +20,7 @@ import java.util.Optional;
  * Constructs a basic transaction between 2 peers, and signs and verifies (sig).
  */
 
-public class RTransactionTestSimple extends RandomizedTest {
+public class TransactionTest extends RandomizedTest {
 
     @Test
     public void testToString() throws Exception {
