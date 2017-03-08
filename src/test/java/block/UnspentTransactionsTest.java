@@ -4,6 +4,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import testutils.RandomizedTest;
+import testutils.TestUtils;
 import transaction.TxOut;
 import utils.Crypto;
 import utils.ShaTwoFiftySix;
@@ -65,11 +66,27 @@ public class UnspentTransactionsTest extends RandomizedTest {
 
         UnspentTransactions copy = ut.copy();
 
-        Assert.assertEquals(errorMessage, copy, ut);
-        Assert.assertEquals(errorMessage, copy.hashCode(), ut.hashCode());
+        TestUtils.assertEqualsWithHashCode(errorMessage, copy, ut);
         Assert.assertTrue(copy.contains(hash, 0));
         Assert.assertFalse(copy.contains(hash, 1));
         TxOut got = copy.get(hash, 0);
         Assert.assertEquals(errorMessage, got, out);
+    }
+
+    @Test
+    public void testEquals() throws GeneralSecurityException {
+        UnspentTransactions ut = UnspentTransactions.empty();
+        ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(randomBytes(1024));
+
+        KeyPair pair = Crypto.signatureKeyPair();
+        TxOut out = new TxOut(1024, pair.getPublic());
+        ut.put(hash, 0, out);
+
+        UnspentTransactions copy = ut.copy();
+
+        TestUtils.assertEqualsWithHashCode(errorMessage, ut, ut);
+        TestUtils.assertEqualsWithHashCode(errorMessage, copy, ut);
+        Assert.assertNotEquals(errorMessage, copy, UnspentTransactions.empty());
+        Assert.assertNotEquals(errorMessage, copy, null);
     }
 }

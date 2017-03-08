@@ -1,5 +1,6 @@
 package testutils;
 
+import org.junit.Assert;
 import utils.Pair;
 
 import java.io.IOException;
@@ -24,5 +25,18 @@ public class TestUtils {
         Socket left = new Socket(InetAddress.getLocalHost(), port);
         Socket right = serverSocket.accept();
         return new Pair<>(left, right);
+    }
+
+    /**
+     * Assert that {@code expected} and {@code actual} are {@code .equals()},
+     * and that they have the same {@code .hashCode()}
+     */
+    public static void assertEqualsWithHashCode(String message, Object expected, Object actual) {
+        Assert.assertEquals(message, expected, actual);
+        Assert.assertEquals(
+                String.format("hashCode() not equal for .equals() objects: %s", message),
+                expected.hashCode(),
+                actual.hashCode()
+        );
     }
 }

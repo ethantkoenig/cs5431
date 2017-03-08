@@ -4,6 +4,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import testutils.RandomizedTest;
+import testutils.TestUtils;
 import utils.Crypto;
 import utils.ShaTwoFiftySix;
 
@@ -40,18 +41,9 @@ public class TxInTest extends RandomizedTest {
         TxIn input2 = new TxIn(hash, 4);
         TxIn anotherInput = new TxIn(randomShaTwoFiftySix(), random.nextInt(10));
 
-        Assert.assertEquals(errorMessage, input1, input1);
-        Assert.assertEquals(errorMessage, input1, input2);
+        TestUtils.assertEqualsWithHashCode(errorMessage, input1, input1);
+        TestUtils.assertEqualsWithHashCode(errorMessage, input1, input2);
         Assert.assertNotEquals(errorMessage, input1, anotherInput);
         Assert.assertNotEquals(errorMessage, input1, null);
-    }
-
-    @Test
-    public void testHashCode() throws Exception {
-        ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(randomBytes(256));
-        int index = random.nextInt(16);
-        TxIn input1 = new TxIn(hash, index);
-        TxIn input2 = new TxIn(hash, index);
-        Assert.assertEquals(errorMessage, input1.hashCode(), input2.hashCode());
     }
 }

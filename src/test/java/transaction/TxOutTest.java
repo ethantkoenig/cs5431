@@ -4,6 +4,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import testutils.RandomizedTest;
+import testutils.TestUtils;
 import utils.Crypto;
 
 import java.io.ByteArrayOutputStream;
@@ -43,17 +44,9 @@ public class TxOutTest extends RandomizedTest {
         KeyPair otherPair = Crypto.signatureKeyPair();
         TxOut anotherOutput = new TxOut(random.nextInt(Integer.MAX_VALUE), otherPair.getPublic());
 
-        Assert.assertEquals(errorMessage, output1, output2);
+        TestUtils.assertEqualsWithHashCode(errorMessage, output1, output1);
+        TestUtils.assertEqualsWithHashCode(errorMessage, output1, output2);
         Assert.assertNotEquals(errorMessage, output1, anotherOutput);
         Assert.assertNotEquals(errorMessage, output1, null);
-    }
-
-    @Test
-    public void testHashCode() throws Exception {
-        KeyPair pair = Crypto.signatureKeyPair();
-        long value = random.nextInt(Integer.MAX_VALUE);
-        TxOut output1 = new TxOut(value, pair.getPublic());
-        TxOut output2 = new TxOut(value, pair.getPublic());
-        Assert.assertEquals(errorMessage, output1.hashCode(), output2.hashCode());
     }
 }

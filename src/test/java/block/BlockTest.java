@@ -4,6 +4,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import testutils.RandomizedTest;
+import testutils.TestUtils;
 import transaction.Transaction;
 import utils.Crypto;
 import utils.Pair;
@@ -36,6 +37,7 @@ public class BlockTest extends RandomizedTest {
         block.serialize(new DataOutputStream(outputStream));
         Block deserialized = Block.deserialize(ByteBuffer.wrap(outputStream.toByteArray()));
 
+        TestUtils.assertEqualsWithHashCode(errorMessage, block, deserialized);
         Assert.assertEquals(errorMessage,
                 block.getShaTwoFiftySix(),
                 deserialized.getShaTwoFiftySix()
@@ -51,6 +53,7 @@ public class BlockTest extends RandomizedTest {
         block.serialize(new DataOutputStream(outputStream));
         Block deserialized = Block.deserialize(ByteBuffer.wrap(outputStream.toByteArray()));
 
+        TestUtils.assertEqualsWithHashCode(errorMessage, block, deserialized);
         Assert.assertEquals(errorMessage,
                 block.getShaTwoFiftySix(),
                 deserialized.getShaTwoFiftySix()
@@ -71,7 +74,7 @@ public class BlockTest extends RandomizedTest {
         Transaction lastTxn = block.transactions[Block.NUM_TRANSACTIONS_PER_BLOCK - 1];
         // TODO currently assumes that last transaction will only have one output
         expected.put(lastTxn.getShaTwoFiftySix(), 0, lastTxn.getOutput(0));
-        Assert.assertEquals(errorMessage, result.get(), expected);
+        TestUtils.assertEqualsWithHashCode(errorMessage, result.get(), expected);
     }
 
     @Test
