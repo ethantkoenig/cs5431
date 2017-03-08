@@ -38,7 +38,7 @@ public class TxIn {
     public boolean equals(Object o) {
         if (o == this) {
             return true;
-        } else if (o == null || !(o instanceof TxIn)) {
+        } else if (!(o instanceof TxIn)) {
             return false;
         }
         TxIn other = (TxIn) o;

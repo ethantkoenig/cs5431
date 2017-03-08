@@ -64,6 +64,12 @@ public class BlockChainTest extends RandomizedTest {
         bc.insertBlock(next);
         Assert.assertTrue(errorMessage, bc.verifyBlock(next).isPresent());
         assertEquals(errorMessage, unspentTxs, bc.getUnspentTransactionsAt(next));
+
+        Assert.assertFalse(errorMessage, bc.verifyBlock(randomBlock(randomShaTwoFiftySix())).isPresent());
+
+        Block fauxGenesis = Block.genesis();
+        fauxGenesis.reward = new TxOut(Block.REWARD_AMOUNT + 1, Crypto.signatureKeyPair().getPublic());
+        Assert.assertFalse(errorMessage, bc.verifyBlock(fauxGenesis).isPresent());
     }
 
     @Test
@@ -107,6 +113,29 @@ public class BlockChainTest extends RandomizedTest {
         assertTrue(errorMessage, bc.insertBlock(genesis));
         assertTrue(errorMessage, bc.containsBlock(genesis));
         assertEquals(errorMessage, genesis, bc.getCurrentHead());
+    }
+
+    @Test
+    public void insertDuplicateGenesis() throws Exception {
+        BlockChain bc = new BlockChain();
+        PublicKey key1 = Crypto.signatureKeyPair().getPublic();
+        PublicKey key2 = Crypto.signatureKeyPair().getPublic();
+
+        Block genesis1 = Block.genesis();
+        genesis1.addReward(key1);
+
+        Block genesis2 = Block.genesis();
+        genesis2.addReward(key2);
+
+        bc.insertBlock(genesis1);
+
+        try {
+            bc.insertBlock(genesis2);
+            // should throw
+            Assert.fail(errorMessage);
+        } catch (IllegalStateException e) {
+            // should catch
+        }
     }
 
     @Test
@@ -182,6 +211,8 @@ public class BlockChainTest extends RandomizedTest {
         }
 
         assertEquals(blocks, bc.getAncestorsStartingAt(prev.getShaTwoFiftySix()));
+
+        assertEquals(errorMessage, new ArrayList<>(), bc.getAncestorsStartingAt(null));
     }
 
     @Test

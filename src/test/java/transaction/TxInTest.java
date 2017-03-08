@@ -39,11 +39,13 @@ public class TxInTest extends RandomizedTest {
         ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(randomBytes(256));
         TxIn input1 = new TxIn(hash, 4);
         TxIn input2 = new TxIn(hash, 4);
+        TxIn input3 = new TxIn(hash, 5);
         TxIn anotherInput = new TxIn(randomShaTwoFiftySix(), random.nextInt(10));
 
         TestUtils.assertEqualsWithHashCode(errorMessage, input1, input1);
         TestUtils.assertEqualsWithHashCode(errorMessage, input1, input2);
         Assert.assertNotEquals(errorMessage, input1, anotherInput);
         Assert.assertNotEquals(errorMessage, input1, null);
+        Assert.assertNotEquals(errorMessage, input1, input3);
     }
 }
