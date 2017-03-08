@@ -3,6 +3,10 @@ package utils;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
+import java.util.Optional;
 
 /**
  * Various IO utilities
@@ -31,5 +35,19 @@ public class IOUtils {
         outputStream.writeInt(payload.length);
         outputStream.write(type);
         outputStream.write(payload);
+    }
+
+    public static Optional<InetSocketAddress> parseAddress(String address) {
+        String[] pieces = address.split(":");
+        if (pieces.length != 2) {
+            return Optional.empty();
+        }
+        try {
+            InetAddress addr = InetAddress.getByName(pieces[0]);
+            int port = Integer.parseInt(pieces[1]);
+            return Optional.of(new InetSocketAddress(addr, port));
+        } catch (UnknownHostException | NumberFormatException e) {
+            return Optional.empty();
+        }
     }
 }

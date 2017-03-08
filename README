@@ -75,7 +75,7 @@ This will open an interactive shell, which supports the following commands:
 * help - list all commands
 * quit - quit the shell
 * setNodeList <filepath> -
-    Given a file with lines of the form "(ip address) (port number)", register
+    Given a file with lines of the form "(ip address):(port number)", register
     the list of running nodes to connect to for transactions.
 * generate <public filepath> <private filepath> -
     Generate a public/private key pair to the specified filepaths
