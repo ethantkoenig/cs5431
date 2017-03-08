@@ -13,7 +13,7 @@ Our project uses Java 8. We have most extensively tested on 1.8.0_121 and
 
 Our projects uses the Gradle build tool. We have included the Gradle wrapper, so
 that you do not need to install Gradle manually. Note that the first command you
-run using the Gradle the wrapper take a few minutes.
+run using the Gradle the wrapper may take a few minutes.
 
 ## Compiling and Running
 
@@ -23,9 +23,8 @@ To compile our source code, run
 
 $ ./gradlew assemble
 
-This command will, among other things, create a compressed archive at
-build/distributions/cs5431.tar. Copy this tar to a directory of your choosing,
-and extract it.
+This command will create a compressed archive at build/distributions/cs5431.tar.
+Copy this tar to a directory of your choosing, and extract it.
 
 Inside the decompressed directory, there will be an executable at bin/cs5431.
 This executable will run our project.
@@ -62,7 +61,7 @@ $ bin/cs5431 node 8001 public2 private2 public3 localhost:8000
 (finally, in yet another terminal)
 $ bin/cs5431 node 8002 public3 private3 public3 localhost:8000 localhost:8001
 
-where publicX/privateX are filepath containing public/private keys.
+where publicX/privateX are filepaths to public/private keys.
 
 ### Running a Client
 
@@ -92,6 +91,6 @@ This will open an interactive shell, which supports the following commands:
 
 ## Testing and FindBugs
 
-If you would like to run our unit tests, and run a FindBugs analysis, run
+If you would like to run our unit tests and run a FindBugs analysis, run
 
 $ ./gradlew check
