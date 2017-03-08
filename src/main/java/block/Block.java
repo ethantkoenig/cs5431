@@ -239,16 +239,14 @@ public class Block implements Iterable<Transaction> {
     public boolean equals(Object other) {
         if (other instanceof Block) {
             Block b = (Block) other;
-            return Arrays.equals(transactions, b.transactions) && Arrays.equals(nonce, b.nonce)
-                    && previousBlockHash.equals(b.previousBlockHash) && reward.equals(b.reward);
+            // Relying on collision resistance of SHA-256 to check for equality
+            return getShaTwoFiftySix().equals(b.getShaTwoFiftySix());
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        // TODO not completely right, since transactions can be .equals() even if they
-        // have different signatures
         return getShaTwoFiftySix().hashCode();
     }
 
