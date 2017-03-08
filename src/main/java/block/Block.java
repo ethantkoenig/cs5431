@@ -119,11 +119,18 @@ public class Block implements Iterable<Transaction> {
         return checkHashWith(hashGoalZeros);
     }
 
-    boolean checkHashWith(int goal) throws IOException, GeneralSecurityException {
+    /* package */ boolean checkHashWith(int goal) throws IOException, GeneralSecurityException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         serialize(new DataOutputStream(outputStream));
         ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(outputStream.toByteArray());
         return hash.checkHashZeros(goal);
+    }
+
+    /**
+     * @return Whether {@code this} is a genesis {@code Block}
+     */
+    public boolean isGenesisBlock() {
+        return previousBlockHash.equals(ShaTwoFiftySix.zero());
     }
 
     /**
@@ -198,7 +205,6 @@ public class Block implements Iterable<Transaction> {
             throw new IllegalStateException("Cannot reset block's reward");
         }
         reward = new TxOut(REWARD_AMOUNT, publicKey);
-
     }
 
     /**
