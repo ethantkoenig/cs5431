@@ -31,6 +31,12 @@ public class IOUtils {
         }
     }
 
+    /**
+     * @param outputStream output stream to write message to
+     * @param type type field of message to send
+     * @param payload payload of message to send
+     * @throws IOException
+     */
     public static void sendMessage(DataOutputStream outputStream, byte type, byte[] payload)
             throws IOException {
         outputStream.writeInt(payload.length);
@@ -38,6 +44,11 @@ public class IOUtils {
         outputStream.write(payload);
     }
 
+    /**
+     * @param address String representation of socket address
+     * @return The socket address that {@code address} represents,
+     * if {@code address} is valid
+     */
     public static Optional<InetSocketAddress> parseAddress(String address) {
         String[] pieces = address.split(":");
         if (pieces.length != 2) {
@@ -52,6 +63,12 @@ public class IOUtils {
         }
     }
 
+    /**
+     * @param path path to the file of socket addresses
+     * @return list of socket addresses contained in the file at {@code path}
+     * @throws IOException if there is an I/O error, or the file has misformatted
+     *                     addresses
+     */
     public static List<InetSocketAddress> parseAddresses(String path) throws IOException {
         try (BufferedReader nodeReader = new BufferedReader(
                 new InputStreamReader(new FileInputStream(path), StandardCharsets.UTF_8)
@@ -63,7 +80,7 @@ public class IOUtils {
                     return result;
                 }
                 result.add(IOUtils.parseAddress(line).orElseThrow(() ->
-                    new IOException(String.format("Invalid address: %s", line))
+                        new IOException(String.format("Invalid address: %s", line))
                 ));
             }
         }
