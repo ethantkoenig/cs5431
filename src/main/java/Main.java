@@ -1,12 +1,16 @@
 import cli.ClientInterface;
 import network.Miner;
 import utils.Crypto;
+import utils.IOUtils;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.util.Optional;
 
 public class Main {
 
@@ -45,13 +49,14 @@ public class Main {
 
         Miner miner = new Miner(port, new KeyPair(myPublic, myPrivate), privilegedKey);
         for (int i = 5; i < args.length; i++) {
-            String[] pieces = args[i].split(":");
-            if (pieces.length != 2) {
+            Optional<InetSocketAddress> optAddr = IOUtils.parseAddress(args[i]);
+            if (!optAddr.isPresent()) {
                 String msg = String.format("Invalid address %s", args[i]);
                 System.err.println(msg);
                 continue;
             }
-            miner.connect(pieces[0], Integer.parseInt(pieces[1]));
+            InetSocketAddress addr = optAddr.get();
+            miner.connect(addr.getHostName(), addr.getPort());
         }
         miner.startMiner();
         return true;

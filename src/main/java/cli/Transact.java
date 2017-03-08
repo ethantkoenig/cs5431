@@ -12,11 +12,13 @@ import utils.ShaTwoFiftySix;
 
 import java.io.*;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class Transact {
 
@@ -35,13 +37,10 @@ public class Transact {
         Transact transact = null;
         try {
             while ((line = nodeReader.readLine()) != null) {
-                String[] IPandPort = line.split(" ");
-                // Check to ensure we only have IP and Port
-                if (IPandPort.length == 2) {
-                    sockets.add(new Socket(
-                            InetAddress.getByName(IPandPort[0]),
-                            Integer.parseInt(IPandPort[1]))
-                    );
+                Optional<InetSocketAddress> optAddr = IOUtils.parseAddress(line);
+                if (optAddr.isPresent()) {
+                    InetSocketAddress addr = optAddr.get();
+                    sockets.add(new Socket(addr.getAddress(), addr.getPort()));
                 }
             }
             transact = new Transact(input);

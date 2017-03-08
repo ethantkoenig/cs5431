@@ -5,8 +5,11 @@ import org.junit.Test;
 import testutils.RandomizedTest;
 
 import java.io.*;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.Optional;
 
 public class IOUtilsTest extends RandomizedTest {
 
@@ -65,5 +68,29 @@ public class IOUtilsTest extends RandomizedTest {
         Assert.assertEquals(errorMessage, payload.length, writtenLen);
         Assert.assertEquals(errorMessage, type, writtenType);
         Assert.assertArrayEquals(errorMessage, payload, writtenPayload);
+    }
+
+    @Test
+    public void testParseAddress() throws IOException {
+        Optional<InetSocketAddress> optAddr = IOUtils.parseAddress("localhost:9801");
+        Assert.assertTrue(optAddr.isPresent());
+        InetSocketAddress addr = optAddr.get();
+        Assert.assertEquals(InetAddress.getByName("localhost"), addr.getAddress());
+        Assert.assertEquals(9801, addr.getPort());
+
+        optAddr = IOUtils.parseAddress("168.192.0.1:80");
+        Assert.assertTrue(optAddr.isPresent());
+        addr = optAddr.get();
+        Assert.assertEquals(InetAddress.getByName("168.192.0.1"), addr.getAddress());
+        Assert.assertEquals(80, addr.getPort());
+
+        optAddr = IOUtils.parseAddress("notAValidAddress");
+        Assert.assertFalse(optAddr.isPresent());
+
+        optAddr = IOUtils.parseAddress("notAValidIPAddress:80");
+        Assert.assertFalse(optAddr.isPresent());
+
+        optAddr = IOUtils.parseAddress("localhost:notANumber");
+        Assert.assertFalse(optAddr.isPresent());
     }
 }
