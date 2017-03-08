@@ -15,6 +15,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.nio.ByteBuffer;
 import java.security.KeyPair;
+import java.security.PublicKey;
 import java.util.Collections;
 import java.util.Optional;
 
@@ -65,6 +66,39 @@ public class BlockTest extends RandomizedTest {
                 block.getShaTwoFiftySix(),
                 deserialized.getShaTwoFiftySix()
         );
+    }
+
+    @Test
+    public void testAddReward() throws Exception {
+        Block b = Block.empty(ShaTwoFiftySix.zero());
+        PublicKey key = Crypto.signatureKeyPair().getPublic();
+        b.addReward(key);
+
+        Assert.assertEquals(Block.REWARD_AMOUNT, b.reward.value);
+        Assert.assertEquals(key, b.reward.ownerPubKey);
+
+        try {
+            b.addReward(key);
+            // Should have thrown
+            Assert.fail(errorMessage);
+        } catch (IllegalStateException e) {
+            // We should be here
+        }
+    }
+
+    @Test
+    public void testAddTransaction() throws Exception {
+        Block b = Block.empty(ShaTwoFiftySix.zero());
+
+        for (int i = 0; i < Block.NUM_TRANSACTIONS_PER_BLOCK; ++i) {
+            Assert.assertFalse(errorMessage, b.isFull());
+            Transaction tx = randomTransaction();
+            b.addTransaction(tx);
+            Assert.assertEquals(tx, b.transactions[i]);
+        }
+
+        Assert.assertTrue(errorMessage, b.isFull());
+        Assert.assertFalse(errorMessage, b.addTransaction(randomTransaction()));
     }
 
     @Test
@@ -156,6 +190,31 @@ public class BlockTest extends RandomizedTest {
                 ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(outputStream.toByteArray());
                 Assert.assertTrue(hash.checkHashZeros(1));
             }
+        }
+    }
+
+    @Test
+    public void testSerializeFailures() throws Exception {
+        Block block = Block.empty(randomShaTwoFiftySix());
+
+        try {
+            block.getShaTwoFiftySix();
+            // should throw
+            Assert.fail(errorMessage);
+        } catch (IllegalStateException e) {
+            // should reach
+        }
+
+        while (!block.isFull()) {
+            block.addTransaction(randomTransaction());
+        }
+
+        try {
+            block.getShaTwoFiftySix();
+            // should throw
+            Assert.fail(errorMessage);
+        } catch (IllegalStateException e) {
+            // should reach
         }
     }
 }
