@@ -30,7 +30,7 @@ public class BlockTest extends RandomizedTest {
     public void testEquals() throws Exception {
         Block b1 = randomBlock(ShaTwoFiftySix.zero());
 
-        Assert.assertFalse(errorMessage, b1.equals(new Object()));
+        Assert.assertNotEquals(errorMessage, b1, new Object());
 
         Block b2 = Block.empty(ShaTwoFiftySix.zero());
         for (Transaction tx: b1) {
@@ -41,11 +41,11 @@ public class BlockTest extends RandomizedTest {
             b2.nonce[i] = b1.nonce[i];
         }
 
-        Assert.assertTrue(errorMessage, b1.equals(b2));
+        TestUtils.assertEqualsWithHashCode(errorMessage, b1, b2);
 
         b2.nonceAddOne();
 
-        Assert.assertFalse(errorMessage, b1.equals(b2));
+        Assert.assertNotEquals(errorMessage, b1, b2);
     }
 
     @Test
