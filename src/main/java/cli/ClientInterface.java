@@ -20,11 +20,11 @@ public class ClientInterface {
      */
     interface Command {
         /**
-         * Takes in a Scanner which can parse the argument, and perfrom the
-         * corresponding actions. Returns a boolean to signal if the actions
-         * was successful or not.
+         * Takes in a Scanner which can parse the argument, and perform the
+         * corresponding actions.
          *
          * @param args Scanner which contains the arguments from the user
+         * @return whether the action was successful
          */
         boolean run(Scanner args);
 
