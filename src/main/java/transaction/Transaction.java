@@ -199,7 +199,7 @@ public class Transaction {
             outputsum += out.value;
             unspentOutputs.put(getShaTwoFiftySix(), j, out);
         }
-        if (outputsum > inputsum) {
+        if (outputsum != inputsum) {
             return false;
         }
         return true;
