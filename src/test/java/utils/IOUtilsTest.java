@@ -86,10 +86,7 @@ public class IOUtilsTest extends RandomizedTest {
         Assert.assertEquals(InetAddress.getByName("168.192.0.1"), addr.getAddress());
         Assert.assertEquals(80, addr.getPort());
 
-        optAddr = IOUtils.parseAddress("notAValidAddress");
-        Assert.assertFalse(optAddr.isPresent());
-
-        optAddr = IOUtils.parseAddress("notAValidIPAddress:80");
+        optAddr = IOUtils.parseAddress("not a valid address");
         Assert.assertFalse(optAddr.isPresent());
 
         optAddr = IOUtils.parseAddress("localhost:notANumber");
@@ -109,7 +106,7 @@ public class IOUtilsTest extends RandomizedTest {
                 addresses
         );
 
-        TestUtils.writeFile(temp.getAbsolutePath(), "localhost:9801\nnotValid:80\n");
+        TestUtils.writeFile(temp.getAbsolutePath(), "localhost:9801\nnotValid?:\n");
         try {
             IOUtils.parseAddresses(temp.getAbsolutePath());
             Assert.fail("Expected IOException");
