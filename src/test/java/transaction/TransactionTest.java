@@ -5,6 +5,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import testutils.RandomizedTest;
+import testutils.TestUtils;
 import utils.Crypto;
 import utils.ShaTwoFiftySix;
 
@@ -53,9 +54,8 @@ public class TransactionTest extends RandomizedTest {
 
         Transaction anotherTx = randomTransaction();
 
-        Assert.assertEquals(errorMessage, tx1, tx1);
-        Assert.assertEquals(errorMessage, tx1, tx2);
-        Assert.assertEquals(errorMessage, tx1.hashCode(), tx2.hashCode());
+        TestUtils.assertEqualsWithHashCode(errorMessage, tx1, tx1);
+        TestUtils.assertEqualsWithHashCode(errorMessage, tx1, tx2);
         Assert.assertNotEquals(errorMessage, tx1, anotherTx);
         Assert.assertNotEquals(errorMessage, tx1, null);
     }

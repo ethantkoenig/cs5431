@@ -4,6 +4,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import testutils.RandomizedTest;
+import testutils.TestUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
@@ -65,8 +66,8 @@ public class ShaTwoFiftySixTest extends RandomizedTest {
         ShaTwoFiftySix hash1 = deserializeFrom(hash);
         ShaTwoFiftySix hash2 = deserializeFrom(hash);
 
-        Assert.assertEquals(errorMessage, hash1, hash1);
-        Assert.assertEquals(errorMessage, hash1, hash2);
+        TestUtils.assertEqualsWithHashCode(errorMessage, hash1, hash1);
+        TestUtils.assertEqualsWithHashCode(errorMessage, hash1, hash2);
         Assert.assertNotEquals(errorMessage, hash1, null);
 
         byte[] anotherHash = randomBytes(ShaTwoFiftySix.HASH_SIZE_IN_BYTES);
@@ -76,14 +77,6 @@ public class ShaTwoFiftySixTest extends RandomizedTest {
         Assert.assertNotEquals(errorMessage,
                 deserializeFrom(hash),
                 deserializeFrom(anotherHash));
-    }
-
-    @Test
-    public void testHashCode() throws GeneralSecurityException {
-        byte[] hash = randomBytes(ShaTwoFiftySix.HASH_SIZE_IN_BYTES);
-        Assert.assertEquals(errorMessage,
-                deserializeFrom(hash).hashCode(),
-                deserializeFrom(hash).hashCode());
     }
 
     @Test
