@@ -40,7 +40,7 @@ public class TxOut {
     public boolean equals(Object o) {
         if (o == this) {
             return true;
-        } else if (o == null || !(o instanceof TxOut)) {
+        } else if (!(o instanceof TxOut)) {
             return false;
         }
         TxOut other = (TxOut) o;

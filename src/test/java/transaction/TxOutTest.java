@@ -43,10 +43,12 @@ public class TxOutTest extends RandomizedTest {
 
         KeyPair otherPair = Crypto.signatureKeyPair();
         TxOut anotherOutput = new TxOut(random.nextInt(Integer.MAX_VALUE), otherPair.getPublic());
+        TxOut output3 = new TxOut(value, otherPair.getPublic());
 
         TestUtils.assertEqualsWithHashCode(errorMessage, output1, output1);
         TestUtils.assertEqualsWithHashCode(errorMessage, output1, output2);
         Assert.assertNotEquals(errorMessage, output1, anotherOutput);
         Assert.assertNotEquals(errorMessage, output1, null);
+        Assert.assertNotEquals(errorMessage, output1, output3);
     }
 }
