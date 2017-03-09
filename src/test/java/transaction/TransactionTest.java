@@ -13,6 +13,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.nio.ByteBuffer;
 import java.security.KeyPair;
+import java.security.PrivateKey;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -218,5 +219,66 @@ public class TransactionTest extends RandomizedTest {
                 txn.verifySignature(2, senderPair2.getPublic()));
         Assert.assertTrue(errorMessage,
                 txn.verifySignature(2, senderPair3.getPublic()));
+    }
+
+    @Test
+    public void testVerificationFailure() throws Exception {
+        KeyPair badSpender = Crypto.signatureKeyPair();
+        TxOut unspent = new TxOut(50, badSpender.getPublic());
+        ShaTwoFiftySix hash = randomShaTwoFiftySix();
+
+        UnspentTransactions unspentTxs = UnspentTransactions.empty();
+        unspentTxs.put(hash, 0, unspent);
+
+        Transaction tx = new Transaction.Builder()
+                .addInput(new TxIn(hash, 0), Crypto.signatureKeyPair().getPrivate())
+                .addOutput(new TxOut(50, badSpender.getPublic()))
+                .build();
+
+        Assert.assertFalse(tx.verify(unspentTxs));
+
+        tx = new Transaction.Builder()
+                .addInput(new TxIn(hash, 0), badSpender.getPrivate())
+                .addOutput(new TxOut(49, badSpender.getPublic()))
+                .build();
+
+        Assert.assertFalse(tx.verify(unspentTxs));
+    }
+
+    @Test
+    public void testGetterFailure() throws Exception {
+        Transaction tx = randomTransaction();
+
+        try {
+            tx.getInput(-1);
+            // should throw
+            Assert.fail(errorMessage);
+        } catch (IllegalArgumentException e) {
+            // should catch
+        }
+
+        try {
+            tx.getInput(tx.numInputs);
+            // should throw
+            Assert.fail(errorMessage);
+        } catch (IllegalArgumentException e) {
+            // should catch
+        }
+
+        try {
+            tx.getOutput(-1);
+            // should throw
+            Assert.fail(errorMessage);
+        } catch (IllegalArgumentException e) {
+            // should catch
+        }
+
+        try {
+            tx.getOutput(tx.numOutputs);
+            // should throw
+            Assert.fail(errorMessage);
+        } catch (IllegalArgumentException e) {
+            // should catch
+        }
     }
 }
