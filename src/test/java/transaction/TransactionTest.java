@@ -249,36 +249,9 @@ public class TransactionTest extends RandomizedTest {
     public void testGetterFailure() throws Exception {
         Transaction tx = randomTransaction();
 
-        try {
-            tx.getInput(-1);
-            // should throw
-            Assert.fail(errorMessage);
-        } catch (IllegalArgumentException e) {
-            // should catch
-        }
-
-        try {
-            tx.getInput(tx.numInputs);
-            // should throw
-            Assert.fail(errorMessage);
-        } catch (IllegalArgumentException e) {
-            // should catch
-        }
-
-        try {
-            tx.getOutput(-1);
-            // should throw
-            Assert.fail(errorMessage);
-        } catch (IllegalArgumentException e) {
-            // should catch
-        }
-
-        try {
-            tx.getOutput(tx.numOutputs);
-            // should throw
-            Assert.fail(errorMessage);
-        } catch (IllegalArgumentException e) {
-            // should catch
-        }
+        TestUtils.assertThrows(errorMessage, () -> tx.getInput(-1), IllegalArgumentException.class);
+        TestUtils.assertThrows(errorMessage, () -> tx.getInput(tx.numInputs), IllegalArgumentException.class);
+        TestUtils.assertThrows(errorMessage, () -> tx.getOutput(-1), IllegalArgumentException.class);
+        TestUtils.assertThrows(errorMessage, () -> tx.getOutput(tx.numOutputs), IllegalArgumentException.class);
     }
 }

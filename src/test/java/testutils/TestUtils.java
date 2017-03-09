@@ -11,6 +11,7 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.util.function.Predicate;
 
 /**
  * Various (non-random) test utilities
@@ -59,4 +60,29 @@ public class TestUtils {
             Assert.fail(String.format("Unexpected exception while writing file: %s", e.getMessage()));
         }
     }
+
+    /**
+     * Run {@code thrower} and assert that it {@code throws} a {@code Throwable} that is an instance of
+     * {@code throwableClass}.
+     *
+     * @param errorMessage   The message to print if {@code thrower} either does not throw or {@code throws} that wrong
+     *                       kind of {@code Throwable}.
+     * @param thrower        The function to test
+     * @param throwableClass The {@code Class object} corresponding to the intended {@code Class} of the
+     *                       {@code Throwable} to be thrown.
+     */
+    public static <T extends Throwable> void assertThrows(String errorMessage, RunnableThrower thrower, Class<T> throwableClass) {
+        try {
+            thrower.run();
+            Assert.fail(errorMessage);
+        } catch (Throwable e) {
+            Assert.assertTrue(errorMessage, throwableClass.isInstance(e));
+        }
+    }
+
+    @FunctionalInterface
+    public interface RunnableThrower {
+        void run() throws Throwable;
+    }
+
 }
