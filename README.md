@@ -13,7 +13,12 @@ To simply compile the project, run
 
 To run the project, run
 
-```$ ./gradlew run```
+```$ ./gradlew distTar```
+
+then unpack the compressed archive at `build/distributions/cs5431.tar`. Inside the uncompressed
+directory, run
+
+```$ bin/cs5431 <args>```
 
 To fully build the project (compile, test, and run all checks), run
 
