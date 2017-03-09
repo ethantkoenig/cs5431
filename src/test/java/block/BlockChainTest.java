@@ -3,6 +3,7 @@ package block;
 import org.junit.Assert;
 import org.junit.Test;
 import testutils.RandomizedTest;
+import testutils.TestUtils;
 import transaction.Transaction;
 import transaction.TxIn;
 import transaction.TxOut;
@@ -129,13 +130,7 @@ public class BlockChainTest extends RandomizedTest {
 
         bc.insertBlock(genesis1);
 
-        try {
-            bc.insertBlock(genesis2);
-            // should throw
-            Assert.fail(errorMessage);
-        } catch (IllegalStateException e) {
-            // should catch
-        }
+        TestUtils.assertThrows(errorMessage, () -> bc.insertBlock(genesis2), IllegalStateException.class);
     }
 
     @Test

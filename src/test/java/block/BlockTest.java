@@ -77,13 +77,7 @@ public class BlockTest extends RandomizedTest {
         Assert.assertEquals(Block.REWARD_AMOUNT, b.reward.value);
         Assert.assertEquals(key, b.reward.ownerPubKey);
 
-        try {
-            b.addReward(key);
-            // Should have thrown
-            Assert.fail(errorMessage);
-        } catch (IllegalStateException e) {
-            // We should be here
-        }
+        TestUtils.assertThrows(errorMessage, () -> b.addReward(key), IllegalStateException.class);
     }
 
     @Test
@@ -197,24 +191,12 @@ public class BlockTest extends RandomizedTest {
     public void testSerializeFailures() throws Exception {
         Block block = Block.empty(randomShaTwoFiftySix());
 
-        try {
-            block.getShaTwoFiftySix();
-            // should throw
-            Assert.fail(errorMessage);
-        } catch (IllegalStateException e) {
-            // should reach
-        }
+        TestUtils.assertThrows(errorMessage, () -> block.getShaTwoFiftySix(), IllegalStateException.class);
 
         while (!block.isFull()) {
             block.addTransaction(randomTransaction());
         }
 
-        try {
-            block.getShaTwoFiftySix();
-            // should throw
-            Assert.fail(errorMessage);
-        } catch (IllegalStateException e) {
-            // should reach
-        }
+        TestUtils.assertThrows(errorMessage, () -> block.getShaTwoFiftySix(), IllegalStateException.class);
     }
 }
