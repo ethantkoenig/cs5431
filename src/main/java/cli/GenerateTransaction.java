@@ -47,6 +47,9 @@ public class GenerateTransaction {
             return;
         }
         sendTransaction(transaction.get(), addresses);
+
+        System.out.println(String.format("Successfully sent transaction: %s",
+                transaction.get().getShaTwoFiftySix()));
     }
 
     private Optional<Transaction> getTransaction() throws GeneralSecurityException, IOException {
