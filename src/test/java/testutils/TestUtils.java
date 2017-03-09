@@ -73,9 +73,10 @@ public class TestUtils {
     public static <T extends Throwable> void assertThrows(String errorMessage, RunnableThrower thrower, Class<T> throwableClass) {
         try {
             thrower.run();
-            Assert.fail(errorMessage);
+            Assert.fail(String.format("Expected %s to be thrown: %s", throwableClass.getName(), errorMessage));
         } catch (Throwable e) {
-            Assert.assertTrue(errorMessage, throwableClass.isInstance(e));
+            Assert.assertTrue(String.format("Expected %s to be thrown, instead found %s (%s): %s",
+                    throwableClass.getName(), e.class.getName(), e.getMessage(), errorMessage));
         }
     }
 
