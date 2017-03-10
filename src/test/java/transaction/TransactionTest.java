@@ -6,14 +6,12 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import testutils.RandomizedTest;
 import testutils.TestUtils;
+import utils.ByteUtil;
 import utils.Crypto;
 import utils.ShaTwoFiftySix;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.nio.ByteBuffer;
 import java.security.KeyPair;
-import java.security.PrivateKey;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -113,10 +111,8 @@ public class TransactionTest extends RandomizedTest {
         Assert.assertTrue(errorMessage,
                 tx.verifySignature(0, senderPair.getPublic()));
 
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        tx.serializeWithSignatures(new DataOutputStream(outputStream));
-        ByteBuffer serialized = ByteBuffer.wrap(outputStream.toByteArray());
-        Transaction deserialized = Transaction.deserialize(serialized);
+        byte[] serialized = ByteUtil.asByteArray(tx::serializeWithSignatures);
+        Transaction deserialized = Transaction.deserialize(ByteBuffer.wrap(serialized));
 
         Assert.assertTrue(tx.equals(deserialized));
         Assert.assertTrue(deserialized.verifySignature(0, senderPair.getPublic()));
@@ -162,10 +158,8 @@ public class TransactionTest extends RandomizedTest {
                 .addOutput(new TxOut(300, recipientPair3.getPublic()))
                 .build();
 
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        txn.serializeWithSignatures(new DataOutputStream(outputStream));
-        ByteBuffer serialized = ByteBuffer.wrap(outputStream.toByteArray());
-        Transaction deserialized = Transaction.deserialize(serialized);
+        byte[] serialized = ByteUtil.asByteArray(txn::serializeWithSignatures);
+        Transaction deserialized = Transaction.deserialize(ByteBuffer.wrap(serialized));
 
         Assert.assertTrue(txn.equals(deserialized));
         Assert.assertTrue(errorMessage,
@@ -192,10 +186,8 @@ public class TransactionTest extends RandomizedTest {
                 .addOutput(new TxOut(300, recipientPair3.getPublic()))
                 .build();
 
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        txn.serializeWithSignatures(new DataOutputStream(outputStream));
-        ByteBuffer serialized = ByteBuffer.wrap(outputStream.toByteArray());
-        Transaction deserialized = Transaction.deserialize(serialized);
+        byte[] serialized = ByteUtil.asByteArray(txn::serializeWithSignatures);
+        Transaction deserialized = Transaction.deserialize(ByteBuffer.wrap(serialized));
 
         Assert.assertTrue(txn.equals(deserialized));
 

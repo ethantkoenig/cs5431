@@ -7,7 +7,6 @@ import utils.ByteUtil;
 import utils.Crypto;
 import utils.ShaTwoFiftySix;
 
-import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.BufferUnderflowException;
@@ -120,9 +119,7 @@ public class Block implements Iterable<Transaction> {
     }
 
     /* package */ boolean checkHashWith(int goal) throws IOException, GeneralSecurityException {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        serialize(new DataOutputStream(outputStream));
-        ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(outputStream.toByteArray());
+        ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(ByteUtil.asByteArray(this::serialize));
         return hash.checkHashZeros(goal);
     }
 
@@ -138,9 +135,7 @@ public class Block implements Iterable<Transaction> {
      */
     public ShaTwoFiftySix getShaTwoFiftySix() {
         try {
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            serialize(new DataOutputStream(outputStream));
-            return ShaTwoFiftySix.hashOf(outputStream.toByteArray());
+            return ShaTwoFiftySix.hashOf(ByteUtil.asByteArray(this::serialize));
         } catch (IOException | GeneralSecurityException e) {
             LOGGER.severe(e.getMessage());
             throw new RuntimeException(e);

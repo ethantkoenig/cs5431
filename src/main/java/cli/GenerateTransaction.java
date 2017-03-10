@@ -11,7 +11,6 @@ import utils.IOUtils;
 import utils.ShaTwoFiftySix;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -66,9 +65,7 @@ public class GenerateTransaction {
 
     private void sendTransaction(Transaction transaction, List<InetSocketAddress> addresses)
             throws IOException {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        transaction.serializeWithSignatures(new DataOutputStream(outputStream));
-        byte[] payload = outputStream.toByteArray();
+        byte[] payload = ByteUtil.asByteArray(transaction::serializeWithSignatures);
 
         for (InetSocketAddress address : addresses) {
             try (Socket socket = new Socket(address.getAddress(), address.getPort())) {
