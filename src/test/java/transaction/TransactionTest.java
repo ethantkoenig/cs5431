@@ -235,14 +235,31 @@ public class TransactionTest extends RandomizedTest {
                 .addOutput(new TxOut(50, badSpender.getPublic()))
                 .build();
 
-        Assert.assertFalse(tx.verify(unspentTxs));
+        Assert.assertFalse(tx.verify(unspentTxs.copy()));
 
         tx = new Transaction.Builder()
                 .addInput(new TxIn(hash, 0), badSpender.getPrivate())
                 .addOutput(new TxOut(49, badSpender.getPublic()))
                 .build();
 
-        Assert.assertFalse(tx.verify(unspentTxs));
+        Assert.assertFalse(tx.verify(unspentTxs.copy()));
+
+        tx = new Transaction.Builder()
+                .addInput(new TxIn(hash, 0), badSpender.getPrivate())
+                .addOutput(new TxOut(70, badSpender.getPublic()))
+                .addOutput(new TxOut(-20, badSpender.getPublic()))
+                .build();
+        Assert.assertFalse(tx.verify(unspentTxs.copy()));
+
+        tx = new Transaction.Builder()
+                .addInput(new TxIn(hash, 0), badSpender.getPrivate())
+                .addOutput(new TxOut(1L << 62, badSpender.getPublic()))
+                .addOutput(new TxOut(1L << 62, badSpender.getPublic()))
+                .addOutput(new TxOut(1L << 62, badSpender.getPublic()))
+                .addOutput(new TxOut(1L << 62, badSpender.getPublic()))
+                .addOutput(new TxOut(50, badSpender.getPublic()))
+                .build();
+        Assert.assertFalse(tx.verify(unspentTxs.copy()));
     }
 
     @Test
