@@ -3,6 +3,7 @@ package transaction;
 
 import block.UnspentTransactions;
 import utils.ByteUtil;
+import utils.Longs;
 import utils.ShaTwoFiftySix;
 
 import java.io.ByteArrayOutputStream;
@@ -179,8 +180,8 @@ public class Transaction {
      */
     public boolean verify(UnspentTransactions unspentOutputs)
             throws GeneralSecurityException, IOException {
-        long inputsum = 0;
-        long outputsum = 0;
+        long inputSum = 0;
+        long outputSum = 0;
         for (int i = 0; i < txIn.length; ++i) {
             TxIn in = txIn[i];
             if (!unspentOutputs.contains(in.previousTxn, in.txIdx)) {
@@ -188,7 +189,10 @@ public class Transaction {
                 return false;
             }
             TxOut out = unspentOutputs.remove(in.previousTxn, in.txIdx);
-            inputsum += out.value;
+            if (Longs.sumWillOverflow(inputSum, out.value)) {
+                return false;
+            }
+            inputSum += out.value;
             if (!verifySignature(i, out.ownerPubKey)) {
                 LOGGER.warning("Invalid signature: " + out.ownerPubKey + "," + signatures[i]);
                 return false;
@@ -196,13 +200,15 @@ public class Transaction {
         }
         for (int j = 0; j < txOut.length; j++) {
             TxOut out = txOut[j];
-            outputsum += out.value;
+            if (out.value <= 0) {
+                return false;
+            } else if (Longs.sumWillOverflow(outputSum, out.value)) {
+                return false;
+            }
+            outputSum += out.value;
             unspentOutputs.put(getShaTwoFiftySix(), j, out);
         }
-        if (outputsum != inputsum) {
-            return false;
-        }
-        return true;
+        return outputSum == inputSum;
     }
 
     /**
