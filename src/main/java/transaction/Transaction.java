@@ -46,9 +46,7 @@ public class Transaction {
             throw new IllegalStateException();
         }
         Transaction txn = new Transaction(inputs, outputs, null);
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        txn.serialize(new DataOutputStream(outputStream));
-        byte[] body = outputStream.toByteArray();
+        byte[] body = ByteUtil.asByteArray(txn::serialize);
 
         Signature[] signatures = new Signature[keys.length];
         for (int i = 0; i < keys.length; i++) {
@@ -160,9 +158,7 @@ public class Transaction {
         }
 
         // TODO: eventually find a way to not re-serialize every time
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        serialize(new DataOutputStream(outputStream));
-        return signatures[inputIndex].verify(outputStream.toByteArray(), key);
+        return signatures[inputIndex].verify(ByteUtil.asByteArray(this::serialize), key);
     }
 
     /**
@@ -242,9 +238,7 @@ public class Transaction {
      */
     public ShaTwoFiftySix getShaTwoFiftySix() {
         try {
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            serialize(new DataOutputStream(outputStream));
-            return ShaTwoFiftySix.hashOf(outputStream.toByteArray());
+            return ShaTwoFiftySix.hashOf(ByteUtil.asByteArray(this::serialize));
         } catch (IOException | GeneralSecurityException e) {
             LOGGER.severe(e.getMessage());
             throw new RuntimeException(e);

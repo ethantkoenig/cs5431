@@ -1,9 +1,8 @@
 package network;
 
 import block.Block;
+import utils.ByteUtil;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Random;
 import java.util.concurrent.BlockingQueue;
@@ -68,18 +67,13 @@ public class MinerThread extends Thread {
             return;
         }
 
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        try {
-            finalBlock.serialize(new DataOutputStream(outputStream));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
         LOGGER.info("[+] Successfully mined block! Broadcasting to other nodes.");
         // Put message on broadcast queue
         try {
-            Message message = new Message(Message.BLOCK, outputStream.toByteArray());
+            byte[] payload = ByteUtil.asByteArray(finalBlock::serialize);
+            Message message = new Message(Message.BLOCK, payload);
             broadcastQueue.put(message);
-        } catch (InterruptedException e) {
+        } catch (InterruptedException | IOException e) {
             e.printStackTrace();
         }
 

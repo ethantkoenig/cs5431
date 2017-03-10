@@ -7,12 +7,11 @@ import testutils.RandomizedTest;
 import testutils.TestUtils;
 import transaction.Transaction;
 import transaction.TxOut;
+import utils.ByteUtil;
 import utils.Crypto;
 import utils.Pair;
 import utils.ShaTwoFiftySix;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.nio.ByteBuffer;
 import java.security.KeyPair;
 import java.security.PublicKey;
@@ -57,9 +56,9 @@ public class BlockTest extends RandomizedTest {
         }
         block.addReward(Crypto.signatureKeyPair().getPublic());
 
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        block.serialize(new DataOutputStream(outputStream));
-        Block deserialized = Block.deserialize(ByteBuffer.wrap(outputStream.toByteArray()));
+        Block deserialized = Block.deserialize(ByteBuffer.wrap(
+                ByteUtil.asByteArray(block::serialize)
+        ));
 
         TestUtils.assertEqualsWithHashCode(errorMessage, block, deserialized);
         Assert.assertEquals(errorMessage,
@@ -100,9 +99,9 @@ public class BlockTest extends RandomizedTest {
         Block block = Block.genesis();
         block.addReward(Crypto.signatureKeyPair().getPublic());
 
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        block.serialize(new DataOutputStream(outputStream));
-        Block deserialized = Block.deserialize(ByteBuffer.wrap(outputStream.toByteArray()));
+        Block deserialized = Block.deserialize(ByteBuffer.wrap(
+                ByteUtil.asByteArray(block::serialize)
+        ));
 
         TestUtils.assertEqualsWithHashCode(errorMessage, block, deserialized);
         Assert.assertEquals(errorMessage,
@@ -179,9 +178,7 @@ public class BlockTest extends RandomizedTest {
         for (int i = 0; i < 1000; i++) {
             block.nonceAddOne();
             if (block.checkHashWith(1)) {
-                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-                block.serialize(new DataOutputStream(outputStream));
-                ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(outputStream.toByteArray());
+                ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(ByteUtil.asByteArray(block::serialize));
                 Assert.assertTrue(hash.checkHashZeros(1));
             }
         }

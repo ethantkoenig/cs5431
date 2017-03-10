@@ -1,14 +1,12 @@
 package transaction;
 
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import testutils.RandomizedTest;
 import testutils.TestUtils;
+import utils.ByteUtil;
 import utils.Crypto;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
@@ -16,19 +14,13 @@ import java.security.KeyPair;
 
 public class TxOutTest extends RandomizedTest {
 
-    @BeforeClass
-    public static void setupClass() {
-        Crypto.init();
-    }
-
     @Test
     public void testSerialize() throws GeneralSecurityException, IOException {
         KeyPair pair = Crypto.signatureKeyPair();
         TxOut output = new TxOut(100, pair.getPublic());
 
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        output.serialize(new DataOutputStream(outputStream));
-        TxOut deserialized = TxOut.deserialize(ByteBuffer.wrap(outputStream.toByteArray()));
+        byte[] serialized = ByteUtil.asByteArray(output::serialize);
+        TxOut deserialized = TxOut.deserialize(ByteBuffer.wrap(serialized));
 
         Assert.assertEquals(output.ownerPubKey, deserialized.ownerPubKey);
         Assert.assertEquals(output.value, deserialized.value);
