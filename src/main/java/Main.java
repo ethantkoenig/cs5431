@@ -4,7 +4,6 @@ import utils.Crypto;
 import utils.IOUtils;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
@@ -24,8 +23,7 @@ public class Main {
             case "node":
                 if (!runNode(args)) {
                     System.exit(1);
-                }
-                ;
+                };
                 break;
             case "client":
                 new ClientInterface().startInterface();
