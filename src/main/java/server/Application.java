@@ -1,6 +1,9 @@
 package server;
 
-import server.Controllers.IndexController;
+import server.config.DatabaseConfig;
+import server.controllers.IndexController;
+import server.controllers.UserController;
+import server.dao.UserDao;
 
 import static spark.Spark.port;
 import static spark.Spark.staticFiles;
@@ -8,7 +11,11 @@ import static spark.Spark.staticFiles;
 
 public class Application {
 
+    private static UserDao userDao;
+
     public static void main(String args[]) {
+
+        userDao = new UserDao();
 
         // Configure Spark on port 5000
         port(5000);
@@ -17,8 +24,9 @@ public class Application {
         // Caching of static files lifetime
         staticFiles.expireTime(600L);
 
+        DatabaseConfig.dbInit();
         IndexController.serveIndexPage();
-
+        UserController.serveUserPublicKey(userDao);
     }
-
 }
+
