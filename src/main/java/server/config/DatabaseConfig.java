@@ -8,6 +8,12 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.logging.Logger;
 
+/**
+ * Class to config and initialize DB with necessary tables. So far only creates a users table.
+ * NOTE: unable to run sql scripts because of findbugs and dependency restrictions. See line 31.
+ *
+ * @version 1.0, March 11 2017
+ */
 public class DatabaseConfig {
 
     private static final Logger LOGGER = Logger.getLogger(DatabaseConfig.class.getName());

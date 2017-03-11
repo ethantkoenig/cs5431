@@ -8,12 +8,19 @@ import utils.Crypto;
 import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
 import java.security.PublicKey;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
 /**
- * Created by EvanKing on 3/10/17.
+ * The User Data Access Model is the layer between user objects and the Users table in the DB. The
+ * {@code UserDao} queries the database in order to return user objects. It also updates, modifies, user
+ * objects in DB.
+ *
+ * @version 1.0, March 11 2017
  */
 public class UserDao {
 
@@ -23,6 +30,14 @@ public class UserDao {
         return null;
     }
 
+
+    /**
+     * Given a username return the user object in the DB that is associated with this username
+     * NOTE: we will need to not allow duplicate usernames.
+     *
+     * @param username the username of the user being queried
+     * @throws SQLException
+     */
     public User getUserbyUsername(String username) throws SQLException {
         Connection conn = null;
         PreparedStatement preparedStmt = null;
@@ -62,7 +77,35 @@ public class UserDao {
         return user;
     }
 
-    public void registerUser(User user) {
-        return;
+    /**
+     * Inserts a user into the ssers table in the yaccoin database
+     *
+     * @param username
+     * @param password
+     * @throws SQLException
+     */
+    public boolean insertUser(String username, String password) throws SQLException {
+        Connection conn = null;
+        PreparedStatement preparedStmt = null;
+        try {
+            conn = DbUtil.getConnection(false);
+            preparedStmt = conn.prepareStatement(Statements.INSERT_USER);
+            preparedStmt.setString(1, username);
+            preparedStmt.setString(2, password);
+            int rs = preparedStmt.executeUpdate();
+            return rs == 1;
+        } finally {
+
+            try {
+                preparedStmt.close();
+            } catch (Exception e) {
+                LOGGER.severe(e.getMessage());
+            }
+            try {
+                conn.close();
+            } catch (Exception e) {
+                LOGGER.severe(e.getMessage());
+            }
+        }
     }
 }

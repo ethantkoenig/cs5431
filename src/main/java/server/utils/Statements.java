@@ -13,6 +13,8 @@ public class Statements {
     // Select statements
     public static final String SELECT_USER_BY_USERNAME = "SELECT * FROM users WHERE username = ?";
 
+    // Insert statements
+    public static final String INSERT_USER = "INSERT INTO users (username, pass) VALUES (?, ?)";
 
 
     //TODO: this query will be removed. Just for testing.

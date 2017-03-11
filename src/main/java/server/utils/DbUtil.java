@@ -14,7 +14,7 @@ public class DbUtil {
     private static final String STATEMENT_DELIMITER = ";";
     private static final String SCRIPT_PATH = "src/main/resources/sql/";
     private static String jdbcDriver = "com.mysql.jdbc.Driver";
-    private static String dbPassword = "Chelseafc8";//System.getenv("MYSQL_PASS");
+    private static String dbPassword = System.getenv("MYSQL_PASS");
 
 
 //    public static void runScript(Connection conn, String scriptPath) throws IOException, SQLException {
