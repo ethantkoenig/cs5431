@@ -14,7 +14,7 @@ public class DbUtil {
     private static final String STATEMENT_DELIMITER = ";";
     private static final String SCRIPT_PATH = "src/main/resources/sql/";
     private static String jdbcDriver = "com.mysql.jdbc.Driver";
-    private static String dbPassword = "";
+    private static String dbPassword = "Chelseafc8";//System.getenv("MYSQL_PASS");
 
 
 //    public static void runScript(Connection conn, String scriptPath) throws IOException, SQLException {
@@ -40,14 +40,18 @@ public class DbUtil {
 //    }
 
 
-    public static Connection getConnection() {
+    public static Connection getConnection(Boolean initial) {
         Connection connection = null;
+        String db = "";
         try {
             Class.forName(jdbcDriver);
-            connection = DriverManager.getConnection("jdbc:mysql://localhost/?user=root&password=" + dbPassword);
+            if (!initial) db = Statements.DB_NAME;
+            //TODO: don't hard code this string in here
+            connection = DriverManager.getConnection("jdbc:mysql://localhost/" + db + "?user=root&password=" + dbPassword);
         } catch (ClassNotFoundException | SQLException e) {
-            LOGGER.severe("Unable to connect to DB, check that you added your password: " + e.getMessage());
+            LOGGER.severe("Unable to connect to DB, make sure you added MYSQL_PASS to env variables: " + e.getMessage());
         }
         return connection;
     }
+
 }

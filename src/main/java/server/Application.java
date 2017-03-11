@@ -5,6 +5,8 @@ import server.controllers.IndexController;
 import server.controllers.UserController;
 import server.dao.UserDao;
 
+import java.sql.SQLException;
+
 import static spark.Spark.port;
 import static spark.Spark.staticFiles;
 
@@ -27,6 +29,11 @@ public class Application {
         DatabaseConfig.dbInit();
         IndexController.serveIndexPage();
         UserController.serveUserPublicKey(userDao);
+        try {
+            userDao.getUserbyUsername("Evan");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 }
 
