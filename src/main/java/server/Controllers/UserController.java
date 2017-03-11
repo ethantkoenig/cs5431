@@ -56,6 +56,7 @@ public class UserController {
             response.type("application/json");
             if (user != null)
                 if (user.getPublicKey() != null)
+                    //TODO: hex encode but doesnt much matter here since we wont use this function anyway
                     return user.getPublicKey().getEncoded();
                 else
                     return "null";

@@ -40,9 +40,4 @@ public class User {
     public void setPublicKey(PublicKey publicKey) {
         this.publicKey = publicKey;
     }
-
-    public String serialize(){
-        //TODO: I know this will be a big fight with our group...
-        return null;
-    }
 }

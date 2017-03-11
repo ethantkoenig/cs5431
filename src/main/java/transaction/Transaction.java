@@ -19,7 +19,7 @@ import java.util.Optional;
 import java.util.logging.Logger;
 
 /**
- * Application transaction class.
+ * Main transaction class.
  * Contains an array of inputs, outputs and signatures.
  */
 public class Transaction {
