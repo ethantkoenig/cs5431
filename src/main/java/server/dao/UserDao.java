@@ -41,17 +41,15 @@ public class UserDao {
     public User getUserbyUsername(String username) throws SQLException {
         try (
                 Connection conn = DbUtil.getConnection(false);
-                PreparedStatement preparedStmt = conn.prepareStatement(Statements.SELECT_USER_BY_USERNAME)
+                PreparedStatement preparedStmt = Statements.selectUserByUsername(conn, username);
+                ResultSet rs = preparedStmt.executeQuery()
         ) {
-            preparedStmt.setString(1, username);
-            try (ResultSet rs = preparedStmt.executeQuery()) {
-                if (rs.next()) {
-                    int userid = rs.getInt("userid");
-                    byte[] key = rs.getBytes("publickey");
-                    PublicKey publicKey = (key == null) ? null
-                            : Crypto.deserializePublicKey(ByteBuffer.wrap(key));
-                    return new User(userid, username, publicKey);
-                }
+            if (rs.next()) {
+                int userid = rs.getInt("userid");
+                byte[] key = rs.getBytes("publickey");
+                PublicKey publicKey = (key == null) ? null
+                        : Crypto.deserializePublicKey(ByteBuffer.wrap(key));
+                return new User(userid, username, publicKey);
             }
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
@@ -69,12 +67,9 @@ public class UserDao {
     public boolean insertUser(String username, String password) throws SQLException {
         try (
                 Connection conn = DbUtil.getConnection(false);
-                PreparedStatement preparedStmt = conn.prepareStatement(Statements.INSERT_USER)
+                PreparedStatement preparedStmt = Statements.insertUser(conn, username, password)
         ) {
-            preparedStmt.setString(1, username);
-            preparedStmt.setString(2, password);
-            int rs = preparedStmt.executeUpdate();
-            return rs == 1;
+            return preparedStmt.executeUpdate() == 1;
         }
     }
 }

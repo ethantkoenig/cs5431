@@ -46,6 +46,6 @@ public class DatabaseConfig {
 
     public static void createUserTable(Statement statement) throws SQLException {
         statement.executeUpdate(Statements.CREATE_USERS_TABLE);
-        statement.executeUpdate(Statements.INITIAL_INSERT);
+        statement.executeUpdate(Statements.INITIAL_INSERT); // TODO this is temporary
     }
 }
