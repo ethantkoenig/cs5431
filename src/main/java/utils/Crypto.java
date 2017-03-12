@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.security.*;
+import java.util.Random;
 import java.security.spec.ECGenParameterSpec;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
@@ -17,6 +18,7 @@ import java.security.spec.X509EncodedKeySpec;
 public class Crypto {
     public static final int PRIVATE_KEY_LEN_IN_BYTES = 150;
     public static final int PUBLIC_KEY_LEN_IN_BYTES = 91;
+    private static final Random RANDOM = new SecureRandom();
 
     public static void init() {
         Security.addProvider(new BouncyCastleProvider());
@@ -78,5 +80,11 @@ public class Crypto {
         byte[] keyBytes = new byte[Crypto.PRIVATE_KEY_LEN_IN_BYTES];
         IOUtils.fill(inputStream, keyBytes);
         return parsePrivateKey(keyBytes);
+    }
+
+    public static byte[] generateSalt() {
+        byte[] salt = new byte[32];
+        RANDOM.nextBytes(salt);
+        return salt;
     }
 }
