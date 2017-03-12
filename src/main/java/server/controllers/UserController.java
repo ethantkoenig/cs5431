@@ -67,13 +67,34 @@ public class UserController {
         });
     }
 
-    private static boolean nameValidator(String name) {
-        //TODO: validate the user input. ie length, not a sql query, etc.
-        return true;
+    private static boolean validateLength(String str, int min, int max) {
+        return (str.length() > min) && (str.length() < max);
     }
 
+    // Check for common elements of SQL statements.
+    private static boolean validateNotSql(String str) {
+        return !((str.contains(";")) || (str.contains("'")) || (str.contains("/*")) || (str.contains("()"))
+        || str.contains("@@"));
+    }
+
+    private static boolean validateAlphanumeric(String str) {
+        return str.matches("^(?=.*[a-z])(?=.*[0-9])[a-z0-9]+$");
+    }
+
+    private static boolean validateStrongAlphanumeric(String str) {
+        return str.matches("^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])[A-Za-z0-9]+$");
+    }
+
+    // Name must be between 6 and 12 characters and contain both lowercase letters and numbers.
+    private static boolean nameValidator(String name) {
+        return validateLength(name, 6, 12) && validateAlphanumeric(name) && validateNotSql(name);
+    }
+
+    /* Password Requirements:
+     * Length: 24 >= Length >= 12
+     * Must contain capitals, lowercase, and numbers.
+     */
     private static boolean passwordValidator(String password) {
-        //TODO: validate that it is a proper and strong password
-        return true;
+        return validateLength(password, 12, 24) && validateStrongAlphanumeric(password) && validateNotSql(password);
     }
 }
