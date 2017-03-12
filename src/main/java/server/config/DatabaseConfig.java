@@ -19,12 +19,11 @@ public class DatabaseConfig {
     private static final Logger LOGGER = Logger.getLogger(DatabaseConfig.class.getName());
 
     public static void dbInit() {
-        Connection connection = null;
-        Statement statement = null;
-        try {
-            LOGGER.info("[!] Initializing database");
-            connection = DbUtil.getConnection(true);
-            statement = connection.createStatement();
+        LOGGER.info("[!] Initializing database");
+        try (
+                Connection connection = DbUtil.getConnection(true);
+                Statement statement = connection.createStatement()
+        ) {
             int result = statement.executeUpdate(Statements.SHOW_DB_LIKE);
             // The user does not already have this db.
             if (result == 0) {
@@ -35,19 +34,8 @@ public class DatabaseConfig {
             } else {
                 LOGGER.info("[!] Database already created: " + Statements.DB_NAME);
             }
-        } catch (Exception e) {
+        } catch (SQLException e) {
             LOGGER.severe(e.getMessage());
-        } finally {
-            try {
-                statement.close();
-            } catch (Exception e) {
-                LOGGER.severe(e.getMessage());
-            }
-            try {
-                connection.close();
-            } catch (Exception e) {
-                LOGGER.severe(e.getMessage());
-            }
         }
     }
 

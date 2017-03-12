@@ -39,42 +39,24 @@ public class UserDao {
      * @throws SQLException
      */
     public User getUserbyUsername(String username) throws SQLException {
-        Connection conn = null;
-        PreparedStatement preparedStmt = null;
-        User user = null;
-        ResultSet rs = null;
-        try {
-            conn = DbUtil.getConnection(false);
-            preparedStmt = conn.prepareStatement(Statements.SELECT_USER_BY_USERNAME);
+        try (
+                Connection conn = DbUtil.getConnection(false);
+                PreparedStatement preparedStmt = conn.prepareStatement(Statements.SELECT_USER_BY_USERNAME)
+        ) {
             preparedStmt.setString(1, username);
-            rs = preparedStmt.executeQuery();
-            PublicKey publicKey = null;
-            if (rs.next()) {
-                int userid = rs.getInt("userid");
-                byte[] key = rs.getBytes("publickey");
-                if(key != null) publicKey = Crypto.deserializePublicKey(ByteBuffer.wrap(key));
-                user = new User(userid,  username, publicKey);
+            try (ResultSet rs = preparedStmt.executeQuery()) {
+                if (rs.next()) {
+                    int userid = rs.getInt("userid");
+                    byte[] key = rs.getBytes("publickey");
+                    PublicKey publicKey = (key == null) ? null
+                            : Crypto.deserializePublicKey(ByteBuffer.wrap(key));
+                    return new User(userid, username, publicKey);
+                }
             }
         } catch (GeneralSecurityException e) {
             e.printStackTrace();
-        } finally {
-            try {
-                rs.close();
-            } catch (Exception e) {
-                LOGGER.severe(e.getMessage());
-            }
-            try {
-                preparedStmt.close();
-            } catch (Exception e) {
-                LOGGER.severe(e.getMessage());
-            }
-            try {
-                conn.close();
-            } catch (Exception e) {
-                LOGGER.severe(e.getMessage());
-            }
         }
-        return user;
+        return null;
     }
 
     /**
@@ -85,27 +67,14 @@ public class UserDao {
      * @throws SQLException
      */
     public boolean insertUser(String username, String password) throws SQLException {
-        Connection conn = null;
-        PreparedStatement preparedStmt = null;
-        try {
-            conn = DbUtil.getConnection(false);
-            preparedStmt = conn.prepareStatement(Statements.INSERT_USER);
+        try (
+                Connection conn = DbUtil.getConnection(false);
+                PreparedStatement preparedStmt = conn.prepareStatement(Statements.INSERT_USER)
+        ) {
             preparedStmt.setString(1, username);
             preparedStmt.setString(2, password);
             int rs = preparedStmt.executeUpdate();
             return rs == 1;
-        } finally {
-
-            try {
-                preparedStmt.close();
-            } catch (Exception e) {
-                LOGGER.severe(e.getMessage());
-            }
-            try {
-                conn.close();
-            } catch (Exception e) {
-                LOGGER.severe(e.getMessage());
-            }
         }
     }
 }

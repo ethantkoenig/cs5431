@@ -11,11 +11,9 @@ import static spark.Spark.staticFiles;
 
 public class Application {
 
-    private static UserDao userDao;
-
     public static void main(String args[]) {
 
-        userDao = new UserDao();
+        UserDao userDao = new UserDao();
 
         // Configure Spark on port 5000
         port(5000);
@@ -29,4 +27,3 @@ public class Application {
         UserController.startUserController(userDao);
     }
 }
-

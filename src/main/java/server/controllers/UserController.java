@@ -52,14 +52,18 @@ public class UserController {
         get("/user/:name", (request, response) -> {
             User user = null;
             String name = request.params(":name");
-            if (nameValidator(name)) user = userDao.getUserbyUsername(name);
+            if (nameValidator(name)) {
+                user = userDao.getUserbyUsername(name);
+            }
             response.type("application/json");
-            if (user != null)
-                if (user.getPublicKey() != null)
+            if (user != null) {
+                if (user.getPublicKey() != null) {
                     //TODO: hex encode but doesnt much matter here since we wont use this function anyway
                     return user.getPublicKey().getEncoded();
-                else
+                } else {
                     return "null";
+                }
+            }
             return "{\"message\":\"User not found.\"}";
         });
     }

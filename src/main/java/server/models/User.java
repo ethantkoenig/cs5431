@@ -2,9 +2,6 @@ package server.models;
 
 import java.security.PublicKey;
 
-/**
- * Created by EvanKing on 3/10/17.
- */
 public class User {
 
     private int userid;

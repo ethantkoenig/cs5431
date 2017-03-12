@@ -5,16 +5,13 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.logging.Logger;
 
-/**
- * Created by EvanKing on 3/10/17.
- */
 public class DbUtil {
 
     private static final Logger LOGGER = Logger.getLogger(DbUtil.class.getName());
     private static final String STATEMENT_DELIMITER = ";";
     private static final String SCRIPT_PATH = "src/main/resources/sql/";
-    private static String jdbcDriver = "com.mysql.jdbc.Driver";
-    private static String dbPassword = System.getenv("MYSQL_PASS");
+    private static final String jdbcDriver = "com.mysql.jdbc.Driver";
+    private static final String dbPassword = System.getenv("MYSQL_PASS");
 
 
 //    public static void runScript(Connection conn, String scriptPath) throws IOException, SQLException {
