@@ -42,7 +42,6 @@ public class UserController {
                 }
             });
         });
-
     }
 
     // Basic route controller to serve user publickey
