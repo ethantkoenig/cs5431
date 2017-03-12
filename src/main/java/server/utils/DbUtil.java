@@ -8,33 +8,8 @@ import java.util.logging.Logger;
 public class DbUtil {
 
     private static final Logger LOGGER = Logger.getLogger(DbUtil.class.getName());
-    private static final String STATEMENT_DELIMITER = ";";
-    private static final String SCRIPT_PATH = "src/main/resources/sql/";
     private static final String jdbcDriver = "com.mysql.jdbc.Driver";
     private static final String dbPassword = System.getenv("MYSQL_PASS");
-
-
-//    public static void runScript(Connection conn, String scriptPath) throws IOException, SQLException {
-//        BufferedReader in = null;
-//        Statement statement = null;
-//        try {
-//            StringBuilder command = new StringBuilder();
-//            in = new BufferedReader(new InputStreamReader(new FileInputStream(SCRIPT_PATH + "dbconfig.sql"), Charset.defaultCharset()));
-//            statement = conn.createStatement();
-//            for (String line = in.readLine(); line != null; line = in.readLine()) {
-//                System.out.println(line);
-//                command.append(line);
-//                if (line.contains(STATEMENT_DELIMITER)) {
-//                    System.out.println(command);
-//                    statement.executeUpdate(command.toString());
-//                    command.setLength(0);
-//                }
-//            }
-//        }finally{
-//            in.close();
-//            statement.close();
-//        }
-//    }
 
 
     public static Connection getConnection(Boolean initial) {

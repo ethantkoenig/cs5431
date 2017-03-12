@@ -9,6 +9,7 @@ public class User {
     private PublicKey publicKey;
 
     public User(int userid, String username, PublicKey publicKey) {
+        // TODO username uniqueness
         this.userid = userid;
         this.username = username;
         this.publicKey = publicKey;
@@ -27,6 +28,7 @@ public class User {
     }
 
     public void setUsername(String username) {
+        // TODO check for uniqueness
         this.username = username;
     }
 
