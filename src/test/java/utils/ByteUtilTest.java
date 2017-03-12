@@ -2,6 +2,7 @@ package utils;
 import org.junit.Assert;
 import org.junit.Test;
 import testutils.RandomizedTest;
+import testutils.TestUtils;
 
 import java.util.Arrays;
 
@@ -9,7 +10,9 @@ public class ByteUtilTest extends RandomizedTest {
 
     @Test
     public void testBytesToHexString() throws Exception {
-        byte[] b = ByteUtil.hexStringToByteArray("e04fd020ea3a6910a2d808002b30309d");
+        byte[] b = TestUtils.assertPresent(
+                ByteUtil.hexStringToByteArray("e04fd020ea3a6910a2d808002b30309d")
+        );
         String byteString = ByteUtil.bytesToHexString(b);
         Assert.assertTrue(errorMessage, "e04fd020ea3a6910a2d808002b30309e".equals(ByteUtil.addOne(byteString)));
     }
@@ -43,8 +46,12 @@ public class ByteUtilTest extends RandomizedTest {
 
     @Test
     public void testCompare() throws Exception {
-        byte[] a = ByteUtil.hexStringToByteArray("0a2d808002b3030dd");
-        byte[] b = ByteUtil.hexStringToByteArray("0a2d808002b30309d");
+        byte[] a = TestUtils.assertPresent(
+                ByteUtil.hexStringToByteArray("0a2d808002b3030dd")
+        );
+        byte[] b = TestUtils.assertPresent(
+                ByteUtil.hexStringToByteArray("0a2d808002b30309d")
+        );
         Assert.assertTrue(errorMessage, ByteUtil.compare(a,b) == 1);
     }
 
@@ -59,10 +66,10 @@ public class ByteUtilTest extends RandomizedTest {
 
     @Test
     public void testHexStringToByteArray() throws Exception {
-        byte[] a = ByteUtil.hexStringToByteArray("0001");
+        byte[] a = TestUtils.assertPresent(ByteUtil.hexStringToByteArray("0001"));
         String b = ByteUtil.bytesToHexString(a);
         System.out.println(b);
-        byte[] c = ByteUtil.hexStringToByteArray(b);
+        byte[] c = TestUtils.assertPresent(ByteUtil.hexStringToByteArray(b));
         Assert.assertTrue(errorMessage, Arrays.equals(a, c));
     }
 

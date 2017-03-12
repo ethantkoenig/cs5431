@@ -6,6 +6,7 @@ import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
+import java.util.Optional;
 
 /**
  * Represents a SHA-256 hash
@@ -41,11 +42,11 @@ public final class ShaTwoFiftySix implements Comparable<ShaTwoFiftySix> {
         return new ShaTwoFiftySix(hash);
     }
 
-    public static ShaTwoFiftySix create(byte[] hash) {
+    public static Optional<ShaTwoFiftySix> create(byte[] hash) {
         if (hash.length != HASH_SIZE_IN_BYTES) {
-            throw new IllegalArgumentException("Mis-sized SHA-256 hash");
+            return Optional.empty();
         }
-        return new ShaTwoFiftySix(Arrays.copyOf(hash, HASH_SIZE_IN_BYTES));
+        return Optional.of(new ShaTwoFiftySix(Arrays.copyOf(hash, HASH_SIZE_IN_BYTES)));
     }
 
     /**

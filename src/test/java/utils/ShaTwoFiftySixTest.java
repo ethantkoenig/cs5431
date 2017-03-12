@@ -27,7 +27,8 @@ public class ShaTwoFiftySixTest extends RandomizedTest {
     @Test
     public void testCreate() throws GeneralSecurityException {
         byte[] hash = randomBytes(ShaTwoFiftySix.HASH_SIZE_IN_BYTES);
-        ShaTwoFiftySix sha256 = ShaTwoFiftySix.create(hash);
+        ShaTwoFiftySix sha256 = ShaTwoFiftySix.create(hash).
+                orElseThrow(() -> new AssertionError("Unable to create SHA-256"));
         Assert.assertArrayEquals(errorMessage, hash, sha256.copyOfHash());
     }
 
@@ -81,7 +82,8 @@ public class ShaTwoFiftySixTest extends RandomizedTest {
     public void testCheckHashZeros() {
         byte[] hash = new byte[ShaTwoFiftySix.HASH_SIZE_IN_BYTES];
         hash[2] = 0x01;
-        ShaTwoFiftySix shaTwoFiftySix = ShaTwoFiftySix.create(hash);
+        ShaTwoFiftySix shaTwoFiftySix = ShaTwoFiftySix.create(hash).
+                orElseThrow(() -> new AssertionError("Unable to create SHA-256"));
         Assert.assertTrue(errorMessage, shaTwoFiftySix.checkHashZeros(1));
         Assert.assertTrue(errorMessage, shaTwoFiftySix.checkHashZeros(2));
         Assert.assertFalse(errorMessage, shaTwoFiftySix.checkHashZeros(3));

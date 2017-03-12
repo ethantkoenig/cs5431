@@ -11,6 +11,7 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 
 /**
  * Various (non-random) test utilities
@@ -42,6 +43,11 @@ public class TestUtils {
                 expected.hashCode(),
                 actual.hashCode()
         );
+    }
+
+    public static <T> T assertPresent(Optional<T> optional) {
+        Assert.assertTrue(optional.isPresent());
+        return optional.orElseThrow(() -> new AssertionError("This can't happen"));
     }
 
     /**
