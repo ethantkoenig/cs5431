@@ -73,12 +73,6 @@ public class UserController {
         return (str.length() > min) && (str.length() < max);
     }
 
-    // Check for common elements of SQL statements.
-    private static boolean validateNotSql(String str) {
-        return !((str.contains(";")) || (str.contains("'")) || (str.contains("/*")) || (str.contains("()"))
-        || str.contains("@@"));
-    }
-
     private static boolean validateAlphanumeric(String str) {
         return str.matches("^(?=.*[a-z])(?=.*[0-9])[a-z0-9]+$");
     }
@@ -89,7 +83,7 @@ public class UserController {
 
     // Name must be between 6 and 12 characters and contain both lowercase letters and numbers.
     private static boolean nameValidator(String name) {
-        return validateLength(name, 6, 12) && validateAlphanumeric(name) && validateNotSql(name);
+        return validateLength(name, 6, 12) && validateAlphanumeric(name);
     }
 
     /* Password Requirements:
@@ -97,6 +91,6 @@ public class UserController {
      * Must contain capitals, lowercase, and numbers.
      */
     private static boolean passwordValidator(String password) {
-        return validateLength(password, 12, 24) && validateStrongAlphanumeric(password) && validateNotSql(password);
+        return validateLength(password, 12, 24) && validateStrongAlphanumeric(password);
     }
 }
