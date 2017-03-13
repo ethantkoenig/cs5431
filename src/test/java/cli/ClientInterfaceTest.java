@@ -92,6 +92,24 @@ public class ClientInterfaceTest extends RandomizedTest {
         Assert.assertEquals(errorMessage, 1, transaction.numOutputs);
     }
 
+    @Test
+    public void testInvalidInput() throws Exception {
+        File temp = File.createTempFile("nodes", ".tmp");
+        TestUtils.writeFile(temp.getAbsolutePath(), "localhost:12345");
+        runCli(
+                "transact", // will fail, have not set nodes
+                String.format("setNodeList %s", temp.getAbsolutePath()),
+                "transact", // start transact
+                "1", // first attempt fails
+                "not a valid hash!",
+                "transact",
+                "1",
+                randomShaTwoFiftySix().toString(),
+                temp.getAbsolutePath(),
+                "quit"
+        );
+    }
+
     private String runCli(String... inputs) {
         BufferedReader in = new BufferedReader(
                 new StringReader(String.join("\n", inputs))

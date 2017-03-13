@@ -76,23 +76,24 @@ public class GenerateTransaction {
     }
 
     private void getInputs(Transaction.Builder builder)
-            throws IOException, GeneralSecurityException {
+            throws InvalidInputException, IOException, GeneralSecurityException {
         int numInputs = (int) promptUserInt("Number of inputs");
         for (int i = 0; i < numInputs; i++) {
             System.out.println(String.format("[Input %d]", i));
-            String hexHash = promptUser("Hash of input transaction");
+            byte[] hash = ByteUtil.hexStringToByteArray(promptUser("Hash of input transaction")).
+                    orElseThrow(() -> new InvalidInputException("Invalid SHA-256 hash"));
             int index = (int) promptUserInt("Index of input funds");
             String privateFilename = promptUser("Filename for private key");
 
-            builder.addInput(
-                    new TxIn(ShaTwoFiftySix.create(ByteUtil.hexStringToByteArray(hexHash)), index),
-                    Crypto.loadPrivateKey(privateFilename)
-            );
+            ShaTwoFiftySix sha256 = ShaTwoFiftySix.create(hash).
+                    orElseThrow(() -> new InvalidInputException("Invalid SHA-256 hash"));
+
+            builder.addInput(new TxIn(sha256, index), Crypto.loadPrivateKey(privateFilename));
         }
     }
 
     private void getOutputs(Transaction.Builder builder)
-            throws IOException, GeneralSecurityException {
+            throws InvalidInputException, IOException, GeneralSecurityException {
         int numOutputs = (int) promptUserInt("Number of outputs");
         for (int i = 0; i < numOutputs; i++) {
             System.out.println(String.format("[Output %d]", i));
@@ -103,7 +104,7 @@ public class GenerateTransaction {
         }
     }
 
-    private long promptUserInt(String prompt) throws IOException {
+    private long promptUserInt(String prompt) throws InvalidInputException, IOException {
         String text = promptUser(prompt);
         try {
             long n = Long.parseLong(text);
@@ -121,7 +122,7 @@ public class GenerateTransaction {
         return input.readLine();
     }
 
-    private static class InvalidInputException extends RuntimeException {
+    private static class InvalidInputException extends Exception {
         private InvalidInputException(String message) {
             super(message);
         }

@@ -39,7 +39,16 @@ public class Main {
         }
     }
 
-    private static boolean runNode(String[] args) throws GeneralSecurityException, IOException {
+    private static boolean runNode(String[] args) {
+        try {
+            return runNodeWithThrowing(args);
+        } catch (GeneralSecurityException | IOException e) {
+            System.err.println(String.format("Error: %s", e.getMessage()));
+            return false;
+        }
+    }
+
+    private static boolean runNodeWithThrowing(String[] args) throws GeneralSecurityException, IOException {
         if (args.length < 5) {
             System.err.println("usage: node <port> <public-key> <private-key> <privileged-key> (<ip-address>:<port>)*");
             return false;

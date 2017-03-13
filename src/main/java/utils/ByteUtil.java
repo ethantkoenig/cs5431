@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Formatter;
+import java.util.Optional;
 
 /**
  * Byte Manipulation functions
@@ -65,7 +66,7 @@ public class ByteUtil {
         return formatter.toString();
     }
 
-    public static byte[] hexStringToByteArray(String s) {
+    public static Optional<byte[]> hexStringToByteArray(String s) {
         int length = s.length();
         if (length % 2 != 0) {
             length++;
@@ -73,10 +74,14 @@ public class ByteUtil {
         }
         byte[] byteArray = new byte[length / 2];
         for (int i = 0; i < length; i += 2) {
-            byteArray[i / 2] = (byte) (Character.digit(s.charAt(i), 16) << 4);
-            byteArray[i / 2] += (byte) Character.digit(s.charAt(i + 1), 16);
+            int hi = Character.digit(s.charAt(i), 16);
+            int lo = Character.digit(s.charAt(i + 1), 16);
+            if (hi == -1 || lo == -1) {
+                return Optional.empty();
+            }
+            byteArray[i / 2] = (byte) ((hi << 4) + lo);
         }
-        return byteArray;
+        return Optional.of(byteArray);
     }
 
     public static String addOne(String hex) {

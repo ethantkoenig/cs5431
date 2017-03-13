@@ -186,7 +186,7 @@ public class ClientInterface {
                 try {
                     GenerateTransaction.run(buffer, socketAddresses);
                 } catch (GeneralSecurityException | IOException e) {
-                    e.printStackTrace();
+                    outputStream.println(String.format("Error: %s", e.getMessage()));
                     return false;
                 }
                 return true;

@@ -97,7 +97,7 @@ public abstract class RandomizedTest {
             senderPair = recipientPair;
             recipientPair = Crypto.signatureKeyPair();
 
-            Transaction previous = i > 0 ? block.transactions[i-1] : initTransaction;
+            Transaction previous = i > 0 ? block.transactions[i - 1] : initTransaction;
 
             block.transactions[i] = new Transaction.Builder()
                     .addInput(
@@ -114,6 +114,7 @@ public abstract class RandomizedTest {
     }
 
     protected ShaTwoFiftySix randomShaTwoFiftySix() {
-        return ShaTwoFiftySix.create(randomBytes(ShaTwoFiftySix.HASH_SIZE_IN_BYTES));
+        return ShaTwoFiftySix.create(randomBytes(ShaTwoFiftySix.HASH_SIZE_IN_BYTES)).
+                orElseThrow(() -> new AssertionError("Unable to generate random SHA-256"));
     }
 }
