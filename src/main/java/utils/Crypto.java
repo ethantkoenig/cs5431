@@ -11,7 +11,6 @@ import java.security.*;
 import java.security.spec.ECGenParameterSpec;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
-import java.util.Arrays;
 
 /**
  * Various crypto-related functions
@@ -94,22 +93,12 @@ public class Crypto {
         return salt;
     }
 
-    public static Pair<byte[],byte[]> hashAndSalt(String password)
+    public static byte[] hashAndSalt(String password, byte[] salt)
             throws IOException, GeneralSecurityException {
-        byte[] salt = Crypto.generateSalt();
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         outputStream.write(password.getBytes("UTF-8"));
         outputStream.write(salt);
-        byte[] hash = sha256(outputStream.toByteArray());
-        return new Pair<>(hash, salt);
+        return sha256(outputStream.toByteArray());
     }
 
-    public static boolean verifyPassword(String password, byte[] hash, byte[] salt)
-            throws IOException, GeneralSecurityException {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        outputStream.write(password.getBytes("UTF-8"));
-        outputStream.write(salt);
-        byte[] checkhash = sha256(outputStream.toByteArray());
-        return Arrays.equals(checkhash, hash);
-    }
 }

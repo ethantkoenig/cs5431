@@ -20,13 +20,13 @@ public class CryptoTest extends RandomizedTest {
     @Test
     public void testHashAndSalt() throws Exception {
         String pass = "password";
-        Pair<byte[], byte[]> hashsalt = Crypto.hashAndSalt(pass);
+        byte[] salt = Crypto.generateSalt();
+        byte[] hash = Crypto.hashAndSalt(pass, salt);
 
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         outputStream.write(pass.getBytes("UTF-8"));
-        outputStream.write(hashsalt.getRight());
-        Assert.assertArrayEquals(hashsalt.getLeft(),Crypto.sha256(outputStream.toByteArray()));
-        Assert.assertTrue(Crypto.verifyPassword(pass, hashsalt.getLeft(), hashsalt.getRight()));
+        outputStream.write(salt);
+        Assert.assertArrayEquals(hash,Crypto.sha256(outputStream.toByteArray()));
     }
 
 

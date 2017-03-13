@@ -5,7 +5,6 @@ import server.models.User;
 import spark.ModelAndView;
 import spark.template.freemarker.FreeMarkerEngine;
 import utils.Crypto;
-import utils.Pair;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -35,9 +34,10 @@ public class UserController {
                 String username = request.queryParams("username");
                 String password = request.queryParams("password");
                 if (nameValidator(username) && passwordValidator(password)) {
-                    Pair<byte[], byte[]> hashedpass = Crypto.hashAndSalt(password);
-                    //TODO: store salt in the database
-                    userDao.insertUser(username, new String(hashedpass.getLeft(), "UTF-8"));
+                    byte[] salt = Crypto.generateSalt();
+                    byte[] hash = Crypto.hashAndSalt(password, salt);
+                    //TODO: store salt in the database, change DB to take bytes instead of string.
+                    userDao.insertUser(username, new String(hash, "UTF-8"));
                     return "{\"message\":\"User registered.\"}";
                 } else {
                     return "{\"message\":\"Unable to add user. Check fields and try again. \"}";
