@@ -26,9 +26,8 @@ public class CryptoTest extends RandomizedTest {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         outputStream.write(pass.getBytes("UTF-8"));
         outputStream.write(salt);
-        Assert.assertArrayEquals(hash,Crypto.sha256(outputStream.toByteArray()));
+        Assert.assertArrayEquals(hash,Crypto.bcrypt(outputStream.toByteArray(), salt, 16));
     }
-
 
     @Test
     public void testSignatureKeyPair() throws Exception {
