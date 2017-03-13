@@ -1,5 +1,6 @@
 import cli.ClientInterface;
 import network.Miner;
+import server.Application;
 import utils.Crypto;
 import utils.IOUtils;
 
@@ -28,6 +29,8 @@ public class Main {
             case "client":
                 new ClientInterface().startInterface();
                 break;
+            case "webserver":
+                Application.run();
             default:
                 String msg = String.format("Unrecognized command %s", args[0]);
                 System.err.println(msg);
