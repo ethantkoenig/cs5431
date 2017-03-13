@@ -3,6 +3,7 @@ package transaction;
 
 import block.UnspentTransactions;
 import utils.ByteUtil;
+import utils.Longs;
 import utils.ShaTwoFiftySix;
 
 import java.io.ByteArrayOutputStream;
@@ -46,9 +47,7 @@ public class Transaction {
             throw new IllegalStateException();
         }
         Transaction txn = new Transaction(inputs, outputs, null);
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        txn.serialize(new DataOutputStream(outputStream));
-        byte[] body = outputStream.toByteArray();
+        byte[] body = ByteUtil.asByteArray(txn::serialize);
 
         Signature[] signatures = new Signature[keys.length];
         for (int i = 0; i < keys.length; i++) {
@@ -160,9 +159,7 @@ public class Transaction {
         }
 
         // TODO: eventually find a way to not re-serialize every time
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        serialize(new DataOutputStream(outputStream));
-        return signatures[inputIndex].verify(outputStream.toByteArray(), key);
+        return signatures[inputIndex].verify(ByteUtil.asByteArray(this::serialize), key);
     }
 
     /**
@@ -179,8 +176,8 @@ public class Transaction {
      */
     public boolean verify(UnspentTransactions unspentOutputs)
             throws GeneralSecurityException, IOException {
-        long inputsum = 0;
-        long outputsum = 0;
+        long inputSum = 0;
+        long outputSum = 0;
         for (int i = 0; i < txIn.length; ++i) {
             TxIn in = txIn[i];
             if (!unspentOutputs.contains(in.previousTxn, in.txIdx)) {
@@ -188,7 +185,10 @@ public class Transaction {
                 return false;
             }
             TxOut out = unspentOutputs.remove(in.previousTxn, in.txIdx);
-            inputsum += out.value;
+            if (Longs.sumWillOverflow(inputSum, out.value)) {
+                return false;
+            }
+            inputSum += out.value;
             if (!verifySignature(i, out.ownerPubKey)) {
                 LOGGER.warning("Invalid signature: " + out.ownerPubKey + "," + signatures[i]);
                 return false;
@@ -196,13 +196,15 @@ public class Transaction {
         }
         for (int j = 0; j < txOut.length; j++) {
             TxOut out = txOut[j];
-            outputsum += out.value;
+            if (out.value <= 0) {
+                return false;
+            } else if (Longs.sumWillOverflow(outputSum, out.value)) {
+                return false;
+            }
+            outputSum += out.value;
             unspentOutputs.put(getShaTwoFiftySix(), j, out);
         }
-        if (outputsum != inputsum) {
-            return false;
-        }
-        return true;
+        return outputSum == inputSum;
     }
 
     /**
@@ -242,9 +244,7 @@ public class Transaction {
      */
     public ShaTwoFiftySix getShaTwoFiftySix() {
         try {
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            serialize(new DataOutputStream(outputStream));
-            return ShaTwoFiftySix.hashOf(outputStream.toByteArray());
+            return ShaTwoFiftySix.hashOf(ByteUtil.asByteArray(this::serialize));
         } catch (IOException | GeneralSecurityException e) {
             LOGGER.severe(e.getMessage());
             throw new RuntimeException(e);

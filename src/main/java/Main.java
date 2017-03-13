@@ -24,7 +24,7 @@ public class Main {
             case "node":
                 if (!runNode(args)) {
                     System.exit(1);
-                };
+                }
                 break;
             case "client":
                 new ClientInterface().startInterface();
