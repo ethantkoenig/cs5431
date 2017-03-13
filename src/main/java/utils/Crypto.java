@@ -8,10 +8,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.security.*;
-import java.util.Random;
 import java.security.spec.ECGenParameterSpec;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.Arrays;
 
 /* Various crypto-related functions
  *
@@ -19,7 +19,7 @@ import java.security.spec.X509EncodedKeySpec;
 public class Crypto {
     public static final int PRIVATE_KEY_LEN_IN_BYTES = 150;
     public static final int PUBLIC_KEY_LEN_IN_BYTES = 91;
-    private static final Random RANDOM = new SecureRandom();
+    private static final SecureRandom RANDOM = new SecureRandom();
 
     public static void init() {
         Security.addProvider(new BouncyCastleProvider());
@@ -97,5 +97,14 @@ public class Crypto {
         outputStream.write(salt);
         byte[] hash = sha256(outputStream.toByteArray());
         return new Pair<>(hash, salt);
+    }
+
+    public static boolean verifyPassword(String password, byte[] hash, byte[] salt)
+            throws IOException, GeneralSecurityException {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        outputStream.write(password.getBytes("UTF-8"));
+        outputStream.write(salt);
+        byte[] checkhash = sha256(outputStream.toByteArray());
+        return Arrays.equals(checkhash, hash);
     }
 }
