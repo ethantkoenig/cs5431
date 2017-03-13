@@ -1,6 +1,7 @@
 package utils;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.crypto.generators.BCrypt;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
@@ -71,6 +72,10 @@ public class Crypto {
         return digest.digest(content);
     }
 
+    public static byte[] bcrypt(byte[] content, byte[] salt, int cost) {
+        return BCrypt.generate(content, salt, cost);
+    }
+
     public static PublicKey loadPublicKey(String filename)
             throws GeneralSecurityException, IOException {
         InputStream inputStream = new FileInputStream(filename);
@@ -88,7 +93,7 @@ public class Crypto {
     }
 
     public static byte[] generateSalt() {
-        byte[] salt = new byte[32];
+        byte[] salt = new byte[16];
         RANDOM.nextBytes(salt);
         return salt;
     }
@@ -98,7 +103,7 @@ public class Crypto {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         outputStream.write(password.getBytes("UTF-8"));
         outputStream.write(salt);
-        return sha256(outputStream.toByteArray());
+        return bcrypt(outputStream.toByteArray(), salt, 16);
     }
 
 }
