@@ -1,18 +1,16 @@
 package server.dao;
 
+import server.models.Key;
 import server.models.User;
 import server.utils.DbUtil;
 import server.utils.Statements;
-import utils.Crypto;
 
-import java.nio.ByteBuffer;
-import java.security.GeneralSecurityException;
-import java.security.PublicKey;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 
 /**
@@ -46,16 +44,43 @@ public class UserDao {
         ) {
             if (rs.next()) {
                 int userid = rs.getInt("userid");
-                byte[] key = rs.getBytes("publickey");
-                PublicKey publicKey = (key == null) ? null
-                        : Crypto.deserializePublicKey(ByteBuffer.wrap(key));
-                return new User(userid, username, publicKey);
+                return new User(userid, username);
             }
-        } catch (GeneralSecurityException e) {
-            e.printStackTrace();
+            return null;
         }
-        return null;
     }
+
+    /**
+     * @return The keys associated with a given userID
+     */
+    public List<Key> getKeysByUserID(int userID) throws SQLException {
+        try (Connection conn = DbUtil.getConnection(false);
+             PreparedStatement preparedStmt = Statements.getKeysByUserID(conn, userID);
+             ResultSet rs = preparedStmt.executeQuery()
+        ) {
+            List<Key> keys = new ArrayList<>();
+            while (rs.next()) {
+                byte[] publicKeyBytes = rs.getBytes("publickey");
+                byte[] encryptedPrivateKeyBytes = rs.getBytes("privatekey");
+                keys.add(new Key(publicKeyBytes, encryptedPrivateKeyBytes));
+            }
+            return keys;
+        }
+    }
+
+    /**
+     * Add the given public/private keys to the database, under the given userID.
+     *
+     * @return whether insert was successful
+     */
+    public boolean insertKey(int userID, byte[] publicKey, byte[] privateKey) throws SQLException {
+        try (Connection conn = DbUtil.getConnection(false);
+             PreparedStatement preparedStmt = Statements.insertKey(conn, userID, publicKey, privateKey)
+        ) {
+            return preparedStmt.executeUpdate() == 1;
+        }
+    }
+
 
     /**
      * Inserts a user into the ssers table in the yaccoin database
@@ -65,9 +90,8 @@ public class UserDao {
      * @throws SQLException
      */
     public boolean insertUser(String username, String password) throws SQLException {
-        try (
-                Connection conn = DbUtil.getConnection(false);
-                PreparedStatement preparedStmt = Statements.insertUser(conn, username, password)
+        try (Connection conn = DbUtil.getConnection(false);
+             PreparedStatement preparedStmt = Statements.insertUser(conn, username, password)
         ) {
             return preparedStmt.executeUpdate() == 1;
         }
