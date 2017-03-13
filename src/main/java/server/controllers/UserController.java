@@ -4,13 +4,12 @@ import server.dao.UserDao;
 import server.models.User;
 import spark.ModelAndView;
 import spark.template.freemarker.FreeMarkerEngine;
+import utils.Crypto;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static spark.Spark.get;
-import static spark.Spark.path;
-import static spark.Spark.post;
+import static spark.Spark.*;
 
 public class UserController {
 
@@ -35,7 +34,10 @@ public class UserController {
                 String username = request.queryParams("username");
                 String password = request.queryParams("password");
                 if (nameValidator(username) && passwordValidator(password)) {
-                    userDao.insertUser(username, password);
+                    byte[] salt = Crypto.generateSalt();
+                    byte[] hash = Crypto.hashAndSalt(password, salt);
+                    //TODO: store salt in the database, change DB to take bytes instead of string.
+                    userDao.insertUser(username, new String(hash, "UTF-8"));
                     return "{\"message\":\"User registered.\"}";
                 } else {
                     return "{\"message\":\"Unable to add user. Check fields and try again. \"}";
@@ -67,13 +69,28 @@ public class UserController {
         });
     }
 
-    private static boolean nameValidator(String name) {
-        //TODO: validate the user input. ie length, not a sql query, etc.
-        return true;
+    private static boolean validateLength(String str, int min, int max) {
+        return (str.length() > min) && (str.length() < max);
     }
 
+    private static boolean validateAlphanumeric(String str) {
+        return str.matches("^(?=.*[a-z])(?=.*[0-9])[a-z0-9]+$");
+    }
+
+    private static boolean validateStrongAlphanumeric(String str) {
+        return str.matches("^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])[A-Za-z0-9]+$");
+    }
+
+    // Name must be between 6 and 12 characters and contain both lowercase letters and numbers.
+    private static boolean nameValidator(String name) {
+        return validateLength(name, 6, 12) && validateAlphanumeric(name);
+    }
+
+    /* Password Requirements:
+     * Length: 24 >= Length >= 12
+     * Must contain capitals, lowercase, and numbers.
+     */
     private static boolean passwordValidator(String password) {
-        //TODO: validate that it is a proper and strong password
-        return true;
+        return validateLength(password, 12, 24) && validateStrongAlphanumeric(password);
     }
 }

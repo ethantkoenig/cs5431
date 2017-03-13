@@ -2,6 +2,7 @@ package utils;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
+import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -17,6 +18,7 @@ import java.security.spec.X509EncodedKeySpec;
 public class Crypto {
     public static final int PRIVATE_KEY_LEN_IN_BYTES = 150;
     public static final int PUBLIC_KEY_LEN_IN_BYTES = 91;
+    private static final SecureRandom RANDOM = new SecureRandom();
 
     private static boolean initialized = false;
 
@@ -84,4 +86,19 @@ public class Crypto {
         IOUtils.fill(inputStream, keyBytes);
         return parsePrivateKey(keyBytes);
     }
+
+    public static byte[] generateSalt() {
+        byte[] salt = new byte[32];
+        RANDOM.nextBytes(salt);
+        return salt;
+    }
+
+    public static byte[] hashAndSalt(String password, byte[] salt)
+            throws IOException, GeneralSecurityException {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        outputStream.write(password.getBytes("UTF-8"));
+        outputStream.write(salt);
+        return sha256(outputStream.toByteArray());
+    }
+
 }

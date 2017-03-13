@@ -5,6 +5,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import testutils.RandomizedTest;
 
+import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.security.KeyPair;
 import java.security.PublicKey;
@@ -15,6 +16,19 @@ public class CryptoTest extends RandomizedTest {
     public static void setUpBeforeClass() {
         Crypto.init();
     }
+
+    @Test
+    public void testHashAndSalt() throws Exception {
+        String pass = "password";
+        byte[] salt = Crypto.generateSalt();
+        byte[] hash = Crypto.hashAndSalt(pass, salt);
+
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        outputStream.write(pass.getBytes("UTF-8"));
+        outputStream.write(salt);
+        Assert.assertArrayEquals(hash,Crypto.sha256(outputStream.toByteArray()));
+    }
+
 
     @Test
     public void testSignatureKeyPair() throws Exception {
