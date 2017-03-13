@@ -1,13 +1,6 @@
 import cli.ClientInterface;
 import network.Miner;
-<<<<<<< HEAD
-import server.config.DatabaseConfig;
-import server.controllers.IndexController;
-import server.controllers.UserController;
-import server.dao.UserDao;
-=======
 import server.Application;
->>>>>>> master
 import utils.Crypto;
 import utils.IOUtils;
 
@@ -18,9 +11,6 @@ import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Optional;
-
-import static spark.Spark.port;
-import static spark.Spark.staticFiles;
 
 public class Main {
 
