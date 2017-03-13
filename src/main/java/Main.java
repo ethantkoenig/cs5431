@@ -1,10 +1,10 @@
 import cli.ClientInterface;
 import network.Miner;
+import server.Application;
 import utils.Crypto;
 import utils.IOUtils;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
@@ -29,6 +29,8 @@ public class Main {
             case "client":
                 new ClientInterface().startInterface();
                 break;
+            case "webserver":
+                Application.run();
             default:
                 String msg = String.format("Unrecognized command %s", args[0]);
                 System.err.println(msg);
