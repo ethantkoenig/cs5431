@@ -31,6 +31,7 @@ public class Main {
                 break;
             case "webserver":
                 Application.run();
+                break;
             default:
                 String msg = String.format("Unrecognized command %s", args[0]);
                 System.err.println(msg);
