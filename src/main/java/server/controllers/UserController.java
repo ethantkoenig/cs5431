@@ -4,13 +4,13 @@ import server.dao.UserDao;
 import server.models.User;
 import spark.ModelAndView;
 import spark.template.freemarker.FreeMarkerEngine;
+import utils.Crypto;
+import utils.Pair;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static spark.Spark.get;
-import static spark.Spark.path;
-import static spark.Spark.post;
+import static spark.Spark.*;
 
 public class UserController {
 
@@ -35,7 +35,9 @@ public class UserController {
                 String username = request.queryParams("username");
                 String password = request.queryParams("password");
                 if (nameValidator(username) && passwordValidator(password)) {
-                    userDao.insertUser(username, password);
+                    Pair<byte[], byte[]> hashedpass = Crypto.hashAndSalt(password);
+                    //TODO: store salt in the database
+                    userDao.insertUser(username, new String(hashedpass.getLeft(), "UTF-8"));
                     return "{\"message\":\"User registered.\"}";
                 } else {
                     return "{\"message\":\"Unable to add user. Check fields and try again. \"}";

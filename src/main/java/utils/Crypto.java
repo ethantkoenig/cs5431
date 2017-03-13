@@ -2,6 +2,7 @@ package utils;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
+import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -86,5 +87,15 @@ public class Crypto {
         byte[] salt = new byte[32];
         RANDOM.nextBytes(salt);
         return salt;
+    }
+
+    public static Pair<byte[],byte[]> hashAndSalt(String password)
+            throws IOException, GeneralSecurityException {
+        byte[] salt = Crypto.generateSalt();
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        outputStream.write(password.getBytes("UTF-8"));
+        outputStream.write(salt);
+        byte[] hash = sha256(outputStream.toByteArray());
+        return new Pair<>(hash, salt);
     }
 }

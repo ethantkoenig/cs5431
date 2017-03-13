@@ -1,11 +1,5 @@
 package server.utils;
 
-import utils.Crypto;
-import utils.Pair;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -42,17 +36,6 @@ public class Statements {
             statement.setString(1, username);
             return statement;
         }
-    }
-
-    // Here because this is where user insertion is happening.
-    private static Pair<String,byte[]> hashAndSalt(String password)
-            throws IOException, GeneralSecurityException {
-        byte[] salt = Crypto.generateSalt();
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        outputStream.write(password.getBytes("UTF-8"));
-        outputStream.write(salt);
-        byte[] hash = Crypto.sha256(outputStream.toByteArray());
-        return new Pair(hash, salt);
     }
 
     public static PreparedStatement insertUser(Connection connection,
