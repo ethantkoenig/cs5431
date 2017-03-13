@@ -6,13 +6,11 @@ public class User {
 
     private int userid;
     private String username;
-    private PublicKey publicKey;
 
-    public User(int userid, String username, PublicKey publicKey) {
+    public User(int userid, String username) {
         // TODO username uniqueness
         this.userid = userid;
         this.username = username;
-        this.publicKey = publicKey;
     }
 
     public int getUserid() {
@@ -30,13 +28,5 @@ public class User {
     public void setUsername(String username) {
         // TODO check for uniqueness
         this.username = username;
-    }
-
-    public PublicKey getPublicKey() {
-        return publicKey;
-    }
-
-    public void setPublicKey(PublicKey publicKey) {
-        this.publicKey = publicKey;
     }
 }

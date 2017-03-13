@@ -1,13 +1,18 @@
 package server.controllers;
 
 import server.dao.UserDao;
+import server.models.Key;
 import server.models.User;
 import spark.ModelAndView;
 import spark.template.freemarker.FreeMarkerEngine;
+import utils.ByteUtil;
 import utils.Crypto;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static spark.Spark.*;
 
@@ -15,7 +20,8 @@ public class UserController {
 
     public static void startUserController(UserDao userDao) {
         registerUser(userDao);
-        serveUserPublicKey(userDao);
+        viewUser(userDao);
+        addUserPublicKey(userDao);
     }
 
     /**
@@ -37,7 +43,7 @@ public class UserController {
                     byte[] salt = Crypto.generateSalt();
                     byte[] hash = Crypto.hashAndSalt(password, salt);
                     //TODO: store salt in the database, change DB to take bytes instead of string.
-                    userDao.insertUser(username, new String(hash, "UTF-8"));
+                    userDao.insertUser(username, new String(hash, "UTF-8"));  // TODO check return value
                     return "{\"message\":\"User registered.\"}";
                 } else {
                     return "{\"message\":\"Unable to add user. Check fields and try again. \"}";
@@ -46,26 +52,46 @@ public class UserController {
         });
     }
 
-    // Basic route controller to serve user publickey
-    // This is useless, no case where we would want this but it serves as an example for you guys
-    // and yall asked for it so ya...
-    private static void serveUserPublicKey(UserDao userDao) {
+    private static void viewUser(UserDao userDao) {
         get("/user/:name", (request, response) -> {
-            User user = null;
             String name = request.params(":name");
-            if (nameValidator(name)) {
-                user = userDao.getUserbyUsername(name);
+            User user = userDao.getUserbyUsername(name);
+            if (user == null) {
+                // TODO 404 handling
+                response.redirect("/");
+                return null;
             }
-            response.type("application/json");
-            if (user != null) {
-                if (user.getPublicKey() != null) {
-                    //TODO: hex encode but doesnt much matter here since we wont use this function anyway
-                    return user.getPublicKey().getEncoded();
-                } else {
-                    return "null";
-                }
+            List<Key> keys = userDao.getKeysByUserID(user.getUserid());
+            List<String> hashes = keys.stream().map(key ->
+                    ByteUtil.bytesToHexString(key.getPublicKey())
+            ).collect(Collectors.toList());
+            Map<String, Object> model = new HashMap<>();
+            model.put("username", user.getUsername());
+            model.put("hashes", hashes);
+            return new ModelAndView(model, "user.ftl");
+        }, new FreeMarkerEngine());
+    }
+
+    private static void addUserPublicKey(UserDao userDao) {
+        post("/user/:name/keys", (request, response) -> {
+            String name = request.params(":name");
+            String publicKeyStr = request.queryParams("publickey");
+            String privateKeyStr = request.queryParams("privatekey");
+
+            Optional<byte[]> publicKeyOpt = ByteUtil.hexStringToByteArray(publicKeyStr);
+            Optional<byte[]> privateKeyOpt = ByteUtil.hexStringToByteArray(privateKeyStr);
+            User user = userDao.getUserbyUsername(name);
+
+            if (!publicKeyOpt.isPresent() || !privateKeyOpt.isPresent()) {
+                // TODO 404 handling
+                return "invalid keys";
             }
-            return "{\"message\":\"User not found.\"}";
+            if (user == null) {
+                // TODO 404 handling
+                return "invalid username";
+            }
+            userDao.insertKey(user.getUserid(), publicKeyOpt.get(), privateKeyOpt.get()); // TODO check return value
+            return "ok";
         });
     }
 
