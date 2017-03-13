@@ -6,7 +6,6 @@ import org.junit.Test;
 import testutils.RandomizedTest;
 import testutils.TestUtils;
 
-import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
@@ -54,9 +53,8 @@ public class ShaTwoFiftySixTest extends RandomizedTest {
     public void testWriteTo() throws Exception {
         byte[] hash = randomBytes(ShaTwoFiftySix.HASH_SIZE_IN_BYTES);
         ShaTwoFiftySix sha256 = deserializeFrom(hash);
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        sha256.writeTo(outputStream);
-        Assert.assertTrue(errorMessage, Arrays.equals(outputStream.toByteArray(), hash));
+        byte[] serialized = ByteUtil.asByteArray(sha256::writeTo);
+        Assert.assertTrue(errorMessage, Arrays.equals(serialized, hash));
     }
 
     @Test

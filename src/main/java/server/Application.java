@@ -11,7 +11,7 @@ import static spark.Spark.staticFiles;
 
 public class Application {
 
-    public static void main(String args[]) {
+    public static void run() {
 
         UserDao userDao = new UserDao();
 

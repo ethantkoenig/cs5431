@@ -1,9 +1,13 @@
 import cli.ClientInterface;
 import network.Miner;
+<<<<<<< HEAD
 import server.config.DatabaseConfig;
 import server.controllers.IndexController;
 import server.controllers.UserController;
 import server.dao.UserDao;
+=======
+import server.Application;
+>>>>>>> master
 import utils.Crypto;
 import utils.IOUtils;
 
@@ -30,36 +34,18 @@ public class Main {
             case "node":
                 if (!runNode(args)) {
                     System.exit(1);
-                };
+                }
                 break;
             case "client":
                 new ClientInterface().startInterface();
                 break;
             case "webserver":
-                runServer(args);
-                break;
+                Application.run();
             default:
                 String msg = String.format("Unrecognized command %s", args[0]);
                 System.err.println(msg);
                 System.exit(1);
         }
-    }
-
-    private static boolean runServer(String args[]) {
-
-        UserDao userDao = new UserDao();
-
-        // Configure Spark on port 5000
-        port(5000);
-        // Static files location
-        staticFiles.location("/public");
-        // Caching of static files lifetime
-        staticFiles.expireTime(600L);
-
-        DatabaseConfig.dbInit();
-        IndexController.serveIndexPage();
-        UserController.startUserController(userDao);
-        return true;
     }
 
     private static boolean runNode(String[] args) throws GeneralSecurityException, IOException {

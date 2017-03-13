@@ -5,9 +5,6 @@ import testutils.RandomizedTest;
 
 import java.util.Arrays;
 
-/**
- * Created by EvanKing on 2/26/17.
- */
 public class ByteUtilTest extends RandomizedTest {
 
     @Test
@@ -49,6 +46,15 @@ public class ByteUtilTest extends RandomizedTest {
         byte[] a = ByteUtil.hexStringToByteArray("0a2d808002b3030dd");
         byte[] b = ByteUtil.hexStringToByteArray("0a2d808002b30309d");
         Assert.assertTrue(errorMessage, ByteUtil.compare(a,b) == 1);
+    }
+
+    @Test
+    public void testAsByteArray() throws Exception {
+        byte[] bytes = randomBytes(random.nextInt(1024));
+        byte[] result = ByteUtil.asByteArray(outputStream -> {
+            outputStream.write(bytes);
+        });
+        Assert.assertArrayEquals(errorMessage, bytes, result);
     }
 
     @Test

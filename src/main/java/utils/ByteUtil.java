@@ -1,6 +1,7 @@
 package utils;
 
 import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -38,6 +39,17 @@ public class ByteUtil {
         BigInteger bia = new BigInteger(a);
         BigInteger bib = new BigInteger(b);
         return bia.compareTo(bib);
+    }
+
+    public static byte[] asByteArray(Serializer serializer) throws IOException {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        serializer.serialize(new DataOutputStream(outputStream));
+        return outputStream.toByteArray();
+    }
+
+    @FunctionalInterface
+    public interface Serializer {
+        void serialize(DataOutputStream outputStream) throws IOException;
     }
 
     /***********************************************************************************************************

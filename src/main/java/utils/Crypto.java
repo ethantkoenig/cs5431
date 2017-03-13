@@ -13,16 +13,21 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
 
-/* Various crypto-related functions
- *
-**/
+/**
+ * Various crypto-related functions
+ */
 public class Crypto {
     public static final int PRIVATE_KEY_LEN_IN_BYTES = 150;
     public static final int PUBLIC_KEY_LEN_IN_BYTES = 91;
     private static final SecureRandom RANDOM = new SecureRandom();
 
+    private static boolean initialized = false;
+
     public static void init() {
-        Security.addProvider(new BouncyCastleProvider());
+        if (!initialized) {
+            Security.addProvider(new BouncyCastleProvider());
+            initialized = true;
+        }
     }
 
     public static KeyPair signatureKeyPair() throws GeneralSecurityException {

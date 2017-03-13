@@ -36,6 +36,14 @@ public abstract class RandomizedTest {
         errorMessage = seededRandom.errorMessage();
     }
 
+    protected long nonNegativeLong() {
+        long l = random.nextLong();
+        if (l < 0) {
+            l = ~l;
+        }
+        return l;
+    }
+
     protected byte[] randomBytes(int length) {
         byte[] bytes = new byte[length];
         random.nextBytes(bytes);
