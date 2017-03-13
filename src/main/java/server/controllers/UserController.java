@@ -42,8 +42,7 @@ public class UserController {
                 if (nameValidator(username) && passwordValidator(password)) {
                     byte[] salt = Crypto.generateSalt();
                     byte[] hash = Crypto.hashAndSalt(password, salt);
-                    //TODO: store salt in the database, change DB to take bytes instead of string.
-                    userDao.insertUser(username, new String(hash, "UTF-8"));  // TODO check return value
+                    userDao.insertUser(username, salt, hash);  // TODO check return value
                     return "{\"message\":\"User registered.\"}";
                 } else {
                     return "{\"message\":\"Unable to add user. Check fields and try again. \"}";
@@ -61,7 +60,7 @@ public class UserController {
                 response.redirect("/");
                 return null;
             }
-            List<Key> keys = userDao.getKeysByUserID(user.getUserid());
+            List<Key> keys = userDao.getKeysByUserID(user.getId());
             List<String> hashes = keys.stream().map(key ->
                     ByteUtil.bytesToHexString(key.getPublicKey())
             ).collect(Collectors.toList());
@@ -90,7 +89,7 @@ public class UserController {
                 // TODO 404 handling
                 return "invalid username";
             }
-            userDao.insertKey(user.getUserid(), publicKeyOpt.get(), privateKeyOpt.get()); // TODO check return value
+            userDao.insertKey(user.getId(), publicKeyOpt.get(), privateKeyOpt.get()); // TODO check return value
             return "ok";
         });
     }

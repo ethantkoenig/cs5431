@@ -43,8 +43,10 @@ public class UserDao {
                 ResultSet rs = preparedStmt.executeQuery()
         ) {
             if (rs.next()) {
-                int userid = rs.getInt("userid");
-                return new User(userid, username);
+                int id = rs.getInt("id");
+                byte[] salt = rs.getBytes("salt");
+                byte[] hashedPassword = rs.getBytes("pass");
+                return new User(id, username, salt, hashedPassword);
             }
             return null;
         }
@@ -85,13 +87,11 @@ public class UserDao {
     /**
      * Inserts a user into the ssers table in the yaccoin database
      *
-     * @param username
-     * @param password
-     * @throws SQLException
+     * @return whether insertion was successful
      */
-    public boolean insertUser(String username, String password) throws SQLException {
+    public boolean insertUser(String username, byte[] salt, byte[] hashedPassword) throws SQLException {
         try (Connection conn = DbUtil.getConnection(false);
-             PreparedStatement preparedStmt = Statements.insertUser(conn, username, password)
+             PreparedStatement preparedStmt = Statements.insertUser(conn, username, salt, hashedPassword)
         ) {
             return preparedStmt.executeUpdate() == 1;
         }
