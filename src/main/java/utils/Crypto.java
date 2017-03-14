@@ -8,6 +8,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.security.spec.ECGenParameterSpec;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -19,6 +20,8 @@ import java.security.spec.X509EncodedKeySpec;
 public class Crypto {
     public static final int PRIVATE_KEY_LEN_IN_BYTES = 150;
     public static final int PUBLIC_KEY_LEN_IN_BYTES = 91;
+    public static final int BCRYPT_COST = 12;
+
     private static final SecureRandom RANDOM = new SecureRandom();
 
     private static boolean initialized = false;
@@ -72,8 +75,8 @@ public class Crypto {
         return digest.digest(content);
     }
 
-    public static byte[] bcrypt(byte[] content, byte[] salt, int cost) {
-        return BCrypt.generate(content, salt, cost);
+    public static byte[] bcrypt(byte[] content, byte[] salt) {
+        return BCrypt.generate(content, salt, BCRYPT_COST);
     }
 
     public static PublicKey loadPublicKey(String filename)
@@ -101,9 +104,9 @@ public class Crypto {
     public static byte[] hashAndSalt(String password, byte[] salt)
             throws IOException, GeneralSecurityException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        outputStream.write(password.getBytes("UTF-8"));
+        outputStream.write(password.getBytes(StandardCharsets.UTF_8));
         outputStream.write(salt);
-        return bcrypt(outputStream.toByteArray(), salt, 16);
+        return bcrypt(outputStream.toByteArray(), salt);
     }
 
 }
