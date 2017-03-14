@@ -3,6 +3,7 @@ package server.controllers;
 import server.dao.UserDao;
 import server.models.Key;
 import server.models.User;
+import server.utils.ValidateUtils;
 import spark.ModelAndView;
 import spark.template.freemarker.FreeMarkerEngine;
 import utils.ByteUtil;
@@ -39,7 +40,8 @@ public class UserController {
                 response.type("application/json");
                 String username = request.queryParams("username");
                 String password = request.queryParams("password");
-                if (nameValidator(username) && passwordValidator(password)) {
+                if (ValidateUtils.validUsername(username)
+                        && ValidateUtils.validPassword(password)) {
                     byte[] salt = Crypto.generateSalt();
                     byte[] hash = Crypto.hashAndSalt(password, salt);
                     //TODO: store salt in the database, change DB to take bytes instead of string.
@@ -93,30 +95,5 @@ public class UserController {
             userDao.insertKey(user.getUserid(), publicKeyOpt.get(), privateKeyOpt.get()); // TODO check return value
             return "ok";
         });
-    }
-
-    private static boolean validateLength(String str, int min, int max) {
-        return (str.length() > min) && (str.length() < max);
-    }
-
-    private static boolean validateAlphanumeric(String str) {
-        return str.matches("^(?=.*[a-z])(?=.*[0-9])[a-z0-9]+$");
-    }
-
-    private static boolean validateStrongAlphanumeric(String str) {
-        return str.matches("^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])[A-Za-z0-9]+$");
-    }
-
-    // Name must be between 6 and 12 characters and contain both lowercase letters and numbers.
-    private static boolean nameValidator(String name) {
-        return validateLength(name, 6, 12) && validateAlphanumeric(name);
-    }
-
-    /* Password Requirements:
-     * Length: 24 >= Length >= 12
-     * Must contain capitals, lowercase, and numbers.
-     */
-    private static boolean passwordValidator(String password) {
-        return validateLength(password, 12, 24) && validateStrongAlphanumeric(password);
     }
 }
