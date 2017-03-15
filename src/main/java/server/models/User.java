@@ -1,24 +1,24 @@
 package server.models;
 
-import java.security.PublicKey;
+import java.util.Arrays;
 
 public class User {
 
-    private int userid;
+    private final int id;
     private String username;
+    private byte[] salt;
+    private byte[] hashedPassword;
 
-    public User(int userid, String username) {
+    public User(int id, String username, byte[] salt, byte[] hashedPassword) {
         // TODO username uniqueness
-        this.userid = userid;
+        this.id = id;
         this.username = username;
+        this.salt = Arrays.copyOf(salt, salt.length);
+        this.hashedPassword = Arrays.copyOf(hashedPassword, hashedPassword.length);
     }
 
-    public int getUserid() {
-        return userid;
-    }
-
-    public void setUserid(int userid) {
-        this.userid = userid;
+    public int getId() {
+        return id;
     }
 
     public String getUsername() {
@@ -28,5 +28,13 @@ public class User {
     public void setUsername(String username) {
         // TODO check for uniqueness
         this.username = username;
+    }
+
+    public byte[] getSalt() {
+        return Arrays.copyOf(salt, salt.length);
+    }
+
+    public byte[] getHashedPassword() {
+        return Arrays.copyOf(hashedPassword, hashedPassword.length);
     }
 }

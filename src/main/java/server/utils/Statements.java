@@ -12,10 +12,11 @@ public class Statements {
     public static final String CREATE_DB = "CREATE DATABASE yaccoin";
     public static final String USE_DB = "USE yaccoin";
     public static final String CREATE_USERS_TABLE = "CREATE TABLE users ("
-            + "userid int NOT NULL AUTO_INCREMENT,"
-            + "username varchar(100) NOT NULL,"
-            + "pass varchar(30) NOT NULL,"
-            + "PRIMARY KEY (userid)"
+            + "id int NOT NULL AUTO_INCREMENT,"
+            + "username varchar(32) NOT NULL,"
+            + "salt varbinary(32) NOT NULL,"
+            + "pass varbinary(128) NOT NULL,"
+            + "PRIMARY KEY (id)"
             + ")";
     public static final String CREATE_KEYS_TABLE = "CREATE TABLE keypairs ("
             + "keypairid int NOT NULL AUTO_INCREMENT,"
@@ -25,13 +26,10 @@ public class Statements {
             + "PRIMARY KEY (keypairid),"
             + "INDEX userid_index (userid),"
             + "FOREIGN KEY (userid)"
-            + "  REFERENCES users(userid)"
+            + "  REFERENCES users(id)"
             + "  ON DELETE CASCADE"
             + ")";
     public static final String SHOW_DB_LIKE = String.format("SHOW DATABASES LIKE '%s'", DB_NAME);
-
-    //TODO: this query will be removed. Just for testing.
-    public static final String INITIAL_INSERT = "INSERT INTO users (username, pass) VALUES ('Evan','password')";
 
 
     @FunctionalInterface
@@ -68,12 +66,14 @@ public class Statements {
 
     public static PreparedStatement insertUser(Connection connection,
                                                String username,
-                                               String password) throws SQLException {
+                                               byte[] salt,
+                                               byte[] hashedPassword) throws SQLException {
         return prepareStatement(connection.prepareStatement(
-                "INSERT INTO users (username, pass) VALUES (?, ?)"),
+                "INSERT INTO users (username, salt, pass) VALUES (?, ?, ?)"),
                 statement -> {
                     statement.setString(1, username);
-                    statement.setString(2, password);
+                    statement.setBytes(2, salt);
+                    statement.setBytes(3, hashedPassword);
                 }
         );
     }
