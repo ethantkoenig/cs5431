@@ -12,17 +12,13 @@ import java.util.Optional;
  * Byte Manipulation functions
  */
 public class ByteUtil {
-    final private static char[] hexArray = "0123456789ABCDEF".toCharArray();
-
     public static void addOne(byte[] b) throws Exception {
         for (int i = b.length - 1; i >= 0; i--) {
-            if (b[i] < 126) {
-                b[i]++;
+            if (++b[i] != 0) {
                 return;
             }
-            b[i] = 0;
             if (i == 0) {
-                throw new Exception("Overflow");
+                throw new IllegalArgumentException("Overflow");
             }
         }
     }
@@ -83,12 +79,4 @@ public class ByteUtil {
         }
         return Optional.of(byteArray);
     }
-
-    public static String addOne(String hex) {
-        BigInteger bi = new BigInteger(hex, 16);
-        bi = bi.add(BigInteger.ONE);
-        return bi.toString(16);
-    }
-
-
 }

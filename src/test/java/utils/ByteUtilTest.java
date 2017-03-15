@@ -1,4 +1,5 @@
 package utils;
+
 import org.junit.Assert;
 import org.junit.Test;
 import testutils.RandomizedTest;
@@ -9,39 +10,25 @@ import java.util.Arrays;
 public class ByteUtilTest extends RandomizedTest {
 
     @Test
-    public void testBytesToHexString() throws Exception {
-        byte[] b = TestUtils.assertPresent(
-                ByteUtil.hexStringToByteArray("e04fd020ea3a6910a2d808002b30309d")
-        );
-        String byteString = ByteUtil.bytesToHexString(b);
-        Assert.assertTrue(errorMessage, "e04fd020ea3a6910a2d808002b30309e".equals(ByteUtil.addOne(byteString)));
-    }
-
-    @Test
     public void testConcatenate() throws Exception {
-        byte[] a = new byte[]{0,1};
-        byte[] b = new byte[]{1,0};
-        Assert.assertTrue(errorMessage, Arrays.equals(new byte[]{0,1,1,0}, ByteUtil.concatenate(a, b)));
-    }
-
-    @Test
-    public void testAddOneString() throws Exception {
-        String b = "ae";
-        Assert.assertTrue(errorMessage, "af".equals(ByteUtil.addOne(b)));
+        byte[] a = new byte[]{0, 1};
+        byte[] b = new byte[]{1, 0};
+        Assert.assertTrue(errorMessage, Arrays.equals(new byte[]{0, 1, 1, 0}, ByteUtil.concatenate(a, b)));
     }
 
     @Test
     public void testAddOneByte() throws Exception {
-        byte[] a = new byte[]{(byte) 0xa,(byte) 0xe};
+        byte[] a = bytes(0x0a, 0xfe);
         ByteUtil.addOne(a);
-        Assert.assertTrue(errorMessage, Arrays.equals(new byte[]{(byte) 0xa,(byte) 0xf}, a));
-    }
+        Assert.assertArrayEquals(errorMessage, bytes(0x0a, 0xff), a);
 
-    @Test
-    public void testAddOneByteCarry() throws Exception {
-        byte[] a = new byte[]{(byte) 0xa,(byte) 0xf};
+        a = bytes(0x0a, 0xff);
         ByteUtil.addOne(a);
-        Assert.assertTrue(errorMessage, Arrays.equals(new byte[]{(byte) 0xa,(byte) 0x10}, a));
+        Assert.assertArrayEquals(errorMessage, bytes(0x0b, 0x00), a);
+
+        TestUtils.assertThrows(errorMessage,
+                () -> ByteUtil.addOne(bytes(0xff, 0xff)),
+                IllegalArgumentException.class);
     }
 
     @Test
@@ -52,7 +39,7 @@ public class ByteUtilTest extends RandomizedTest {
         byte[] b = TestUtils.assertPresent(
                 ByteUtil.hexStringToByteArray("0a2d808002b30309d")
         );
-        Assert.assertTrue(errorMessage, ByteUtil.compare(a,b) == 1);
+        Assert.assertTrue(errorMessage, ByteUtil.compare(a, b) == 1);
     }
 
     @Test
@@ -65,21 +52,43 @@ public class ByteUtilTest extends RandomizedTest {
     }
 
     @Test
-    public void testHexStringToByteArray() throws Exception {
-        byte[] a = TestUtils.assertPresent(ByteUtil.hexStringToByteArray("0001"));
-        String b = ByteUtil.bytesToHexString(a);
-        System.out.println(b);
-        byte[] c = TestUtils.assertPresent(ByteUtil.hexStringToByteArray(b));
-        Assert.assertTrue(errorMessage, Arrays.equals(a, c));
+    public void testBytesToHexString() throws Exception {
+        byte[] b = bytes(0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef);
+        Assert.assertEquals(errorMessage,
+                "0123456789abcdef",
+                ByteUtil.bytesToHexString(b));
     }
 
     @Test
-    public void testByteInt() throws Exception {
-        byte b = (byte) 0xaf;
-        byte[] c = new byte[]{(byte) 0x00, (byte) 0x01,(byte) 0x02,(byte) 0x03};
-        System.out.println(Arrays.toString(c));
-        System.out.println(ByteUtil.bytesToHexString(c));
+    public void testHexStringToByteArray() throws Exception {
+        Assert.assertArrayEquals(errorMessage,
+                bytes(0xe0, 0x4f, 0xd0, 0x20, 0xea, 0x3a, 0x69, 0x10, 0xa2, 0xd8, 0x08, 0x00,
+                        0x2b, 0x30, 0x030, 0x9d),
+                TestUtils.assertPresent(
+                        ByteUtil.hexStringToByteArray("e04fd020ea3a6910a2d808002b30309d")
+                )
+        );
 
-        System.out.println(0xff&b);
+        Assert.assertArrayEquals(errorMessage,
+                bytes(),
+                TestUtils.assertPresent(ByteUtil.hexStringToByteArray(""))
+        );
+
+        Assert.assertFalse(errorMessage,
+                ByteUtil.hexStringToByteArray("notavalidhexstring").isPresent()
+        );
+    }
+
+    /**
+     * Convenience method for constructing an array of bytes
+     *
+     * @return byte arrays with the given elements (cast to bytes)
+     */
+    private static byte[] bytes(int... elements) {
+        byte[] result = new byte[elements.length];
+        for (int i = 0; i < result.length; i++) {
+            result[i] = (byte) elements[i];
+        }
+        return result;
     }
 }
