@@ -24,6 +24,7 @@
             integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
             crossorigin="anonymous"></script>
 
+    <script src="/js/index.js"></script>
 
     <!------------------------------------------- Themes ------------------------------------------>
 
@@ -50,6 +51,12 @@
             <ul class="nav navbar-nav">
                 <li>
                     <a href="/register">Register</a>
+                </li>
+                <li>
+                    <a href="/login">Login</a>
+                </li>
+                <li>
+                    <a href="#" id="logout">Logout</a>
                 </li>
             </ul>
         </div>
