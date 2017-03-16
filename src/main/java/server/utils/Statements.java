@@ -16,7 +16,8 @@ public class Statements {
             + "username varchar(32) NOT NULL,"
             + "salt varbinary(32) NOT NULL,"
             + "pass varbinary(128) NOT NULL,"
-            + "PRIMARY KEY (id)"
+            + "PRIMARY KEY (id),"
+            + "UNIQUE (username)"
             + ")";
     public static final String CREATE_KEYS_TABLE = "CREATE TABLE keypairs ("
             + "keypairid int NOT NULL AUTO_INCREMENT,"

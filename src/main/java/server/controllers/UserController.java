@@ -9,6 +9,7 @@ import spark.template.freemarker.FreeMarkerEngine;
 import utils.ByteUtil;
 import utils.Crypto;
 
+import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -39,16 +40,21 @@ public class UserController {
                 response.type("application/json");
                 String username = request.queryParams("username");
                 String password = request.queryParams("password");
-                if (ValidateUtils.validUsername(username)
-                        && ValidateUtils.validPassword(password)) {
-                    byte[] salt = Crypto.generateSalt();
-                    byte[] hash = Crypto.hashAndSalt(password, salt);
-                    userDao.insertUser(username, salt, hash);  // TODO check return value
-                    request.session(true).attribute("username", username);
-                    return "{\"message\":\"User registered.\"}";
-                } else {
-                    return "{\"message\":\"Unable to add user. Check fields and try again. \"}";
+                if (!ValidateUtils.validUsername(username)) {
+                    return "invalid username";
+                } else if (!ValidateUtils.validPassword(password)) {
+                    return "invalid password";
+                } else if (userDao.getUserbyUsername(username) != null) {
+                    return "username already taken";
                 }
+                byte[] salt = Crypto.generateSalt();
+                byte[] hash = Crypto.hashAndSalt(password, salt);
+                if (!userDao.insertUser(username, salt, hash)) {
+                    // TODO log, since this shouldn't ever happen
+                    return "internal error";
+                }
+                request.session(true).attribute("username", username);
+                return "{\"message\":\"User registered.\"}";
             });
         });
     }
