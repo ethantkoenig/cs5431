@@ -49,10 +49,7 @@ public class UserController {
                 }
                 byte[] salt = Crypto.generateSalt();
                 byte[] hash = Crypto.hashAndSalt(password, salt);
-                if (!userDao.insertUser(username, salt, hash)) {
-                    // TODO log, since this shouldn't ever happen
-                    return "internal error";
-                }
+                userDao.insertUser(username, salt, hash);
                 request.session(true).attribute("username", username);
                 return "{\"message\":\"User registered.\"}";
             });
@@ -143,7 +140,7 @@ public class UserController {
                 // TODO 403 handling
                 return "cannot change another user's keys";
             }
-            userDao.insertKey(user.getId(), publicKeyOpt.get(), privateKeyOpt.get()); // TODO check return value
+            userDao.insertKey(user.getId(), publicKeyOpt.get(), privateKeyOpt.get());
             return "ok";
         });
     }
