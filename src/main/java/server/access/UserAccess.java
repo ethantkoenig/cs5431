@@ -1,33 +1,22 @@
-package server.dao;
+package server.access;
 
 import server.models.Key;
 import server.models.User;
 import server.utils.DbUtil;
 import server.utils.Statements;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
 /**
- * The User Data Access Model is the layer between user objects and the Users table in the DB. The
- * {@code UserDao} queries the database in order to return user objects. It also updates, modifies, user
- * objects in DB.
- *
- * @version 1.0, March 11 2017
+ * The layer between user objects and the "users" table in the DB.
+ * Utilities for reading and modifying database.
  */
-public class UserDao {
+public class UserAccess {
 
-    private static final Logger LOGGER = Logger.getLogger(UserDao.class.getName());
-
-    public ArrayList<User> getUsers() {
-        return null;
-    }
-
+    private static final Logger LOGGER = Logger.getLogger(UserAccess.class.getName());
 
     /**
      * Given a username return the user object in the DB that is associated with this username
@@ -36,7 +25,7 @@ public class UserDao {
      * @param username the username of the user being queried
      * @throws SQLException
      */
-    public User getUserbyUsername(String username) throws SQLException {
+    public static User getUserbyUsername(String username) throws SQLException {
         try (
                 Connection conn = DbUtil.getConnection(false);
                 PreparedStatement preparedStmt = Statements.selectUserByUsername(conn, username);
@@ -55,7 +44,7 @@ public class UserDao {
     /**
      * @return The keys associated with a given userID
      */
-    public List<Key> getKeysByUserID(int userID) throws SQLException {
+    public static List<Key> getKeysByUserID(int userID) throws SQLException {
         try (Connection conn = DbUtil.getConnection(false);
              PreparedStatement preparedStmt = Statements.getKeysByUserID(conn, userID);
              ResultSet rs = preparedStmt.executeQuery()
@@ -73,7 +62,7 @@ public class UserDao {
     /**
      * Add the given public/private keys to the database, under the given userID.
      */
-    public void insertKey(int userID, byte[] publicKey, byte[] privateKey) throws SQLException {
+    public static void insertKey(int userID, byte[] publicKey, byte[] privateKey) throws SQLException {
         try (Connection conn = DbUtil.getConnection(false);
              PreparedStatement preparedStmt = Statements.insertKey(conn, userID, publicKey, privateKey)
         ) {
@@ -89,7 +78,7 @@ public class UserDao {
     /**
      * Inserts a user into the users table in the yaccoin database
      */
-    public void insertUser(String username, byte[] salt, byte[] hashedPassword) throws SQLException {
+    public static void insertUser(String username, byte[] salt, byte[] hashedPassword) throws SQLException {
         try (Connection conn = DbUtil.getConnection(false);
              PreparedStatement preparedStmt = Statements.insertUser(conn, username, salt, hashedPassword)
         ) {
