@@ -3,7 +3,6 @@ package server;
 import server.config.DatabaseConfig;
 import server.controllers.IndexController;
 import server.controllers.UserController;
-import server.dao.UserDao;
 
 import static spark.Spark.port;
 import static spark.Spark.staticFiles;
@@ -12,8 +11,6 @@ import static spark.Spark.staticFiles;
 public class Application {
 
     public static void run() {
-
-        UserDao userDao = new UserDao();
 
         // Configure Spark on port 5000
         port(5000);
@@ -24,6 +21,6 @@ public class Application {
 
         DatabaseConfig.dbInit();
         IndexController.serveIndexPage();
-        UserController.startUserController(userDao);
+        UserController.startUserController();
     }
 }
