@@ -16,8 +16,8 @@ public class Message {
     public static final byte TRANSACTION = 0;
     public static final byte BLOCK = 1;
 
-    public InetAddress hostIP;
-    public int hostPort;
+    private InetAddress hostIP;
+    private int hostPort;
     public final byte type;
     public final byte[] payload;
 
@@ -42,6 +42,14 @@ public class Message {
      */
     public void setHostPort(int port) {
         hostPort = port;
+    }
+
+    public InetAddress getHostIP() {
+        return hostIP;
+    }
+
+    public int getHostPort() {
+        return hostPort;
     }
 
     @Override
