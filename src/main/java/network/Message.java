@@ -2,7 +2,9 @@ package network;
 
 import utils.ByteUtil;
 
+import java.net.UnknownHostException;
 import java.util.Arrays;
+import java.net.InetAddress;
 
 /**
  * Represents a message sent or received on the network
@@ -14,12 +16,32 @@ public class Message {
     public static final byte TRANSACTION = 0;
     public static final byte BLOCK = 1;
 
+    public InetAddress hostIP;
+    public int hostPort;
     public final byte type;
     public final byte[] payload;
 
     public Message(byte type, byte[] payload) {
         this.type = type;
         this.payload = Arrays.copyOf(payload, payload.length);
+    }
+
+    /**
+     * Sets host IP for the message.
+     * XXX: Might want to move this to the constructor and make the field final.
+     * @param ip is the users IP
+     */
+    public void setHostIP(String ip) throws UnknownHostException {
+        hostIP = InetAddress.getByName(ip);
+    }
+
+    /**
+     *
+     * @param port is the port the user will receive a reply from.
+     * XXX: Might want to move this to the constructor and make the field final.
+     */
+    public void setHostPort(int port) {
+        hostPort = port;
     }
 
     @Override

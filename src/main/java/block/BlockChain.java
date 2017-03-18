@@ -6,7 +6,7 @@ import transaction.TxOut;
 import utils.Pair;
 import utils.ShaTwoFiftySix;
 
-import java.io.IOException;
+import java.io.*;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -174,6 +174,37 @@ public class BlockChain {
      */
     public boolean containsBlock(Block b) {
         return blocks.containsKey(b.getShaTwoFiftySix());
+    }
+
+    /**
+     *
+     * @param file is the file to be written to.
+     * @return true in success, exception otherwise.
+     * @throws IOException
+     * XXX: Test
+     */
+    public boolean storeBlockchain(FileOutputStream file)
+            throws IOException {
+        DataOutputStream data = new DataOutputStream(file);
+        Block end = currentHead;
+        while (currentHead != null) {
+            currentHead.serialize(data);
+            ShaTwoFiftySix previous = currentHead.previousBlockHash;
+            currentHead = blocks.get(previous).getLeft();
+        }
+        currentHead = end;
+        return true;
+    }
+
+    /**
+     * Reads in a file containing a series of blocks to be used to construct the blockchain.
+     * @param file is a FileInputStream where the blocks are located
+     * @return true in success, exception otherwise.
+     * @throws IOException
+     * XXX: Figure out how to best do this.
+     */
+    public boolean readBlockchain(FileInputStream file) throws IOException {
+        return false;
     }
 
 }
