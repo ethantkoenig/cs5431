@@ -59,6 +59,19 @@ public class UserAccess {
         }
     }
 
+    public static Key getKey(int userID, byte[] publicKey) throws SQLException {
+        try (Connection conn = DbUtil.getConnection(false);
+             PreparedStatement preparedStmt = Statements.getKey(conn, userID, publicKey);
+             ResultSet rs = preparedStmt.executeQuery()
+        ) {
+            if (rs.next()) {
+                byte[] encryptedPrivateKeyBytes = rs.getBytes("privatekey");
+                return new Key(publicKey, encryptedPrivateKeyBytes);
+            }
+            return null;
+        }
+    }
+
     /**
      * Add the given public/private keys to the database, under the given userID.
      */
