@@ -72,28 +72,32 @@ public class UserDao {
 
     /**
      * Add the given public/private keys to the database, under the given userID.
-     *
-     * @return whether insert was successful
      */
-    public boolean insertKey(int userID, byte[] publicKey, byte[] privateKey) throws SQLException {
+    public void insertKey(int userID, byte[] publicKey, byte[] privateKey) throws SQLException {
         try (Connection conn = DbUtil.getConnection(false);
              PreparedStatement preparedStmt = Statements.insertKey(conn, userID, publicKey, privateKey)
         ) {
-            return preparedStmt.executeUpdate() == 1;
+            int rowCount = preparedStmt.executeUpdate();
+            if (rowCount != 1) {
+                String msg = String.format("Insert affected %d rows, expected 1", rowCount);
+                LOGGER.severe(msg);
+            }
         }
     }
 
 
     /**
-     * Inserts a user into the ssers table in the yaccoin database
-     *
-     * @return whether insertion was successful
+     * Inserts a user into the users table in the yaccoin database
      */
-    public boolean insertUser(String username, byte[] salt, byte[] hashedPassword) throws SQLException {
+    public void insertUser(String username, byte[] salt, byte[] hashedPassword) throws SQLException {
         try (Connection conn = DbUtil.getConnection(false);
              PreparedStatement preparedStmt = Statements.insertUser(conn, username, salt, hashedPassword)
         ) {
-            return preparedStmt.executeUpdate() == 1;
+            int rowCount = preparedStmt.executeUpdate();
+            if (rowCount != 1) {
+                String msg = String.format("Insert affected %d rows, expected 1", rowCount);
+                LOGGER.severe(msg);
+            }
         }
     }
 }
