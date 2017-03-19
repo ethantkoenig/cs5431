@@ -3,9 +3,10 @@ package utils;
 import org.junit.Assert;
 import org.junit.Test;
 import testutils.RandomizedTest;
-import testutils.TestUtils;
 
 import java.util.Arrays;
+
+import static testutils.TestUtils.*;
 
 public class ByteUtilTest extends RandomizedTest {
 
@@ -26,17 +27,17 @@ public class ByteUtilTest extends RandomizedTest {
         ByteUtil.addOne(a);
         Assert.assertArrayEquals(errorMessage, bytes(0x0b, 0x00), a);
 
-        TestUtils.assertThrows(errorMessage,
+        assertThrows(errorMessage,
                 () -> ByteUtil.addOne(bytes(0xff, 0xff)),
                 IllegalArgumentException.class);
     }
 
     @Test
     public void testCompare() throws Exception {
-        byte[] a = TestUtils.assertPresent(
+        byte[] a = assertPresent(
                 ByteUtil.hexStringToByteArray("0a2d808002b3030dd")
         );
-        byte[] b = TestUtils.assertPresent(
+        byte[] b = assertPresent(
                 ByteUtil.hexStringToByteArray("0a2d808002b30309d")
         );
         Assert.assertTrue(errorMessage, ByteUtil.compare(a, b) == 1);
@@ -64,31 +65,18 @@ public class ByteUtilTest extends RandomizedTest {
         Assert.assertArrayEquals(errorMessage,
                 bytes(0xe0, 0x4f, 0xd0, 0x20, 0xea, 0x3a, 0x69, 0x10, 0xa2, 0xd8, 0x08, 0x00,
                         0x2b, 0x30, 0x030, 0x9d),
-                TestUtils.assertPresent(
+                assertPresent(
                         ByteUtil.hexStringToByteArray("e04fd020ea3a6910a2d808002b30309d")
                 )
         );
 
         Assert.assertArrayEquals(errorMessage,
                 bytes(),
-                TestUtils.assertPresent(ByteUtil.hexStringToByteArray(""))
+                assertPresent(ByteUtil.hexStringToByteArray(""))
         );
 
         Assert.assertFalse(errorMessage,
                 ByteUtil.hexStringToByteArray("notavalidhexstring").isPresent()
         );
-    }
-
-    /**
-     * Convenience method for constructing an array of bytes
-     *
-     * @return byte arrays with the given elements (cast to bytes)
-     */
-    private static byte[] bytes(int... elements) {
-        byte[] result = new byte[elements.length];
-        for (int i = 0; i < result.length; i++) {
-            result[i] = (byte) elements[i];
-        }
-        return result;
     }
 }
