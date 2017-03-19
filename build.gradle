@@ -48,3 +48,17 @@ tasks.withType(FindBugs) {
 run {
    standardInput = System.in
 }
+
+if (project.hasProperty("verbose")) {
+    def startTimestamp = 0
+    test {
+        beforeTest { desc ->
+            startTimestamp = new Date().getTime()
+            println "${desc.name} [${desc.className}]"
+        }
+        afterTest { desc, result ->
+            def diff = new Date().getTime() - startTimestamp
+            println "  ${result.resultType} (time = ${diff} ms)"
+        }
+    }
+}
