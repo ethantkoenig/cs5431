@@ -2,6 +2,7 @@ package transaction;
 
 import utils.Crypto;
 
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -25,9 +26,10 @@ public class TxOut {
         this.ownerPubKey = ownerPubKey;
     }
 
-    public static TxOut deserialize(ByteBuffer input) throws GeneralSecurityException {
+    public static TxOut deserialize(DataInputStream input)
+            throws GeneralSecurityException, IOException {
         PublicKey ownerKey = Crypto.deserializePublicKey(input);
-        long value = input.getLong();
+        long value = input.readLong();
         return new TxOut(value, ownerKey);
     }
 

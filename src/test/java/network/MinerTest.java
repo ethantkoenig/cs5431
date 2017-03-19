@@ -17,7 +17,6 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.ByteBuffer;
 import java.security.KeyPair;
 import java.util.HashSet;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -35,7 +34,7 @@ public class MinerTest extends RandomizedTest {
 
         Message genesisMessage = simulation.getNextMessage();
         Assert.assertEquals(genesisMessage.type, Message.BLOCK);
-        Block genesisBlock = Block.deserialize(ByteBuffer.wrap(genesisMessage.payload));
+        Block genesisBlock = Block.deserialize(genesisMessage.payload);
 
         Transaction transaction1 = new Transaction.Builder()
                 .addInput(
@@ -49,7 +48,7 @@ public class MinerTest extends RandomizedTest {
 
         Message transaction1Message = simulation.getNextMessage();
         Assert.assertEquals(transaction1Message.type, Message.TRANSACTION);
-        Transaction deserialized = Transaction.deserialize(ByteBuffer.wrap(transaction1Message.payload));
+        Transaction deserialized = Transaction.deserialize(transaction1Message.payload);
         TestUtils.assertEqualsWithHashCode(errorMessage, transaction1, deserialized);
 
         Transaction transaction2 = new Transaction.Builder()
@@ -63,12 +62,12 @@ public class MinerTest extends RandomizedTest {
 
         Message transaction2Message = simulation.getNextMessage();
         Assert.assertEquals(transaction2Message.type, Message.TRANSACTION);
-        deserialized = Transaction.deserialize(ByteBuffer.wrap(transaction2Message.payload));
+        deserialized = Transaction.deserialize(transaction2Message.payload);
         TestUtils.assertEqualsWithHashCode(errorMessage, transaction2, deserialized);
 
         Message mineBlockMessage = simulation.getNextMessage();
         Assert.assertEquals(Message.BLOCK, mineBlockMessage.type);
-        Block block = Block.deserialize(ByteBuffer.wrap(mineBlockMessage.payload));
+        Block block = Block.deserialize(mineBlockMessage.payload);
         Assert.assertTrue(block.reward.ownerPubKey.equals(pair1.getPublic()) ||
                 block.reward.ownerPubKey.equals(pair2.getPublic()));
 

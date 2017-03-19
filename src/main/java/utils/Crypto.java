@@ -1,13 +1,12 @@
 package utils;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.crypto.generators.BCrypt;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.security.spec.ECGenParameterSpec;
@@ -40,10 +39,10 @@ public class Crypto {
         return keyGen.generateKeyPair();
     }
 
-    public static PublicKey deserializePublicKey(ByteBuffer input)
-            throws GeneralSecurityException {
+    public static PublicKey deserializePublicKey(InputStream input)
+            throws GeneralSecurityException, IOException {
         byte[] array = new byte[PUBLIC_KEY_LEN_IN_BYTES];
-        input.get(array);
+        IOUtils.fill(input, array);
         return parsePublicKey(array);
     }
 
