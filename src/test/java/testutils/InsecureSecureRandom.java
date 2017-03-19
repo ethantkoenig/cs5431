@@ -9,8 +9,10 @@ import java.util.Random;
  * only.
  */
 public class InsecureSecureRandom extends SecureRandom {
+    private static final long serialVersionUID = 42L;
     private final Random random;
-    public InsecureSecureRandom(Random random ) {
+
+    InsecureSecureRandom(Random random) {
         super();
         this.random = random;
     }
