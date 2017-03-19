@@ -27,8 +27,8 @@ public class MinerTest extends RandomizedTest {
 
     @Test
     public void testRun() throws Exception {
-        KeyPair pair1 = Crypto.signatureKeyPair();
-        KeyPair pair2 = Crypto.signatureKeyPair();
+        KeyPair pair1 = randomKeyPair();
+        KeyPair pair2 = randomKeyPair();
 
         MinerSimulation simulation = new MinerSimulation(pair1, pair2, 10100);
 

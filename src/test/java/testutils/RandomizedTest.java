@@ -14,6 +14,8 @@ import utils.ShaTwoFiftySix;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.spec.ECGenParameterSpec;
 import java.util.Random;
 
 /**
@@ -22,6 +24,7 @@ import java.util.Random;
 public abstract class RandomizedTest {
 
     protected Random random;
+    private KeyPairGenerator generator;
     protected String errorMessage;
 
     @BeforeClass
@@ -30,10 +33,18 @@ public abstract class RandomizedTest {
     }
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
         SeededRandom seededRandom = SeededRandom.randomSeed();
         random = seededRandom.random();
         errorMessage = seededRandom.errorMessage();
+
+        generator = KeyPairGenerator.getInstance("ECDSA", "BC");
+        ECGenParameterSpec ecSpec = new ECGenParameterSpec("P-256");
+        generator.initialize(ecSpec, new InsecureSecureRandom(random));
+    }
+
+    protected KeyPair randomKeyPair() throws GeneralSecurityException {
+        return generator.generateKeyPair();
     }
 
     protected long nonNegativeLong() {
@@ -60,8 +71,8 @@ public abstract class RandomizedTest {
     }
 
     protected Transaction randomTransaction() throws GeneralSecurityException, IOException {
-        KeyPair senderPair = Crypto.signatureKeyPair();
-        KeyPair recipientPair = Crypto.signatureKeyPair();
+        KeyPair senderPair = randomKeyPair();
+        KeyPair recipientPair = randomKeyPair();
 
         ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(randomBytes(256));
         return new Transaction.Builder()
@@ -75,15 +86,15 @@ public abstract class RandomizedTest {
         for (int i = 0; i < Block.NUM_TRANSACTIONS_PER_BLOCK; ++i) {
             b.addTransaction(randomTransaction());
         }
-        b.addReward(Crypto.signatureKeyPair().getPublic());
+        b.addReward(randomKeyPair().getPublic());
         b.setRandomNonce(random);
         return b;
     }
 
     protected Pair<Block, UnspentTransactions> randomValidBlock(ShaTwoFiftySix previousHash)
             throws GeneralSecurityException, IOException {
-        KeyPair senderPair = Crypto.signatureKeyPair();
-        KeyPair recipientPair = Crypto.signatureKeyPair();
+        KeyPair senderPair = randomKeyPair();
+        KeyPair recipientPair = randomKeyPair();
 
         TxOut output = new TxOut(1 + random.nextInt(1024), recipientPair.getPublic());
         Transaction initTransaction = new Transaction.Builder()
@@ -95,7 +106,7 @@ public abstract class RandomizedTest {
 
         for (int i = 0; i < Block.NUM_TRANSACTIONS_PER_BLOCK; i++) {
             senderPair = recipientPair;
-            recipientPair = Crypto.signatureKeyPair();
+            recipientPair = randomKeyPair();
 
             Transaction previous = i > 0 ? block.transactions[i - 1] : initTransaction;
 
