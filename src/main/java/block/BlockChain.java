@@ -7,11 +7,9 @@ import utils.Pair;
 import utils.ShaTwoFiftySix;
 
 import java.io.*;
+import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * A {@code BlockChain} represents a forest of related {@code Blocks} which together represent a secure public ledger.
@@ -177,13 +175,15 @@ public class BlockChain {
     }
 
     /**
+     * Writes all blocks in the main chain to the specified file. They are written in reverse
+     * order, newest to oldest.
      *
      * @param file is the file to be written to.
      * @return true in success, exception otherwise.
      * @throws IOException
      * XXX: Test
      */
-    public boolean storeBlockchain(FileOutputStream file)
+    public boolean storeMainChain(FileOutputStream file)
             throws IOException {
         DataOutputStream data = new DataOutputStream(file);
         Block end = currentHead;
@@ -197,13 +197,56 @@ public class BlockChain {
     }
 
     /**
+     * Enumerates over all the blocks, writing the serialized blocks to a file.
+     * @param file is a file descriptor to be written to.
+     * @return true in success, exception otherwise.
+     * @throws IOException
+     * XXX: Test
+     */
+    public boolean storeAllBlocks(FileOutputStream file) throws IOException {
+        DataOutputStream data = new DataOutputStream(file);
+        for (Map.Entry<ShaTwoFiftySix, Pair<Block, Integer>> entry : blocks.entrySet()) {
+            entry.getValue().getLeft().serialize(data);
+        }
+        return true;
+    }
+
+    /**
      * Reads in a file containing a series of blocks to be used to construct the blockchain.
+     * Note that since the main chain is stored in reverse order, we read in the file, deserializing
+     * blocks into an arraylist, then reversing that list and reinserting the blocks into the chain.
+     *
      * @param file is a FileInputStream where the blocks are located
      * @return true in success, exception otherwise.
      * @throws IOException
-     * XXX: Figure out how to best do this.
+     * XXX: Figure out a better way to do this.
      */
-    public boolean readBlockchain(FileInputStream file) throws IOException {
+    public boolean importMainChain(FileInputStream file) throws IOException, GeneralSecurityException {
+        ArrayList<Block> blocklist = new ArrayList<>();
+        DataInputStream in = new DataInputStream(file);
+        BufferedReader br = new BufferedReader(new InputStreamReader(in, "UTF-8"));
+        String line;
+        while (true) {
+            line = br.readLine();
+            if (line == null) {
+                break;
+            }
+            blocklist.add(Block.deserialize(ByteBuffer.wrap(line.getBytes("UTF-8"))));
+        }
+        Collections.reverse(blocklist);
+        for (Block b : blocklist) {
+            insertBlock(b);
+        }
+        return true;
+    }
+
+    /**
+     * Imports a series of blocks from the specified file and reconstructs the blockchain.
+     * @param file is the file containing all the blocks.
+     * @return true in success, exception otherwise.
+     * @throws IOException
+     */
+    public boolean importAllBlocks(FileInputStream file) throws IOException {
         return false;
     }
 
