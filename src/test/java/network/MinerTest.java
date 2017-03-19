@@ -11,6 +11,7 @@ import transaction.Transaction;
 import transaction.TxIn;
 import transaction.TxOut;
 import utils.ByteUtil;
+import utils.Config;
 import utils.Crypto;
 
 import java.io.IOException;
@@ -27,6 +28,8 @@ public class MinerTest extends RandomizedTest {
 
     @Test
     public void testRun() throws Exception {
+        Config.HASH_GOAL.set(1);
+
         KeyPair pair1 = randomKeyPair();
         KeyPair pair2 = randomKeyPair();
 
