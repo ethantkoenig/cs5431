@@ -21,7 +21,7 @@
     <textarea type="text" name="privatekey" form="keyform"></textarea><br>
 
 
-    <form method="post" action="/user/${username}/keys" id="keyform">
+    <form method="post" action="/user/keys" id="keyform">
       <input type="submit" value="Submit">
     </form>
 

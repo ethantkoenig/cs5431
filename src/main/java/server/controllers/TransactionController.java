@@ -7,23 +7,28 @@ import server.access.UserAccess;
 import server.models.Key;
 import server.models.User;
 import server.utils.Constants;
+import server.utils.RouteUtils;
 import spark.ModelAndView;
 import spark.template.freemarker.FreeMarkerEngine;
 import transaction.Transaction;
 import transaction.TxIn;
 import transaction.TxOut;
-import utils.*;
+import utils.ByteUtil;
+import utils.Crypto;
+import utils.IOUtils;
+import utils.ShaTwoFiftySix;
 
 import java.io.DataOutputStream;
+import java.io.IOException;
 import java.net.Socket;
+import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.HashMap;
 import java.util.Map;
 
-import static spark.Spark.get;
-import static spark.Spark.path;
-import static spark.Spark.post;
+import static server.utils.RouteUtils.*;
+import static spark.Spark.*;
 
 public class TransactionController {
 
@@ -34,46 +39,52 @@ public class TransactionController {
                 return new ModelAndView(emptyModel, "transact.ftl");
             }, new FreeMarkerEngine());
 
-            post("", (request, response) -> {
-                // TODO missing a lot of null checks, etc.
-                int transactionIndex = request.queryMap("index").integerValue();
-                long amount = request.queryMap("amount").longValue();
-
-                byte[] senderPublicKey = ByteUtil.hexStringToByteArray(
-                        request.queryParams("senderpublickey")).get();
-                byte[] recipientPublicKeyBytes = ByteUtil.hexStringToByteArray(
-                        request.queryParams("recipientpublickey")).get();
+            post("", wrapRoute((request, response) -> {
+                int index = queryParamInt(request, "index");
+                long amount = queryParamLong(request, "amount");
+                byte[] senderPublicKey = queryParamHex(request, "senderpublickey");
+                byte[] recipientPublicKeyBytes = queryParamHex(request, "recipientpublickey");
                 ShaTwoFiftySix inputHash = ShaTwoFiftySix.create(
-                        ByteUtil.hexStringToByteArray(request.queryParams("transaction")).get())
-                        .get();
+                        queryParamHex(request, "transaction")
+                ).orElseThrow(InvalidParamException::new);
 
-                User user = UserAccess.getUserbyUsername(request.session().attribute("username"));
-                if (user == null) {
-                    // TODO handle
-                    return "not logged in";
-                }
-                Key senderKey = UserAccess.getKey(user.getId(), senderPublicKey);
+                User loggedInUser = loggedInUser(request);
+                Key senderKey = UserAccess.getKey(loggedInUser.getId(), senderPublicKey);
                 if (senderKey == null) {
                     // TODO handle
-                    return "wrong user";
+                    response.status(400);
+                    return "no such key under user";
                 }
-                PublicKey recipientPublicKey = Crypto.parsePublicKey(recipientPublicKeyBytes);
-                PrivateKey senderPrivateKey = Crypto.parsePrivateKey(senderKey.getEncryptedPrivateKey());
+
+                PublicKey recipientPublicKey;
+                PrivateKey senderPrivateKey;
+
+                try {
+                    recipientPublicKey = Crypto.parsePublicKey(recipientPublicKeyBytes);
+                    senderPrivateKey = Crypto.parsePrivateKey(senderKey.getEncryptedPrivateKey());
+                } catch (GeneralSecurityException e) {
+                    // TODO handle
+                    response.status(400);
+                    return "bad keys";
+                }
 
                 Transaction transaction = new Transaction.Builder()
-                        .addInput(new TxIn(inputHash, transactionIndex), senderPrivateKey)
+                        .addInput(new TxIn(inputHash, index), senderPrivateKey)
                         .addOutput(new TxOut(amount, recipientPublicKey))
                         .build();
-
-                byte[] payload = ByteUtil.asByteArray(transaction::serializeWithSignatures);
-                try (Socket socket = new Socket(
-                        Constants.getNodeAddress().getAddress(),
-                        Constants.getNodeAddress().getPort())) {
-                    DataOutputStream socketOut = new DataOutputStream(socket.getOutputStream());
-                    new OutgoingMessage(Message.TRANSACTION, payload).serialize(socketOut);
-                }
+                sendTransaction(transaction);
                 return "ok";
-            });
+            }));
         });
+    }
+
+    private static void sendTransaction(Transaction transaction) throws IOException {
+        byte[] payload = ByteUtil.asByteArray(transaction::serializeWithSignatures);
+        try (Socket socket = new Socket(
+                Constants.getNodeAddress().getAddress(),
+                Constants.getNodeAddress().getPort())) {
+            DataOutputStream socketOut = new DataOutputStream(socket.getOutputStream());
+            new OutgoingMessage(Message.TRANSACTION, payload).serialize(socketOut);
+        }
     }
 }
