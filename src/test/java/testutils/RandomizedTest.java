@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.security.SecureRandom;
 import java.security.spec.ECGenParameterSpec;
 import java.util.Random;
 
@@ -24,6 +25,7 @@ import java.util.Random;
 public abstract class RandomizedTest {
 
     protected Random random;
+    private SecureRandom secureRandom;
     private KeyPairGenerator generator;
     protected String errorMessage;
 
@@ -40,11 +42,13 @@ public abstract class RandomizedTest {
 
         generator = KeyPairGenerator.getInstance("ECDSA", "BC");
         ECGenParameterSpec ecSpec = new ECGenParameterSpec("P-256");
-        generator.initialize(ecSpec, new InsecureSecureRandom(random));
+        secureRandom = new InsecureSecureRandom(random);
+        generator.initialize(ecSpec, secureRandom);
     }
 
     protected KeyPair randomKeyPair() throws GeneralSecurityException {
-        return generator.generateKeyPair();
+        KeyPair pair = generator.generateKeyPair();
+        return pair;
     }
 
     protected long nonNegativeLong() {
