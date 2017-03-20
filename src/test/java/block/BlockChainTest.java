@@ -225,7 +225,6 @@ public class BlockChainTest extends RandomizedTest {
         for (int i = 0; i < 100; ++i) {
             Block next = randomBlock(prev.getShaTwoFiftySix());
             bc.insertBlock(next);
-            blocks.add(genesis);
             prev = next;
         }
 
@@ -249,7 +248,6 @@ public class BlockChainTest extends RandomizedTest {
         for (int i = 0; i < 100; ++i) {
             Block next = randomBlock(prev.getShaTwoFiftySix());
             bc.insertBlock(next);
-            blocks.add(genesis);
             prev = next;
         }
 
@@ -273,7 +271,6 @@ public class BlockChainTest extends RandomizedTest {
         for (int i = 0; i < 100; ++i) {
             Block next = randomBlock(prev.getShaTwoFiftySix());
             bc.insertBlock(next);
-            blocks.add(genesis);
             prev = next;
         }
         bc.storeMainChain();

@@ -207,15 +207,13 @@ public class BlockChain {
         Block end = currentHead;
         File blockdir = new File("blockchain");
         if (blockdir.mkdir()) {
-            int i = 0;
             while (currentHead != null) {
-                File block = new File("blockchain/block" + i);
+                File block = new File("blockchain/" + currentHead.getShaTwoFiftySix());
                 DataOutputStream data = new DataOutputStream(new FileOutputStream(block));
                 currentHead.serialize(data);
                 ShaTwoFiftySix previous = currentHead.previousBlockHash;
                 if (previous.equals(ShaTwoFiftySix.zero())) break;
                 currentHead = blocks.get(previous).getLeft();
-                i++;
             }
             currentHead = end;
             return true;
@@ -231,11 +229,9 @@ public class BlockChain {
     public boolean storeAllBlocks() throws IOException {
         File blockdir = new File("blockchain");
         if (blockdir.mkdir()) {
-            int i = 0;
             for (Map.Entry<ShaTwoFiftySix, Pair<Block, Integer>> entry : blocks.entrySet()) {
-                File block = new File("blockchain/block" + i);
+                File block = new File("blockchain/" + entry.getKey());
                 entry.getValue().getLeft().serialize(new DataOutputStream(new FileOutputStream(block)));
-                i++;
             }
             return true;
         }
