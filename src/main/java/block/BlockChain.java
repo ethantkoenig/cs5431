@@ -7,7 +7,6 @@ import utils.Pair;
 import utils.ShaTwoFiftySix;
 
 import java.io.*;
-import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
 import java.util.*;
 
@@ -232,7 +231,7 @@ public class BlockChain {
             if (line == null) {
                 break;
             }
-            blocklist.add(Block.deserialize(ByteBuffer.wrap(line.getBytes("UTF-8"))));
+            blocklist.add(Block.deserialize((line.getBytes("UTF-8"))));
         }
         Collections.reverse(blocklist);
         for (Block b : blocklist) {

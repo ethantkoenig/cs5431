@@ -11,6 +11,9 @@ import utils.Crypto;
 import utils.Pair;
 import utils.ShaTwoFiftySix;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.ArrayList;
@@ -255,6 +258,38 @@ public class BlockChainTest extends RandomizedTest {
 
         for (Block b: blocks) {
             Assert.assertTrue(bc.containsBlock(b));
+        }
+    }
+
+    @Test
+    public void importMainChain() throws Exception {
+        Block genesis = Block.genesis();
+        PublicKey PK = Crypto.signatureKeyPair().getPublic();
+        genesis.addReward(PK);
+        BlockChain bc = new BlockChain(genesis);
+        Assert.assertTrue(bc.containsBlockWithHash(genesis.getShaTwoFiftySix()));
+
+        Block prev = genesis;
+        List<Block> blocks = new ArrayList<>();
+        blocks.add(genesis);
+
+        for (int i = 0; i < 100; ++i) {
+            Block next = randomBlock(prev.getShaTwoFiftySix());
+            bc.insertBlock(next);
+            blocks.add(genesis);
+            prev = next;
+        }
+
+        File store = new File("bc.txt");
+        try (FileOutputStream fr = new FileOutputStream(store); FileInputStream rd = new FileInputStream("bc.txt")) {
+            bc.storeMainChain(fr);
+            BlockChain newbc = new BlockChain();
+            newbc.importMainChain(rd);
+            for (Block b : blocks) {
+                Assert.assertTrue(newbc.containsBlock(b));
+            }
+        } finally {
+            store.deleteOnExit();
         }
     }
 }
