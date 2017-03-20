@@ -190,6 +190,7 @@ public class BlockChain {
         while (currentHead != null) {
             currentHead.serialize(data);
             ShaTwoFiftySix previous = currentHead.previousBlockHash;
+            if (previous.equals(ShaTwoFiftySix.zero())) break;
             currentHead = blocks.get(previous).getLeft();
         }
         currentHead = end;
