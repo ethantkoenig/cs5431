@@ -11,9 +11,6 @@ import utils.Crypto;
 import utils.Pair;
 import utils.ShaTwoFiftySix;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.ArrayList;
@@ -279,17 +276,11 @@ public class BlockChainTest extends RandomizedTest {
             blocks.add(genesis);
             prev = next;
         }
-
-        File store = new File("bc.txt");
-        try (FileOutputStream fr = new FileOutputStream(store); FileInputStream rd = new FileInputStream("bc.txt")) {
-            bc.storeMainChain(fr);
-            BlockChain newbc = new BlockChain();
-            newbc.importMainChain(rd);
-            for (Block b : blocks) {
-                Assert.assertTrue(newbc.containsBlock(b));
-            }
-        } finally {
-            store.deleteOnExit();
+        bc.storeMainChain();
+        BlockChain newbc = new BlockChain();
+        newbc.importMainChain();
+        for (Block b : blocks) {
+            Assert.assertTrue(newbc.containsBlock(b));
         }
     }
 }

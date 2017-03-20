@@ -7,8 +7,10 @@ import utils.Pair;
 import utils.ShaTwoFiftySix;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.security.GeneralSecurityException;
 import java.util.*;
+import java.nio.file.Paths;
 
 /**
  * A {@code BlockChain} represents a forest of related {@code Blocks} which together represent a secure public ledger.
@@ -177,23 +179,29 @@ public class BlockChain {
      * Writes all blocks in the main chain to the specified file. They are written in reverse
      * order, newest to oldest.
      *
-     * @param file is the file to be written to.
      * @return true in success, exception otherwise.
      * @throws IOException
      * XXX: Test
      */
-    public boolean storeMainChain(FileOutputStream file)
+    public boolean storeMainChain()
             throws IOException {
-        DataOutputStream data = new DataOutputStream(file);
         Block end = currentHead;
-        while (currentHead != null) {
-            currentHead.serialize(data);
-            ShaTwoFiftySix previous = currentHead.previousBlockHash;
-            if (previous.equals(ShaTwoFiftySix.zero())) break;
-            currentHead = blocks.get(previous).getLeft();
+        File blockdir = new File("blockchain");
+        if (blockdir.mkdir()) {
+            int i = 0;
+            while (currentHead != null) {
+                File block = new File("blockchain/block" + i);
+                DataOutputStream data = new DataOutputStream(new FileOutputStream(block));
+                currentHead.serialize(data);
+                ShaTwoFiftySix previous = currentHead.previousBlockHash;
+                if (previous.equals(ShaTwoFiftySix.zero())) break;
+                currentHead = blocks.get(previous).getLeft();
+                i++;
+            }
+            currentHead = end;
+            return true;
         }
-        currentHead = end;
-        return true;
+        return false;
     }
 
     /**
@@ -216,27 +224,24 @@ public class BlockChain {
      * Note that since the main chain is stored in reverse order, we read in the file, deserializing
      * blocks into an arraylist, then reversing that list and reinserting the blocks into the chain.
      *
-     * @param file is a FileInputStream where the blocks are located
      * @return true in success, exception otherwise.
      * @throws IOException
      * XXX: Figure out a better way to do this.
      */
-    public boolean importMainChain(FileInputStream file) throws IOException, GeneralSecurityException {
+    public boolean importMainChain() throws IOException, GeneralSecurityException {
         ArrayList<Block> blocklist = new ArrayList<>();
-        DataInputStream in = new DataInputStream(file);
-        BufferedReader br = new BufferedReader(new InputStreamReader(in, "UTF-8"));
-        String line;
-        while (true) {
-            line = br.readLine();
-            if (line == null) {
-                break;
-            }
-            blocklist.add(Block.deserialize((line.getBytes("UTF-8"))));
+        File blockdir = new File("blockchain");
+        File[] blocks = blockdir.listFiles();
+        if (blocks == null) return false;
+        for (File block : blocks) {
+            blocklist.add(Block.deserialize(new DataInputStream(new FileInputStream(block))));
+            Files.delete(Paths.get(block.toURI()));
         }
         Collections.reverse(blocklist);
         for (Block b : blocklist) {
             insertBlock(b);
         }
+        Files.delete(Paths.get("blockchain"));
         return true;
     }
 
