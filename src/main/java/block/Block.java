@@ -5,12 +5,14 @@ import transaction.Transaction;
 import transaction.TxOut;
 import utils.ByteUtil;
 import utils.Crypto;
+import utils.IOUtils;
 import utils.ShaTwoFiftySix;
 
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.BufferUnderflowException;
-import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
 import java.security.PublicKey;
 import java.util.*;
@@ -56,12 +58,19 @@ public class Block implements Iterable<Transaction> {
     /**
      * @param input input bytes to deserialize
      * @return deserialized block
-     * @throws BufferUnderflowException if the buffer is too short
      */
-    public static Block deserialize(ByteBuffer input)
-            throws BufferUnderflowException, GeneralSecurityException {
+    public static Block deserialize(byte[] input) throws IOException, GeneralSecurityException {
+        return deserialize(new DataInputStream(new ByteArrayInputStream(input)));
+    }
+
+    /**
+     * @param input input bytes to deserialize
+     * @return deserialized block
+     */
+    public static Block deserialize(DataInputStream input)
+            throws IOException, GeneralSecurityException {
         ShaTwoFiftySix hash = ShaTwoFiftySix.deserialize(input);
-        int numBlocks = input.getInt();
+        int numBlocks = input.readInt();
         Block block = new Block(hash, numBlocks);
 
         for (int i = 0; i < numBlocks; i++) {
@@ -69,7 +78,7 @@ public class Block implements Iterable<Transaction> {
         }
         PublicKey rewardKey = Crypto.deserializePublicKey(input);
         block.reward = new TxOut(REWARD_AMOUNT, rewardKey);
-        input.get(block.nonce);
+        IOUtils.fill(input, block.nonce);
         return block;
     }
 

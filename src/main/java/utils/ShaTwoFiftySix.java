@@ -1,9 +1,9 @@
 package utils;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.BufferUnderflowException;
-import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
 import java.util.Optional;
@@ -36,9 +36,9 @@ public final class ShaTwoFiftySix implements Comparable<ShaTwoFiftySix> {
      * @return A {@code ShaTwoFiftySix} object corresponding to the read SHA-256 hash
      * @throws BufferUnderflowException
      */
-    public static ShaTwoFiftySix deserialize(ByteBuffer input) throws BufferUnderflowException {
+    public static ShaTwoFiftySix deserialize(InputStream input) throws IOException {
         byte[] hash = new byte[HASH_SIZE_IN_BYTES];
-        input.get(hash);
+        IOUtils.fill(input, hash);
         return new ShaTwoFiftySix(hash);
     }
 

@@ -5,8 +5,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import testutils.RandomizedTest;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.nio.ByteBuffer;
 import java.security.KeyPair;
 import java.security.PublicKey;
 
@@ -39,8 +39,9 @@ public class CryptoTest extends RandomizedTest {
     public void testDeserializePublicKey() throws Exception {
         PublicKey publicKey = Crypto.signatureKeyPair().getPublic();
 
-        ByteBuffer serializedKey = ByteBuffer.wrap(publicKey.getEncoded());
-        PublicKey deserializedKey = Crypto.deserializePublicKey(serializedKey);
+        PublicKey deserializedKey = Crypto.deserializePublicKey(
+                new ByteArrayInputStream(publicKey.getEncoded())
+        );
         Assert.assertEquals(publicKey, deserializedKey);
     }
 
@@ -54,8 +55,9 @@ public class CryptoTest extends RandomizedTest {
                 Crypto.verify(content, signature, pair.getPublic()));
 
         // test that deserialized public keys can correctly verify
-        ByteBuffer serializedKey = ByteBuffer.wrap(pair.getPublic().getEncoded());
-        PublicKey deserializedKey = Crypto.deserializePublicKey(serializedKey);
+        PublicKey deserializedKey = Crypto.deserializePublicKey(
+                new ByteArrayInputStream(pair.getPublic().getEncoded())
+        );
         Assert.assertTrue(errorMessage,
                 Crypto.verify(content, signature, deserializedKey));
     }
