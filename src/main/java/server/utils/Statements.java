@@ -65,6 +65,17 @@ public class Statements {
         );
     }
 
+    public static PreparedStatement getKey(Connection connection, int userID, byte[] publicKey)
+            throws SQLException {
+        return prepareStatement(connection.prepareStatement(
+                "SELECT * FROM keypairs WHERE userid = ? AND publickey = ?"),
+                statement -> {
+                    statement.setInt(1, userID);
+                    statement.setBytes(2, publicKey);
+                }
+        );
+    }
+
     public static PreparedStatement insertUser(Connection connection,
                                                String username,
                                                byte[] salt,
