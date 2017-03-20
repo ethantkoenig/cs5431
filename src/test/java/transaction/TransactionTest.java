@@ -35,8 +35,8 @@ public class TransactionTest extends RandomizedTest {
 
     @Test
     public void testEqualsHashCode() throws Exception {
-        KeyPair senderPair = Crypto.signatureKeyPair();
-        KeyPair recipientPair = Crypto.signatureKeyPair();
+        KeyPair senderPair = randomKeyPair();
+        KeyPair recipientPair = randomKeyPair();
 
         ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(randomBytes(256));
         long value = random.nextInt(Integer.MAX_VALUE);
@@ -60,9 +60,9 @@ public class TransactionTest extends RandomizedTest {
 
     @Test
     public void testRollback() throws Exception {
-        KeyPair initialPair = Crypto.signatureKeyPair();
-        KeyPair middlePair = Crypto.signatureKeyPair();
-        KeyPair finalPair = Crypto.signatureKeyPair();
+        KeyPair initialPair = randomKeyPair();
+        KeyPair middlePair = randomKeyPair();
+        KeyPair finalPair = randomKeyPair();
 
         TxOut middleOut0 = new TxOut(100, middlePair.getPublic());
         TxOut middleOut1 = new TxOut(200, middlePair.getPublic());
@@ -98,8 +98,8 @@ public class TransactionTest extends RandomizedTest {
 
     @Test
     public void doTransaction() throws Exception {
-        KeyPair senderPair = Crypto.signatureKeyPair();
-        KeyPair recipientPair = Crypto.signatureKeyPair();
+        KeyPair senderPair = randomKeyPair();
+        KeyPair recipientPair = randomKeyPair();
 
         ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(randomBytes(256));
         Transaction tx = new Transaction.Builder()
@@ -120,8 +120,8 @@ public class TransactionTest extends RandomizedTest {
     //  Sign transaction with key that does not match, should fail.
     @Test
     public void failTransaction() throws Exception {
-        KeyPair senderPair = Crypto.signatureKeyPair();
-        KeyPair recipientPair = Crypto.signatureKeyPair();
+        KeyPair senderPair = randomKeyPair();
+        KeyPair recipientPair = randomKeyPair();
 
         ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(randomBytes(256));
         Transaction txn = new Transaction.Builder()
@@ -143,11 +143,11 @@ public class TransactionTest extends RandomizedTest {
 
     @Test
     public void doThreeOutTransaction() throws Exception {
-        KeyPair senderPair = Crypto.signatureKeyPair();
+        KeyPair senderPair = randomKeyPair();
 
-        KeyPair recipientPair1 = Crypto.signatureKeyPair();
-        KeyPair recipientPair2 = Crypto.signatureKeyPair();
-        KeyPair recipientPair3 = Crypto.signatureKeyPair();
+        KeyPair recipientPair1 = randomKeyPair();
+        KeyPair recipientPair2 = randomKeyPair();
+        KeyPair recipientPair3 = randomKeyPair();
 
         ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(randomBytes(256));
         Transaction txn = new Transaction.Builder()
@@ -167,13 +167,13 @@ public class TransactionTest extends RandomizedTest {
 
     @Test
     public void doMultiInOutTransaction() throws Exception {
-        KeyPair senderPair1 = Crypto.signatureKeyPair();
-        KeyPair senderPair2 = Crypto.signatureKeyPair();
-        KeyPair senderPair3 = Crypto.signatureKeyPair();
+        KeyPair senderPair1 = randomKeyPair();
+        KeyPair senderPair2 = randomKeyPair();
+        KeyPair senderPair3 = randomKeyPair();
 
-        KeyPair recipientPair1 = Crypto.signatureKeyPair();
-        KeyPair recipientPair2 = Crypto.signatureKeyPair();
-        KeyPair recipientPair3 = Crypto.signatureKeyPair();
+        KeyPair recipientPair1 = randomKeyPair();
+        KeyPair recipientPair2 = randomKeyPair();
+        KeyPair recipientPair3 = randomKeyPair();
 
         ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(randomBytes(256));
         Transaction txn = new Transaction.Builder()
@@ -214,7 +214,7 @@ public class TransactionTest extends RandomizedTest {
 
     @Test
     public void testVerificationFailure() throws Exception {
-        KeyPair badSpender = Crypto.signatureKeyPair();
+        KeyPair badSpender = randomKeyPair();
         TxOut unspent = new TxOut(50, badSpender.getPublic());
         ShaTwoFiftySix hash = randomShaTwoFiftySix();
 
@@ -222,7 +222,7 @@ public class TransactionTest extends RandomizedTest {
         unspentTxs.put(hash, 0, unspent);
 
         Transaction tx = new Transaction.Builder()
-                .addInput(new TxIn(hash, 0), Crypto.signatureKeyPair().getPrivate())
+                .addInput(new TxIn(hash, 0), randomKeyPair().getPrivate())
                 .addOutput(new TxOut(50, badSpender.getPublic()))
                 .build();
 

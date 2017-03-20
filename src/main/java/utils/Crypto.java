@@ -19,7 +19,6 @@ import java.security.spec.X509EncodedKeySpec;
 public class Crypto {
     public static final int PRIVATE_KEY_LEN_IN_BYTES = 150;
     public static final int PUBLIC_KEY_LEN_IN_BYTES = 91;
-    public static final int BCRYPT_COST = 12;
 
     private static final SecureRandom RANDOM = new SecureRandom();
 
@@ -75,7 +74,7 @@ public class Crypto {
     }
 
     public static byte[] bcrypt(byte[] content, byte[] salt) {
-        return BCrypt.generate(content, salt, BCRYPT_COST);
+        return BCrypt.generate(content, salt, Config.BCRYPT_COST.get());
     }
 
     public static PublicKey loadPublicKey(String filename)

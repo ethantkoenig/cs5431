@@ -5,7 +5,9 @@ import org.junit.Assert;
 import org.junit.Test;
 import testutils.RandomizedTest;
 import utils.ByteUtil;
+import utils.Config;
 
+import java.sql.Connection;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
@@ -13,6 +15,7 @@ public class MinerThreadTest extends RandomizedTest {
 
     @Test
     public void test() throws Exception {
+        Config.HASH_GOAL.set(1);
         Block block = randomBlock(randomShaTwoFiftySix());
         BlockingQueue<Message> queue = new ArrayBlockingQueue<>(5);
         MinerThread minerThread = new MinerThread(block, queue);
@@ -30,6 +33,7 @@ public class MinerThreadTest extends RandomizedTest {
 
     @Test
     public void testStop() throws Exception {
+        Config.HASH_GOAL.set(10); // really big, so miner won't succeed
         Block block = randomBlock(randomShaTwoFiftySix());
         BlockingQueue<Message> queue = new ArrayBlockingQueue<>(5);
         MinerThread minerThread = new MinerThread(block, queue);

@@ -4,6 +4,7 @@ package block;
 import transaction.Transaction;
 import transaction.TxOut;
 import utils.ByteUtil;
+import utils.Config;
 import utils.Crypto;
 import utils.IOUtils;
 import utils.ShaTwoFiftySix;
@@ -32,8 +33,6 @@ public class Block implements Iterable<Transaction> {
     public final Transaction[] transactions;
     public TxOut reward;
     public final byte[] nonce = new byte[NONCE_SIZE_IN_BYTES];
-
-    private int hashGoalZeros = 2;
 
     private Block(ShaTwoFiftySix previousBlockHash, int numTransactions) {
         this.previousBlockHash = previousBlockHash;
@@ -124,7 +123,7 @@ public class Block implements Iterable<Transaction> {
      * with hashGoalZeros number of leading zeros.
      */
     public boolean checkHash() throws IOException, GeneralSecurityException {
-        return checkHashWith(hashGoalZeros);
+        return checkHashWith(Config.HASH_GOAL.get());
     }
 
     /* package */ boolean checkHashWith(int goal) throws IOException, GeneralSecurityException {
