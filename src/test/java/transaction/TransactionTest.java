@@ -10,7 +10,6 @@ import utils.ByteUtil;
 import utils.Crypto;
 import utils.ShaTwoFiftySix;
 
-import java.nio.ByteBuffer;
 import java.security.KeyPair;
 import java.util.HashMap;
 import java.util.Map;
@@ -112,7 +111,7 @@ public class TransactionTest extends RandomizedTest {
                 tx.verifySignature(0, senderPair.getPublic()));
 
         byte[] serialized = ByteUtil.asByteArray(tx::serializeWithSignatures);
-        Transaction deserialized = Transaction.deserialize(ByteBuffer.wrap(serialized));
+        Transaction deserialized = Transaction.deserialize(serialized);
 
         Assert.assertTrue(tx.equals(deserialized));
         Assert.assertTrue(deserialized.verifySignature(0, senderPair.getPublic()));
@@ -159,7 +158,7 @@ public class TransactionTest extends RandomizedTest {
                 .build();
 
         byte[] serialized = ByteUtil.asByteArray(txn::serializeWithSignatures);
-        Transaction deserialized = Transaction.deserialize(ByteBuffer.wrap(serialized));
+        Transaction deserialized = Transaction.deserialize(serialized);
 
         Assert.assertTrue(txn.equals(deserialized));
         Assert.assertTrue(errorMessage,
@@ -187,7 +186,7 @@ public class TransactionTest extends RandomizedTest {
                 .build();
 
         byte[] serialized = ByteUtil.asByteArray(txn::serializeWithSignatures);
-        Transaction deserialized = Transaction.deserialize(ByteBuffer.wrap(serialized));
+        Transaction deserialized = Transaction.deserialize(serialized);
 
         Assert.assertTrue(txn.equals(deserialized));
 

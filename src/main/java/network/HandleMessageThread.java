@@ -6,7 +6,6 @@ import transaction.Transaction;
 import utils.ShaTwoFiftySix;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -58,7 +57,7 @@ public class HandleMessageThread extends Thread {
             while ((message = messageQueue.take()) != null) {
                 switch (message.type) {
                     case Message.TRANSACTION:
-                        Transaction transaction = Transaction.deserialize(ByteBuffer.wrap(message.payload));
+                        Transaction transaction = Transaction.deserialize(message.payload);
                         LOGGER.info("[!] Received transaction!");
                         if (!recentTransactionsReceived.contains(message)) {
                             LOGGER.info("[!] New transaction, so I am broadcasting to all other miners.");
@@ -70,7 +69,7 @@ public class HandleMessageThread extends Thread {
                         addTransactionToBlock(transaction);
                         break;
                     case Message.BLOCK:
-                        Block block = Block.deserialize(ByteBuffer.wrap(message.payload));
+                        Block block = Block.deserialize(message.payload);
                         if (block.checkHash()) {
                             addBlockToChain(block);
                         } else {

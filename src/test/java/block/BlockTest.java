@@ -12,7 +12,6 @@ import utils.Crypto;
 import utils.Pair;
 import utils.ShaTwoFiftySix;
 
-import java.nio.ByteBuffer;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.Collections;
@@ -32,7 +31,7 @@ public class BlockTest extends RandomizedTest {
         Assert.assertNotEquals(errorMessage, b1, new Object());
 
         Block b2 = Block.empty(ShaTwoFiftySix.zero());
-        for (Transaction tx: b1) {
+        for (Transaction tx : b1) {
             b2.addTransaction(tx);
         }
         b2.addReward(b1.reward.ownerPubKey);
@@ -56,9 +55,7 @@ public class BlockTest extends RandomizedTest {
         }
         block.addReward(Crypto.signatureKeyPair().getPublic());
 
-        Block deserialized = Block.deserialize(ByteBuffer.wrap(
-                ByteUtil.asByteArray(block::serialize)
-        ));
+        Block deserialized = Block.deserialize(ByteUtil.asByteArray(block::serialize));
 
         TestUtils.assertEqualsWithHashCode(errorMessage, block, deserialized);
         Assert.assertEquals(errorMessage,
@@ -99,9 +96,7 @@ public class BlockTest extends RandomizedTest {
         Block block = Block.genesis();
         block.addReward(Crypto.signatureKeyPair().getPublic());
 
-        Block deserialized = Block.deserialize(ByteBuffer.wrap(
-                ByteUtil.asByteArray(block::serialize)
-        ));
+        Block deserialized = Block.deserialize(ByteUtil.asByteArray(block::serialize));
 
         TestUtils.assertEqualsWithHashCode(errorMessage, block, deserialized);
         Assert.assertEquals(errorMessage,

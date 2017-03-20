@@ -7,8 +7,9 @@ import testutils.TestUtils;
 import utils.ByteUtil;
 import utils.ShaTwoFiftySix;
 
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
 
 public class TxInTest extends RandomizedTest {
@@ -20,7 +21,9 @@ public class TxInTest extends RandomizedTest {
         TxIn input = new TxIn(hash, 4);
 
         byte[] serialized = ByteUtil.asByteArray(input::serialize);
-        TxIn deserialized = TxIn.deserialize(ByteBuffer.wrap(serialized));
+        TxIn deserialized = TxIn.deserialize(new DataInputStream(
+                new ByteArrayInputStream(serialized)
+        ));
 
         Assert.assertEquals(errorMessage, input.previousTxn, deserialized.previousTxn);
         Assert.assertEquals(errorMessage, input.txIdx, deserialized.txIdx);

@@ -6,7 +6,8 @@ import org.junit.Test;
 import testutils.RandomizedTest;
 import testutils.TestUtils;
 
-import java.nio.ByteBuffer;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
 
@@ -18,7 +19,7 @@ public class ShaTwoFiftySixTest extends RandomizedTest {
     }
 
     @Test
-    public void testDeserialize() throws GeneralSecurityException {
+    public void testDeserialize() throws GeneralSecurityException, IOException {
         byte[] hash = randomBytes(ShaTwoFiftySix.HASH_SIZE_IN_BYTES);
         ShaTwoFiftySix sha256 = deserializeFrom(hash);
         Assert.assertTrue(errorMessage, Arrays.equals(hash, sha256.copyOfHash()));
@@ -41,7 +42,7 @@ public class ShaTwoFiftySixTest extends RandomizedTest {
     }
 
     @Test
-    public void testCopyOfHash() {
+    public void testCopyOfHash() throws Exception {
         byte[] hash = randomBytes(ShaTwoFiftySix.HASH_SIZE_IN_BYTES);
         ShaTwoFiftySix sha256 = deserializeFrom(hash);
         byte[] copy = sha256.copyOfHash();
@@ -59,7 +60,7 @@ public class ShaTwoFiftySixTest extends RandomizedTest {
     }
 
     @Test
-    public void testEquals() throws GeneralSecurityException {
+    public void testEquals() throws Exception {
         byte[] hash = randomBytes(ShaTwoFiftySix.HASH_SIZE_IN_BYTES);
 
         ShaTwoFiftySix hash1 = deserializeFrom(hash);
@@ -89,7 +90,7 @@ public class ShaTwoFiftySixTest extends RandomizedTest {
         Assert.assertFalse(errorMessage, shaTwoFiftySix.checkHashZeros(3));
     }
 
-    private ShaTwoFiftySix deserializeFrom(byte[] hash) {
-        return ShaTwoFiftySix.deserialize(ByteBuffer.wrap(hash));
+    private ShaTwoFiftySix deserializeFrom(byte[] hash) throws IOException {
+        return ShaTwoFiftySix.deserialize(new ByteArrayInputStream(hash));
     }
 }

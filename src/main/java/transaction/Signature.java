@@ -1,7 +1,9 @@
 package transaction;
 
 import utils.Crypto;
+import utils.IOUtils;
 
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -30,13 +32,13 @@ public class Signature {
     /**
      * Deserialize a signature.
      *
-     * @param byteBuffer bytes to deserialize
+     * @param input input to deserialize
      * @return deserialized signature
      */
-    public static Signature deserialize(ByteBuffer byteBuffer) {
-        int signatureLen = byteBuffer.getInt();
+    public static Signature deserialize(DataInputStream input) throws IOException {
+        int signatureLen = input.readInt();
         byte[] signature = new byte[signatureLen];
-        byteBuffer.get(signature);
+        IOUtils.fill(input, signature);
         return new Signature(signature);
     }
 

@@ -7,8 +7,9 @@ import testutils.TestUtils;
 import utils.ByteUtil;
 import utils.Crypto;
 
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 
@@ -20,7 +21,9 @@ public class TxOutTest extends RandomizedTest {
         TxOut output = new TxOut(100, pair.getPublic());
 
         byte[] serialized = ByteUtil.asByteArray(output::serialize);
-        TxOut deserialized = TxOut.deserialize(ByteBuffer.wrap(serialized));
+        TxOut deserialized = TxOut.deserialize(new DataInputStream(
+                new ByteArrayInputStream(serialized)
+        ));
 
         Assert.assertEquals(output.ownerPubKey, deserialized.ownerPubKey);
         Assert.assertEquals(output.value, deserialized.value);

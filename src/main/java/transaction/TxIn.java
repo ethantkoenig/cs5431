@@ -2,9 +2,9 @@ package transaction;
 
 import utils.ShaTwoFiftySix;
 
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 
@@ -23,9 +23,9 @@ public class TxIn {
         txIdx = index;
     }
 
-    public static TxIn deserialize(ByteBuffer input) {
+    public static TxIn deserialize(DataInputStream input) throws IOException {
         ShaTwoFiftySix sha = ShaTwoFiftySix.deserialize(input);
-        int index = input.getInt();
+        int index = input.readInt();
         return new TxIn(sha, index);
     }
 

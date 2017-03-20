@@ -6,10 +6,10 @@ import utils.ByteUtil;
 import utils.Longs;
 import utils.ShaTwoFiftySix;
 
-import java.io.ByteArrayOutputStream;
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
@@ -57,14 +57,28 @@ public class Transaction {
         return new Transaction(inputs, outputs, signatures);
     }
 
-    public static Transaction deserialize(ByteBuffer input) throws GeneralSecurityException {
-        final int numInputs = input.getInt();
+    /**
+     * @param input input to deserialize
+     * @return deserialized transaction
+     */
+    public static Transaction deserialize(byte[] input)
+            throws GeneralSecurityException, IOException {
+        return deserialize(new DataInputStream(new ByteArrayInputStream(input)));
+    }
+
+    /**
+     * @param input input to deserialize
+     * @return deserialized transaction
+     */
+    public static Transaction deserialize(DataInputStream input)
+            throws GeneralSecurityException, IOException {
+        final int numInputs = input.readInt();
         TxIn[] inputs = new TxIn[numInputs];
         for (int i = 0; i < numInputs; i++) {
             inputs[i] = TxIn.deserialize(input);
         }
 
-        final int numOutputs = input.getInt();
+        final int numOutputs = input.readInt();
         TxOut[] outputs = new TxOut[numOutputs];
         for (int i = 0; i < numOutputs; i++) {
             outputs[i] = TxOut.deserialize(input);
