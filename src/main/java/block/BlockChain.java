@@ -176,15 +176,34 @@ public class BlockChain {
     }
 
     /**
+     * Serializes blockchain info, not including the blocks.
+     * @param out is the output stream.
+     * @throws IOException
+     */
+    public void serialize(DataOutputStream out) throws IOException {
+        currentHead.serialize(out);
+        out.writeInt(headDepth);
+    }
+
+    /**
+     * Deserializes blockchain info, not including the blocks.
+     * @param in is the input stream.
+     * @throws GeneralSecurityException
+     * @throws IOException
+     */
+    public void deserialize(DataInputStream in) throws GeneralSecurityException, IOException {
+        currentHead = Block.deserialize(in);
+        headDepth = in.readInt();
+    }
+
+    /**
      * Writes all blocks in the main chain to the specified file. They are written in reverse
      * order, newest to oldest.
      *
      * @return true in success, exception otherwise.
      * @throws IOException
-     * XXX: Test
      */
-    public boolean storeMainChain()
-            throws IOException {
+    public boolean storeMainChain() throws IOException {
         Block end = currentHead;
         File blockdir = new File("blockchain");
         if (blockdir.mkdir()) {
@@ -206,17 +225,21 @@ public class BlockChain {
 
     /**
      * Enumerates over all the blocks, writing the serialized blocks to a file.
-     * @param file is a file descriptor to be written to.
      * @return true in success, exception otherwise.
      * @throws IOException
-     * XXX: Test
      */
-    public boolean storeAllBlocks(FileOutputStream file) throws IOException {
-        DataOutputStream data = new DataOutputStream(file);
-        for (Map.Entry<ShaTwoFiftySix, Pair<Block, Integer>> entry : blocks.entrySet()) {
-            entry.getValue().getLeft().serialize(data);
+    public boolean storeAllBlocks() throws IOException {
+        File blockdir = new File("blockchain");
+        if (blockdir.mkdir()) {
+            int i = 0;
+            for (Map.Entry<ShaTwoFiftySix, Pair<Block, Integer>> entry : blocks.entrySet()) {
+                File block = new File("blockchain/block" + i);
+                entry.getValue().getLeft().serialize(new DataOutputStream(new FileOutputStream(block)));
+                i++;
+            }
+            return true;
         }
-        return true;
+        return false;
     }
 
     /**
@@ -226,7 +249,6 @@ public class BlockChain {
      *
      * @return true in success, exception otherwise.
      * @throws IOException
-     * XXX: Figure out a better way to do this.
      */
     public boolean importMainChain() throws IOException, GeneralSecurityException {
         ArrayList<Block> blocklist = new ArrayList<>();
@@ -245,13 +267,26 @@ public class BlockChain {
         return true;
     }
 
+    // XXX: We need to serialize depth with the block in order to store all blocks. This wll not work as is.
+    private void forceInsertBlock(Block b) {
+        blocks.put(b.getShaTwoFiftySix(), new Pair<>(b, -1));
+    }
+
     /**
      * Imports a series of blocks from the specified file and reconstructs the blockchain.
-     * @param file is the file containing all the blocks.
+     * @param file is the blockchain file.
      * @return true in success, exception otherwise.
      * @throws IOException
      */
-    public boolean importAllBlocks(FileInputStream file) throws IOException {
+    public boolean importAllBlocks(FileInputStream file) throws GeneralSecurityException, IOException {
+        deserialize(new DataInputStream(file));
+        File blockdir = new File("blockchain");
+        File[] blocks = blockdir.listFiles();
+        if (blocks == null) return false;
+        for (File block : blocks) {
+            forceInsertBlock(Block.deserialize(new DataInputStream(new FileInputStream(block))));
+            Files.delete(Paths.get(block.toURI()));
+        }
         return false;
     }
 
