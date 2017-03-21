@@ -205,15 +205,17 @@ public class BlockChain {
      */
     public boolean storeMainChain() throws IOException {
         Block end = currentHead;
-        File blockdir = new File("blockchain");
+        File blockdir = new File("blockchain" + currentHead.getShaTwoFiftySix());
         if (blockdir.mkdir()) {
+            int i = 0; // Enforce ordering
             while (currentHead != null) {
-                File block = new File("blockchain/" + currentHead.getShaTwoFiftySix());
+                File block = new File(blockdir.getPath() + '/' + i + currentHead.getShaTwoFiftySix());
                 DataOutputStream data = new DataOutputStream(new FileOutputStream(block));
                 currentHead.serialize(data);
                 ShaTwoFiftySix previous = currentHead.previousBlockHash;
                 if (previous.equals(ShaTwoFiftySix.zero())) break;
                 currentHead = blocks.get(previous).getLeft();
+                i++;
             }
             currentHead = end;
             return true;
@@ -230,7 +232,7 @@ public class BlockChain {
         File blockdir = new File("blockchain");
         if (blockdir.mkdir()) {
             for (Map.Entry<ShaTwoFiftySix, Pair<Block, Integer>> entry : blocks.entrySet()) {
-                File block = new File("blockchain/" + entry.getKey());
+                File block = new File(blockdir.getPath() + entry.getKey());
                 entry.getValue().getLeft().serialize(new DataOutputStream(new FileOutputStream(block)));
             }
             return true;
@@ -246,20 +248,18 @@ public class BlockChain {
      * @return true in success, exception otherwise.
      * @throws IOException
      */
-    public boolean importMainChain() throws IOException, GeneralSecurityException {
+    public boolean importMainChain(File blockdir) throws IOException, GeneralSecurityException {
         ArrayList<Block> blocklist = new ArrayList<>();
-        File blockdir = new File("blockchain");
         File[] blocks = blockdir.listFiles();
         if (blocks == null) return false;
+        Arrays.sort(blocks);
         for (File block : blocks) {
             blocklist.add(Block.deserialize(new DataInputStream(new FileInputStream(block))));
-            Files.delete(Paths.get(block.toURI()));
         }
         Collections.reverse(blocklist);
         for (Block b : blocklist) {
             insertBlock(b);
         }
-        Files.delete(Paths.get("blockchain"));
         return true;
     }
 
@@ -269,14 +269,15 @@ public class BlockChain {
     }
 
     /**
-     * Imports a series of blocks from the specified file and reconstructs the blockchain.
+     * Imports blockcahin metadata from the specified file and reconstructs the blockchain from
+     * the blockchain location.
      * @param file is the blockchain file.
-     * @return true in success, exception otherwise.
+     * @return true in success, false or exception otherwise.
      * @throws IOException
      */
     public boolean importAllBlocks(FileInputStream file) throws GeneralSecurityException, IOException {
         deserialize(new DataInputStream(file));
-        File blockdir = new File("blockchain");
+        File blockdir = new File("blockchain" + currentHead.getShaTwoFiftySix());
         File[] blocks = blockdir.listFiles();
         if (blocks == null) return false;
         for (File block : blocks) {
@@ -286,4 +287,17 @@ public class BlockChain {
         return false;
     }
 
+    /**
+     * Destroys the Blockchain
+     * @return true in successs, false or exception otherwise.
+     */
+    public boolean destroyBlockchain(File dir) {
+        File[] files = dir.listFiles();
+        if (files == null) return false;
+        for (File f : files) {
+            if (!f.delete()) return false;
+        }
+        if (!dir.delete()) return false;
+        return true;
+    }
 }

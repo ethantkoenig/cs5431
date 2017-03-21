@@ -16,6 +16,7 @@ import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.io.*;
 
 import static org.junit.Assert.*;
 
@@ -275,9 +276,11 @@ public class BlockChainTest extends RandomizedTest {
         }
         bc.storeMainChain();
         BlockChain newbc = new BlockChain();
-        newbc.importMainChain();
+        newbc.importMainChain(new File("blockchain" + bc.getCurrentHead().getShaTwoFiftySix()));
         for (Block b : blocks) {
             Assert.assertTrue(newbc.containsBlock(b));
         }
+
+        newbc.destroyBlockchain(new File("blockchain" + bc.getCurrentHead().getShaTwoFiftySix()));
     }
 }
