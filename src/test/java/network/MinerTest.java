@@ -37,7 +37,8 @@ public class MinerTest extends RandomizedTest {
 
         Message genesisMessage = simulation.getNextMessage();
         Assert.assertEquals(genesisMessage.type, Message.BLOCK);
-        Block genesisBlock = Block.deserialize(genesisMessage.payload);
+        Block[] genBlocks = Block.deserializeBlocks(genesisMessage.payload);
+        Block genesisBlock = genBlocks[0];
 
         Transaction transaction1 = new Transaction.Builder()
                 .addInput(
@@ -70,7 +71,8 @@ public class MinerTest extends RandomizedTest {
 
         Message mineBlockMessage = simulation.getNextMessage();
         Assert.assertEquals(Message.BLOCK, mineBlockMessage.type);
-        Block block = Block.deserialize(mineBlockMessage.payload);
+        Block[] blocks = Block.deserializeBlocks(mineBlockMessage.payload);
+        Block block = blocks[0];
         Assert.assertTrue(block.reward.ownerPubKey.equals(pair1.getPublic()) ||
                 block.reward.ownerPubKey.equals(pair2.getPublic()));
 

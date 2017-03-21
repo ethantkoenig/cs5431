@@ -28,7 +28,7 @@ public class MinerThreadTest extends RandomizedTest {
 
         Assert.assertArrayEquals(errorMessage,
                 msg.payload,
-                ByteUtil.asByteArray(block::serialize));
+                Block.serializeBlocks(new Block[]{block}));
     }
 
     @Test
