@@ -69,11 +69,13 @@ public class HandleMessageThread extends Thread {
                         addTransactionToBlock(transaction);
                         break;
                     case Message.BLOCK:
-                        Block block = Block.deserialize(message.payload);
-                        if (block.checkHash()) {
-                            addBlockToChain(block);
-                        } else {
-                            LOGGER.info("[!] Received block that does not pass hash check. Not adding to block chain.");
+                        Block[] blocks = Block.deserializeBlocks(message.payload);
+                        for (Block b : blocks) {
+                            if (b.checkHash()) {
+                                addBlockToChain(b);
+                            } else {
+                                LOGGER.info("[!] Received block that does not pass hash check. Not adding to block chain.");
+                            }
                         }
                         break;
                     default:
