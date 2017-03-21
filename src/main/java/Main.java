@@ -30,7 +30,8 @@ public class Main {
                 new ClientInterface().startInterface();
                 break;
             case "webserver":
-                Application.run();
+                // TODO check index[1], .get() call
+                Application.run(IOUtils.parseAddress(args[1]).get());
                 break;
             default:
                 String msg = String.format("Unrecognized command %s", args[0]);

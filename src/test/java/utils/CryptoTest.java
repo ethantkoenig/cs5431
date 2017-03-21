@@ -9,6 +9,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.security.KeyPair;
 import java.security.PublicKey;
+import java.sql.Connection;
 
 public class CryptoTest extends RandomizedTest {
 
@@ -19,6 +20,8 @@ public class CryptoTest extends RandomizedTest {
 
     @Test
     public void testHashAndSalt() throws Exception {
+        Config.BCRYPT_COST.set(5);
+
         String pass = "password";
         byte[] salt = Crypto.generateSalt();
         byte[] hash = Crypto.hashAndSalt(pass, salt);

@@ -1,6 +1,6 @@
 package server.controllers;
 
-import server.dao.UserDao;
+import server.access.UserAccess;
 import server.models.Key;
 import server.models.User;
 import server.utils.ValidateUtils;
@@ -9,7 +9,6 @@ import spark.template.freemarker.FreeMarkerEngine;
 import utils.ByteUtil;
 import utils.Crypto;
 
-import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -17,19 +16,19 @@ import static spark.Spark.*;
 
 public class UserController {
 
-    public static void startUserController(UserDao userDao) {
-        registerUser(userDao);
-        loginUser(userDao);
+    public static void startUserController() {
+        registerUser();
+        loginUser();
         logoutUser();
-        viewUser(userDao);
-        addUserPublicKey(userDao);
+        viewUser();
+        addUserPublicKey();
     }
 
     /**
      * Route to server register page on get and post username and password on post.
      * On post, add user to users table.
      */
-    private static void registerUser(UserDao userDao) {
+    private static void registerUser() {
         path("/register", () -> {
             get("", (request, response) -> {
                 Map<String, Object> emptyModel = new HashMap<>();
@@ -44,12 +43,12 @@ public class UserController {
                     return "invalid username";
                 } else if (!ValidateUtils.validPassword(password)) {
                     return "invalid password";
-                } else if (userDao.getUserbyUsername(username) != null) {
+                } else if (UserAccess.getUserbyUsername(username) != null) {
                     return "username already taken";
                 }
                 byte[] salt = Crypto.generateSalt();
                 byte[] hash = Crypto.hashAndSalt(password, salt);
-                userDao.insertUser(username, salt, hash);
+                UserAccess.insertUser(username, salt, hash);
                 request.session(true).attribute("username", username);
                 return "{\"message\":\"User registered.\"}";
             });
@@ -59,7 +58,7 @@ public class UserController {
     /**
      * Route to server login page on get and post username and password on post.
      */
-    private static void loginUser(UserDao userDao) {
+    private static void loginUser() {
         path("/login", () -> {
             get("", (request, response) -> {
                 Map<String, Object> emptyModel = new HashMap<>();
@@ -70,7 +69,7 @@ public class UserController {
                 response.type("application/json");
                 String username = request.queryParams("username");
                 String password = request.queryParams("password");
-                User user = userDao.getUserbyUsername(username);
+                User user = UserAccess.getUserbyUsername(username);
                 if (user == null) {
                     // TODO handle
                     return "user does not exist";
@@ -93,16 +92,16 @@ public class UserController {
         });
     }
 
-    private static void viewUser(UserDao userDao) {
+    private static void viewUser() {
         get("/user/:name", (request, response) -> {
             String name = request.params(":name");
-            User user = userDao.getUserbyUsername(name);
+            User user = UserAccess.getUserbyUsername(name);
             if (user == null) {
                 // TODO 404 handling
                 response.redirect("/");
                 return null;
             }
-            List<Key> keys = userDao.getKeysByUserID(user.getId());
+            List<Key> keys = UserAccess.getKeysByUserID(user.getId());
             List<String> hashes = keys.stream().map(key ->
                     ByteUtil.bytesToHexString(key.getPublicKey())
             ).collect(Collectors.toList());
@@ -113,7 +112,7 @@ public class UserController {
         }, new FreeMarkerEngine());
     }
 
-    private static void addUserPublicKey(UserDao userDao) {
+    private static void addUserPublicKey() {
         post("/user/:name/keys", (request, response) -> {
             String name = request.params(":name");
             String publicKeyStr = request.queryParams("publickey");
@@ -121,7 +120,7 @@ public class UserController {
 
             Optional<byte[]> publicKeyOpt = ByteUtil.hexStringToByteArray(publicKeyStr);
             Optional<byte[]> privateKeyOpt = ByteUtil.hexStringToByteArray(privateKeyStr);
-            User user = userDao.getUserbyUsername(name);
+            User user = UserAccess.getUserbyUsername(name);
 
             if (!publicKeyOpt.isPresent() || !privateKeyOpt.isPresent()) {
                 // TODO 404 handling
@@ -140,7 +139,7 @@ public class UserController {
                 // TODO 403 handling
                 return "cannot change another user's keys";
             }
-            userDao.insertKey(user.getId(), publicKeyOpt.get(), privateKeyOpt.get());
+            UserAccess.insertKey(user.getId(), publicKeyOpt.get(), privateKeyOpt.get());
             return "ok";
         });
     }

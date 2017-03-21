@@ -53,7 +53,7 @@ public class BlockTest extends RandomizedTest {
         for (int i = 0; i < Block.NUM_TRANSACTIONS_PER_BLOCK; i++) {
             block.transactions[i] = randomTransaction();
         }
-        block.addReward(Crypto.signatureKeyPair().getPublic());
+        block.addReward(randomKeyPair().getPublic());
 
         Block deserialized = Block.deserialize(ByteUtil.asByteArray(block::serialize));
 
@@ -67,7 +67,7 @@ public class BlockTest extends RandomizedTest {
     @Test
     public void testAddReward() throws Exception {
         Block b = Block.empty(ShaTwoFiftySix.zero());
-        PublicKey key = Crypto.signatureKeyPair().getPublic();
+        PublicKey key = randomKeyPair().getPublic();
         b.addReward(key);
 
         Assert.assertEquals(Block.REWARD_AMOUNT, b.reward.value);
@@ -94,7 +94,7 @@ public class BlockTest extends RandomizedTest {
     @Test
     public void testSerializeGenesis() throws Exception {
         Block block = Block.genesis();
-        block.addReward(Crypto.signatureKeyPair().getPublic());
+        block.addReward(randomKeyPair().getPublic());
 
         Block deserialized = Block.deserialize(ByteUtil.asByteArray(block::serialize));
 
@@ -110,7 +110,7 @@ public class BlockTest extends RandomizedTest {
         ShaTwoFiftySix previousBlockHash = ShaTwoFiftySix.hashOf(randomBytes(256));
         Pair<Block, UnspentTransactions> pair = randomValidBlock(previousBlockHash);
         Block block = pair.getLeft();
-        block.addReward(Crypto.signatureKeyPair().getPublic());
+        block.addReward(randomKeyPair().getPublic());
 
         Optional<UnspentTransactions> result = block.verify(pair.getRight());
         Assert.assertTrue(errorMessage, result.isPresent());
@@ -132,7 +132,7 @@ public class BlockTest extends RandomizedTest {
 
     @Test
     public void testVerifyGenesis() throws Exception {
-        KeyPair pair = Crypto.signatureKeyPair();
+        KeyPair pair = randomKeyPair();
         Assert.assertFalse(errorMessage,
                 randomBlock(randomShaTwoFiftySix()).verifyGenesis(pair.getPublic()));
 

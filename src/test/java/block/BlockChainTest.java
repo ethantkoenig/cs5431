@@ -31,8 +31,8 @@ public class BlockChainTest extends RandomizedTest {
         assertEquals(UnspentTransactions.empty(),
                 bc.getUnspentTransactionsAt(randomBlock(randomShaTwoFiftySix())));
 
-        KeyPair senderPair = Crypto.signatureKeyPair();
-        KeyPair recipientPair = Crypto.signatureKeyPair();
+        KeyPair senderPair = randomKeyPair();
+        KeyPair recipientPair = randomKeyPair();
 
         Block genesis = Block.genesis();
         genesis.addReward(senderPair.getPublic());
@@ -76,7 +76,7 @@ public class BlockChainTest extends RandomizedTest {
     @Test
     public void getBlockWithHash() throws Exception {
         Block genesis = Block.genesis();
-        PublicKey PK = Crypto.signatureKeyPair().getPublic();
+        PublicKey PK = randomKeyPair().getPublic();
         genesis.addReward(PK);
         BlockChain bc = new BlockChain(genesis);
         assertEquals(Optional.of(genesis), bc.getBlockWithHash(genesis.getShaTwoFiftySix()));
@@ -94,7 +94,7 @@ public class BlockChainTest extends RandomizedTest {
     @Test
     public void insertBlock() throws Exception {
         Block genesis = Block.genesis();
-        genesis.addReward(Crypto.signatureKeyPair().getPublic());
+        genesis.addReward(randomKeyPair().getPublic());
         BlockChain bc = new BlockChain(genesis);
 
         ShaTwoFiftySix randomHash = randomShaTwoFiftySix();
@@ -110,7 +110,7 @@ public class BlockChainTest extends RandomizedTest {
         assertFalse(errorMessage, bc.insertBlock(randomBlock(randomShaTwoFiftySix())));
 
         Block genesis = Block.genesis();
-        genesis.addReward(Crypto.signatureKeyPair().getPublic());
+        genesis.addReward(randomKeyPair().getPublic());
         assertTrue(errorMessage, bc.insertBlock(genesis));
         assertTrue(errorMessage, bc.containsBlock(genesis));
         assertEquals(errorMessage, genesis, bc.getCurrentHead());
@@ -119,8 +119,8 @@ public class BlockChainTest extends RandomizedTest {
     @Test
     public void insertDuplicateGenesis() throws Exception {
         BlockChain bc = new BlockChain();
-        PublicKey key1 = Crypto.signatureKeyPair().getPublic();
-        PublicKey key2 = Crypto.signatureKeyPair().getPublic();
+        PublicKey key1 = randomKeyPair().getPublic();
+        PublicKey key2 = randomKeyPair().getPublic();
 
         Block genesis1 = Block.genesis();
         genesis1.addReward(key1);
@@ -136,7 +136,7 @@ public class BlockChainTest extends RandomizedTest {
     @Test
     public void getCurrentHead() throws Exception {
         Block genesis = Block.genesis();
-        genesis.addReward(Crypto.signatureKeyPair().getPublic());
+        genesis.addReward(randomKeyPair().getPublic());
         BlockChain bc = new BlockChain(genesis);
 
         assertEquals(genesis, bc.getCurrentHead());
@@ -175,7 +175,7 @@ public class BlockChainTest extends RandomizedTest {
     @Test
     public void getAncestorsStartingAt() throws Exception {
         Block genesis = Block.genesis();
-        genesis.addReward(Crypto.signatureKeyPair().getPublic());
+        genesis.addReward(randomKeyPair().getPublic());
         BlockChain bc = new BlockChain(genesis);
 
         assertEquals(genesis, bc.getCurrentHead());
@@ -213,7 +213,7 @@ public class BlockChainTest extends RandomizedTest {
     @Test
     public void containsBlockWithHash() throws Exception {
         Block genesis = Block.genesis();
-        PublicKey PK = Crypto.signatureKeyPair().getPublic();
+        PublicKey PK = randomKeyPair().getPublic();
         genesis.addReward(PK);
         BlockChain bc = new BlockChain(genesis);
         Assert.assertTrue(bc.containsBlockWithHash(genesis.getShaTwoFiftySix()));
@@ -236,7 +236,7 @@ public class BlockChainTest extends RandomizedTest {
     @Test
     public void containsBlock() throws Exception {
         Block genesis = Block.genesis();
-        PublicKey PK = Crypto.signatureKeyPair().getPublic();
+        PublicKey PK = randomKeyPair().getPublic();
         genesis.addReward(PK);
         BlockChain bc = new BlockChain(genesis);
         Assert.assertTrue(bc.containsBlock(genesis));

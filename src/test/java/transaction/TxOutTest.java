@@ -17,7 +17,7 @@ public class TxOutTest extends RandomizedTest {
 
     @Test
     public void testSerialize() throws GeneralSecurityException, IOException {
-        KeyPair pair = Crypto.signatureKeyPair();
+        KeyPair pair = randomKeyPair();
         TxOut output = new TxOut(100, pair.getPublic());
 
         byte[] serialized = ByteUtil.asByteArray(output::serialize);
@@ -31,12 +31,12 @@ public class TxOutTest extends RandomizedTest {
 
     @Test
     public void testEquals() throws Exception {
-        KeyPair pair = Crypto.signatureKeyPair();
+        KeyPair pair = randomKeyPair();
         long value = random.nextInt(Integer.MAX_VALUE);
         TxOut output1 = new TxOut(value, pair.getPublic());
         TxOut output2 = new TxOut(value, pair.getPublic());
 
-        KeyPair otherPair = Crypto.signatureKeyPair();
+        KeyPair otherPair = randomKeyPair();
         TxOut anotherOutput = new TxOut(random.nextInt(Integer.MAX_VALUE), otherPair.getPublic());
         TxOut output3 = new TxOut(value, otherPair.getPublic());
 
