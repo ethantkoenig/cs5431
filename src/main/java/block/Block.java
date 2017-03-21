@@ -18,6 +18,7 @@ import java.security.GeneralSecurityException;
 import java.security.PublicKey;
 import java.util.*;
 import java.util.logging.Logger;
+import java.io.ByteArrayOutputStream;
 
 /**
  * Represents a block of transactions in the ledger
@@ -102,6 +103,16 @@ public class Block implements Iterable<Transaction> {
         block.reward = new TxOut(REWARD_AMOUNT, rewardKey);
         IOUtils.fill(input, block.nonce);
         return block;
+    }
+
+    public static byte[] serializeBlocks(Block[] blocks) throws IOException {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        DataOutputStream dataOut = new DataOutputStream(outputStream);
+        dataOut.writeInt(blocks.length);
+        for (Block b : blocks) {
+            b.serialize(dataOut);
+        }
+        return outputStream.toByteArray();
     }
 
     /**
