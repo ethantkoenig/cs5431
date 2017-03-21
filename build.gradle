@@ -14,8 +14,8 @@ dependencies {
     compile group: 'com.sparkjava', name: 'spark-template-freemarker', version: '2.0.0'
     compile group: 'mysql', name: 'mysql-connector-java', version: '5.1.13' //db requirement
     // quickcheck
-    compile 'com.pholser:junit-quickcheck-core:0.7'
-    compile 'com.pholser:junit-quickcheck-generators:0.7'
+    testCompile 'com.pholser:junit-quickcheck-core:0.7'
+    testCompile 'com.pholser:junit-quickcheck-generators:0.7'
     testCompile 'junit:junit:4.12'
 }
 
