@@ -56,6 +56,29 @@ public class Block implements Iterable<Transaction> {
 
     /**
      * @param input input bytes to deserialize
+     * @return Array of deserialized blocks
+     */
+    public static Block[] deserializeBlocks(byte[] input)
+            throws IOException, GeneralSecurityException {
+        return deserializeBlocks(new DataInputStream(new ByteArrayInputStream(input)));
+    }
+
+    /**
+     * @param input input bytes to deserialize
+     * @return Array of deserialized blocks
+     */
+    public static Block[] deserializeBlocks(DataInputStream input)
+            throws IOException, GeneralSecurityException {
+        int numBlocks = input.readInt();
+        Block[] blocks = new Block[numBlocks];
+        for (int i = 0; i < numBlocks; ++i) {
+            blocks[i] = Block.deserialize(input);
+        }
+        return blocks;
+    }
+
+    /**
+     * @param input input bytes to deserialize
      * @return deserialized block
      */
     public static Block deserialize(byte[] input) throws IOException, GeneralSecurityException {
