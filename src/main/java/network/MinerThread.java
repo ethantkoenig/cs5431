@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.Random;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
+import java.util.Arrays;
 
 /**
  * The MinerThread is run as a background thread by a Node and is responsible for mining.
