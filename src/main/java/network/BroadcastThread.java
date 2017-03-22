@@ -15,12 +15,12 @@ public class BroadcastThread extends Thread {
 
     private static final Logger LOGGER = Logger.getLogger(BroadcastThread.class.getName());
 
-    private final Consumer<Message> broadcast;
+    private final Consumer<OutgoingMessage> broadcast;
 
-    private final BlockingQueue<Message> broadcastQueue;
+    private final BlockingQueue<OutgoingMessage> broadcastQueue;
 
     // Needs reference to parent in order to call Node.broadcast()
-    public BroadcastThread(Consumer<Message> broadcast, BlockingQueue<Message> broadcastQueue) {
+    public BroadcastThread(Consumer<OutgoingMessage> broadcast, BlockingQueue<OutgoingMessage> broadcastQueue) {
         this.broadcast = broadcast;
         this.broadcastQueue = broadcastQueue;
     }
@@ -32,7 +32,7 @@ public class BroadcastThread extends Thread {
     @Override
     public void run() {
         try {
-            Message message;
+            OutgoingMessage message;
             while ((message = broadcastQueue.take()) != null) {
                 broadcast.accept(message);
             }

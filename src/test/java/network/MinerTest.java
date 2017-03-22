@@ -80,7 +80,7 @@ public class MinerTest extends RandomizedTest {
     }
 
     private static final class MinerSimulation {
-        private final BlockingQueue<Message> queue = new ArrayBlockingQueue<>(100);
+        private final BlockingQueue<IncomingMessage> queue = new ArrayBlockingQueue<>(100);
         private final HashSet<Message> seenMessages = new HashSet<>();
         private ConnectionThread connectionThread;
 
@@ -121,7 +121,7 @@ public class MinerTest extends RandomizedTest {
 
         private void sendTransaction(Transaction transaction) throws IOException {
             byte[] serialized = ByteUtil.asByteArray(transaction::serializeWithSignatures);
-            connectionThread.send(Message.TRANSACTION, serialized);
+            connectionThread.send(new OutgoingMessage(Message.TRANSACTION, serialized));
         }
 
         private Message getNextMessage() throws Exception {

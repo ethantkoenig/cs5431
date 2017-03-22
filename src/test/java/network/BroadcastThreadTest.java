@@ -14,15 +14,15 @@ public class BroadcastThreadTest extends RandomizedTest {
 
     @Test
     public void testBroadcastThread() {
-        List<Message> messages = new ArrayList<>();
+        List<OutgoingMessage> messages = new ArrayList<>();
 
-        BlockingQueue<Message> queue = new ArrayBlockingQueue<Message>(10);
+        BlockingQueue<OutgoingMessage> queue = new ArrayBlockingQueue<>(10);
         BroadcastThread thread = new BroadcastThread(messages::add, queue);
         thread.start();
 
-        Message m1 = new Message(Message.BLOCK, randomBytes(random.nextInt(1024)));
-        Message m2 = new Message(Message.BLOCK, randomBytes(random.nextInt(1024)));
-        Message m3 = new Message(Message.TRANSACTION, randomBytes(random.nextInt(1024)));
+        OutgoingMessage m1 = new OutgoingMessage(Message.BLOCK, randomBytes(random.nextInt(1024)));
+        OutgoingMessage m2 = new OutgoingMessage(Message.BLOCK, randomBytes(random.nextInt(1024)));
+        OutgoingMessage m3 = new OutgoingMessage(Message.TRANSACTION, randomBytes(random.nextInt(1024)));
         queue.add(m1);
         queue.add(m2);
         queue.add(m3);

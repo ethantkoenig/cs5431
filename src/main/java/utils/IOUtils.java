@@ -32,19 +32,6 @@ public class IOUtils {
     }
 
     /**
-     * @param outputStream output stream to write message to
-     * @param type type field of message to send
-     * @param payload payload of message to send
-     * @throws IOException
-     */
-    public static void sendMessage(DataOutputStream outputStream, byte type, byte[] payload)
-            throws IOException {
-        outputStream.writeInt(payload.length);
-        outputStream.write(type);
-        outputStream.write(payload);
-    }
-
-    /**
      * @param address String representation of socket address
      * @return The socket address that {@code address} represents,
      * if {@code address} is valid
