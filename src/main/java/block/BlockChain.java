@@ -111,7 +111,7 @@ public class BlockChain {
 
         if (hash == null) return result;
 
-        while (blocks.containsKey(hash) && numAncest > 0) {
+        while (blocks.containsKey(hash) && numAncest != 0) {
             Block current = blocks.get(hash).getLeft();
             result.add(current);
             hash = current.previousBlockHash;
@@ -191,7 +191,7 @@ public class BlockChain {
      * @return The set of unspent transactions with respect to {@code Block}
      */
     public UnspentTransactions getUnspentTransactionsAt(Block block) {
-        List<Block> ancestors = getAncestorsStartingAt(block.getShaTwoFiftySix());
+        List<Block> ancestors = getAncestorsStartingAt(block.getShaTwoFiftySix(), -1);
 
         UnspentTransactions unspentTxs = UnspentTransactions.empty();
 
