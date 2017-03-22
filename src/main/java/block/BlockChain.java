@@ -173,26 +173,6 @@ public class BlockChain {
         return blocks.containsKey(b.getShaTwoFiftySix());
     }
 
-    /**
-     * Serializes blockchain info, not including the blocks.
-     * @param out is the output stream.
-     * @throws IOException
-     */
-    public void serialize(DataOutputStream out) throws IOException {
-        currentHead.serialize(out);
-        out.writeInt(headDepth);
-    }
-
-    /**
-     * Deserializes blockchain info, not including the blocks.
-     * @param in is the input stream.
-     * @throws GeneralSecurityException
-     * @throws IOException
-     */
-    public void deserialize(DataInputStream in) throws GeneralSecurityException, IOException {
-        currentHead = Block.deserialize(in);
-        headDepth = in.readInt();
-    }
 
     /**
      * Writes all blocks in the blockchain to a directory 'blockchain'
