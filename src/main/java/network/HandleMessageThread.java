@@ -11,6 +11,8 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
+import java.io.DataInputStream;
+import java.io.ByteArrayInputStream;
 
 /**
  * The network.HandleMessageThread is a background thread ran by the instantiated Node class
@@ -69,12 +71,24 @@ public class HandleMessageThread extends Thread {
                         addTransactionToBlock(transaction);
                         break;
                     case Message.BLOCK:
-                        Block block = Block.deserialize(message.payload);
-                        if (block.checkHash()) {
-                            addBlockToChain(block);
-                        } else {
-                            LOGGER.info("[!] Received block that does not pass hash check. Not adding to block chain.");
+                        Block[] blocks = Block.deserializeBlocks(message.payload);
+                        for (Block b : blocks) {
+                            if (b.checkHash()) {
+                                addBlockToChain(b);
+                            } else {
+                                LOGGER.info("[!] Received block that does not pass hash check. Not adding to block chain.");
+                            }
                         }
+                        break;
+                    case Message.getBLOCK:
+                        DataInputStream input =
+                            new DataInputStream(new ByteArrayInputStream(message.payload));
+                        ShaTwoFiftySix lastHash = ShaTwoFiftySix.deserialize(input);
+                        ArrayList<Block> blocksToSend =
+                            miningBundle.getBlockChain().getDescendantsOf(lastHash);
+                        byte[] payload = Block.serializeBlocks(blocksToSend);
+                        Message msgToSend = new Message(Message.BLOCK, payload);
+                        broadcastQueue.put(msgToSend);
                         break;
                     default:
                         LOGGER.severe(String.format("Unexpected message type: %d", message.type));

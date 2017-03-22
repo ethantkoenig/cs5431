@@ -18,6 +18,7 @@ import java.security.GeneralSecurityException;
 import java.security.PublicKey;
 import java.util.*;
 import java.util.logging.Logger;
+import java.io.ByteArrayOutputStream;
 
 /**
  * Represents a block of transactions in the ledger
@@ -56,6 +57,29 @@ public class Block implements Iterable<Transaction> {
 
     /**
      * @param input input bytes to deserialize
+     * @return Array of deserialized blocks
+     */
+    public static Block[] deserializeBlocks(byte[] input)
+            throws IOException, GeneralSecurityException {
+        return deserializeBlocks(new DataInputStream(new ByteArrayInputStream(input)));
+    }
+
+    /**
+     * @param input input bytes to deserialize
+     * @return Array of deserialized blocks
+     */
+    public static Block[] deserializeBlocks(DataInputStream input)
+            throws IOException, GeneralSecurityException {
+        int numBlocks = input.readInt();
+        Block[] blocks = new Block[numBlocks];
+        for (int i = 0; i < numBlocks; ++i) {
+            blocks[i] = Block.deserialize(input);
+        }
+        return blocks;
+    }
+
+    /**
+     * @param input input bytes to deserialize
      * @return deserialized block
      */
     public static Block deserialize(byte[] input) throws IOException, GeneralSecurityException {
@@ -79,6 +103,16 @@ public class Block implements Iterable<Transaction> {
         block.reward = new TxOut(REWARD_AMOUNT, rewardKey);
         IOUtils.fill(input, block.nonce);
         return block;
+    }
+
+    public static byte[] serializeBlocks(List<Block> blocks) throws IOException {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        DataOutputStream dataOut = new DataOutputStream(outputStream);
+        dataOut.writeInt(blocks.size());
+        for (Block b : blocks) {
+            b.serialize(dataOut);
+        }
+        return outputStream.toByteArray();
     }
 
     /**
