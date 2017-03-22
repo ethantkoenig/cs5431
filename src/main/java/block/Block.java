@@ -29,6 +29,7 @@ public class Block implements Iterable<Transaction> {
     public final static int NUM_TRANSACTIONS_PER_BLOCK = 2;
     public final static int NONCE_SIZE_IN_BYTES = 128;
     public final static int REWARD_AMOUNT = 50000;
+    public final static int MAX_BLOCKS_PER_MSG = 500;
 
     public final ShaTwoFiftySix previousBlockHash;
     public final Transaction[] transactions;
@@ -57,7 +58,8 @@ public class Block implements Iterable<Transaction> {
 
     /**
      * @param input input bytes to deserialize
-     * @return Array of deserialized blocks
+     * @return Array of deserialized blocks, if length is invalid, returns an
+     *   empty one element array
      */
     public static Block[] deserializeBlocks(byte[] input)
             throws IOException, GeneralSecurityException {
@@ -69,13 +71,17 @@ public class Block implements Iterable<Transaction> {
      * @return Array of deserialized blocks
      */
     public static Block[] deserializeBlocks(DataInputStream input)
-            throws IOException, GeneralSecurityException {
+        throws IOException, GeneralSecurityException {
         int numBlocks = input.readInt();
-        Block[] blocks = new Block[numBlocks];
-        for (int i = 0; i < numBlocks; ++i) {
-            blocks[i] = Block.deserialize(input);
+        if (numBlocks > 0 && numBlocks < MAX_BLOCKS_PER_MSG) {
+            Block[] blocks = new Block[numBlocks];
+            for (int i = 0; i < numBlocks; ++i) {
+                blocks[i] = Block.deserialize(input);
+            }
+            return blocks;
+        } else {
+            return new Block[1];
         }
-        return blocks;
     }
 
     /**
