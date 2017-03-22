@@ -88,14 +88,15 @@ public class HandleMessageThread extends Thread {
                         int ancestToGet = input.readInt();
                         byte[] payld = Block.serializeBlocks(miningBundle.getBlockChain()
                             .getAncestorsStartingAt(lastHash, ancestToGet));
-                        Message returnMsg = new Message(Message.BLOCK, payld);
-                        broadcastQueue.put(returnMsg);
+                        OutgoingMessage returnMsg = new OutgoingMessage(Message.BLOCK, payld);
+                        message.respond(returnMsg);
                         break;
                     case Message.GET_HEAD:
                         Block head = miningBundle.getBlockChain().getCurrentHead();
                         byte[] payload = Block.serializeBlocks(Arrays.asList(head));
-                        Message returnMessage = new Message(Message.BLOCK, payload);
-                        broadcastQueue.put(returnMessage);
+                        OutgoingMessage returnMessage =
+                            new OutgoingMessage(Message.BLOCK, payload);
+                        message.respond(returnMessage);
                         break;
                     default:
                         LOGGER.severe(String.format("Unexpected message type: %d", message.type));
