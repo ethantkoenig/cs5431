@@ -16,24 +16,32 @@ public class ConnectionThreadTest extends RandomizedTest {
     public void testRun() throws Exception {
         Pair<Socket, Socket> pair = TestUtils.sockets(10000);
 
-        BlockingQueue<Message> leftQueue = new ArrayBlockingQueue<Message>(5);
+        BlockingQueue<IncomingMessage> leftQueue = new ArrayBlockingQueue<>(5);
         ConnectionThread leftThread = new ConnectionThread(pair.getLeft(), leftQueue);
         leftThread.start();
 
-        BlockingQueue<Message> rightQueue = new ArrayBlockingQueue<Message>(5);
+        BlockingQueue<IncomingMessage> rightQueue = new ArrayBlockingQueue<>(5);
         ConnectionThread rightThread = new ConnectionThread(pair.getRight(), rightQueue);
         rightThread.start();
 
-        Message m1 = new Message(Message.BLOCK, randomBytes(random.nextInt(1024)));
-        Message m2 = new Message(Message.BLOCK, randomBytes(random.nextInt(1024)));
-        Message m3 = new Message(Message.TRANSACTION, randomBytes(random.nextInt(1024)));
-        leftThread.send(m1.type, m1.payload);
-        rightThread.send(m2.type, m2.payload);
-        leftThread.send(m3.type, m3.payload);
+        OutgoingMessage m1 = new OutgoingMessage(Message.BLOCK, randomBytes(random.nextInt(1024)));
+        OutgoingMessage m2 = new OutgoingMessage(Message.BLOCK, randomBytes(random.nextInt(1024)));
+        OutgoingMessage m3 = new OutgoingMessage(Message.TRANSACTION, randomBytes(random.nextInt(1024)));
+        leftThread.send(m1);
+        rightThread.send(m2);
+        leftThread.send(m3);
 
-        Assert.assertEquals(errorMessage, rightQueue.take(), m1);
-        Assert.assertEquals(errorMessage, leftQueue.take(), m2);
-        Assert.assertEquals(errorMessage, rightQueue.take(), m3);
+        IncomingMessage in1 = rightQueue.take();
+        Assert.assertEquals(errorMessage, m1.type, in1.type);
+        Assert.assertArrayEquals(errorMessage, m1.payload, in1.payload);
+
+        IncomingMessage in2 = leftQueue.take();
+        Assert.assertEquals(errorMessage, m2.type, in2.type);
+        Assert.assertArrayEquals(errorMessage, m2.payload, in2.payload);
+
+        IncomingMessage in3 = rightQueue.take();
+        Assert.assertEquals(errorMessage, m3.type, in3.type);
+        Assert.assertArrayEquals(errorMessage, m3.payload, in3.payload);
 
         leftThread.close();
         rightThread.close();

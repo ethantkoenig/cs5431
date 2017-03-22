@@ -2,6 +2,7 @@ package server.controllers;
 
 
 import network.Message;
+import network.OutgoingMessage;
 import server.access.UserAccess;
 import server.models.Key;
 import server.models.User;
@@ -69,7 +70,7 @@ public class TransactionController {
                         Constants.getNodeAddress().getAddress(),
                         Constants.getNodeAddress().getPort())) {
                     DataOutputStream socketOut = new DataOutputStream(socket.getOutputStream());
-                    IOUtils.sendMessage(socketOut, Message.TRANSACTION, payload);
+                    new OutgoingMessage(Message.TRANSACTION, payload).serialize(socketOut);
                 }
                 return "ok";
             });

@@ -1,6 +1,7 @@
 package cli;
 
 import network.ConnectionThread;
+import network.IncomingMessage;
 import network.Message;
 import org.junit.Assert;
 import org.junit.Test;
@@ -12,7 +13,6 @@ import utils.Crypto;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -53,7 +53,7 @@ public class ClientInterfaceTest extends RandomizedTest {
         File temp = File.createTempFile("nodes", ".tmp");
         TestUtils.writeFile(temp.getAbsolutePath(), "localhost:12345");
 
-        BlockingQueue<Message> queue = new ArrayBlockingQueue<Message>(5);
+        BlockingQueue<IncomingMessage> queue = new ArrayBlockingQueue<>(5);
 
         ServerSocket serverSocket = new ServerSocket(12345);
         new Thread(() -> {

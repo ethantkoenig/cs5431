@@ -23,10 +23,10 @@ public class Node {
     private ServerSocket serverSocket;
 
     // Synchronized blocking queue to hold incoming messages
-    protected BlockingQueue<Message> messageQueue;
+    protected BlockingQueue<IncomingMessage> messageQueue;
 
     // Synchronized blocking queue to hold outgoing broadcast messages
-    protected BlockingQueue<Message> broadcastQueue;
+    protected BlockingQueue<OutgoingMessage> broadcastQueue;
 
 
     // The connections list holds all of the Nodes current connections
@@ -93,13 +93,11 @@ public class Node {
      *
      * @param message the type message object containing type and payload
      */
-    public synchronized void broadcast(Message message) {
-        byte type = message.type;
-        byte[] output = message.payload;
+    public synchronized void broadcast(OutgoingMessage message) {
         Set<ConnectionThread> toRemove = new HashSet<>();
         for (ConnectionThread connectionThread : connections) {
             try {
-                connectionThread.send(type, output);
+                connectionThread.send(message);
             } catch (IOException e) {
                 LOGGER.warning(String.format(
                         "Lost connection to connectionThread: %s.%n", connectionThread));

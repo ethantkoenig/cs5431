@@ -17,7 +17,7 @@ public class MinerThreadTest extends RandomizedTest {
     public void test() throws Exception {
         Config.HASH_GOAL.set(1);
         Block block = randomBlock(randomShaTwoFiftySix());
-        BlockingQueue<Message> queue = new ArrayBlockingQueue<>(5);
+        BlockingQueue<OutgoingMessage> queue = new ArrayBlockingQueue<>(5);
         MinerThread minerThread = new MinerThread(block, queue);
 
         minerThread.start();
@@ -35,7 +35,7 @@ public class MinerThreadTest extends RandomizedTest {
     public void testStop() throws Exception {
         Config.HASH_GOAL.set(10); // really big, so miner won't succeed
         Block block = randomBlock(randomShaTwoFiftySix());
-        BlockingQueue<Message> queue = new ArrayBlockingQueue<>(5);
+        BlockingQueue<OutgoingMessage> queue = new ArrayBlockingQueue<>(5);
         MinerThread minerThread = new MinerThread(block, queue);
 
         minerThread.start();

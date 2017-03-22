@@ -50,29 +50,6 @@ public class IOUtilsTest extends RandomizedTest {
     }
 
     @Test
-    public void testSendMessage() throws IOException {
-        byte[] payload = randomBytes(random.nextInt(1024));
-        byte type = (byte) random.nextInt(Byte.MAX_VALUE + 1);
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-
-        IOUtils.sendMessage(new DataOutputStream(outputStream), type, payload);
-
-        byte[] written = outputStream.toByteArray();
-        Assert.assertEquals(errorMessage,
-                written.length, Integer.BYTES + Byte.BYTES + payload.length);
-
-        ByteBuffer buffer = ByteBuffer.wrap(written);
-        int writtenLen = buffer.getInt();
-        byte writtenType = buffer.get();
-        byte[] writtenPayload = new byte[payload.length];
-        buffer.get(writtenPayload);
-
-        Assert.assertEquals(errorMessage, payload.length, writtenLen);
-        Assert.assertEquals(errorMessage, type, writtenType);
-        Assert.assertArrayEquals(errorMessage, payload, writtenPayload);
-    }
-
-    @Test
     public void testParseAddress() throws IOException {
         Optional<InetSocketAddress> optAddr = IOUtils.parseAddress("localhost:9801");
         Assert.assertTrue(optAddr.isPresent());

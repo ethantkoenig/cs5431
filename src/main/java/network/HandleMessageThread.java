@@ -21,8 +21,8 @@ import java.util.logging.Logger;
 public class HandleMessageThread extends Thread {
     private static final Logger LOGGER = Logger.getLogger(HandleMessageThread.class.getName());
 
-    private BlockingQueue<Message> messageQueue;
-    private BlockingQueue<Message> broadcastQueue;
+    private BlockingQueue<IncomingMessage> messageQueue;
+    private BlockingQueue<OutgoingMessage> broadcastQueue;
     private LinkedList<Block> miningQueue;
 
     // The incomplete block to add incoming transactions to
@@ -35,10 +35,10 @@ public class HandleMessageThread extends Thread {
 
     private MiningBundle miningBundle;
 
-    private FixedSizeSet<Message> recentTransactionsReceived;
+    private FixedSizeSet<IncomingMessage> recentTransactionsReceived;
 
     // Needs reference to parent in order to call Node.broadcast()
-    public HandleMessageThread(BlockingQueue<Message> messageQueue, BlockingQueue<Message> broadcastQueue, MiningBundle miningBundle) {
+    public HandleMessageThread(BlockingQueue<IncomingMessage> messageQueue, BlockingQueue<OutgoingMessage> broadcastQueue, MiningBundle miningBundle) {
         this.messageQueue = messageQueue;
         this.broadcastQueue = broadcastQueue;
         this.miningQueue = new LinkedList<>();
@@ -53,7 +53,7 @@ public class HandleMessageThread extends Thread {
     @Override
     public void run() {
         try {
-            Message message;
+            IncomingMessage message;
             while ((message = messageQueue.take()) != null) {
                 switch (message.type) {
                     case Message.TRANSACTION:
@@ -61,7 +61,7 @@ public class HandleMessageThread extends Thread {
                         LOGGER.info("[!] Received transaction!");
                         if (!recentTransactionsReceived.contains(message)) {
                             LOGGER.info("[!] New transaction, so I am broadcasting to all other miners.");
-                            broadcastQueue.put(message);
+                            broadcastQueue.put(new OutgoingMessage(message.type, message.payload));
                         } else {
                             continue;
                         }
