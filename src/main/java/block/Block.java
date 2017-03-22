@@ -105,10 +105,10 @@ public class Block implements Iterable<Transaction> {
         return block;
     }
 
-    public static byte[] serializeBlocks(Block[] blocks) throws IOException {
+    public static byte[] serializeBlocks(List<Block> blocks) throws IOException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         DataOutputStream dataOut = new DataOutputStream(outputStream);
-        dataOut.writeInt(blocks.length);
+        dataOut.writeInt(blocks.size());
         for (Block b : blocks) {
             b.serialize(dataOut);
         }
