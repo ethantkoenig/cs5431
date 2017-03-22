@@ -274,9 +274,9 @@ public class BlockChainTest extends RandomizedTest {
             bc.insertBlock(next);
             prev = next;
         }
-        bc.storeMainChain();
+        bc.storeBlockChain();
         BlockChain newbc = new BlockChain();
-        newbc.importMainChain(new File("blockchain" + bc.getCurrentHead().getShaTwoFiftySix()));
+        newbc.importBlockChain(new File("blockchain" + bc.getCurrentHead().getShaTwoFiftySix()));
         for (Block b : blocks) {
             Assert.assertTrue(newbc.containsBlock(b));
         }

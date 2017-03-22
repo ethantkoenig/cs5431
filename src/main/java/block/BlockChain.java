@@ -7,10 +7,8 @@ import utils.Pair;
 import utils.ShaTwoFiftySix;
 
 import java.io.*;
-import java.nio.file.Files;
 import java.security.GeneralSecurityException;
 import java.util.*;
-import java.nio.file.Paths;
 
 /**
  * A {@code BlockChain} represents a forest of related {@code Blocks} which together represent a secure public ledger.
@@ -18,7 +16,7 @@ import java.nio.file.Paths;
  * Created by eperdew on 2/25/17.
  */
 public class BlockChain {
-    private HashMap<ShaTwoFiftySix, Pair<Block, Integer>> blocks = new HashMap<>();
+    private LinkedHashMap<ShaTwoFiftySix, Pair<Block, Integer>> blocks = new LinkedHashMap<>();
     private Block currentHead;
     private int headDepth;
 
@@ -197,43 +195,20 @@ public class BlockChain {
     }
 
     /**
-     * Writes all blocks in the main chain to the specified file. They are written in reverse
-     * order, newest to oldest.
+     * Writes all blocks in the blockchain to a directory 'blockchain'
      *
      * @return true in success, exception otherwise.
      * @throws IOException
      */
-    public boolean storeMainChain() throws IOException {
-        Block end = currentHead;
+    public boolean storeBlockChain() throws IOException {
         File blockdir = new File("blockchain" + currentHead.getShaTwoFiftySix());
         if (blockdir.mkdir()) {
-            int i = 0; // Enforce ordering
-            while (currentHead != null) {
-                File block = new File(blockdir.getPath() + '/' + i + currentHead.getShaTwoFiftySix());
-                DataOutputStream data = new DataOutputStream(new FileOutputStream(block));
-                currentHead.serialize(data);
-                ShaTwoFiftySix previous = currentHead.previousBlockHash;
-                if (previous.equals(ShaTwoFiftySix.zero())) break;
-                currentHead = blocks.get(previous).getLeft();
-                i++;
-            }
-            currentHead = end;
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Enumerates over all the blocks, writing the serialized blocks to a file.
-     * @return true in success, exception otherwise.
-     * @throws IOException
-     */
-    public boolean storeAllBlocks() throws IOException {
-        File blockdir = new File("blockchain");
-        if (blockdir.mkdir()) {
+            int i = 0; // Still need to enforce ordering on the filesystem
             for (Map.Entry<ShaTwoFiftySix, Pair<Block, Integer>> entry : blocks.entrySet()) {
-                File block = new File(blockdir.getPath() + entry.getKey());
-                entry.getValue().getLeft().serialize(new DataOutputStream(new FileOutputStream(block)));
+                File block = new File(blockdir.getPath() + '/' + i + entry.getKey());
+                DataOutputStream data = new DataOutputStream(new FileOutputStream(block));
+                entry.getValue().getLeft().serialize(data);
+                i++;
             }
             return true;
         }
@@ -248,43 +223,14 @@ public class BlockChain {
      * @return true in success, exception otherwise.
      * @throws IOException
      */
-    public boolean importMainChain(File blockdir) throws IOException, GeneralSecurityException {
-        ArrayList<Block> blocklist = new ArrayList<>();
+    public boolean importBlockChain(File blockdir) throws IOException, GeneralSecurityException {
         File[] blocks = blockdir.listFiles();
         if (blocks == null) return false;
         Arrays.sort(blocks);
         for (File block : blocks) {
-            blocklist.add(Block.deserialize(new DataInputStream(new FileInputStream(block))));
-        }
-        Collections.reverse(blocklist);
-        for (Block b : blocklist) {
-            insertBlock(b);
+            insertBlock(Block.deserialize(new DataInputStream(new FileInputStream(block))));
         }
         return true;
-    }
-
-    // XXX: We need to serialize depth with the block in order to store all blocks. This wll not work as is.
-    private void forceInsertBlock(Block b) {
-        blocks.put(b.getShaTwoFiftySix(), new Pair<>(b, -1));
-    }
-
-    /**
-     * Imports blockcahin metadata from the specified file and reconstructs the blockchain from
-     * the blockchain location.
-     * @param file is the blockchain file.
-     * @return true in success, false or exception otherwise.
-     * @throws IOException
-     */
-    public boolean importAllBlocks(FileInputStream file) throws GeneralSecurityException, IOException {
-        deserialize(new DataInputStream(file));
-        File blockdir = new File("blockchain" + currentHead.getShaTwoFiftySix());
-        File[] blocks = blockdir.listFiles();
-        if (blocks == null) return false;
-        for (File block : blocks) {
-            forceInsertBlock(Block.deserialize(new DataInputStream(new FileInputStream(block))));
-            Files.delete(Paths.get(block.toURI()));
-        }
-        return false;
     }
 
     /**
@@ -297,7 +243,6 @@ public class BlockChain {
         for (File f : files) {
             if (!f.delete()) return false;
         }
-        if (!dir.delete()) return false;
-        return true;
+        return dir.delete();
     }
 }
