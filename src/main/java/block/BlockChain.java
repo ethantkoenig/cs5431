@@ -17,6 +17,9 @@ import java.util.*;
  */
 public class BlockChain {
     private LinkedHashMap<ShaTwoFiftySix, Pair<Block, Integer>> blocks = new LinkedHashMap<>();
+
+    // Map to keep track of heads of all current branches of the blockchain
+    private HashMap<ShaTwoFiftySix, Block> heads = new HashMap<>();
     private Block currentHead;
     private int headDepth;
 
@@ -29,6 +32,7 @@ public class BlockChain {
      */
     public BlockChain(Block genesisBlock) {
         blocks.put(genesisBlock.getShaTwoFiftySix(), new Pair<>(genesisBlock, 0));
+        heads.put(genesisBlock.getShaTwoFiftySix(), genesisBlock);
         currentHead = genesisBlock;
         headDepth = 0;
     }
@@ -52,6 +56,7 @@ public class BlockChain {
      */
     public boolean insertBlock(Block b) {
         if (blocks.containsKey(b.previousBlockHash)) {
+            updateHeads(b);
             Integer depth = blocks.get(b.previousBlockHash).getRight() + 1;
             blocks.put(b.getShaTwoFiftySix(), new Pair<>(b, depth));
             if (depth > headDepth) {
@@ -63,12 +68,20 @@ public class BlockChain {
             if (!blocks.isEmpty()) {
                 throw new IllegalStateException("Cannot insert genesis block into non-empty blockchain");
             }
+            updateHeads(b);
             blocks.put(b.getShaTwoFiftySix(), new Pair<>(b, 0));
             currentHead = b;
             headDepth = 0;
             return true;
         }
         return false;
+    }
+
+    private void updateHeads(Block b) {
+        if (heads.containsKey(b.previousBlockHash)) {
+            heads.remove(b.previousBlockHash);
+        }
+        heads.put(b.getShaTwoFiftySix(), b);
     }
 
     /**
@@ -101,6 +114,69 @@ public class BlockChain {
         }
 
         return result;
+    }
+
+    /**
+     * Returns all of the descendants of {@code Block} with {@code hash}
+     *   contained in {@code this} and returns from oldest to youngest.
+     *
+     * @param hash The SHA-256 hash of ancestor of following nodes
+     * @return Am {@code ArrayList} of all descendant {@code Block}s of Block
+     *   with hash {@code hash}, from oldest to youngest, with unspecified order
+     *   when it comes to branches in the blockchain. I.e. it is unspecified
+     *   which branch will be first, but once in that branch, you again have the
+     *   oldest to youngest gaurantee. If no descendants returns an empty
+     *   ArrayList
+     */
+    public ArrayList<Block> getDescendantsOf(ShaTwoFiftySix hash) {
+        ArrayList<Block> descendants = new ArrayList<>();
+        if (blocks.containsKey(hash)) {
+            for (Block head : heads.values()) {
+                if (hashInBranch(hash, head)) {
+                    descendants = getDescendHelper(descendants, hash, head);
+                }
+            }
+        }
+        return descendants;
+    }
+
+    private ArrayList<Block> getDescendHelper(ArrayList<Block> toReturn,
+                                              ShaTwoFiftySix endHash,
+                                              Block head) {
+        Optional<Block> optParent =getBlockWithHash(head.previousBlockHash);
+        if (head.previousBlockHash.equals(endHash)) {
+            return toReturn;
+        } else if (optParent.isPresent()) {
+            Block prevBlock = getBlockWithHash(head.previousBlockHash).get();
+            toReturn.addAll(getDescendHelper(toReturn, endHash, prevBlock));
+            if (!toReturn.contains(head)) {
+                toReturn.add(head);
+            }
+        }
+        return toReturn;
+    }
+
+
+    /*
+     * @param hash hash of block to check branch for
+     * @param head Block at the head of the branch we are checking for hash in
+     * @return boolean true if in branch, false if not in branch
+     */
+    private boolean hashInBranch(ShaTwoFiftySix hash, Block head) {
+        // We have found it
+        if (head.previousBlockHash.equals(hash)) {
+            return true;
+        // We have hit the end of the blockchain, it is not in this branch
+        } else if (head.previousBlockHash.equals(ShaTwoFiftySix.zero())) {
+            return false;
+        } else {
+            Optional<Block> optParent = getBlockWithHash(head.previousBlockHash);
+            if (optParent.isPresent()) {
+                return hashInBranch(hash, optParent.get());
+            } else {
+                return false;
+            }
+        }
     }
 
     /**
