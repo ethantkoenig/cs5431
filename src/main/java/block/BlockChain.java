@@ -134,7 +134,9 @@ public class BlockChain {
         ArrayList<Block> descendants = new ArrayList<>();
         if (blocks.containsKey(hash)) {
             for (Block head : heads.values()) {
-                descendants = getDescendHelper(descendants, hash, head);
+                if (hashInBranch(hash, head)) {
+                    descendants = getDescendHelper(descendants, hash, head);
+                }
             }
         }
         return descendants;
@@ -152,6 +154,24 @@ public class BlockChain {
                 toReturn.add(head);
             }
             return toReturn;
+        }
+    }
+
+
+    /*
+     * @param hash hash of block to check branch for
+     * @param head Block at the head of the branch we are checking for hash in
+     * @return boolean true if in branch, false if not in branch
+     */
+    private boolean hashInBranch(ShaTwoFiftySix hash, Block head) {
+        // We have found it
+        if (head.previousBlockHash.equals(hash)) {
+            return true;
+        // We have hit the end of the blockchain, it is not in this branch
+        } else if (head.previousBlockHash.equals(ShaTwoFiftySix.zero())) {
+            return false;
+        } else {
+            return hashInBranch(hash, getBlockWithHash(head.previousBlockHash).get());
         }
     }
 
