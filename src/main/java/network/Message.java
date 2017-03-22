@@ -13,6 +13,8 @@ public class Message {
     /* Message kinds */
     public static final byte TRANSACTION = 0;
     public static final byte BLOCK = 1;
+    public static final byte GET_BLOCK = 2;
+    public static final byte GET_HEAD = 3;
 
     public final byte type;
     public final byte[] payload;

@@ -11,6 +11,9 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
+import java.io.DataInputStream;
+import java.io.ByteArrayInputStream;
+import java.util.Arrays;
 
 /**
  * The network.HandleMessageThread is a background thread ran by the instantiated Node class
@@ -77,6 +80,22 @@ public class HandleMessageThread extends Thread {
                                 LOGGER.info("[!] Received block that does not pass hash check. Not adding to block chain.");
                             }
                         }
+                        break;
+                    case Message.GET_BLOCK:
+                        DataInputStream input =
+                            new DataInputStream(new ByteArrayInputStream(message.payload));
+                        ShaTwoFiftySix lastHash = ShaTwoFiftySix.deserialize(input);
+                        int ancestToGet = input.readInt();
+                        byte[] payld = Block.serializeBlocks(miningBundle.getBlockChain()
+                            .getAncestorsStartingAt(lastHash, ancestToGet));
+                        Message returnMsg = new Message(Message.BLOCK, payld);
+                        broadcastQueue.put(returnMsg);
+                        break;
+                    case Message.GET_HEAD:
+                        Block head = miningBundle.getBlockChain().getCurrentHead();
+                        byte[] payload = Block.serializeBlocks(Arrays.asList(head));
+                        Message returnMessage = new Message(Message.BLOCK, payload);
+                        broadcastQueue.put(returnMessage);
                         break;
                     default:
                         LOGGER.severe(String.format("Unexpected message type: %d", message.type));
