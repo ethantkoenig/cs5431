@@ -71,7 +71,7 @@ public class MinerThread extends Thread {
         LOGGER.info("[+] Successfully mined block! Broadcasting to other nodes.");
         // Put message on broadcast queue
         try {
-            byte[] payload = ByteUtil.asByteArray(finalBlock::serialize);
+            byte[] payload = Block.serializeBlocks(Arrays.asList(finalBlock));
             broadcastQueue.put(new OutgoingMessage(Message.BLOCK, payload));
         } catch (InterruptedException | IOException e) {
             e.printStackTrace();
