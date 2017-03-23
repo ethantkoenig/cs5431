@@ -18,8 +18,6 @@ import java.util.*;
 public class BlockChain {
     private LinkedHashMap<ShaTwoFiftySix, Pair<Block, Integer>> blocks = new LinkedHashMap<>();
 
-    // Map to keep track of heads of all current branches of the blockchain
-    private HashMap<ShaTwoFiftySix, Block> heads = new HashMap<>();
     private Block currentHead;
     private int headDepth;
 
@@ -32,7 +30,6 @@ public class BlockChain {
      */
     public BlockChain(Block genesisBlock) {
         blocks.put(genesisBlock.getShaTwoFiftySix(), new Pair<>(genesisBlock, 0));
-        heads.put(genesisBlock.getShaTwoFiftySix(), genesisBlock);
         currentHead = genesisBlock;
         headDepth = 0;
     }
@@ -56,7 +53,6 @@ public class BlockChain {
      */
     public boolean insertBlock(Block b) {
         if (blocks.containsKey(b.previousBlockHash)) {
-            updateHeads(b);
             Integer depth = blocks.get(b.previousBlockHash).getRight() + 1;
             blocks.put(b.getShaTwoFiftySix(), new Pair<>(b, depth));
             if (depth > headDepth) {
@@ -68,20 +64,12 @@ public class BlockChain {
             if (!blocks.isEmpty()) {
                 throw new IllegalStateException("Cannot insert genesis block into non-empty blockchain");
             }
-            updateHeads(b);
             blocks.put(b.getShaTwoFiftySix(), new Pair<>(b, 0));
             currentHead = b;
             headDepth = 0;
             return true;
         }
         return false;
-    }
-
-    private void updateHeads(Block b) {
-        if (heads.containsKey(b.previousBlockHash)) {
-            heads.remove(b.previousBlockHash);
-        }
-        heads.put(b.getShaTwoFiftySix(), b);
     }
 
     /**
