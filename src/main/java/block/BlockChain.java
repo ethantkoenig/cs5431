@@ -100,8 +100,7 @@ public class BlockChain {
      *
      * @param hash The SHA-256 hash of the first {@code Block} that will appear in the list
      * @param numAncest the number of ancestors from {@code Block} with
-     *   {@code hash} to return. If less than zero returns all blocks back to
-     *    genisis.
+     *   {@code hash} to return.
      * @return A {@code List} of all ancestor {@code Block}s related to the
      *   {@code Block} with hash {@code hash}, from youngest to oldest, or an
      *    empty list if no such {@code Block} exists
@@ -111,7 +110,7 @@ public class BlockChain {
 
         if (hash == null) return result;
 
-        while (blocks.containsKey(hash) && numAncest != 0) {
+        while (blocks.containsKey(hash) && numAncest > 0) {
             Block current = blocks.get(hash).getLeft();
             result.add(current);
             hash = current.previousBlockHash;
@@ -122,66 +121,16 @@ public class BlockChain {
     }
 
     /**
-     * Returns all of the descendants of {@code Block} with {@code hash}
-     *   contained in {@code this} and returns from oldest to youngest.
+     * Finds all the ancestors of {@code Block} with hash {@code hash} contained in {@code this} and returns them from
+     * youngest to oldest.
      *
-     * @param hash The SHA-256 hash of ancestor of following nodes
-     * @return Am {@code ArrayList} of all descendant {@code Block}s of Block
-     *   with hash {@code hash}, from oldest to youngest, with unspecified order
-     *   when it comes to branches in the blockchain. I.e. it is unspecified
-     *   which branch will be first, but once in that branch, you again have the
-     *   oldest to youngest gaurantee. If no descendants returns an empty
-     *   ArrayList
+     * @param hash The SHA-256 hash of the first {@code Block} that will appear in the list
+     * @return A {@code List} of all ancestor {@code Block}s related to the
+     *   {@code Block} with hash {@code hash}, from youngest to oldest, or an
+     *    empty list if no such {@code Block} exists
      */
-    public ArrayList<Block> getDescendantsOf(ShaTwoFiftySix hash) {
-        ArrayList<Block> descendants = new ArrayList<>();
-        if (blocks.containsKey(hash)) {
-            for (Block head : heads.values()) {
-                if (hashInBranch(hash, head)) {
-                    descendants = getDescendHelper(descendants, hash, head);
-                }
-            }
-        }
-        return descendants;
-    }
-
-    private ArrayList<Block> getDescendHelper(ArrayList<Block> toReturn,
-                                              ShaTwoFiftySix endHash,
-                                              Block head) {
-        Optional<Block> optParent =getBlockWithHash(head.previousBlockHash);
-        if (head.previousBlockHash.equals(endHash)) {
-            return toReturn;
-        } else if (optParent.isPresent()) {
-            Block prevBlock = getBlockWithHash(head.previousBlockHash).get();
-            toReturn.addAll(getDescendHelper(toReturn, endHash, prevBlock));
-            if (!toReturn.contains(head)) {
-                toReturn.add(head);
-            }
-        }
-        return toReturn;
-    }
-
-
-    /*
-     * @param hash hash of block to check branch for
-     * @param head Block at the head of the branch we are checking for hash in
-     * @return boolean true if in branch, false if not in branch
-     */
-    private boolean hashInBranch(ShaTwoFiftySix hash, Block head) {
-        // We have found it
-        if (head.previousBlockHash.equals(hash)) {
-            return true;
-        // We have hit the end of the blockchain, it is not in this branch
-        } else if (head.previousBlockHash.equals(ShaTwoFiftySix.zero())) {
-            return false;
-        } else {
-            Optional<Block> optParent = getBlockWithHash(head.previousBlockHash);
-            if (optParent.isPresent()) {
-                return hashInBranch(hash, optParent.get());
-            } else {
-                return false;
-            }
-        }
+    public List<Block> getAncestorsStartingAt(ShaTwoFiftySix hash) {
+        return getAncestorsStartingAt(hash, blocks.size());
     }
 
     /**
@@ -191,7 +140,7 @@ public class BlockChain {
      * @return The set of unspent transactions with respect to {@code Block}
      */
     public UnspentTransactions getUnspentTransactionsAt(Block block) {
-        List<Block> ancestors = getAncestorsStartingAt(block.getShaTwoFiftySix(), -1);
+        List<Block> ancestors = getAncestorsStartingAt(block.getShaTwoFiftySix());
 
         UnspentTransactions unspentTxs = UnspentTransactions.empty();
 
