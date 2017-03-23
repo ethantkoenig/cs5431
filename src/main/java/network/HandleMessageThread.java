@@ -14,7 +14,7 @@ import java.util.logging.Logger;
 import java.io.DataInputStream;
 import java.io.ByteArrayInputStream;
 import java.util.Arrays;
-
+import java.util.Optional;
 /**
  * The network.HandleMessageThread is a background thread ran by the instantiated Node class
  * in order to process incoming messages from all connected nodes.
@@ -72,13 +72,18 @@ public class HandleMessageThread extends Thread {
                         addTransactionToBlock(transaction);
                         break;
                     case Message.BLOCK:
-                        Block[] blocks = Block.deserializeBlocks(message.payload);
+                        Optional<Block[]> optParent = Block.deserializeBlocks(message.payload);
+                        if (optParent.isPresent()) {
+                            Block[] blocks = optParent.get();
                         for (Block b : blocks) {
                             if (b.checkHash()) {
                                 addBlockToChain(b);
                             } else {
                                 LOGGER.info("[!] Received block that does not pass hash check. Not adding to block chain.");
                             }
+                        }
+                        } else {
+                            LOGGER.info("[EE] Received ill formated blocks");
                         }
                         break;
                     case Message.GET_BLOCK:

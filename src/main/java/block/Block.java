@@ -61,7 +61,7 @@ public class Block implements Iterable<Transaction> {
      * @return Array of deserialized blocks, if length is invalid, returns an
      *   empty one element array
      */
-    public static Block[] deserializeBlocks(byte[] input)
+    public static Optional<Block[]> deserializeBlocks(byte[] input)
             throws IOException, GeneralSecurityException {
         return deserializeBlocks(new DataInputStream(new ByteArrayInputStream(input)));
     }
@@ -70,7 +70,7 @@ public class Block implements Iterable<Transaction> {
      * @param input input bytes to deserialize
      * @return Array of deserialized blocks
      */
-    public static Block[] deserializeBlocks(DataInputStream input)
+    public static Optional<Block[]> deserializeBlocks(DataInputStream input)
         throws IOException, GeneralSecurityException {
         int numBlocks = input.readInt();
         if (numBlocks > 0 && numBlocks < MAX_BLOCKS_PER_MSG) {
@@ -78,9 +78,9 @@ public class Block implements Iterable<Transaction> {
             for (int i = 0; i < numBlocks; ++i) {
                 blocks[i] = Block.deserialize(input);
             }
-            return blocks;
+            return Optional.of(blocks);
         } else {
-            return new Block[1];
+            return Optional.empty();
         }
     }
 
