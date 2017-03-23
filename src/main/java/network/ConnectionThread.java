@@ -2,11 +2,13 @@ package network;
 
 import utils.IOUtils;
 
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
 import java.nio.ByteBuffer;
+import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
@@ -19,10 +21,8 @@ import java.util.logging.Logger;
 public class ConnectionThread extends Thread {
     private static final Logger LOGGER = Logger.getLogger(ConnectionThread.class.getName());
 
-    private static final int MAX_PAYLOAD_LEN = 33554432;
-
     private final Socket socket;
-    private final BlockingQueue<Message> messageQueue;
+    private final BlockingQueue<IncomingMessage> messageQueue;
 
     // The out buffer to write to this network.ConnectionThread
     private DataOutputStream out;
@@ -30,7 +30,7 @@ public class ConnectionThread extends Thread {
     // The in buffer to read incoming messages to this network.ConnectionThread
     private InputStream in;
 
-    public ConnectionThread(Socket socket, BlockingQueue<Message> messageQueue) {
+    public ConnectionThread(Socket socket, BlockingQueue<IncomingMessage> messageQueue) {
         this.socket = socket;
         this.messageQueue = messageQueue;
         try {
@@ -60,14 +60,13 @@ public class ConnectionThread extends Thread {
 
 
     /**
-     * Send the given output to this network.ConnectionThread
+     * Send the given message to this network.ConnectionThread
      *
-     * @param type    the type of message to be sent
-     * @param payload the message to be sent
+     * @param message message to send
      * @throws IOException if out.checkError() returns true indicating that the connection has been closed.
      */
-    public void send(byte type, byte[] payload) throws IOException {
-        IOUtils.sendMessage(out, type, payload);
+    public void send(OutgoingMessage message) throws IOException {
+        message.serialize(new DataOutputStream(out));
     }
 
     /**
@@ -77,25 +76,15 @@ public class ConnectionThread extends Thread {
      * Receives incoming messages, and put them onto the messageQueue.
      */
     private void receive() throws IOException, InterruptedException {
-        byte[] headerBuffer = new byte[Integer.BYTES + Byte.BYTES];
+        DataInputStream dataInputStream = new DataInputStream(in);
         while (true) {
-            try {
-                IOUtils.fill(in, headerBuffer);
-            } catch (IOException e) {
-                LOGGER.info("[-] Lost connection to Node: " + socket.getInetAddress().getHostAddress());
+            Optional<IncomingMessage> optMessage = IncomingMessage.deserialize(dataInputStream, this::send);
+
+            if (!optMessage.isPresent()) {
                 close();
                 break;
             }
-            int payloadLen = ByteBuffer.wrap(headerBuffer, 0, Integer.BYTES).getInt();
-            if (payloadLen > MAX_PAYLOAD_LEN) {
-                LOGGER.severe(String.format("Received misformatted message (payloadLen=%d)", payloadLen));
-                close();
-                return;
-            }
-            byte payloadType = ByteBuffer.wrap(headerBuffer, Integer.BYTES, Byte.BYTES).get();
-            byte[] payload = new byte[payloadLen];
-            IOUtils.fill(in, payload);
-            Message message = new Message(payloadType, payload);
+            IncomingMessage message = optMessage.get();
             LOGGER.info("Putting message on messageQueue: " + message.toString());
             messageQueue.put(message);
         }

@@ -2,6 +2,7 @@ package cli;
 
 
 import network.Message;
+import network.OutgoingMessage;
 import transaction.Transaction;
 import transaction.TxIn;
 import transaction.TxOut;
@@ -70,7 +71,7 @@ public class GenerateTransaction {
         for (InetSocketAddress address : addresses) {
             try (Socket socket = new Socket(address.getAddress(), address.getPort())) {
                 DataOutputStream socketOut = new DataOutputStream(socket.getOutputStream());
-                IOUtils.sendMessage(socketOut, Message.TRANSACTION, payload);
+                new OutgoingMessage(Message.TRANSACTION, payload).serialize(socketOut);
             }
         }
     }

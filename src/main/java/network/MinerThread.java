@@ -21,9 +21,9 @@ public class MinerThread extends Thread {
     private Block block;
     private boolean stopMining = false;
 
-    private final BlockingQueue<Message> broadcastQueue;
+    private final BlockingQueue<OutgoingMessage> broadcastQueue;
 
-    public MinerThread(Block block, BlockingQueue<Message> broadcastQueue) {
+    public MinerThread(Block block, BlockingQueue<OutgoingMessage> broadcastQueue) {
         this.block = block;
         this.broadcastQueue = broadcastQueue;
     }
@@ -71,8 +71,7 @@ public class MinerThread extends Thread {
         // Put message on broadcast queue
         try {
             byte[] payload = ByteUtil.asByteArray(finalBlock::serialize);
-            Message message = new Message(Message.BLOCK, payload);
-            broadcastQueue.put(message);
+            broadcastQueue.put(new OutgoingMessage(Message.BLOCK, payload));
         } catch (InterruptedException | IOException e) {
             e.printStackTrace();
         }
