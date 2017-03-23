@@ -193,7 +193,13 @@ public class BlockChainTest extends RandomizedTest {
         }
 
         Block newHead = prev;
-        assertEquals(blocks, bc.getAncestorsStartingAt(newHead.getShaTwoFiftySix(), -1));
+        assertEquals(blocks, bc.getAncestorsStartingAt(newHead.getShaTwoFiftySix()));
+
+        assertEquals(blocks.subList(0,2),
+                     bc.getAncestorsStartingAt(newHead.getShaTwoFiftySix(),2));
+
+        assertEquals(blocks.subList(1,3),
+                     bc.getAncestorsStartingAt(blocks.get(1).getShaTwoFiftySix(),2));
 
         prev = genesis;
         blocks = new ArrayList<>();
@@ -206,9 +212,17 @@ public class BlockChainTest extends RandomizedTest {
             prev = next;
         }
 
-        assertEquals(blocks, bc.getAncestorsStartingAt(prev.getShaTwoFiftySix(), -1));
+        assertEquals(blocks, bc.getAncestorsStartingAt(prev.getShaTwoFiftySix()));
+
+        assertEquals(errorMessage, new ArrayList<>(), bc.getAncestorsStartingAt(null));
 
         assertEquals(errorMessage, new ArrayList<>(), bc.getAncestorsStartingAt(null, -1));
+
+        assertEquals(errorMessage, new ArrayList<>(),
+                     bc.getAncestorsStartingAt(prev.getShaTwoFiftySix(), -1));
+
+        assertEquals(errorMessage, new ArrayList<>(), bc.getAncestorsStartingAt(null, 10));
+
     }
 
     @Test
