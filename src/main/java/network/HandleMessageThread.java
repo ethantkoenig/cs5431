@@ -22,6 +22,8 @@ import java.util.Optional;
  * @version 1.0, Feb 22 2017
  */
 public class HandleMessageThread extends Thread {
+    // Blocks to request when we are behind other nodes
+    private static final int BLOCKS_TO_GET = 100;
     private static final Logger LOGGER = Logger.getLogger(HandleMessageThread.class.getName());
 
     private BlockingQueue<IncomingMessage> messageQueue;
@@ -98,10 +100,23 @@ public class HandleMessageThread extends Thread {
                         break;
                     case Message.GET_HEAD:
                         Block head = miningBundle.getBlockChain().getCurrentHead();
-                        byte[] payload = Block.serializeBlocks(Arrays.asList(head));
+                        byte[] payload = head.getShaTwoFiftySix().copyOfHash();
                         OutgoingMessage returnMessage =
-                            new OutgoingMessage(Message.BLOCK, payload);
+                            new OutgoingMessage(Message.HEAD, payload);
                         message.respond(returnMessage);
+                        break;
+                    case Message.HEAD:
+                        DataInputStream in =
+                            new DataInputStream(new ByteArrayInputStream(message.payload));
+                        ShaTwoFiftySix headHash = ShaTwoFiftySix.deserialize(in);
+                        Optional<Block> hd =
+                            miningBundle.getBlockChain().getBlockWithHash(headHash);
+                        byte[] payl = Message.getBlockPayload(headHash, BLOCKS_TO_GET);
+                        if (!hd.isPresent()) {
+                            OutgoingMessage retrnMsg =
+                                new OutgoingMessage(Message.GET_BLOCK, payl);
+                            message.respond(retrnMsg);
+                        }
                         break;
                     default:
                         LOGGER.severe(String.format("Unexpected message type: %d", message.type));
