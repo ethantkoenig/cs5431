@@ -45,9 +45,13 @@ public class TestUtils {
         );
     }
 
-    public static <T> T assertPresent(Optional<T> optional) {
-        Assert.assertTrue(optional.isPresent());
+    public static <T> T assertPresent(String message, Optional<T> optional) {
+        Assert.assertTrue(message, optional.isPresent());
         return optional.orElseThrow(() -> new AssertionError("This can't happen"));
+    }
+
+    public static <T> T assertPresent(Optional<T> optional) {
+        return assertPresent(null, optional);
     }
 
     /**
