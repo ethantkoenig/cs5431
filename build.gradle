@@ -4,6 +4,7 @@ apply plugin: 'java'
 apply plugin: 'jacoco'
 
 repositories {
+    jcenter()
     mavenCentral()
 }
 
@@ -14,6 +15,7 @@ dependencies {
     compile group: 'com.sparkjava', name: 'spark-template-freemarker', version: '2.0.0'
     compile group: 'mysql', name: 'mysql-connector-java', version: '5.1.13' //db requirement
     testCompile 'junit:junit:4.12'
+    testCompile group: 'org.mockito', name: 'mockito-core', version: '2.+'
 }
 
 findbugs {

@@ -67,6 +67,19 @@ public class TestUtils {
     }
 
     /**
+     * Convenience method for constructing an array of bytes
+     *
+     * @return byte array with the given elements (cast to bytes)
+     */
+    public static byte[] bytes(int... elements) {
+        byte[] result = new byte[elements.length];
+        for (int i = 0; i < result.length; i++) {
+            result[i] = (byte) elements[i];
+        }
+        return result;
+    }
+
+    /**
      * Run {@code thrower} and assert that it {@code throws} a {@code Throwable} that is an instance of
      * {@code throwableClass}.
      *
