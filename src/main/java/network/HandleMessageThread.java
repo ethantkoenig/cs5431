@@ -11,7 +11,10 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
-
+import java.io.DataInputStream;
+import java.io.ByteArrayInputStream;
+import java.util.Arrays;
+import java.util.Optional;
 /**
  * The network.HandleMessageThread is a background thread ran by the instantiated Node class
  * in order to process incoming messages from all connected nodes.
@@ -19,6 +22,8 @@ import java.util.logging.Logger;
  * @version 1.0, Feb 22 2017
  */
 public class HandleMessageThread extends Thread {
+    // Blocks to request when we are behind other nodes
+    private static final int BLOCKS_TO_GET = 100;
     private static final Logger LOGGER = Logger.getLogger(HandleMessageThread.class.getName());
 
     private BlockingQueue<IncomingMessage> messageQueue;
@@ -57,24 +62,19 @@ public class HandleMessageThread extends Thread {
             while ((message = messageQueue.take()) != null) {
                 switch (message.type) {
                     case Message.TRANSACTION:
-                        Transaction transaction = Transaction.deserialize(message.payload);
-                        LOGGER.info("[!] Received transaction!");
-                        if (!recentTransactionsReceived.contains(message)) {
-                            LOGGER.info("[!] New transaction, so I am broadcasting to all other miners.");
-                            broadcastQueue.put(new OutgoingMessage(message.type, message.payload));
-                        } else {
-                            continue;
-                        }
-                        recentTransactionsReceived.add(message);
-                        addTransactionToBlock(transaction);
+                        txMsgHandler(message);
                         break;
                     case Message.BLOCK:
-                        Block block = Block.deserialize(message.payload);
-                        if (block.checkHash()) {
-                            addBlockToChain(block);
-                        } else {
-                            LOGGER.info("[!] Received block that does not pass hash check. Not adding to block chain.");
-                        }
+                        blockMsgHandler(message);
+                        break;
+                    case Message.GET_BLOCK:
+                        getBlockMsgHandler(message);
+                        break;
+                    case Message.GET_HEAD:
+                        getHeadMsgHandler(message);
+                        break;
+                    case Message.HEAD:
+                        headMsgHandler(message);
                         break;
                     default:
                         LOGGER.severe(String.format("Unexpected message type: %d", message.type));
@@ -171,4 +171,71 @@ public class HandleMessageThread extends Thread {
         startMiningThread();
     }
 
+    private void txMsgHandler(IncomingMessage msg)
+        throws GeneralSecurityException, InterruptedException, IOException {
+        Transaction transaction = Transaction.deserialize(msg.payload);
+        LOGGER.info("[!] Received transaction!");
+        if (!recentTransactionsReceived.contains(msg)) {
+            LOGGER.info("[!] New transaction, so I am broadcasting to all other miners.");
+            broadcastQueue.put(new OutgoingMessage(msg.type, msg.payload));
+        } else {
+            return;
+        }
+        recentTransactionsReceived.add(msg);
+        addTransactionToBlock(transaction);
+        return;
+    }
+
+    private void blockMsgHandler(IncomingMessage message)
+        throws GeneralSecurityException, InterruptedException, IOException {
+        Optional<Block[]> optParent = Block.deserializeBlocks(message.payload);
+        if (optParent.isPresent()) {
+            Block[] blocks = optParent.get();
+            for (Block b : blocks) {
+                if (b.checkHash()) {
+                    addBlockToChain(b);
+                } else {
+                    LOGGER.info("[!] Received block that does not pass hash check. Not adding to block chain.");
+                }
+            }
+        } else {
+            LOGGER.info("[EE] Received ill formated blocks");
+        }
+        return;
+    }
+
+    private void getBlockMsgHandler(IncomingMessage message)
+        throws GeneralSecurityException, InterruptedException, IOException {
+        DataInputStream input =
+            new DataInputStream(new ByteArrayInputStream(message.payload));
+        ShaTwoFiftySix lastHash = ShaTwoFiftySix.deserialize(input);
+        int ancestToGet = input.readInt();
+        byte[] payload = Block.serializeBlocks(miningBundle.getBlockChain()
+                                             .getAncestorsStartingAt(lastHash, ancestToGet));
+        OutgoingMessage returnMsg = new OutgoingMessage(Message.BLOCK, payload);
+        message.respond(returnMsg);
+    }
+
+    private void getHeadMsgHandler(IncomingMessage message)
+        throws GeneralSecurityException, InterruptedException, IOException {
+        Block head = miningBundle.getBlockChain().getCurrentHead();
+        byte[] payload = head.getShaTwoFiftySix().copyOfHash();
+        OutgoingMessage returnMsg = new OutgoingMessage(Message.HEAD, payload);
+        message.respond(returnMsg);
+    }
+
+    private void headMsgHandler(IncomingMessage message)
+        throws GeneralSecurityException, InterruptedException, IOException {
+        DataInputStream in =
+            new DataInputStream(new ByteArrayInputStream(message.payload));
+        ShaTwoFiftySix headHash = ShaTwoFiftySix.deserialize(in);
+        Optional<Block> hd =
+            miningBundle.getBlockChain().getBlockWithHash(headHash);
+        byte[] payload = Message.getBlockPayload(headHash, BLOCKS_TO_GET);
+        if (!hd.isPresent()) {
+            OutgoingMessage returnMsg =
+                new OutgoingMessage(Message.GET_BLOCK, payload);
+            message.respond(returnMsg);
+        }
+    }
 }

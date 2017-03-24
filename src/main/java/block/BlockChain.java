@@ -17,6 +17,7 @@ import java.util.*;
  */
 public class BlockChain {
     private LinkedHashMap<ShaTwoFiftySix, Pair<Block, Integer>> blocks = new LinkedHashMap<>();
+
     private Block currentHead;
     private int headDepth;
 
@@ -86,21 +87,38 @@ public class BlockChain {
      * youngest to oldest.
      *
      * @param hash The SHA-256 hash of the first {@code Block} that will appear in the list
-     * @return A {@code List} of all ancestor {@code Block}s related to the {@code Block} with hash {@code hash}, from
-     * youngest to oldest, or an empty list if no such {@code Block} exists
+     * @param numAncest the number of ancestors from {@code Block} with
+     *   {@code hash} to return.
+     * @return A {@code List} of all ancestor {@code Block}s related to the
+     *   {@code Block} with hash {@code hash}, from youngest to oldest, or an
+     *    empty list if no such {@code Block} exists
      */
-    public List<Block> getAncestorsStartingAt(ShaTwoFiftySix hash) {
+    public List<Block> getAncestorsStartingAt(ShaTwoFiftySix hash, int numAncest) {
         ArrayList<Block> result = new ArrayList<>();
 
         if (hash == null) return result;
 
-        while (blocks.containsKey(hash)) {
+        while (blocks.containsKey(hash) && numAncest > 0) {
             Block current = blocks.get(hash).getLeft();
             result.add(current);
             hash = current.previousBlockHash;
+            --numAncest;
         }
 
         return result;
+    }
+
+    /**
+     * Finds all the ancestors of {@code Block} with hash {@code hash} contained in {@code this} and returns them from
+     * youngest to oldest.
+     *
+     * @param hash The SHA-256 hash of the first {@code Block} that will appear in the list
+     * @return A {@code List} of all ancestor {@code Block}s related to the
+     *   {@code Block} with hash {@code hash}, from youngest to oldest, or an
+     *    empty list if no such {@code Block} exists
+     */
+    public List<Block> getAncestorsStartingAt(ShaTwoFiftySix hash) {
+        return getAncestorsStartingAt(hash, blocks.size());
     }
 
     /**

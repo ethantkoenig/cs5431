@@ -18,6 +18,7 @@ import java.security.GeneralSecurityException;
 import java.security.PublicKey;
 import java.util.*;
 import java.util.logging.Logger;
+import java.io.ByteArrayOutputStream;
 
 /**
  * Represents a block of transactions in the ledger
@@ -28,6 +29,7 @@ public class Block implements Iterable<Transaction> {
     public final static int NUM_TRANSACTIONS_PER_BLOCK = 2;
     public final static int NONCE_SIZE_IN_BYTES = 128;
     public final static int REWARD_AMOUNT = 50000;
+    public final static int MAX_BLOCKS_PER_MSG = 500;
 
     public final ShaTwoFiftySix previousBlockHash;
     public final Transaction[] transactions;
@@ -56,6 +58,34 @@ public class Block implements Iterable<Transaction> {
 
     /**
      * @param input input bytes to deserialize
+     * @return Array of deserialized blocks, if length is invalid, returns an
+     *   empty one element array
+     */
+    public static Optional<Block[]> deserializeBlocks(byte[] input)
+            throws IOException, GeneralSecurityException {
+        return deserializeBlocks(new DataInputStream(new ByteArrayInputStream(input)));
+    }
+
+    /**
+     * @param input input bytes to deserialize
+     * @return Array of deserialized blocks
+     */
+    public static Optional<Block[]> deserializeBlocks(DataInputStream input)
+        throws IOException, GeneralSecurityException {
+        int numBlocks = input.readInt();
+        if (numBlocks > 0 && numBlocks < MAX_BLOCKS_PER_MSG) {
+            Block[] blocks = new Block[numBlocks];
+            for (int i = 0; i < numBlocks; ++i) {
+                blocks[i] = Block.deserialize(input);
+            }
+            return Optional.of(blocks);
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * @param input input bytes to deserialize
      * @return deserialized block
      */
     public static Block deserialize(byte[] input) throws IOException, GeneralSecurityException {
@@ -79,6 +109,16 @@ public class Block implements Iterable<Transaction> {
         block.reward = new TxOut(REWARD_AMOUNT, rewardKey);
         IOUtils.fill(input, block.nonce);
         return block;
+    }
+
+    public static byte[] serializeBlocks(List<Block> blocks) throws IOException {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        DataOutputStream dataOut = new DataOutputStream(outputStream);
+        dataOut.writeInt(blocks.size());
+        for (Block b : blocks) {
+            b.serialize(dataOut);
+        }
+        return outputStream.toByteArray();
     }
 
     /**

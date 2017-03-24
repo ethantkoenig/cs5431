@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.Random;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
+import java.util.Arrays;
 
 /**
  * The MinerThread is run as a background thread by a Node and is responsible for mining.
@@ -70,7 +71,7 @@ public class MinerThread extends Thread {
         LOGGER.info("[+] Successfully mined block! Broadcasting to other nodes.");
         // Put message on broadcast queue
         try {
-            byte[] payload = ByteUtil.asByteArray(finalBlock::serialize);
+            byte[] payload = Block.serializeBlocks(Arrays.asList(finalBlock));
             broadcastQueue.put(new OutgoingMessage(Message.BLOCK, payload));
         } catch (InterruptedException | IOException e) {
             e.printStackTrace();
