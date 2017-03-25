@@ -26,7 +26,7 @@ public class TransactionGenerator extends Generator<Transaction> {
     public Transaction generate(SourceOfRandomness random, GenerationStatus status) {
         Transaction.Builder builder = new Transaction.Builder();
 
-        // TODO: Update this method to generate consistent transactions
+        // TODO: Update this method to generate consistent transactions using a configurator
 
         int numInputs = random.nextInt(1,MAX_INPUTS);
         for (int i = 0; i < numInputs; ++i) {
@@ -43,11 +43,8 @@ public class TransactionGenerator extends Generator<Transaction> {
 
         try {
             return builder.build();
-        } catch (GeneralSecurityException e) {
+        } catch (GeneralSecurityException | IOException e) {
             // We should not ever encounter this
-            assert false;
-        } catch (IOException e) {
-            // Nor this
             assert false;
         }
 
