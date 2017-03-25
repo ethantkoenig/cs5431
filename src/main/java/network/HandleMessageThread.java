@@ -133,12 +133,13 @@ public class HandleMessageThread extends Thread {
         }
     }
 
-    private void addBlockToChain(Block block) {
+    private boolean addBlockToChain(Block block) {
+        boolean toReturn = false;
         if (currentAddToBlock == null) {
             if (block.verifyGenesis(miningBundle.privilegedKey)) {
                 LOGGER.info("Received the genesis block");
                 LOGGER.info(String.format("Genesis hash: %s", block.getShaTwoFiftySix().toString()));
-                miningBundle.getBlockChain().insertBlock(block);
+                toReturn = miningBundle.getBlockChain().insertBlock(block);
                 currentHashingBlock = miningBundle.getBlockChain().getCurrentHead();
                 LOGGER.info("[!] Creating block to put transaction on.");
                 ShaTwoFiftySix previousBlockHash = miningBundle.getBlockChain().getCurrentHead().getShaTwoFiftySix();
@@ -147,7 +148,7 @@ public class HandleMessageThread extends Thread {
             } else {
                 LOGGER.info("Received invalid genesis block");
             }
-            return;
+            return toReturn;
         }
         if (currentHashingBlock != null) {
             ArrayList<Transaction> difference = block.getTransactionDifferences(currentHashingBlock);
@@ -165,10 +166,11 @@ public class HandleMessageThread extends Thread {
 
         // Add block to chain
         LOGGER.info("[+] Adding completed block to block chain");
-        miningBundle.getBlockChain().insertBlock(block);
+        toReturn = miningBundle.getBlockChain().insertBlock(block);
         miningBundle.getUnspentTransactions().put(block.getShaTwoFiftySix(), 0, block.reward);
 
         startMiningThread();
+        return toReturn;
     }
 
     private void txMsgHandler(IncomingMessage msg)
