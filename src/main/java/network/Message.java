@@ -30,6 +30,11 @@ public abstract class Message {
         this.payload = Arrays.copyOf(payload, payload.length);
     }
 
+    @Override
+    public String toString() {
+        return String.format("Message[type=%d, payload={len:%d}]", type, payload.length);
+    }
+
     /**
      * Write the serialization of a payload of GET_BLOCK message type
      *
