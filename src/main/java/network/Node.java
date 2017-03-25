@@ -67,7 +67,9 @@ public class Node {
             }
             LOGGER.info("[+] Received connection!");
             connectionThread.start();
-            this.connections.add(connectionThread);
+            synchronized(this) {
+                connections.add(connectionThread);
+            }
         }
     }
 
@@ -82,7 +84,9 @@ public class Node {
             Socket socket = new Socket(host, port);
             ConnectionThread connectionThread = new ConnectionThread(socket, this.messageQueue);
             connectionThread.start();
-            this.connections.add(connectionThread);
+            synchronized (this) {
+                this.connections.add(connectionThread);
+            }
         } catch (IOException e) {
             LOGGER.severe(String.format("Could not connect to host: %s.%n", host));
         }
@@ -112,7 +116,7 @@ public class Node {
      *
      * @throws IOException if the serverSocket is already closed or broken.
      */
-    public void close() throws IOException {
+    public synchronized void close() throws IOException {
         if (serverSocket != null) serverSocket.close();
         for (ConnectionThread connectionThread : connections) {
             connectionThread.close();
