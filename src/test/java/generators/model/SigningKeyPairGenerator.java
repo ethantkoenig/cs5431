@@ -3,7 +3,6 @@ package generators.model;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import testutils.InsecureSecureRandom;
 import testutils.SeededRandom;
@@ -14,8 +13,6 @@ import java.security.spec.ECGenParameterSpec;
 import java.util.Random;
 
 public class SigningKeyPairGenerator extends Generator<KeyPair> {
-
-    private static int MAX_TRIES = 100;
 
     public SigningKeyPairGenerator() {
         super(KeyPair.class);
@@ -34,10 +31,9 @@ public class SigningKeyPairGenerator extends Generator<KeyPair> {
         KeyPairGenerator generator = null;
         try {
             generator = KeyPairGenerator.getInstance("ECDSA", "BC");
-        } catch (NoSuchAlgorithmException e) {
+        } catch (NoSuchAlgorithmException|NoSuchProviderException e) {
             e.printStackTrace();
-        } catch (NoSuchProviderException e) {
-            e.printStackTrace();
+            return null;
         }
 
         ECGenParameterSpec ecSpec = new ECGenParameterSpec("P-256");
