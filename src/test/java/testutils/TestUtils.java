@@ -45,9 +45,13 @@ public class TestUtils {
         );
     }
 
-    public static <T> T assertPresent(Optional<T> optional) {
-        Assert.assertTrue(optional.isPresent());
+    public static <T> T assertPresent(String message, Optional<T> optional) {
+        Assert.assertTrue(message, optional.isPresent());
         return optional.orElseThrow(() -> new AssertionError("This can't happen"));
+    }
+
+    public static <T> T assertPresent(Optional<T> optional) {
+        return assertPresent(null, optional);
     }
 
     /**
@@ -64,6 +68,19 @@ public class TestUtils {
         } catch (IOException e) {
             Assert.fail(String.format("Unexpected exception while writing file: %s", e.getMessage()));
         }
+    }
+
+    /**
+     * Convenience method for constructing an array of bytes
+     *
+     * @return byte array with the given elements (cast to bytes)
+     */
+    public static byte[] bytes(int... elements) {
+        byte[] result = new byte[elements.length];
+        for (int i = 0; i < result.length; i++) {
+            result[i] = (byte) elements[i];
+        }
+        return result;
     }
 
     /**

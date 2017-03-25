@@ -16,6 +16,7 @@ import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.io.*;
 
 import static org.junit.Assert.*;
 
@@ -194,6 +195,12 @@ public class BlockChainTest extends RandomizedTest {
         Block newHead = prev;
         assertEquals(blocks, bc.getAncestorsStartingAt(newHead.getShaTwoFiftySix()));
 
+        assertEquals(blocks.subList(0,2),
+                     bc.getAncestorsStartingAt(newHead.getShaTwoFiftySix(),2));
+
+        assertEquals(blocks.subList(1,3),
+                     bc.getAncestorsStartingAt(blocks.get(1).getShaTwoFiftySix(),2));
+
         prev = genesis;
         blocks = new ArrayList<>();
         blocks.add(genesis);
@@ -208,6 +215,14 @@ public class BlockChainTest extends RandomizedTest {
         assertEquals(blocks, bc.getAncestorsStartingAt(prev.getShaTwoFiftySix()));
 
         assertEquals(errorMessage, new ArrayList<>(), bc.getAncestorsStartingAt(null));
+
+        assertEquals(errorMessage, new ArrayList<>(), bc.getAncestorsStartingAt(null, -1));
+
+        assertEquals(errorMessage, new ArrayList<>(),
+                     bc.getAncestorsStartingAt(prev.getShaTwoFiftySix(), -1));
+
+        assertEquals(errorMessage, new ArrayList<>(), bc.getAncestorsStartingAt(null, 10));
+
     }
 
     @Test
@@ -225,7 +240,6 @@ public class BlockChainTest extends RandomizedTest {
         for (int i = 0; i < 100; ++i) {
             Block next = randomBlock(prev.getShaTwoFiftySix());
             bc.insertBlock(next);
-            blocks.add(genesis);
             prev = next;
         }
 
@@ -249,7 +263,6 @@ public class BlockChainTest extends RandomizedTest {
         for (int i = 0; i < 100; ++i) {
             Block next = randomBlock(prev.getShaTwoFiftySix());
             bc.insertBlock(next);
-            blocks.add(genesis);
             prev = next;
         }
 
@@ -257,4 +270,33 @@ public class BlockChainTest extends RandomizedTest {
             Assert.assertTrue(bc.containsBlock(b));
         }
     }
+
+    @Test
+    public void importMainChain() throws Exception {
+        Block genesis = Block.genesis();
+        PublicKey PK = Crypto.signatureKeyPair().getPublic();
+        genesis.addReward(PK);
+        BlockChain bc = new BlockChain(genesis);
+        Assert.assertTrue(bc.containsBlockWithHash(genesis.getShaTwoFiftySix()));
+
+        Block prev = genesis;
+        List<Block> blocks = new ArrayList<>();
+        blocks.add(genesis);
+
+        for (int i = 0; i < 100; ++i) {
+            Block next = randomBlock(prev.getShaTwoFiftySix());
+            bc.insertBlock(next);
+            prev = next;
+        }
+        bc.storeBlockChain();
+        BlockChain newbc = new BlockChain();
+        newbc.importBlockChain(new File("blockchain" + bc.getCurrentHead().getShaTwoFiftySix()));
+        for (Block b : blocks) {
+            Assert.assertTrue(newbc.containsBlock(b));
+        }
+
+        newbc.destroyBlockchain(new File("blockchain" + bc.getCurrentHead().getShaTwoFiftySix()));
+    }
 }
+
+

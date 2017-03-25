@@ -6,12 +6,9 @@ import transaction.TxOut;
 import utils.Pair;
 import utils.ShaTwoFiftySix;
 
-import java.io.IOException;
+import java.io.*;
 import java.security.GeneralSecurityException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * A {@code BlockChain} represents a forest of related {@code Blocks} which together represent a secure public ledger.
@@ -19,7 +16,8 @@ import java.util.Optional;
  * Created by eperdew on 2/25/17.
  */
 public class BlockChain {
-    private HashMap<ShaTwoFiftySix, Pair<Block, Integer>> blocks = new HashMap<>();
+    private LinkedHashMap<ShaTwoFiftySix, Pair<Block, Integer>> blocks = new LinkedHashMap<>();
+
     private Block currentHead;
     private int headDepth;
 
@@ -89,21 +87,38 @@ public class BlockChain {
      * youngest to oldest.
      *
      * @param hash The SHA-256 hash of the first {@code Block} that will appear in the list
-     * @return A {@code List} of all ancestor {@code Block}s related to the {@code Block} with hash {@code hash}, from
-     * youngest to oldest, or an empty list if no such {@code Block} exists
+     * @param numAncest the number of ancestors from {@code Block} with
+     *   {@code hash} to return.
+     * @return A {@code List} of all ancestor {@code Block}s related to the
+     *   {@code Block} with hash {@code hash}, from youngest to oldest, or an
+     *    empty list if no such {@code Block} exists
      */
-    public List<Block> getAncestorsStartingAt(ShaTwoFiftySix hash) {
+    public List<Block> getAncestorsStartingAt(ShaTwoFiftySix hash, int numAncest) {
         ArrayList<Block> result = new ArrayList<>();
 
         if (hash == null) return result;
 
-        while (blocks.containsKey(hash)) {
+        while (blocks.containsKey(hash) && numAncest > 0) {
             Block current = blocks.get(hash).getLeft();
             result.add(current);
             hash = current.previousBlockHash;
+            --numAncest;
         }
 
         return result;
+    }
+
+    /**
+     * Finds all the ancestors of {@code Block} with hash {@code hash} contained in {@code this} and returns them from
+     * youngest to oldest.
+     *
+     * @param hash The SHA-256 hash of the first {@code Block} that will appear in the list
+     * @return A {@code List} of all ancestor {@code Block}s related to the
+     *   {@code Block} with hash {@code hash}, from youngest to oldest, or an
+     *    empty list if no such {@code Block} exists
+     */
+    public List<Block> getAncestorsStartingAt(ShaTwoFiftySix hash) {
+        return getAncestorsStartingAt(hash, blocks.size());
     }
 
     /**
@@ -176,4 +191,56 @@ public class BlockChain {
         return blocks.containsKey(b.getShaTwoFiftySix());
     }
 
+
+    /**
+     * Writes all blocks in the blockchain to a directory 'blockchain'
+     *
+     * @return true in success, exception otherwise.
+     * @throws IOException
+     */
+    public boolean storeBlockChain() throws IOException {
+        File blockdir = new File("blockchain" + currentHead.getShaTwoFiftySix());
+        if (blockdir.mkdir()) {
+            int i = 0; // Still need to enforce ordering on the filesystem
+            for (Map.Entry<ShaTwoFiftySix, Pair<Block, Integer>> entry : blocks.entrySet()) {
+                File block = new File(blockdir.getPath() + '/' + i + entry.getKey());
+                DataOutputStream data = new DataOutputStream(new FileOutputStream(block));
+                entry.getValue().getLeft().serialize(data);
+                i++;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Reads in a file containing a series of blocks to be used to construct the blockchain.
+     * Note that since the main chain is stored in reverse order, we read in the file, deserializing
+     * blocks into an arraylist, then reversing that list and reinserting the blocks into the chain.
+     *
+     * @return true in success, exception otherwise.
+     * @throws IOException
+     */
+    public boolean importBlockChain(File blockdir) throws IOException, GeneralSecurityException {
+        File[] blocks = blockdir.listFiles();
+        if (blocks == null) return false;
+        Arrays.sort(blocks);
+        for (File block : blocks) {
+            insertBlock(Block.deserialize(new DataInputStream(new FileInputStream(block))));
+        }
+        return true;
+    }
+
+    /**
+     * Destroys the Blockchain
+     * @return true in successs, false or exception otherwise.
+     */
+    public boolean destroyBlockchain(File dir) {
+        File[] files = dir.listFiles();
+        if (files == null) return false;
+        for (File f : files) {
+            if (!f.delete()) return false;
+        }
+        return dir.delete();
+    }
 }

@@ -4,6 +4,7 @@ apply plugin: 'java'
 apply plugin: 'jacoco'
 
 repositories {
+    jcenter()
     mavenCentral()
 }
 
@@ -17,6 +18,7 @@ dependencies {
     testCompile 'com.pholser:junit-quickcheck-core:0.7'
     testCompile 'com.pholser:junit-quickcheck-generators:0.7'
     testCompile 'junit:junit:4.12'
+    testCompile group: 'org.mockito', name: 'mockito-core', version: '2.+'
 }
 
 findbugs {

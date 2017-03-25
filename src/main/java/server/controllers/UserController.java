@@ -3,6 +3,7 @@ package server.controllers;
 import server.access.UserAccess;
 import server.models.Key;
 import server.models.User;
+import server.utils.RouteUtils;
 import server.utils.ValidateUtils;
 import spark.ModelAndView;
 import spark.template.freemarker.FreeMarkerEngine;
@@ -12,6 +13,8 @@ import utils.Crypto;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static server.utils.RouteUtils.queryParam;
+import static server.utils.RouteUtils.wrapRoute;
 import static spark.Spark.*;
 
 public class UserController {
@@ -65,10 +68,10 @@ public class UserController {
                 return new ModelAndView(emptyModel, "login.ftl");
             }, new FreeMarkerEngine());
 
-            post("", (request, response) -> {
+            post("", wrapRoute((request, response) -> {
                 response.type("application/json");
-                String username = request.queryParams("username");
-                String password = request.queryParams("password");
+                String username = queryParam(request, "username");
+                String password = queryParam(request, "password");
                 User user = UserAccess.getUserbyUsername(username);
                 if (user == null) {
                     // TODO handle
@@ -81,7 +84,7 @@ public class UserController {
                 }
                 request.session(true).attribute("username", username);
                 return "ok";
-            });
+            }));
         });
     }
 
@@ -101,10 +104,10 @@ public class UserController {
                 response.redirect("/");
                 return null;
             }
-            List<Key> keys = UserAccess.getKeysByUserID(user.getId());
-            List<String> hashes = keys.stream().map(key ->
-                    ByteUtil.bytesToHexString(key.getPublicKey())
-            ).collect(Collectors.toList());
+            List<String> hashes = UserAccess.getKeysByUserID(user.getId()).stream()
+                    .map(Key::getPublicKey)
+                    .map(ByteUtil::bytesToHexString)
+                    .collect(Collectors.toList());
             Map<String, Object> model = new HashMap<>();
             model.put("username", user.getUsername());
             model.put("hashes", hashes);
@@ -113,34 +116,12 @@ public class UserController {
     }
 
     private static void addUserPublicKey() {
-        post("/user/:name/keys", (request, response) -> {
-            String name = request.params(":name");
-            String publicKeyStr = request.queryParams("publickey");
-            String privateKeyStr = request.queryParams("privatekey");
-
-            Optional<byte[]> publicKeyOpt = ByteUtil.hexStringToByteArray(publicKeyStr);
-            Optional<byte[]> privateKeyOpt = ByteUtil.hexStringToByteArray(privateKeyStr);
-            User user = UserAccess.getUserbyUsername(name);
-
-            if (!publicKeyOpt.isPresent() || !privateKeyOpt.isPresent()) {
-                // TODO 404 handling
-                return "invalid keys";
-            }
-            if (user == null) {
-                // TODO 404 handling
-                return "invalid username";
-            }
-            String sessionUsername = request.session().attribute("username");
-            if (sessionUsername == null) {
-                // TODO redirect to login?
-                return "must be logged in";
-            }
-            if (!request.session().attribute("username").equals(name)) {
-                // TODO 403 handling
-                return "cannot change another user's keys";
-            }
-            UserAccess.insertKey(user.getId(), publicKeyOpt.get(), privateKeyOpt.get());
+        post("/user/keys", wrapRoute((request, response) -> {
+            byte[] publicKey = RouteUtils.queryParamHex(request, "publickey");
+            byte[] privateKey = RouteUtils.queryParamHex(request, "privatekey");
+            User user = RouteUtils.loggedInUser(request);
+            UserAccess.insertKey(user.getId(), publicKey, privateKey);
             return "ok";
-        });
+        }));
     }
 }

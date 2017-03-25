@@ -10,6 +10,7 @@ import utils.Config;
 import java.sql.Connection;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.Arrays;
 
 public class MinerThreadTest extends RandomizedTest {
 
@@ -28,7 +29,7 @@ public class MinerThreadTest extends RandomizedTest {
 
         Assert.assertArrayEquals(errorMessage,
                 msg.payload,
-                ByteUtil.asByteArray(block::serialize));
+                Block.serializeBlocks(Arrays.asList(block)));
     }
 
     @Test
