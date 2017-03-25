@@ -3,7 +3,6 @@ package block;
 import transaction.Transaction;
 import transaction.TxIn;
 import transaction.TxOut;
-import utils.Pair;
 import utils.ShaTwoFiftySix;
 
 import java.io.*;
@@ -16,7 +15,7 @@ import java.util.*;
  * Created by eperdew on 2/25/17.
  */
 public class BlockChain {
-    private LinkedHashMap<ShaTwoFiftySix, Pair<Block, Integer>> blocks = new LinkedHashMap<>();
+    private LinkedHashMap<ShaTwoFiftySix, BlockWrapper> blocks = new LinkedHashMap<>();
 
     private Block currentHead;
     private int headDepth;
@@ -29,7 +28,7 @@ public class BlockChain {
      * Creates a new {@code BlockChain} with {@code genesisBlock} as its root.
      */
     public BlockChain(Block genesisBlock) {
-        blocks.put(genesisBlock.getShaTwoFiftySix(), new Pair<>(genesisBlock, 0));
+        blocks.put(genesisBlock.getShaTwoFiftySix(), new BlockWrapper(genesisBlock, 0, blocks.size()));
         currentHead = genesisBlock;
         headDepth = 0;
     }
@@ -40,7 +39,7 @@ public class BlockChain {
      */
     public Optional<Block> getBlockWithHash(ShaTwoFiftySix hash) {
         return Optional.ofNullable(blocks.get(hash))
-                .map(p -> p.getLeft());
+                .map(p -> p.block);
     }
 
     /**
@@ -53,8 +52,8 @@ public class BlockChain {
      */
     public boolean insertBlock(Block b) {
         if (blocks.containsKey(b.previousBlockHash)) {
-            Integer depth = blocks.get(b.previousBlockHash).getRight() + 1;
-            blocks.put(b.getShaTwoFiftySix(), new Pair<>(b, depth));
+            Integer depth = blocks.get(b.previousBlockHash).depth + 1;
+            blocks.put(b.getShaTwoFiftySix(), new BlockWrapper(b, depth, blocks.size()));
             if (depth > headDepth) {
                 currentHead = b;
                 headDepth = depth;
@@ -64,7 +63,7 @@ public class BlockChain {
             if (!blocks.isEmpty()) {
                 throw new IllegalStateException("Cannot insert genesis block into non-empty blockchain");
             }
-            blocks.put(b.getShaTwoFiftySix(), new Pair<>(b, 0));
+            blocks.put(b.getShaTwoFiftySix(), new BlockWrapper(b, 0, blocks.size()));
             currentHead = b;
             headDepth = 0;
             return true;
@@ -99,7 +98,7 @@ public class BlockChain {
         if (hash == null) return result;
 
         while (blocks.containsKey(hash) && numAncest > 0) {
-            Block current = blocks.get(hash).getLeft();
+            Block current = blocks.get(hash).block;
             result.add(current);
             hash = current.previousBlockHash;
             --numAncest;
@@ -202,10 +201,10 @@ public class BlockChain {
         File blockdir = new File("blockchain" + currentHead.getShaTwoFiftySix());
         if (blockdir.mkdir()) {
             int i = 0; // Still need to enforce ordering on the filesystem
-            for (Map.Entry<ShaTwoFiftySix, Pair<Block, Integer>> entry : blocks.entrySet()) {
+            for (Map.Entry<ShaTwoFiftySix, BlockWrapper> entry : blocks.entrySet()) {
                 File block = new File(blockdir.getPath() + '/' + i + entry.getKey());
                 DataOutputStream data = new DataOutputStream(new FileOutputStream(block));
-                entry.getValue().getLeft().serialize(data);
+                entry.getValue().serialize(data);
                 i++;
             }
             return true;
@@ -224,9 +223,14 @@ public class BlockChain {
     public boolean importBlockChain(File blockdir) throws IOException, GeneralSecurityException {
         File[] blocks = blockdir.listFiles();
         if (blocks == null) return false;
-        Arrays.sort(blocks);
+        ArrayList<BlockWrapper> blocksOnDisk = new ArrayList<>();
         for (File block : blocks) {
-            insertBlock(Block.deserialize(new DataInputStream(new FileInputStream(block))));
+            BlockWrapper w = BlockWrapper.deserialize(new DataInputStream(new FileInputStream(block)));
+            blocksOnDisk.add(w);
+        }
+        Collections.sort(blocksOnDisk);
+        for (BlockWrapper w : blocksOnDisk) {
+            insertBlock(w.block);
         }
         return true;
     }
@@ -242,5 +246,55 @@ public class BlockChain {
             if (!f.delete()) return false;
         }
         return dir.delete();
+    }
+
+    private static final class BlockWrapper implements Comparable<BlockWrapper> {
+        private final Block block;
+        private final int depth;
+        // the position in which it was inserted, used for reconstruction
+        private final int insertionPosition;
+
+        private BlockWrapper(Block block, int depth, int insertionPosition) {
+            this.block = block;
+            this.depth = depth;
+            this.insertionPosition = insertionPosition;
+        }
+
+        private void serialize(DataOutputStream outputStream) throws IOException {
+            block.serialize(outputStream);
+            outputStream.writeInt(depth);
+            outputStream.writeInt(insertionPosition);
+        }
+
+        private static BlockWrapper deserialize(DataInputStream input)
+                throws IOException, GeneralSecurityException {
+            Block block = Block.deserialize(input);
+            int depth = input.readInt();
+            int insertionPosition = input.readInt();
+            return new BlockWrapper(block, depth, insertionPosition);
+        }
+
+        @Override
+        public int compareTo(BlockWrapper o) {
+            return insertionPosition - o.insertionPosition;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof BlockWrapper)) {
+                return false;
+            }
+            BlockWrapper w = (BlockWrapper) o;
+            return block.equals(w.block) && depth == w.depth
+                    && insertionPosition == w.insertionPosition;
+        }
+
+        @Override
+        public int hashCode() {
+            return Arrays.hashCode(new Object[] { block, depth, insertionPosition });
+        }
     }
 }
