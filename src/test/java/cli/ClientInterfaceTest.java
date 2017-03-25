@@ -86,7 +86,7 @@ public class ClientInterfaceTest extends RandomizedTest {
         Assert.assertNotNull(errorMessage, m);
         Assert.assertEquals(errorMessage, Message.TRANSACTION, m.type);
 
-        Transaction transaction = Transaction.deserialize(m.payload);
+        Transaction transaction = Transaction.DESERIALIZER.deserialize(m.payload);
         Assert.assertEquals(errorMessage, 1, transaction.numInputs);
         Assert.assertEquals(errorMessage, 1, transaction.numOutputs);
     }

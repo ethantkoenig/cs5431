@@ -2,12 +2,8 @@ package transaction;
 
 
 import block.UnspentTransactions;
-import utils.ByteUtil;
-import utils.HashCache;
-import utils.Longs;
-import utils.ShaTwoFiftySix;
+import utils.*;
 
-import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -24,8 +20,9 @@ import java.util.logging.Logger;
  * Main transaction class.
  * Contains an array of inputs, outputs and signatures.
  */
-public class Transaction extends HashCache {
+public class Transaction extends HashCache implements CanBeSerialized {
     private final static Logger LOGGER = Logger.getLogger(Logger.class.getName());
+    public static final Deserializer<Transaction> DESERIALIZER = new TransactionDeserializer();
 
     private final TxIn[] txIn;
     private final TxOut[] txOut;
@@ -48,7 +45,7 @@ public class Transaction extends HashCache {
             throw new IllegalStateException();
         }
         Transaction txn = new Transaction(inputs, outputs, null);
-        byte[] body = ByteUtil.asByteArray(txn::serialize);
+        byte[] body = ByteUtil.asByteArray(txn::serializeWithoutSignatures);
 
         Signature[] signatures = new Signature[keys.length];
         for (int i = 0; i < keys.length; i++) {
@@ -59,54 +56,14 @@ public class Transaction extends HashCache {
     }
 
     /**
-     * @param input input to deserialize
-     * @return deserialized transaction
-     */
-    public static Transaction deserialize(byte[] input)
-            throws GeneralSecurityException, IOException {
-        return deserialize(new DataInputStream(new ByteArrayInputStream(input)));
-    }
-
-    /**
-     * @param input input to deserialize
-     * @return deserialized transaction
-     */
-    public static Transaction deserialize(DataInputStream input)
-            throws GeneralSecurityException, IOException {
-        final int numInputs = input.readInt();
-        TxIn[] inputs = new TxIn[numInputs];
-        for (int i = 0; i < numInputs; i++) {
-            inputs[i] = TxIn.deserialize(input);
-        }
-
-        final int numOutputs = input.readInt();
-        TxOut[] outputs = new TxOut[numOutputs];
-        for (int i = 0; i < numOutputs; i++) {
-            outputs[i] = TxOut.deserialize(input);
-        }
-        Signature[] signatures = new Signature[numInputs];
-        for (int i = 0; i < numInputs; i++) {
-            signatures[i] = Signature.deserialize(input);
-        }
-        return new Transaction(inputs, outputs, signatures);
-    }
-
-    /**
      * Serialize this transaction (excluding signatures), and write it to {@code outputStream}
      *
      * @param outputStream output to write serialized transaction to
      * @throws IOException
      */
-    public void serialize(DataOutputStream outputStream) throws IOException {
-        outputStream.writeInt(txIn.length);
-        for (TxIn input : txIn) {
-            input.serialize(outputStream);
-        }
-
-        outputStream.writeInt(txOut.length);
-        for (TxOut output : txOut) {
-            output.serialize(outputStream);
-        }
+    public void serializeWithoutSignatures(DataOutputStream outputStream) throws IOException {
+        CanBeSerialized.serializeArray(outputStream, txIn);
+        CanBeSerialized.serializeArray(outputStream, txOut);
     }
 
     /**
@@ -115,11 +72,11 @@ public class Transaction extends HashCache {
      * @param outputStream output to write serialized transaction to
      * @throws IOException
      */
-    public void serializeWithSignatures(DataOutputStream outputStream) throws IOException {
+    public void serialize(DataOutputStream outputStream) throws IOException {
         if (signatures == null) {
-            throw new IllegalStateException("Cannot fully serialize unsigned transaction");
+            throw new IllegalStateException("Cannot fully serializeWithoutSignatures unsigned transaction");
         }
-        serialize(outputStream);
+        serializeWithoutSignatures(outputStream);
         for (Signature signature : signatures) {
             signature.serialize(outputStream);
         }
@@ -160,11 +117,10 @@ public class Transaction extends HashCache {
      * @param key        public key to use for verification, should match the public key of the output
      *                   corresponding to the relevant input
      * @return whether the signature was verified
-     * @throws GeneralSecurityException
      * @throws IOException
      */
     public boolean verifySignature(int inputIndex, PublicKey key)
-            throws GeneralSecurityException, IOException {
+            throws IOException {
         if (signatures == null) {
             throw new IllegalStateException("Cannot verify unsigned transaction");
         } else if (inputIndex < 0 || inputIndex >= signatures.length) {
@@ -173,8 +129,8 @@ public class Transaction extends HashCache {
             throw new IllegalArgumentException(msg);
         }
 
-        // TODO: eventually find a way to not re-serialize every time
-        return signatures[inputIndex].verify(ByteUtil.asByteArray(this::serialize), key);
+        // TODO: eventually find a way to not re-serializeWithoutSignatures every time
+        return signatures[inputIndex].verify(ByteUtil.asByteArray(this::serializeWithoutSignatures), key);
     }
 
     /**
@@ -190,7 +146,7 @@ public class Transaction extends HashCache {
      * @throws IOException
      */
     public boolean verify(UnspentTransactions unspentOutputs)
-            throws GeneralSecurityException, IOException {
+            throws IOException {
         long inputSum = 0;
         long outputSum = 0;
         for (int i = 0; i < txIn.length; ++i) {
@@ -257,7 +213,7 @@ public class Transaction extends HashCache {
     @Override
     protected ShaTwoFiftySix computeHash() {
         try {
-            return ShaTwoFiftySix.hashOf(ByteUtil.asByteArray(this::serialize));
+            return ShaTwoFiftySix.hashOf(ByteUtil.asByteArray(this::serializeWithoutSignatures));
         } catch (IOException | GeneralSecurityException e) {
             LOGGER.severe(e.getMessage());
             throw new RuntimeException(e);
@@ -319,6 +275,23 @@ public class Transaction extends HashCache {
                     outputs.toArray(new TxOut[outputs.size()]),
                     privateKeys.toArray(new PrivateKey[privateKeys.size()])
             );
+        }
+    }
+
+    private static final class TransactionDeserializer implements Deserializer<Transaction> {
+        @Override
+        public Transaction deserialize(DataInputStream inputStream) throws DeserializationException, IOException {
+            TxIn[] inputs = Deserializer.deserializeList(inputStream, TxIn.DESERIALIZER)
+                    .toArray(new TxIn[0]);
+
+            TxOut[] outputs = Deserializer.deserializeList(inputStream, TxOut.DESERIALIZER)
+                    .toArray(new TxOut[0]);
+
+            Signature[] signatures = new Signature[inputs.length];
+            for (int i = 0; i < inputs.length; i++) {
+                signatures[i] = Signature.deserialize(inputStream);
+            }
+            return new Transaction(inputs, outputs, signatures);
         }
     }
 }

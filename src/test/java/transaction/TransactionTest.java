@@ -110,8 +110,8 @@ public class TransactionTest extends RandomizedTest {
         Assert.assertTrue(errorMessage,
                 tx.verifySignature(0, senderPair.getPublic()));
 
-        byte[] serialized = ByteUtil.asByteArray(tx::serializeWithSignatures);
-        Transaction deserialized = Transaction.deserialize(serialized);
+        byte[] serialized = ByteUtil.asByteArray(tx::serialize);
+        Transaction deserialized = Transaction.DESERIALIZER.deserialize(serialized);
 
         Assert.assertTrue(tx.equals(deserialized));
         Assert.assertTrue(deserialized.verifySignature(0, senderPair.getPublic()));
@@ -157,8 +157,8 @@ public class TransactionTest extends RandomizedTest {
                 .addOutput(new TxOut(300, recipientPair3.getPublic()))
                 .build();
 
-        byte[] serialized = ByteUtil.asByteArray(txn::serializeWithSignatures);
-        Transaction deserialized = Transaction.deserialize(serialized);
+        byte[] serialized = ByteUtil.asByteArray(txn::serialize);
+        Transaction deserialized = Transaction.DESERIALIZER.deserialize(serialized);
 
         Assert.assertTrue(txn.equals(deserialized));
         Assert.assertTrue(errorMessage,
@@ -185,8 +185,8 @@ public class TransactionTest extends RandomizedTest {
                 .addOutput(new TxOut(300, recipientPair3.getPublic()))
                 .build();
 
-        byte[] serialized = ByteUtil.asByteArray(txn::serializeWithSignatures);
-        Transaction deserialized = Transaction.deserialize(serialized);
+        byte[] serialized = ByteUtil.asByteArray(txn::serialize);
+        Transaction deserialized = Transaction.DESERIALIZER.deserialize(serialized);
 
         Assert.assertTrue(txn.equals(deserialized));
 

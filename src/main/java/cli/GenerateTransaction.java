@@ -8,7 +8,6 @@ import transaction.TxIn;
 import transaction.TxOut;
 import utils.ByteUtil;
 import utils.Crypto;
-import utils.IOUtils;
 import utils.ShaTwoFiftySix;
 
 import java.io.BufferedReader;
@@ -66,7 +65,7 @@ public class GenerateTransaction {
 
     private void sendTransaction(Transaction transaction, List<InetSocketAddress> addresses)
             throws IOException {
-        byte[] payload = ByteUtil.asByteArray(transaction::serializeWithSignatures);
+        byte[] payload = ByteUtil.asByteArray(transaction::serialize);
 
         for (InetSocketAddress address : addresses) {
             try (Socket socket = new Socket(address.getAddress(), address.getPort())) {

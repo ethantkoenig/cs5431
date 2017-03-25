@@ -3,12 +3,14 @@ package network;
 import block.Block;
 import block.UnspentTransactions;
 import transaction.Transaction;
+import utils.ByteUtil;
+import utils.CanBeSerialized;
 import utils.ShaTwoFiftySix;
 
 import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
@@ -44,7 +46,7 @@ public class MessageHandler {
      *            is to be added to the block we are working on
      */
     public void txMsgHandler(IncomingMessage msg, Transaction tx)
-            throws GeneralSecurityException, InterruptedException, IOException {
+            throws InterruptedException, IOException {
         if (!recentTransactionsReceived.contains(msg)) {
             LOGGER.info("[!] New transaction, so I am broadcasting to all other miners.");
             broadcastQueue.put(new OutgoingMessage(msg.type, msg.payload));
@@ -71,15 +73,13 @@ public class MessageHandler {
      * Responds to a sender with a BLOCK message contain the {@code ancestToGet}
      * ancestors of block with hash {@code lastHash}
      *
-     * @param message     IncomingMessage to respond to
-     * @param ancestToGet int of how many ancestors to return of {@code lastHash}
-     * @param lastHash    Shatwofiftysix of the Block we want ancestors of
+     * @param message IncomingMessage to respond to
+     * @param request Request for blocks
      */
-    public void getBlockMsgHandler(IncomingMessage message, int ancestToGet,
-                                   ShaTwoFiftySix lastHash) throws IOException {
-        byte[] payload
-                = Block.serializeBlocks(bundle.getBlockChain()
-                .getAncestorsStartingAt(lastHash, ancestToGet));
+    public void getBlockMsgHandler(IncomingMessage message, GetBlocksRequest request) throws IOException {
+        List<Block> ancestors = bundle.getBlockChain()
+                .getAncestorsStartingAt(request.hash, request.numBlocksRequested);
+        byte[] payload = ByteUtil.asByteArray(out -> CanBeSerialized.serializeList(out, ancestors));
         OutgoingMessage returnMsg = new OutgoingMessage(Message.BLOCK, payload);
         message.respond(returnMsg);
     }
@@ -138,7 +138,7 @@ public class MessageHandler {
     }
 
     private void addTransactionToBlock(Transaction transaction)
-            throws GeneralSecurityException, IOException {
+            throws IOException {
         if (currentAddToBlock == null) {
             if (bundle.getBlockChain().getCurrentHead() == null) {
                 LOGGER.warning("Received transaction before genesis block received");

@@ -18,8 +18,8 @@ public class TransactionProperties {
     }
 
     @Property public void deserializeSerializeInverse(Transaction tx) throws Exception {
-        byte[] ser = ByteUtil.asByteArray(tx::serializeWithSignatures);
-        Transaction deser = Transaction.deserialize(ser);
+        byte[] ser = ByteUtil.asByteArray(tx::serialize);
+        Transaction deser = Transaction.DESERIALIZER.deserialize(ser);
 
         assertEqualsWithHashCode(
                 "Transaction deserialized to something different after serialization",
