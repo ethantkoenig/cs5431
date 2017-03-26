@@ -21,27 +21,25 @@ public class BlockGenerator extends Generator<Block> {
 
     @Override
     public Block generate(SourceOfRandomness random, GenerationStatus status) {
-        Pair<UnspentTransactions, Map<PublicKey, PrivateKey>> pair =
-                new UnspentTransactionsGenerator().generateWithKeys(random, status);
+        UnspentTransactions unspentTxs =
+                new UnspentTransactionsGenerator().generate(random, status);
         ShaTwoFiftySix randomHash = gen().type(ShaTwoFiftySix.class).generate(random, status);
-        return generate(randomHash, pair.getLeft(), pair.getRight(), random, status);
+        return generate(randomHash, unspentTxs, random, status);
     }
 
     public Block generate(
             ShaTwoFiftySix previousBlock,
             UnspentTransactions unspentTxs,
-            Map<PublicKey, PrivateKey> keyMapping,
             SourceOfRandomness random,
             GenerationStatus status)
     {
         Block block = Block.empty(previousBlock);
-        TransactionGenerator txGen = new TransactionGenerator(unspentTxs, keyMapping);
+        TransactionGenerator txGen = new TransactionGenerator(unspentTxs);
         for (int i = 0; i < Block.NUM_TRANSACTIONS_PER_BLOCK; ++i) {
             block.addTransaction(txGen.generate(random, status));
         }
 
         KeyPair keys = new SigningKeyPairGenerator().generate(random, status);
-        keyMapping.put(keys.getPublic(), keys.getPrivate());
 
         block.addReward(keys.getPublic());
 

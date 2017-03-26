@@ -25,22 +25,22 @@ public class TransactionGenerator extends Generator<Transaction> {
     private static int DEFAULT_MAX_INPUTS = 5;
     private static int DEFAULT_MAX_OUTPUTS = 5;
 
-    private final Optional<Pair<UnspentTransactions,Map<PublicKey,PrivateKey>>> consistencyData;
+    private final Optional<UnspentTransactions> unspentTxs;
 
     public TransactionGenerator() {
         super(Transaction.class);
-        consistencyData = Optional.empty();
+        unspentTxs = Optional.empty();
     }
 
-    public TransactionGenerator(UnspentTransactions unspentTxs, Map<PublicKey, PrivateKey> keyMapping) {
+    public TransactionGenerator(UnspentTransactions unspentTxs) {
         super(Transaction.class);
-        consistencyData = Optional.of(new Pair<>(unspentTxs, keyMapping));
+        this.unspentTxs = Optional.of(unspentTxs);
     }
 
     @Override
     public Transaction generate(SourceOfRandomness random, GenerationStatus status) {
-        return consistencyData
-                .map(p -> generateWithRespectTo(p.getLeft(), p.getRight(), random, status))
+        return unspentTxs
+                .map(p -> generateWithRespectTo(p, random, status))
                 .orElseGet(() -> generateSimple(random, status));
     }
 
@@ -72,13 +72,14 @@ public class TransactionGenerator extends Generator<Transaction> {
 
     private Transaction generateWithRespectTo(
             UnspentTransactions unspentTxs,
-            Map<PublicKey, PrivateKey> keyMapping,
             SourceOfRandomness random,
             GenerationStatus status) {
         if (unspentTxs.size() <= 0) {
             assert false;
             return null;
         }
+
+        Map<PublicKey, PrivateKey> keyMapping = SigningKeyPairGenerator.getKeyMapping();
 
         int numInputs = random.nextInt(1, Math.min(unspentTxs.size(), DEFAULT_MAX_INPUTS));
         int numOutputs = random.nextInt(1, DEFAULT_MAX_OUTPUTS);
@@ -99,7 +100,6 @@ public class TransactionGenerator extends Generator<Transaction> {
 
         for (int j = 0; j < numOutputs; ++j) {
             KeyPair keys = keyGen.generate(random, status);
-            keyMapping.put(keys.getPublic(), keys.getPrivate());
 
             long outVal;
             if (j == numOutputs - 1) {

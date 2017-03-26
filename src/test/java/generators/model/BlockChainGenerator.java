@@ -33,9 +33,7 @@ public class BlockChainGenerator extends Generator<BlockChain> {
     public BlockChain generate(SourceOfRandomness random, GenerationStatus status) {
         Block genesis = Block.genesis();
         KeyPair privilegedKey = gen().type(KeyPair.class).generate(random, status);
-        Map<PublicKey, PrivateKey> keyMapping = new HashMap<>();
 
-        keyMapping.put(privilegedKey.getPublic(), privilegedKey.getPrivate());
         genesis.addReward(privilegedKey.getPublic());
 
         try {
@@ -128,7 +126,6 @@ public class BlockChainGenerator extends Generator<BlockChain> {
             Block child = new BlockGenerator().generate(
                     parent.getShaTwoFiftySix(),
                     unspentTxs,
-                    keyMapping,
                     random,
                     status);
             blockchain.insertBlock(child);

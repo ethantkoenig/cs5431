@@ -34,12 +34,6 @@ public class UnspentTransactionsGenerator extends Generator<UnspentTransactions>
 
     @Override
     public UnspentTransactions generate(SourceOfRandomness random, GenerationStatus status) {
-        return generateWithKeys(random, status).getLeft();
-    }
-
-    public Pair<UnspentTransactions, Map<PublicKey, PrivateKey>> generateWithKeys(
-            SourceOfRandomness random,
-            GenerationStatus status) {
         UnspentTransactions unspentTxs = UnspentTransactions.empty();
 
         int minSize = size == null ? DEFAULT_MIN_SIZE : size.min();
@@ -56,17 +50,15 @@ public class UnspentTransactionsGenerator extends Generator<UnspentTransactions>
 
         TxOutGenerator outGen = new TxOutGenerator();
         ArrayList<TxOut> outputs = new ArrayList<>();
-        HashMap<PublicKey, PrivateKey> keyMapping = new HashMap<>();
         for (int i = 0; i < numTxs; ++i) {
-            Pair<TxOut,KeyPair> p = outGen.generateWithKeys(random, status);
-            outputs.add(p.getLeft());
-            keyMapping.put(p.getRight().getPublic(), p.getRight().getPrivate());
+            TxOut out = outGen.generate(random, status);
+            outputs.add(out);
         }
 
         for (int i = 0; i < numTxs; ++i) {
             unspentTxs.put(hashes.get(0), offsets.get(0), outputs.get(0));
         }
 
-        return new Pair<>(unspentTxs, keyMapping);
+        return unspentTxs;
     }
 }

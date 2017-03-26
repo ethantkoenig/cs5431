@@ -22,11 +22,4 @@ public class TxOutGenerator extends Generator<TxOut> {
         return new TxOut(random.nextLong(MIN_VALUE, MAX_VALUE),
                 gen().type(KeyPair.class).generate(random, status).getPublic());
     }
-
-    public Pair<TxOut,KeyPair> generateWithKeys(SourceOfRandomness random, GenerationStatus status) {
-        KeyPair keys = gen().type(KeyPair.class).generate(random, status);
-        return new Pair<>(
-                new TxOut(random.nextLong(MIN_VALUE, MAX_VALUE), keys.getPublic()),
-                keys);
-    }
 }
