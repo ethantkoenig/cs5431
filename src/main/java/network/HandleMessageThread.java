@@ -39,12 +39,15 @@ public class HandleMessageThread extends Thread {
 
     private ArrayList<Stack<Block>> blocksToAdd;
 
+    private ArrayList<ShaTwoFiftySix> queriedHeads;
+
     // Needs reference to parent in order to call Node.broadcast()
     public HandleMessageThread(BlockingQueue<IncomingMessage> messageQueue, BlockingQueue<OutgoingMessage> broadcastQueue, MiningBundle bundle) {
         this.messageQueue = messageQueue;
         this.bundle = bundle;
         this.blocksToAdd = new ArrayList<Stack<Block>>();
         this.handler = new HandleMessage(broadcastQueue, bundle, LOGGER);
+        this.queriedHeads = new ArrayList<ShaTwoFiftySix>();
     }
 
     /**
@@ -74,7 +77,22 @@ public class HandleMessageThread extends Thread {
                             if (!rejects.isEmpty()) {
                                 // Add blocks to stack
                                 addToStacks(rejects);
-                                handler.askForHead(message);
+                                // Check if we queried for head before
+                                boolean askedForHead = false;
+                                for (Block b : rejects) {
+                                    askedForHead = askedForHead
+                                        || queriedHeads.contains(b.getShaTwoFiftySix());
+                                }
+                                if (askedForHead) {
+                                    // Ask for more blocks using hash of last of rejects
+                                    ShaTwoFiftySix askForHead
+                                        = rejects.get(rejects.size() - 1).getShaTwoFiftySix();
+                                    handler.getBlockMsgHandler(message,
+                                                               Message.BLOCKS_TO_GET,
+                                                               askForHead);
+                                } else {
+                                    handler.askForHead(message);
+                                }
                             }
                             addValidStacks();
                         } else {
@@ -100,6 +118,7 @@ public class HandleMessageThread extends Thread {
                             if (bundle.getBlockChain().containsBlockWithHash(headHash)) {
                                 LOGGER.info("Recievd HEAD message containing hash we already have");
                             } else {
+                                queriedHeads.add(headHash);
                                 handler.headMsgHandler(message, headHash);
                             }
                         } else {
