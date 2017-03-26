@@ -39,6 +39,8 @@ public class MinerTest extends RandomizedTest {
         simulation.sendBytes(randomBytes(1024), 0); // should be ignored
         simulation.sendBytes(randomBytes(1024), 1); // should be ignored
 
+        Thread.sleep(100); // TODO actually fix the race conditions
+
         simulation.sendMessage(new OutgoingMessage(
                 Message.GET_BLOCK,
                 Message.getBlockPayload(genesisBlock.getShaTwoFiftySix(), 1)
@@ -72,6 +74,8 @@ public class MinerTest extends RandomizedTest {
         boolean minedBy0 = block.reward.ownerPubKey.equals(pair0.getPublic());
         boolean minedBy1 = block.reward.ownerPubKey.equals(pair1.getPublic());
         Assert.assertTrue(minedBy0 || minedBy1);
+
+        Thread.sleep(100); // TODO actually fix the race conditions
 
         simulation.sendMessage(new OutgoingMessage(
                 Message.GET_BLOCK,
@@ -129,20 +133,6 @@ public class MinerTest extends RandomizedTest {
 
         private void setUp(int initPortNum, KeyPair[] keyPairs) throws Exception {
             ServerSocket serverSocket = new ServerSocket(initPortNum);
-            Thread spawningThread = new Thread(() -> {
-                try {
-                    final int numNodes = keyPairs.length;
-                    for (int i = 0; i < numNodes; i++) {
-                        ConnectionThread conn = new ConnectionThread(serverSocket.accept(), queue);
-                        conn.start();
-                        connectionThreads.add(conn);
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    queue.add(null);
-                }
-            });
-            spawningThread.start();
 
             KeyPair genesisPair = keyPairs[keyPairs.length - 1];
             for (int i = 0; i < keyPairs.length; i++) {
@@ -158,11 +148,13 @@ public class MinerTest extends RandomizedTest {
                 });
                 minerThreads.add(minerThread);
                 minerThread.start();
+                ConnectionThread conn = new ConnectionThread(serverSocket.accept(), queue);
+                conn.start();
+                connectionThreads.add(conn);
                 if (i < keyPairs.length - 1) {
                     Thread.sleep(50); // give miner a chance to start
                 }
             }
-            spawningThread.join();
         }
 
         private void assertMinersRunning() {
