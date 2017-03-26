@@ -76,7 +76,12 @@ public class Block implements Iterable<Transaction> {
         if (numBlocks > 0 && numBlocks < MAX_BLOCKS_PER_MSG) {
             Block[] blocks = new Block[numBlocks];
             for (int i = 0; i < numBlocks; ++i) {
-                blocks[i] = Block.deserialize(input);
+                Block b = Block.deserialize(input);
+                if (b.checkHash()) {
+                    blocks[i] = b;
+                } else {
+                    return Optional.empty();
+                }
             }
             return Optional.of(blocks);
         } else {
