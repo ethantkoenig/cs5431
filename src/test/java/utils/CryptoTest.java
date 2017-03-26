@@ -6,7 +6,6 @@ import org.junit.Test;
 import testutils.RandomizedTest;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.security.KeyPair;
 import java.security.PublicKey;
 
@@ -25,10 +24,7 @@ public class CryptoTest extends RandomizedTest {
         byte[] salt = Crypto.generateSalt();
         byte[] hash = Crypto.hashAndSalt(pass, salt);
 
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        outputStream.write(pass.getBytes("UTF-8"));
-        outputStream.write(salt);
-        Assert.assertArrayEquals(hash, Crypto.pbkdf2(outputStream.toByteArray(), salt));
+        Assert.assertArrayEquals(hash, Crypto.pbkdf2(pass, salt));
     }
 
     @Test
