@@ -80,6 +80,7 @@ public class Block implements Iterable<Transaction> {
             }
             return Optional.of(blocks);
         } else {
+            LOGGER.severe("Invalid number of blocks: " + numBlocks);
             return Optional.empty();
         }
     }
