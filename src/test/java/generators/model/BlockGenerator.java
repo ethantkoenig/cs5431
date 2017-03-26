@@ -5,7 +5,6 @@ import block.UnspentTransactions;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
-import transaction.Transaction;
 import utils.Pair;
 import utils.ShaTwoFiftySix;
 
