@@ -2,23 +2,16 @@ package network;
 
 import block.Block;
 import block.BlockChain;
-import block.UnspentTransactions;
 import transaction.Transaction;
 import utils.ShaTwoFiftySix;
-import utils.Pair;
 
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
-import java.io.DataInputStream;
-import java.io.ByteArrayInputStream;
-import java.util.Arrays;
-import java.util.Optional;
-import java.util.Stack;
-import java.util.List;
 
 
 /**
@@ -33,21 +26,19 @@ public class HandleMessageThread extends Thread {
 
     private BlockingQueue<IncomingMessage> messageQueue;
 
-    private HandleMessage handler;
+    private MessageHandler handler;
 
     private MiningBundle bundle;
 
-    private ArrayList<Stack<Block>> blocksToAdd;
-
-    private ArrayList<ShaTwoFiftySix> queriedHeads;
+    private final OrphanedBlocks orphanedBlocks = new OrphanedBlocks();
 
     // Needs reference to parent in order to call Node.broadcast()
-    public HandleMessageThread(BlockingQueue<IncomingMessage> messageQueue, BlockingQueue<OutgoingMessage> broadcastQueue, MiningBundle bundle) {
+    public HandleMessageThread(BlockingQueue<IncomingMessage> messageQueue,
+                               BlockingQueue<OutgoingMessage> broadcastQueue,
+                               MiningBundle bundle) {
         this.messageQueue = messageQueue;
         this.bundle = bundle;
-        this.blocksToAdd = new ArrayList<Stack<Block>>();
-        this.handler = new HandleMessage(broadcastQueue, bundle, LOGGER);
-        this.queriedHeads = new ArrayList<ShaTwoFiftySix>();
+        this.handler = new MessageHandler(broadcastQueue, bundle);
     }
 
     /**
@@ -59,72 +50,45 @@ public class HandleMessageThread extends Thread {
         try {
             IncomingMessage message;
             while ((message = messageQueue.take()) != null) {
-                if (!checkLen(message.payload)) {
-                    LOGGER.info("(WW) Message payload too large.");
-                    continue;
-                }
                 switch (message.type) {
                     case Message.TRANSACTION:
                         LOGGER.info("[!] Received transaction!");
                         Transaction transaction =
-                            Transaction.deserialize(message.payload);
+                                Transaction.deserialize(message.payload);
                         handler.txMsgHandler(message, transaction);
                         break;
                     case Message.BLOCK:
                         Optional<Block[]> opt = Block.deserializeBlocks(message.payload);
-                        if (opt.isPresent()) {
-                            List<Block> rejects = handler.blockMsgHandler(opt.get());
-                            if (!rejects.isEmpty()) {
-                                // Add blocks to stack
-                                addToStacks(rejects);
-                                // Check if we queried for head before
-                                boolean askedForHead = false;
-                                for (Block b : rejects) {
-                                    askedForHead = askedForHead
-                                        || queriedHeads.contains(b.getShaTwoFiftySix());
+                        if (!opt.isPresent()) {
+                            LOGGER.info("(WW) received misformatted BLOCK message or block that did not pass hashcheck.");
+                            break;
+                        }
+                        Block[] blocks = opt.get();
+                        boolean added = false;
+                        // TODO check that blocks are in "correct" order (parent, child, grandchild, ...)
+                        for (int i = blocks.length - 1; i >= 0; i--) {
+                            Block block = blocks[i];
+                            if (handler.blockHandler(block)) {
+                                for (Block descendant : orphanedBlocks.popDescendantsOf(block.getShaTwoFiftySix())) {
+                                    if (!handler.blockHandler(descendant)) {
+                                        LOGGER.severe("Unexpectedly unable to handle block");
+                                    }
                                 }
-                                if (askedForHead) {
-                                    // Ask for more blocks using hash of last of rejects
-                                    ShaTwoFiftySix askForHead
-                                        = rejects.get(rejects.size() - 1).getShaTwoFiftySix();
-                                    handler.getBlockMsgHandler(message,
-                                                               Message.BLOCKS_TO_GET,
-                                                               askForHead);
-                                } else {
-                                    handler.askForHead(message);
-                                }
+                                added = true;
+                                break;
+                            } else {
+                                orphanedBlocks.add(block);
                             }
-                            addValidStacks();
-                        } else {
-                            LOGGER.info("(WW) recieved ill formatted BLOCK message or block that did not pass hashcheck.");
+                        }
+                        if (!added) {
+                            message.respond(new OutgoingMessage(
+                                    Message.GET_BLOCK,
+                                    Message.getBlockPayload(blocks[0].getShaTwoFiftySix(), 10)
+                            ));
                         }
                         break;
                     case Message.GET_BLOCK:
-                        Optional<Pair<Integer, ShaTwoFiftySix>> optPar
-                            = checkGetBlockArgs(message.payload);
-                        if (optPar.isPresent()) {
-                            handler.getBlockMsgHandler(message,
-                                                       optPar.get().getLeft(),
-                                                       optPar.get().getRight());
-                        }
-                        break;
-                    case Message.GET_HEAD:
-                        handler.getHeadMsgHandler(message);
-                        break;
-                    case Message.HEAD:
-                        Optional<ShaTwoFiftySix> optl = checkHeadArgs(message.payload);
-                        if (optl.isPresent()) {
-                            ShaTwoFiftySix headHash = optl.get();
-                            if (bundle.getBlockChain().containsBlockWithHash(headHash)) {
-                                LOGGER.info("Recievd HEAD message containing hash we already have");
-                            } else {
-                                queriedHeads.add(headHash);
-                                handler.headMsgHandler(message, headHash);
-                            }
-                        } else {
-                            LOGGER.info("(WW) Recieved bad HEAD");
-                        }
-
+                        handleGetBlockRequest(message);
                         break;
                     default:
                         LOGGER.severe(String.format("Unexpected message type: %d", message.type));
@@ -136,79 +100,21 @@ public class HandleMessageThread extends Thread {
         }
     }
 
-    private void addToStacks(List<Block> blocks) {
-        for (Block b : blocks) {
-            addToStacks(b);
-        }
-    }
-
-    /*
-     * Adds block to a stack that accepts it, if none do, creates a new stack.
-     */
-    private void addToStacks(Block b) {
-        for (Stack<Block> s : blocksToAdd) {
-            Block head = s.peek();
-            if (head.previousBlockHash.equals(b.getShaTwoFiftySix())) {
-                s.push(b);
-                return;
-            }
-        }
-        Stack<Block> newStack = new Stack<Block>();
-        newStack.push(b);
-        blocksToAdd.add(newStack);
-        return;
-    }
-
-    /*
-     * Checks to see if any stack can be added to the blockchain, if so uses the
-     * handler to add it to the blockchain and removes from blocksToAdd
-     */
-    private void addValidStacks() {
-        ArrayList<Stack<Block>> toRemove = new ArrayList<>();
-        BlockChain chain = bundle.getBlockChain();
-        for (Stack<Block> s : blocksToAdd) {
-            Block stackHead = s.peek();
-            if (chain.containsBlockWithHash(stackHead.previousBlockHash)) {
-                if (!handler.addStackToChain(s)) {
-                    LOGGER.info("(!!) Invalid block in stack, block not added to blockchain and stack removed");
-                }
-                toRemove.add(s);
-            }
-        }
-        blocksToAdd.removeAll(toRemove);
-    }
-
-    private static boolean checkLen(byte[] payload) {
-        return payload.length < Message.MAX_PAYLOAD_LEN;
-    }
-
-    private Optional<Pair<Integer, ShaTwoFiftySix>> checkGetBlockArgs(byte[] payload)
-        throws IOException {
+    private void handleGetBlockRequest(IncomingMessage message)
+            throws IOException {
         DataInputStream input =
-            new DataInputStream(new ByteArrayInputStream(payload));
+                new DataInputStream(new ByteArrayInputStream(message.payload));
+        // TODO move deserialization elsewhere
         ShaTwoFiftySix lastHash = ShaTwoFiftySix.deserialize(input);
         int aToGet = input.readInt();
         BlockChain chain = bundle.getBlockChain();
-        if (aToGet <= 0) {
-            LOGGER.info("(WW) GET_HEAD message recieved with invalid number of blocks to get");
-            return Optional.empty();
-        } else if (chain.containsBlockWithHash(lastHash)) {
-            LOGGER.info("(WW) GET_HEAD message recieved with unknown hash");
-            return Optional.empty();
-        } else {
-            return Optional.of(new Pair(aToGet, lastHash));
+        if (aToGet <= 0 || aToGet >= Message.MAX_BLOCKS_TO_GET) {
+            LOGGER.info("GET_BLOCK message received with invalid number of blocks to get");
+            return;
+        } else if (!chain.containsBlockWithHash(lastHash)) {
+            LOGGER.info("GET_BLOCK message received with unknown hash");
+            return;
         }
-    }
-
-    private Optional<ShaTwoFiftySix> checkHeadArgs(byte[] payload)
-        throws IOException {
-        if (payload.length == ShaTwoFiftySix.HASH_SIZE_IN_BYTES) {
-            DataInputStream in =
-                new DataInputStream(new ByteArrayInputStream(payload));
-            ShaTwoFiftySix headHash = ShaTwoFiftySix.deserialize(in);
-            Optional<Block> hd =
-                bundle.getBlockChain().getBlockWithHash(headHash);
-        }
-        return Optional.empty();
+        handler.getBlockMsgHandler(message, aToGet, lastHash);
     }
 }

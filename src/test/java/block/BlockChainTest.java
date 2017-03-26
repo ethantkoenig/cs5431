@@ -129,9 +129,8 @@ public class BlockChainTest extends RandomizedTest {
         Block genesis2 = Block.genesis();
         genesis2.addReward(key2);
 
-        bc.insertBlock(genesis1);
-
-        TestUtils.assertThrows(errorMessage, () -> bc.insertBlock(genesis2), IllegalStateException.class);
+        assertTrue(bc.insertBlock(genesis1));
+        assertFalse(bc.insertBlock(genesis2));
     }
 
     @Test
