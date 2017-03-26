@@ -14,6 +14,7 @@ import java.io.IOException;
  */
 public abstract class Message {
     public static final int MAX_PAYLOAD_LEN = 33554432;
+    public static final int BLOCKS_TO_GET = 100;
 
     /* Message types */
     public static final byte TRANSACTION = 0;
