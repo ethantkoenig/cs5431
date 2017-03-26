@@ -23,7 +23,6 @@ import java.util.Optional;
  */
 public class HandleMessageThread extends Thread {
     // Blocks to request when we are behind other nodes
-    private static final int BLOCKS_TO_GET = 100;
     private static final Logger LOGGER = Logger.getLogger(HandleMessageThread.class.getName());
 
     private BlockingQueue<IncomingMessage> messageQueue;
