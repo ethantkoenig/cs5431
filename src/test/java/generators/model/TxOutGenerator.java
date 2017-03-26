@@ -4,6 +4,7 @@ import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import transaction.TxOut;
+import utils.Pair;
 
 import java.security.KeyPair;
 
@@ -20,5 +21,12 @@ public class TxOutGenerator extends Generator<TxOut> {
     public TxOut generate(SourceOfRandomness random, GenerationStatus status) {
         return new TxOut(random.nextLong(MIN_VALUE, MAX_VALUE),
                 gen().type(KeyPair.class).generate(random, status).getPublic());
+    }
+
+    public Pair<TxOut,KeyPair> generateWithKeys(SourceOfRandomness random, GenerationStatus status) {
+        KeyPair keys = gen().type(KeyPair.class).generate(random, status);
+        return new Pair<>(
+                new TxOut(random.nextLong(MIN_VALUE, MAX_VALUE), keys.getPublic()),
+                keys);
     }
 }

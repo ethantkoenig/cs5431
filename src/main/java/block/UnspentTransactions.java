@@ -5,12 +5,14 @@ import utils.Pair;
 import utils.ShaTwoFiftySix;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 /**
  * A map from (SHA-256, index) pairs to unspent transaction outputs.
  */
-public class UnspentTransactions {
+public class UnspentTransactions
+        implements Iterable<Map.Entry<Pair<ShaTwoFiftySix, Integer>, TxOut>> {
     private final Map<Pair<ShaTwoFiftySix, Integer>, TxOut> map;
 
     private UnspentTransactions(Map<Pair<ShaTwoFiftySix, Integer>, TxOut> map) {
@@ -47,6 +49,10 @@ public class UnspentTransactions {
         return map.remove(new Pair<>(hash, index));
     }
 
+    public int size() {
+        return map.size();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == this) {
@@ -61,5 +67,10 @@ public class UnspentTransactions {
     @Override
     public int hashCode() {
         return map.hashCode();
+    }
+
+    @Override
+    public Iterator<Map.Entry<Pair<ShaTwoFiftySix, Integer>, TxOut>> iterator() {
+        return map.entrySet().iterator();
     }
 }

@@ -1,41 +1,60 @@
 package generators.model;
 
+import block.UnspentTransactions;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import transaction.Transaction;
 import transaction.TxIn;
 import transaction.TxOut;
+import utils.Pair;
 import utils.ShaTwoFiftySix;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.util.Map;
+import java.util.Optional;
 
 public class TransactionGenerator extends Generator<Transaction> {
 
-    private static double FRAC_CORRECT = .8;
-    private static int MAX_INPUTS = 5;
-    private static int MAX_OUTPUTS = 5;
+
+
+    private static int DEFAULT_MAX_INPUTS = 5;
+    private static int DEFAULT_MAX_OUTPUTS = 5;
+
+    private final Optional<Pair<UnspentTransactions,Map<PublicKey,PrivateKey>>> consistencyData;
 
     public TransactionGenerator() {
         super(Transaction.class);
+        consistencyData = Optional.empty();
+    }
+
+    public TransactionGenerator(UnspentTransactions unspentTxs, Map<PublicKey, PrivateKey> keyMapping) {
+        super(Transaction.class);
+        consistencyData = Optional.of(new Pair<>(unspentTxs, keyMapping));
     }
 
     @Override
     public Transaction generate(SourceOfRandomness random, GenerationStatus status) {
+        return consistencyData
+                .map(p -> generateWithRespectTo(p.getLeft(), p.getRight(), random, status))
+                .orElse(generateSimple(random, status));
+    }
+
+    private Transaction generateSimple(SourceOfRandomness random, GenerationStatus status) {
         Transaction.Builder builder = new Transaction.Builder();
 
-        // TODO: Update this method to generate consistent transactions using a configurator
-
-        int numInputs = random.nextInt(1,MAX_INPUTS);
+        int numInputs = random.nextInt(1, DEFAULT_MAX_INPUTS);
         for (int i = 0; i < numInputs; ++i) {
             TxIn in = gen().type(TxIn.class).generate(random, status);
             KeyPair keys = gen().type(KeyPair.class).generate(random, status);
             builder.addInput(in, keys.getPrivate());
         }
 
-        int numOutputs = random.nextInt(1,MAX_OUTPUTS);
+        int numOutputs = random.nextInt(1, DEFAULT_MAX_OUTPUTS);
         for (int i = 0; i < numOutputs; ++i) {
             TxOut out = gen().type(TxOut.class).generate(random, status);
             builder.addOutput(out);
@@ -50,4 +69,67 @@ public class TransactionGenerator extends Generator<Transaction> {
 
         return null;
     }
+
+    private Transaction generateWithRespectTo(
+            UnspentTransactions unspentTxs,
+            Map<PublicKey, PrivateKey> keyMapping,
+            SourceOfRandomness random,
+            GenerationStatus status) {
+        if (unspentTxs.size() <= 0) {
+            return null;
+        }
+
+        int numInputs = random.nextInt(1, Math.min(unspentTxs.size(), DEFAULT_MAX_INPUTS));
+        int numOutputs = random.nextInt(1, DEFAULT_MAX_OUTPUTS);
+
+        long valueMoved = 0;
+
+        TxInGenerator txInGen = new TxInGenerator();
+        SigningKeyPairGenerator keyGen = new SigningKeyPairGenerator();
+        Transaction.Builder builder = new Transaction.Builder();
+
+        for (int i = 0; i < numInputs; ++i) {
+            Pair<TxOut,TxIn> p = txInGen.generateWithRespectTo(unspentTxs, random, status);
+            valueMoved += p.getLeft().value;
+            builder.addInput(p.getRight(), keyMapping.get(p.getLeft().ownerPubKey));
+        }
+
+        long valueLeft = valueMoved;
+
+        for (int j = 0; j < numOutputs; ++j) {
+            KeyPair keys = keyGen.generate(random, status);
+            keyMapping.put(keys.getPublic(), keys.getPrivate());
+
+            long outVal;
+            if (j == numOutputs - 1) {
+                outVal = valueLeft;
+            } else {
+                outVal = valueMoved/numOutputs;
+            }
+            valueLeft -= outVal;
+
+            TxOut out = new TxOut(outVal, keys.getPublic());
+            builder.addOutput(out);
+        }
+
+        Transaction result;
+        try {
+            result = builder.build();
+        } catch (IOException | GeneralSecurityException e) {
+            // We should not reach this case unless something goes seriously wrong
+            assert false;
+            e.printStackTrace();
+            return null;
+        }
+
+        ShaTwoFiftySix resultHash = result.getShaTwoFiftySix();
+
+        for (int i = 0; i < result.numOutputs; ++i) {
+            TxOut out = result.getOutput(i);
+            unspentTxs.put(resultHash, i, out);
+        }
+
+        return result;
+    }
+
 }
