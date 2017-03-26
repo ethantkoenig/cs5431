@@ -1,17 +1,16 @@
 package utils;
 
-import org.bouncycastle.crypto.generators.BCrypt;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
-import java.security.spec.ECGenParameterSpec;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.security.spec.X509EncodedKeySpec;
+import java.security.spec.*;
 
 /**
  * Various crypto-related functions
@@ -73,8 +72,10 @@ public class Crypto {
         return digest.digest(content);
     }
 
-    public static byte[] bcrypt(byte[] content, byte[] salt) {
-        return BCrypt.generate(content, salt, Config.BCRYPT_COST.get());
+    public static byte[] pbkdf2(byte[] content, byte[] salt) throws Exception {
+        KeySpec spec = new PBEKeySpec(new String(content, "UTF-8").toCharArray(), salt, Config.PBKDF2_COST.get(), 2048);
+        SecretKeyFactory f = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+        return f.generateSecret(spec).getEncoded();
     }
 
     public static PublicKey loadPublicKey(String filename)
@@ -100,11 +101,11 @@ public class Crypto {
     }
 
     public static byte[] hashAndSalt(String password, byte[] salt)
-            throws IOException, GeneralSecurityException {
+            throws Exception {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         outputStream.write(password.getBytes(StandardCharsets.UTF_8));
         outputStream.write(salt);
-        return bcrypt(outputStream.toByteArray(), salt);
+        return pbkdf2(outputStream.toByteArray(), salt);
     }
 
 }
