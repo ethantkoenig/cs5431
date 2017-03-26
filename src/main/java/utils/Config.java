@@ -8,9 +8,9 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class Config {
 
-    private final static int DEFAULT_BCRYPT_COST = 12;
-    public final static AtomicInteger BCRYPT_COST =
-            new AtomicInteger(DEFAULT_BCRYPT_COST);
+    private final static int DEFAULT_PBKDF2_COST = 12;
+    public final static AtomicInteger PBKDF2_COST =
+            new AtomicInteger(DEFAULT_PBKDF2_COST);
 
     private final static int DEFAULT_HASH_GOAL = 2;
     public final static AtomicInteger HASH_GOAL =
