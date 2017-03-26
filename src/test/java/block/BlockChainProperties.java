@@ -18,11 +18,11 @@ public class BlockChainProperties {
 
     @Before
     public void setConfig() {
-        Config.HASH_GOAL.set(1);
+        Config.HASH_GOAL.set(0);
 
     }
 
-    @Property(trials = 1)
+    @Property(trials = 10)
     public void deserializeSerializeInverse(BlockChain blockchain) throws Exception {
         // TODO
     }

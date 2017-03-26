@@ -3,11 +3,7 @@ package block;
 
 import transaction.Transaction;
 import transaction.TxOut;
-import utils.ByteUtil;
-import utils.Config;
-import utils.Crypto;
-import utils.IOUtils;
-import utils.ShaTwoFiftySix;
+import utils.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -23,7 +19,7 @@ import java.io.ByteArrayOutputStream;
 /**
  * Represents a block of transactions in the ledger
  */
-public class Block implements Iterable<Transaction> {
+public class Block implements Iterable<Transaction>, HashCache {
     private final static Logger LOGGER = Logger.getLogger(Block.class.getName());
 
     public final static int NUM_TRANSACTIONS_PER_BLOCK = 2;
@@ -35,6 +31,7 @@ public class Block implements Iterable<Transaction> {
     public final Transaction[] transactions;
     public TxOut reward;
     public final byte[] nonce = new byte[NONCE_SIZE_IN_BYTES];
+    private transient Optional<ShaTwoFiftySix> cachedHash = Optional.empty();
 
     private Block(ShaTwoFiftySix previousBlockHash, int numTransactions) {
         this.previousBlockHash = previousBlockHash;
@@ -150,6 +147,7 @@ public class Block implements Iterable<Transaction> {
      */
     public void nonceAddOne() throws Exception {
         ByteUtil.addOne(this.nonce);
+        invalidateCache();
     }
 
     /**
@@ -157,6 +155,7 @@ public class Block implements Iterable<Transaction> {
      */
     public void setRandomNonce(Random random) {
         random.nextBytes(nonce);
+        invalidateCache();
     }
 
     /**
@@ -168,7 +167,7 @@ public class Block implements Iterable<Transaction> {
     }
 
     /* package */ boolean checkHashWith(int goal) throws IOException, GeneralSecurityException {
-        ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(ByteUtil.asByteArray(this::serialize));
+        ShaTwoFiftySix hash = getShaTwoFiftySix();
         return hash.checkHashZeros(goal);
     }
 
@@ -184,11 +183,22 @@ public class Block implements Iterable<Transaction> {
      */
     public ShaTwoFiftySix getShaTwoFiftySix() {
         try {
-            return ShaTwoFiftySix.hashOf(ByteUtil.asByteArray(this::serialize));
+            if (cachedHash.isPresent()) {
+                return cachedHash.get();
+            } else {
+                ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(ByteUtil.asByteArray(this::serialize));
+                cachedHash = Optional.of(hash);
+                return hash;
+            }
         } catch (IOException | GeneralSecurityException e) {
             LOGGER.severe(e.getMessage());
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public void invalidateCache() {
+        cachedHash = Optional.empty();
     }
 
     /**
@@ -210,6 +220,7 @@ public class Block implements Iterable<Transaction> {
      */
     public boolean addTransaction(Transaction newTransaction) {
         if (this.isFull()) return false;
+        invalidateCache();
         for (int i = 0; i < transactions.length; i++) {
             if (transactions[i] == null) {
                 transactions[i] = newTransaction;
@@ -248,6 +259,7 @@ public class Block implements Iterable<Transaction> {
         if (reward != null) {
             throw new IllegalStateException("Cannot reset block's reward");
         }
+        invalidateCache();
         reward = new TxOut(REWARD_AMOUNT, publicKey);
     }
 

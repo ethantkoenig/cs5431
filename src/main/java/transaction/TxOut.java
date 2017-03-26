@@ -9,6 +9,7 @@ import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
 import java.security.PublicKey;
 import java.util.Arrays;
+import java.util.Optional;
 
 
 /**
@@ -20,6 +21,8 @@ public class TxOut {
 
     public final long value;
     public final PublicKey ownerPubKey;
+
+    private transient Optional<byte[]> encodedPubKeyCache = Optional.empty();
 
     public TxOut(long value, PublicKey ownerPubKey) {
         this.value = value;
@@ -34,7 +37,14 @@ public class TxOut {
     }
 
     public void serialize(DataOutputStream outputStream) throws IOException {
-        outputStream.write(ownerPubKey.getEncoded());
+        byte[] encodedPubKey;
+        if (encodedPubKeyCache.isPresent()) {
+            encodedPubKey = encodedPubKeyCache.get();
+        } else {
+            encodedPubKey = ownerPubKey.getEncoded();
+            encodedPubKeyCache = Optional.of(encodedPubKey);
+        }
+        outputStream.write(encodedPubKey);
         outputStream.writeLong(value);
     }
 

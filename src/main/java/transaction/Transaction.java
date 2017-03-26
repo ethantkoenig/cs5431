@@ -3,6 +3,7 @@ package transaction;
 
 import block.UnspentTransactions;
 import utils.ByteUtil;
+import utils.HashCache;
 import utils.Longs;
 import utils.ShaTwoFiftySix;
 
@@ -23,7 +24,7 @@ import java.util.logging.Logger;
  * Main transaction class.
  * Contains an array of inputs, outputs and signatures.
  */
-public class Transaction {
+public class Transaction implements HashCache {
     private final static Logger LOGGER = Logger.getLogger(Logger.class.getName());
 
     private final TxIn[] txIn;
@@ -32,6 +33,8 @@ public class Transaction {
 
     public final int numInputs;
     public final int numOutputs;
+
+    private Optional<ShaTwoFiftySix> cachedHash = Optional.empty();
 
     private Transaction(TxIn[] txIn, TxOut[] txOut, Signature[] signatures) {
         this.txIn = txIn;
@@ -258,11 +261,22 @@ public class Transaction {
      */
     public ShaTwoFiftySix getShaTwoFiftySix() {
         try {
-            return ShaTwoFiftySix.hashOf(ByteUtil.asByteArray(this::serialize));
+            if (cachedHash.isPresent()) {
+                return cachedHash.get();
+            } else {
+                ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(ByteUtil.asByteArray(this::serialize));
+                cachedHash = Optional.of(hash);
+                return hash;
+            }
         } catch (IOException | GeneralSecurityException e) {
             LOGGER.severe(e.getMessage());
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public void invalidateCache() {
+        cachedHash = Optional.empty();
     }
 
     @Override
