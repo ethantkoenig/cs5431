@@ -31,7 +31,7 @@ public class BlockChainGenerator extends Generator<BlockChain> {
 
     @Override
     public BlockChain generate(SourceOfRandomness random, GenerationStatus status) {
-        Block genesis = Block.empty(ShaTwoFiftySix.zero());
+        Block genesis = Block.genesis();
         KeyPair privilegedKey = gen().type(KeyPair.class).generate(random, status);
         Map<PublicKey, PrivateKey> keyMapping = new HashMap<>();
 
@@ -44,8 +44,8 @@ public class BlockChainGenerator extends Generator<BlockChain> {
             }
         } catch (Exception e) {
             // We should not reach here
-            assert false;
             e.printStackTrace();
+            assert false;
             return null;
         }
 
@@ -67,8 +67,8 @@ public class BlockChainGenerator extends Generator<BlockChain> {
             }
         } catch (IOException | GeneralSecurityException e) {
             // We should not reach this case
-            assert false;
             e.printStackTrace();
+            assert false;
             return null;
         }
 
@@ -95,8 +95,8 @@ public class BlockChainGenerator extends Generator<BlockChain> {
             distributer = txBuilder.build();
         } catch (IOException | GeneralSecurityException e) {
             // We should not reach this case
-            assert false;
             e.printStackTrace();
+            assert false;
             return null;
         }
 
@@ -109,8 +109,8 @@ public class BlockChainGenerator extends Generator<BlockChain> {
             }
         } catch (Exception e) {
             // We should not reach here
-            assert false;
             e.printStackTrace();
+            assert false;
             return null;
         }
 

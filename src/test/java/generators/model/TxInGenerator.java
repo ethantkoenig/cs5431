@@ -40,6 +40,7 @@ public class TxInGenerator extends Generator<TxIn> {
             i += 1;
         }
 
+        assert false;
         return null;
     }
 

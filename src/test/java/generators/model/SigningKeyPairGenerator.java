@@ -33,6 +33,7 @@ public class SigningKeyPairGenerator extends Generator<KeyPair> {
             generator = KeyPairGenerator.getInstance("ECDSA", "BC");
         } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
             e.printStackTrace();
+            assert false;
             return null;
         }
 

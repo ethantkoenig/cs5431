@@ -40,7 +40,7 @@ public class BlockGenerator extends Generator<Block> {
             block.addTransaction(txGen.generate(random, status));
         }
 
-        KeyPair keys = gen().type(KeyPair.class).generate(random, status);
+        KeyPair keys = new SigningKeyPairGenerator().generate(random, status);
         keyMapping.put(keys.getPublic(), keys.getPrivate());
 
         block.addReward(keys.getPublic());
@@ -51,8 +51,8 @@ public class BlockGenerator extends Generator<Block> {
             }
         } catch (Exception e) {
             // We should not reach this case if the block was constructed correctly
-            assert false;
             e.printStackTrace();
+            assert false;
             return null;
         }
 

@@ -1,3 +1,4 @@
+generators.model.BlockChainGenerator
 generators.model.BlockGenerator
 generators.model.ShaTwoFiftySixGenerator
 generators.model.SigningKeyPairGenerator

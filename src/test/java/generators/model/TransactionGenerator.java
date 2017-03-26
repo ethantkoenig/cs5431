@@ -41,7 +41,7 @@ public class TransactionGenerator extends Generator<Transaction> {
     public Transaction generate(SourceOfRandomness random, GenerationStatus status) {
         return consistencyData
                 .map(p -> generateWithRespectTo(p.getLeft(), p.getRight(), random, status))
-                .orElse(generateSimple(random, status));
+                .orElseGet(() -> generateSimple(random, status));
     }
 
     private Transaction generateSimple(SourceOfRandomness random, GenerationStatus status) {
@@ -64,10 +64,10 @@ public class TransactionGenerator extends Generator<Transaction> {
             return builder.build();
         } catch (GeneralSecurityException | IOException e) {
             // We should not ever encounter this
+            e.printStackTrace();
             assert false;
+            return null;
         }
-
-        return null;
     }
 
     private Transaction generateWithRespectTo(
@@ -76,6 +76,7 @@ public class TransactionGenerator extends Generator<Transaction> {
             SourceOfRandomness random,
             GenerationStatus status) {
         if (unspentTxs.size() <= 0) {
+            assert false;
             return null;
         }
 
@@ -117,8 +118,8 @@ public class TransactionGenerator extends Generator<Transaction> {
             result = builder.build();
         } catch (IOException | GeneralSecurityException e) {
             // We should not reach this case unless something goes seriously wrong
-            assert false;
             e.printStackTrace();
+            assert false;
             return null;
         }
 
