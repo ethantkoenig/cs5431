@@ -1,19 +1,35 @@
 package utils;
 
+import java.util.Optional;
+
 /**
  * Created by eperdew on 3/26/17.
  */
-public interface HashCache {
+public abstract class HashCache {
+
+    private Optional<ShaTwoFiftySix> val = Optional.empty();
 
     /**
      * @return The SHA-256 hash of `this`
      */
-    ShaTwoFiftySix getShaTwoFiftySix();
+    public ShaTwoFiftySix getShaTwoFiftySix() {
+        return val.orElseGet(() -> {
+            val = Optional.of(computeHash());
+            return val.get();
+        });
+    }
+
+    /**
+     * Compute the hash of `this`
+     */
+    protected abstract ShaTwoFiftySix computeHash();
 
     /**
      * Invalidate the cached SHA-256 hash.
      *
      * Call this after any function that mutates `this` in a way that changes the hash.
      */
-    void invalidateCache();
+    public void invalidateCache() {
+        val = Optional.empty();
+    }
 }

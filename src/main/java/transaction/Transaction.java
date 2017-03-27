@@ -24,7 +24,7 @@ import java.util.logging.Logger;
  * Main transaction class.
  * Contains an array of inputs, outputs and signatures.
  */
-public class Transaction implements HashCache {
+public class Transaction extends HashCache {
     private final static Logger LOGGER = Logger.getLogger(Logger.class.getName());
 
     private final TxIn[] txIn;
@@ -33,8 +33,6 @@ public class Transaction implements HashCache {
 
     public final int numInputs;
     public final int numOutputs;
-
-    private Optional<ShaTwoFiftySix> cachedHash = Optional.empty();
 
     private Transaction(TxIn[] txIn, TxOut[] txOut, Signature[] signatures) {
         this.txIn = txIn;
@@ -256,27 +254,14 @@ public class Transaction implements HashCache {
         return true;
     }
 
-    /**
-     * @return The SHA-256 hash of the serialization of {@code this}
-     */
-    public ShaTwoFiftySix getShaTwoFiftySix() {
+    @Override
+    protected ShaTwoFiftySix computeHash() {
         try {
-            if (cachedHash.isPresent()) {
-                return cachedHash.get();
-            } else {
-                ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(ByteUtil.asByteArray(this::serialize));
-                cachedHash = Optional.of(hash);
-                return hash;
-            }
+            return ShaTwoFiftySix.hashOf(ByteUtil.asByteArray(this::serialize));
         } catch (IOException | GeneralSecurityException e) {
             LOGGER.severe(e.getMessage());
             throw new RuntimeException(e);
         }
-    }
-
-    @Override
-    public void invalidateCache() {
-        cachedHash = Optional.empty();
     }
 
     @Override

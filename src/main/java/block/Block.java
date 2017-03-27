@@ -5,21 +5,16 @@ import transaction.Transaction;
 import transaction.TxOut;
 import utils.*;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.nio.BufferUnderflowException;
+import java.io.*;
 import java.security.GeneralSecurityException;
 import java.security.PublicKey;
 import java.util.*;
 import java.util.logging.Logger;
-import java.io.ByteArrayOutputStream;
 
 /**
  * Represents a block of transactions in the ledger
  */
-public class Block implements Iterable<Transaction>, HashCache {
+public class Block extends HashCache implements Iterable<Transaction> {
     private final static Logger LOGGER = Logger.getLogger(Block.class.getName());
 
     public final static int NUM_TRANSACTIONS_PER_BLOCK = 2;
@@ -31,7 +26,6 @@ public class Block implements Iterable<Transaction>, HashCache {
     public final Transaction[] transactions;
     public TxOut reward;
     public final byte[] nonce = new byte[NONCE_SIZE_IN_BYTES];
-    private transient Optional<ShaTwoFiftySix> cachedHash = Optional.empty();
 
     private Block(ShaTwoFiftySix previousBlockHash, int numTransactions) {
         this.previousBlockHash = previousBlockHash;
@@ -183,27 +177,14 @@ public class Block implements Iterable<Transaction>, HashCache {
         return previousBlockHash.equals(ShaTwoFiftySix.zero());
     }
 
-    /**
-     * @return The SHA-256 hash of the serialization of {@code this}
-     */
-    public ShaTwoFiftySix getShaTwoFiftySix() {
+    @Override
+    protected ShaTwoFiftySix computeHash() {
         try {
-            if (cachedHash.isPresent()) {
-                return cachedHash.get();
-            } else {
-                ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(ByteUtil.asByteArray(this::serialize));
-                cachedHash = Optional.of(hash);
-                return hash;
-            }
+            return ShaTwoFiftySix.hashOf(ByteUtil.asByteArray(this::serialize));
         } catch (IOException | GeneralSecurityException e) {
             LOGGER.severe(e.getMessage());
             throw new RuntimeException(e);
         }
-    }
-
-    @Override
-    public void invalidateCache() {
-        cachedHash = Optional.empty();
     }
 
     /**
@@ -257,7 +238,7 @@ public class Block implements Iterable<Transaction>, HashCache {
         return result;
     }
 
-    /*
+    /**
      * Add a reward transaction
      */
     public void addReward(PublicKey publicKey) {
