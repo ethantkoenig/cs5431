@@ -132,4 +132,18 @@ public abstract class RandomizedTest {
         return ShaTwoFiftySix.create(randomBytes(ShaTwoFiftySix.HASH_SIZE_IN_BYTES)).
                 orElseThrow(() -> new AssertionError("Unable to generate random SHA-256"));
     }
+
+    protected int[] randomPermutation(int n) {
+        int[] array = new int[n];
+        for (int i = 0; i < n; i++) {
+            array[i] = i;
+        }
+        for (int j = n - 1; j > 0; j--) {
+            int index = random.nextInt(j + 1);
+            int tmp = array[j];
+            array[j] = array[index];
+            array[index] = tmp;
+        }
+        return array;
+    }
 }

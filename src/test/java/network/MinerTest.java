@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.security.KeyPair;
+import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -32,7 +33,9 @@ public class MinerTest extends RandomizedTest {
         KeyPair pair0 = randomKeyPair();
         KeyPair pair1 = randomKeyPair();
 
-        MinerSimulation simulation = new MinerSimulation(10100, pair0, pair1);
+        MinerSimulation simulation = new MinerSimulation(10100);
+        simulation.addNode(10101, pair0, pair1.getPublic());
+        simulation.addNode(10102, pair1, pair1.getPublic());
 
         Block genesisBlock = assertSingleBlockMessage(simulation.getNextMessage());
 
@@ -49,22 +52,21 @@ public class MinerTest extends RandomizedTest {
         Assert.assertEquals(genesisBlock, getBlockResponse);
 
         Transaction transaction1 = new Transaction.Builder()
-                .addInput(
-                        new TxIn(genesisBlock.getShaTwoFiftySix(), 0),
-                        pair1.getPrivate()
-                )
+                .addInput(new TxIn(genesisBlock.getShaTwoFiftySix(), 0), pair1.getPrivate())
                 .addOutput(new TxOut(Block.REWARD_AMOUNT, pair0.getPublic()))
                 .build();
         simulation.sendTransaction(transaction1, 0);
         Transaction deserialized = assertTransactionMessage(simulation.getNextMessage());
         TestUtils.assertEqualsWithHashCode(errorMessage, transaction1, deserialized);
 
+        KeyPair pair2 = randomKeyPair();
+        simulation.addNode(10103, pair2, pair1.getPublic());
+
+        Thread.sleep(200); // TODO actually fix the race conditions
+
         Transaction transaction2 = new Transaction.Builder()
-                .addInput(
-                        new TxIn(transaction1.getShaTwoFiftySix(), 0),
-                        pair0.getPrivate()
-                )
-                .addOutput(new TxOut(Block.REWARD_AMOUNT, pair1.getPublic()))
+                .addInput(new TxIn(transaction1.getShaTwoFiftySix(), 0), pair0.getPrivate())
+                .addOutput(new TxOut(Block.REWARD_AMOUNT, pair2.getPublic()))
                 .build();
         simulation.sendTransaction(transaction2, 1);
         deserialized = assertTransactionMessage(simulation.getNextMessage());
@@ -75,12 +77,12 @@ public class MinerTest extends RandomizedTest {
         boolean minedBy1 = block.reward.ownerPubKey.equals(pair1.getPublic());
         Assert.assertTrue(minedBy0 || minedBy1);
 
-        Thread.sleep(100); // TODO actually fix the race conditions
+        Thread.sleep(200); // TODO actually fix the race conditions
 
         simulation.sendMessage(new OutgoingMessage(
                 Message.GET_BLOCK,
                 Message.getBlockPayload(block.getShaTwoFiftySix(), 2)
-        ), minedBy0 ? 0 : 1);
+        ), 2);
         while (true) {
             // may receive mined block from other node, so repeatedly check
             // for actual GET_BLOCK response
@@ -93,10 +95,7 @@ public class MinerTest extends RandomizedTest {
                 break;
             }
         }
-
-        simulation.assertMinersRunning();
     }
-
 
     private Transaction assertTransactionMessage(Message msg) throws Exception {
         Assert.assertEquals(Message.TRANSACTION, msg.type);
@@ -120,47 +119,28 @@ public class MinerTest extends RandomizedTest {
         private final BlockingQueue<IncomingMessage> queue = new ArrayBlockingQueue<>(100);
         private final HashSet<Message> seenMessages = new HashSet<>();
         private final List<ConnectionThread> connectionThreads = new ArrayList<>();
-        private final List<Thread> minerThreads = new ArrayList<>();
-        private final int initPortNum;
+        private final ServerSocket serverSocket;
+        private final List<Integer> minerPortNums = new ArrayList<>();
 
-        private MinerSimulation(int initPortNum, KeyPair... keyPairs) throws Exception {
-            if (keyPairs.length == 0) {
-                throw new IllegalArgumentException();
-            }
-            this.initPortNum = initPortNum;
-            setUp(initPortNum, keyPairs);
+        private MinerSimulation(int portNum) throws Exception {
+            serverSocket = new ServerSocket(portNum);
         }
 
-        private void setUp(int initPortNum, KeyPair[] keyPairs) throws Exception {
-            ServerSocket serverSocket = new ServerSocket(initPortNum);
-
-            KeyPair genesisPair = keyPairs[keyPairs.length - 1];
-            for (int i = 0; i < keyPairs.length; i++) {
-                KeyPair pair = keyPairs[i];
-                final int minerPortNum = initPortNum + 1 + i;
-                Thread minerThread = new Thread(() -> {
-                    Miner miner = new Miner(minerPortNum, pair, genesisPair.getPublic());
-                    for (int port = initPortNum; port < minerPortNum; port++) {
-                        // connect to our ConnectionThread, and previous miners
-                        miner.connect("localhost", port);
-                    }
-                    miner.startMiner();
-                });
-                minerThreads.add(minerThread);
-                minerThread.start();
-                ConnectionThread conn = new ConnectionThread(serverSocket.accept(), queue);
-                conn.start();
-                connectionThreads.add(conn);
-                if (i < keyPairs.length - 1) {
-                    Thread.sleep(50); // give miner a chance to start
+        private void addNode(int portNum, KeyPair keyPair, PublicKey privilegedKey) throws Exception {
+            final List<Integer> portNumsToConnectTo = new ArrayList<>(minerPortNums);
+            new Thread(() -> {
+                Miner miner = new Miner(portNum, keyPair, privilegedKey);
+                miner.connect("localhost", serverSocket.getLocalPort());
+                for (int portNumToConnectTo : portNumsToConnectTo) {
+                    miner.connect("localhost", portNumToConnectTo);
                 }
-            }
-        }
-
-        private void assertMinersRunning() {
-            for (Thread minerThread : minerThreads) {
-                Assert.assertTrue(minerThread.isAlive());
-            }
+                miner.startMiner();
+            }).start();
+            minerPortNums.add(portNum);
+            ConnectionThread conn = new ConnectionThread(serverSocket.accept(), queue);
+            conn.start();
+            connectionThreads.add(conn);
+            Thread.sleep(50); // give miner a chance to start
         }
 
         private void sendTransaction(Transaction transaction, int node) throws IOException {
@@ -173,9 +153,9 @@ public class MinerTest extends RandomizedTest {
         }
 
         private void sendBytes(byte[] bytes, int node) throws IOException {
-            Socket socket = new Socket("localhost", initPortNum + 1 + node);
-            socket.getOutputStream().write(bytes);
-            socket.close();
+            try (Socket socket = new Socket("localhost", minerPortNums.get(node))) {
+                socket.getOutputStream().write(bytes);
+            }
         }
 
         private Message getNextMessage() throws Exception {

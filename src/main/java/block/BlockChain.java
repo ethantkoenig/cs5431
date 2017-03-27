@@ -61,7 +61,7 @@ public class BlockChain {
             return true;
         } else if (b.previousBlockHash.equals(ShaTwoFiftySix.zero())) { // genesis block
             if (!blocks.isEmpty()) {
-                throw new IllegalStateException("Cannot insert genesis block into non-empty blockchain");
+                return false;
             }
             blocks.put(b.getShaTwoFiftySix(), new BlockWrapper(b, 0, blocks.size()));
             currentHead = b;
