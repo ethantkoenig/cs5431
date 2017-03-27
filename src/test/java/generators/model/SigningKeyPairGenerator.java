@@ -10,9 +10,17 @@ import utils.Crypto;
 
 import java.security.*;
 import java.security.spec.ECGenParameterSpec;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 public class SigningKeyPairGenerator extends Generator<KeyPair> {
+
+    private static final Map<PublicKey, PrivateKey> keyMapping = new HashMap<>();
+
+    public static Map<PublicKey, PrivateKey> getKeyMapping() {
+        return keyMapping;
+    }
 
     public SigningKeyPairGenerator() {
         super(KeyPair.class);
@@ -33,6 +41,7 @@ public class SigningKeyPairGenerator extends Generator<KeyPair> {
             generator = KeyPairGenerator.getInstance("ECDSA", "BC");
         } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
             e.printStackTrace();
+            assert false;
             return null;
         }
 
@@ -44,6 +53,9 @@ public class SigningKeyPairGenerator extends Generator<KeyPair> {
             e.printStackTrace();
         }
 
-        return generator.generateKeyPair();
+        KeyPair keys = generator.generateKeyPair();
+        keyMapping.put(keys.getPublic(), keys.getPrivate());
+
+        return keys;
     }
 }

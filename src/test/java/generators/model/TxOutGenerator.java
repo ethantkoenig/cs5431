@@ -4,6 +4,7 @@ import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import transaction.TxOut;
+import utils.Pair;
 
 import java.security.KeyPair;
 

@@ -3,27 +3,18 @@ package block;
 
 import transaction.Transaction;
 import transaction.TxOut;
-import utils.ByteUtil;
-import utils.Config;
-import utils.Crypto;
-import utils.IOUtils;
-import utils.ShaTwoFiftySix;
+import utils.*;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.nio.BufferUnderflowException;
+import java.io.*;
 import java.security.GeneralSecurityException;
 import java.security.PublicKey;
 import java.util.*;
 import java.util.logging.Logger;
-import java.io.ByteArrayOutputStream;
 
 /**
  * Represents a block of transactions in the ledger
  */
-public class Block implements Iterable<Transaction> {
+public class Block extends HashCache implements Iterable<Transaction> {
     private final static Logger LOGGER = Logger.getLogger(Block.class.getName());
 
     public final static int NUM_TRANSACTIONS_PER_BLOCK = 2;
@@ -155,6 +146,7 @@ public class Block implements Iterable<Transaction> {
      */
     public void nonceAddOne() throws Exception {
         ByteUtil.addOne(this.nonce);
+        invalidateCache();
     }
 
     /**
@@ -162,6 +154,7 @@ public class Block implements Iterable<Transaction> {
      */
     public void setRandomNonce(Random random) {
         random.nextBytes(nonce);
+        invalidateCache();
     }
 
     /**
@@ -173,7 +166,7 @@ public class Block implements Iterable<Transaction> {
     }
 
     /* package */ boolean checkHashWith(int goal) throws IOException, GeneralSecurityException {
-        ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(ByteUtil.asByteArray(this::serialize));
+        ShaTwoFiftySix hash = getShaTwoFiftySix();
         return hash.checkHashZeros(goal);
     }
 
@@ -184,10 +177,8 @@ public class Block implements Iterable<Transaction> {
         return previousBlockHash.equals(ShaTwoFiftySix.zero());
     }
 
-    /**
-     * @return The SHA-256 hash of the serialization of {@code this}
-     */
-    public ShaTwoFiftySix getShaTwoFiftySix() {
+    @Override
+    protected ShaTwoFiftySix computeHash() {
         try {
             return ShaTwoFiftySix.hashOf(ByteUtil.asByteArray(this::serialize));
         } catch (IOException | GeneralSecurityException e) {
@@ -215,6 +206,7 @@ public class Block implements Iterable<Transaction> {
      */
     public boolean addTransaction(Transaction newTransaction) {
         if (this.isFull()) return false;
+        invalidateCache();
         for (int i = 0; i < transactions.length; i++) {
             if (transactions[i] == null) {
                 transactions[i] = newTransaction;
@@ -246,13 +238,14 @@ public class Block implements Iterable<Transaction> {
         return result;
     }
 
-    /*
+    /**
      * Add a reward transaction
      */
     public void addReward(PublicKey publicKey) {
         if (reward != null) {
             throw new IllegalStateException("Cannot reset block's reward");
         }
+        invalidateCache();
         reward = new TxOut(REWARD_AMOUNT, publicKey);
     }
 

@@ -3,6 +3,7 @@ package transaction;
 
 import block.UnspentTransactions;
 import utils.ByteUtil;
+import utils.HashCache;
 import utils.Longs;
 import utils.ShaTwoFiftySix;
 
@@ -23,7 +24,7 @@ import java.util.logging.Logger;
  * Main transaction class.
  * Contains an array of inputs, outputs and signatures.
  */
-public class Transaction {
+public class Transaction extends HashCache {
     private final static Logger LOGGER = Logger.getLogger(Logger.class.getName());
 
     private final TxIn[] txIn;
@@ -253,10 +254,8 @@ public class Transaction {
         return true;
     }
 
-    /**
-     * @return The SHA-256 hash of the serialization of {@code this}
-     */
-    public ShaTwoFiftySix getShaTwoFiftySix() {
+    @Override
+    protected ShaTwoFiftySix computeHash() {
         try {
             return ShaTwoFiftySix.hashOf(ByteUtil.asByteArray(this::serialize));
         } catch (IOException | GeneralSecurityException e) {

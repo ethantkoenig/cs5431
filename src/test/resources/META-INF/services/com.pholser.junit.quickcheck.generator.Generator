@@ -1,5 +1,10 @@
+generators.model.BlockChainGenerator
+generators.model.BlockGenerator
 generators.model.ShaTwoFiftySixGenerator
 generators.model.SigningKeyPairGenerator
 generators.model.TransactionGenerator
 generators.model.TxInGenerator
 generators.model.TxOutGenerator
+generators.model.UnspentTransactionsGenerator
+testutils.PairGenerator
+
