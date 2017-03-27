@@ -62,6 +62,8 @@ public class MinerTest extends RandomizedTest {
         KeyPair pair2 = randomKeyPair();
         simulation.addNode(10103, pair2, pair1.getPublic());
 
+        Thread.sleep(200); // TODO actually fix the race conditions
+
         Transaction transaction2 = new Transaction.Builder()
                 .addInput(new TxIn(transaction1.getShaTwoFiftySix(), 0), pair0.getPrivate())
                 .addOutput(new TxOut(Block.REWARD_AMOUNT, pair2.getPublic()))
@@ -75,7 +77,7 @@ public class MinerTest extends RandomizedTest {
         boolean minedBy1 = block.reward.ownerPubKey.equals(pair1.getPublic());
         Assert.assertTrue(minedBy0 || minedBy1);
 
-        Thread.sleep(100); // TODO actually fix the race conditions
+        Thread.sleep(200); // TODO actually fix the race conditions
 
         simulation.sendMessage(new OutgoingMessage(
                 Message.GET_BLOCK,
