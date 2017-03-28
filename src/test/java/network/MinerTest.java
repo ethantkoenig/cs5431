@@ -99,9 +99,9 @@ public class MinerTest extends RandomizedTest {
         KeyPair pair0 = randomKeyPair();
         KeyPair pair1 = randomKeyPair();
 
-        MinerSimulation simulation = new MinerSimulation(10100);
-        simulation.addNode(10101, pair0, pair1.getPublic());
-        simulation.addNode(10102, pair1, pair1.getPublic());
+        MinerSimulation simulation = new MinerSimulation(10103);
+        simulation.addNode(10104, pair0, pair1.getPublic());
+        simulation.addNode(10105, pair1, pair1.getPublic());
 
         Block genesisBlock = assertSingleBlockMessage(simulation.getNextMessage());
 
