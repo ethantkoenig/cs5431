@@ -20,7 +20,8 @@ import java.util.logging.Logger;
  * Main transaction class.
  * Contains an array of inputs, outputs and signatures.
  */
-public class Transaction extends HashCache implements CanBeSerialized {
+public final class Transaction extends HashCache implements CanBeSerialized {
+
     private final static Logger LOGGER = Logger.getLogger(Logger.class.getName());
     public static final Deserializer<Transaction> DESERIALIZER = new TransactionDeserializer();
 

@@ -14,7 +14,10 @@ import java.util.logging.Logger;
  * The layer between user objects and the "users" table in the DB.
  * Utilities for reading and modifying database.
  */
-public class UserAccess {
+public final class UserAccess {
+
+    // Disallow instances of this class
+    private UserAccess() { }
 
     private static final Logger LOGGER = Logger.getLogger(UserAccess.class.getName());
 

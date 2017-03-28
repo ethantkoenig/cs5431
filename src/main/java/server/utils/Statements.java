@@ -5,7 +5,10 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 // TODO: probably doesnt belong in utils but not sure where else to put it as of yet
-public class Statements {
+public final class Statements {
+
+    // Disallow instances of this class
+    private Statements() { }
 
     // Update statements
     public static final String DB_NAME = "yaccoin";

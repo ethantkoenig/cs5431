@@ -19,7 +19,7 @@ import java.util.Optional;
  * Contains the value associated with this output and the public key
  * required to claim this output.
  */
-public class TxOut implements CanBeSerialized {
+public final class TxOut implements CanBeSerialized {
 
     public final static Deserializer<TxOut> DESERIALIZER = new TxOutDeserializer();
 

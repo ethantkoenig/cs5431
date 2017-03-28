@@ -16,7 +16,7 @@ import java.util.Arrays;
  * Contains a reference to a previous transactions output in the form
  * of a SHA256 hash of the transaction, and the output index to be spent.
  */
-public class TxIn implements CanBeSerialized {
+public final class TxIn implements CanBeSerialized {
     public static final Deserializer<TxIn> DESERIALIZER = new TxInDeserializer();
 
     public final ShaTwoFiftySix previousTxn;

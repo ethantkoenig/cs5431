@@ -14,7 +14,8 @@ import java.util.logging.Logger;
 /**
  * Represents a signature for a transaction.
  */
-public class Signature {
+public final class Signature {
+
     private final static Logger LOGGER = Logger.getLogger(Signature.class.getName());
 
     private final byte[] signature;

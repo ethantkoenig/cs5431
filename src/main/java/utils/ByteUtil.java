@@ -11,7 +11,11 @@ import java.util.Optional;
 /**
  * Byte Manipulation functions
  */
-public class ByteUtil {
+public final class ByteUtil {
+
+    // Disallow instances of this class
+    private ByteUtil() { }
+
     public static void addOne(byte[] b) throws Exception {
         for (int i = b.length - 1; i >= 0; i--) {
             if (++b[i] != 0) {
