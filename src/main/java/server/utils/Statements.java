@@ -18,7 +18,7 @@ public final class Statements {
             + "id int NOT NULL AUTO_INCREMENT,"
             + "username varchar(32) NOT NULL,"
             + "salt varbinary(32) NOT NULL,"
-            + "pass varbinary(128) NOT NULL,"
+            + "pass varbinary(2048) NOT NULL,"
             + "PRIMARY KEY (id),"
             + "UNIQUE (username)"
             + ")";
