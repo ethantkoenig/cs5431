@@ -104,27 +104,29 @@ public class BlockTest extends RandomizedTest {
 
     @Test
     public void testVerify() throws Exception {
+        Config.HASH_GOAL.set(1);
         ShaTwoFiftySix previousBlockHash = ShaTwoFiftySix.hashOf(randomBytes(256));
         Pair<Block, UnspentTransactions> pair = randomValidBlock(previousBlockHash);
         Block block = pair.getLeft();
         block.addReward(randomKeyPair().getPublic());
+        while (!block.checkHash()) { // mine the block
+            block.nonceAddOne();
+        }
 
-        Optional<UnspentTransactions> result = block.verify(pair.getRight());
-        Assert.assertTrue(errorMessage, result.isPresent());
+        UnspentTransactions result = TestUtils.assertPresent(block.verify(pair.getRight()));
 
         UnspentTransactions expected = UnspentTransactions.empty();
         Transaction lastTxn = block.transactions[Block.NUM_TRANSACTIONS_PER_BLOCK - 1];
         // TODO currently assumes that last transaction will only have one output
         expected.put(lastTxn.getShaTwoFiftySix(), 0, lastTxn.getOutput(0));
-        TestUtils.assertEqualsWithHashCode(errorMessage, result.get(), expected);
+        expected.put(block.getShaTwoFiftySix(), 0, block.reward);
+        TestUtils.assertEqualsWithHashCode(errorMessage, result, expected);
 
         block.reward = new TxOut(block.reward.value + 1, block.reward.ownerPubKey);
-        result = block.verify(pair.getRight());
-        Assert.assertFalse(errorMessage, result.isPresent());
+        Assert.assertFalse(errorMessage, block.verify(pair.getRight()).isPresent());
 
         block = randomBlock(randomShaTwoFiftySix());
-        result = block.verify(UnspentTransactions.empty());
-        Assert.assertFalse(errorMessage, result.isPresent());
+        Assert.assertFalse(errorMessage, block.verify(UnspentTransactions.empty()).isPresent());
     }
 
     @Test
