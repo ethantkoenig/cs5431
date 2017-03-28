@@ -8,6 +8,7 @@ import server.utils.Statements;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Logger;
 
 /**
@@ -28,7 +29,7 @@ public final class UserAccess {
      * @param username the username of the user being queried
      * @throws SQLException
      */
-    public static User getUserbyUsername(String username) throws SQLException {
+    public static Optional<User> getUserbyUsername(String username) throws SQLException {
         try (
                 Connection conn = DbUtil.getConnection(false);
                 PreparedStatement preparedStmt = Statements.selectUserByUsername(conn, username);
@@ -38,9 +39,9 @@ public final class UserAccess {
                 int id = rs.getInt("id");
                 byte[] salt = rs.getBytes("salt");
                 byte[] hashedPassword = rs.getBytes("pass");
-                return new User(id, username, salt, hashedPassword);
+                return Optional.of(new User(id, username, salt, hashedPassword));
             }
-            return null;
+            return Optional.empty();
         }
     }
 

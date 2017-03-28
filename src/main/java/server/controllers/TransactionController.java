@@ -7,7 +7,7 @@ import server.access.UserAccess;
 import server.models.Key;
 import server.models.User;
 import server.utils.Constants;
-import spark.ModelAndView;
+import server.utils.RouteUtils;
 import spark.template.freemarker.FreeMarkerEngine;
 import transaction.Transaction;
 import transaction.TxIn;
@@ -22,8 +22,6 @@ import java.net.Socket;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.util.HashMap;
-import java.util.Map;
 
 import static server.utils.RouteUtils.*;
 import static spark.Spark.*;
@@ -32,10 +30,10 @@ public class TransactionController {
 
     public static void makeTransaction() {
         path("/transact", () -> {
-            get("", (request, response) -> {
-                Map<String, Object> emptyModel = new HashMap<>();
-                return new ModelAndView(emptyModel, "transact.ftl");
-            }, new FreeMarkerEngine());
+            get("", (request, response) ->
+                            RouteUtils.modelAndView(request, "transact.ftl")
+                                    .get()
+                    , new FreeMarkerEngine());
 
             post("", wrapRoute((request, response) -> {
                 int index = queryParamInt(request, "index");
@@ -46,7 +44,7 @@ public class TransactionController {
                         queryParamHex(request, "transaction")
                 ).orElseThrow(InvalidParamException::new);
 
-                User loggedInUser = loggedInUser(request);
+                User loggedInUser = forceLoggedInUser(request);
                 Key senderKey = UserAccess.getKey(loggedInUser.getId(), senderPublicKey);
                 if (senderKey == null) {
                     // TODO handle
