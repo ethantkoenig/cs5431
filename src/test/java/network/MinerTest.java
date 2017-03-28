@@ -98,10 +98,10 @@ public class MinerTest extends RandomizedTest {
 
         KeyPair pair0 = randomKeyPair();
         KeyPair pair1 = randomKeyPair();
-        Block[] empty = new Block[0];
 
         MinerSimulation simulation = new MinerSimulation(10100);
         simulation.addNode(10101, pair0, pair1.getPublic());
+        simulation.addNode(10102, pair1, pair1.getPublic());
 
         Block genesisBlock = assertSingleBlockMessage(simulation.getNextMessage());
 
@@ -123,8 +123,7 @@ public class MinerTest extends RandomizedTest {
 
         simulation.sendBlock(badBlock, 0);
         simulation.sendGetBlocksRequest(badBlock.getShaTwoFiftySix(), 1, 0);
-        Block[] blocks = assertBlockMessage(simulation.getNextMessage());
-        Assert.assertArrayEquals(empty, blocks);
+        simulation.assertNoMessage();
 
 
         Transaction txBadIndex = new Transaction.Builder()
@@ -140,8 +139,7 @@ public class MinerTest extends RandomizedTest {
 
         simulation.sendBlock(badBlock, 0);
         simulation.sendGetBlocksRequest(badBlock.getShaTwoFiftySix(), 1, 0);
-        blocks = assertBlockMessage(simulation.getNextMessage());
-        Assert.assertArrayEquals(empty, blocks);
+        simulation.assertNoMessage();
 
 
         Transaction txBadAmount = new Transaction.Builder()
@@ -157,8 +155,7 @@ public class MinerTest extends RandomizedTest {
 
         simulation.sendBlock(badBlock, 0);
         simulation.sendGetBlocksRequest(badBlock.getShaTwoFiftySix(), 1, 0);
-        blocks = assertBlockMessage(simulation.getNextMessage());
-        Assert.assertArrayEquals(empty, blocks);
+        simulation.assertNoMessage();
 
 
         Transaction txWrongOwner = new Transaction.Builder()
@@ -174,8 +171,7 @@ public class MinerTest extends RandomizedTest {
 
         simulation.sendBlock(badBlock, 0);
         simulation.sendGetBlocksRequest(badBlock.getShaTwoFiftySix(), 1, 0);
-        blocks = assertBlockMessage(simulation.getNextMessage());
-        Assert.assertArrayEquals(empty, blocks);
+        simulation.assertNoMessage();
 
 
         Transaction txZeroOutput = new Transaction.Builder()
@@ -192,8 +188,7 @@ public class MinerTest extends RandomizedTest {
 
         simulation.sendBlock(badBlock, 0);
         simulation.sendGetBlocksRequest(badBlock.getShaTwoFiftySix(), 1, 0);
-        blocks = assertBlockMessage(simulation.getNextMessage());
-        Assert.assertArrayEquals(empty, blocks);
+        simulation.assertNoMessage();
 
 
         Transaction txNegativeOutput = new Transaction.Builder()
@@ -210,22 +205,21 @@ public class MinerTest extends RandomizedTest {
 
         simulation.sendBlock(badBlock, 0);
         simulation.sendGetBlocksRequest(badBlock.getShaTwoFiftySix(), 1, 0);
-        blocks = assertBlockMessage(simulation.getNextMessage());
-        Assert.assertArrayEquals(empty, blocks);
+        simulation.assertNoMessage();
     }
 
-    private Transaction assertTransactionMessage(Message msg) throws Exception {
+    private static Transaction assertTransactionMessage(Message msg) throws Exception {
         Assert.assertEquals(Message.TRANSACTION, msg.type);
         return Transaction.DESERIALIZER.deserialize(msg.payload);
     }
 
-    private Block[] assertBlockMessage(Message msg) throws Exception {
+    private static Block[] assertBlockMessage(Message msg) throws Exception {
         Assert.assertEquals(Message.BLOCK, msg.type);
         return Deserializer.deserializeList(msg.payload, Block.DESERIALIZER)
                 .toArray(new Block[0]);
     }
 
-    private Block assertSingleBlockMessage(Message msg) throws Exception {
+    private static Block assertSingleBlockMessage(Message msg) throws Exception {
         Block[] blocks = assertBlockMessage(msg);
         Assert.assertEquals(1, blocks.length);
         return blocks[0];
@@ -290,14 +284,25 @@ public class MinerTest extends RandomizedTest {
         }
 
         private Message getNextMessage(boolean allowDuplicate) throws Exception {
+            return getNextMessage(allowDuplicate, 5);
+        }
+
+        private Message getNextMessage(boolean allowDuplicate, long timeout) throws Exception {
             while (true) {
-                Message msg = queue.poll(5, TimeUnit.SECONDS);
+                Message msg = queue.poll(timeout, TimeUnit.SECONDS);
                 Assert.assertNotNull(msg);
                 if (allowDuplicate || !seenMessages.contains(msg)) {
                     seenMessages.add(msg);
                     return msg;
                 }
             }
+        }
+
+        private void assertNoMessage() throws Exception {
+            TestUtils.assertThrows(
+                    "Expected no response but found message",
+                    () -> getNextMessage(false, 1),
+                    AssertionError.class);
         }
     }
 
