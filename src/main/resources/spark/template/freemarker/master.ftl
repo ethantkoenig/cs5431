@@ -49,17 +49,28 @@
         <!-- Collect the nav links, forms, and other content for toggling -->
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
             <ul class="nav navbar-nav">
+                <#if loggedIn>
+                <li>
+                    <a href="/user/${loggedInUsername}">${loggedInUsername}</a>
+                </li>
+                <li>
+                    <a href="/transact">Transact</a>
+                </li>
+                <li>
+                    <a href="#" id="logout">Logout</a>
+                </li>
+                <#else>
                 <li>
                     <a href="/register">Register</a>
                 </li>
                 <li>
                     <a href="/login">Login</a>
                 </li>
-                <li>
-                    <a href="#" id="logout">Logout</a>
-                </li>
+                </#if>
+
             </ul>
         </div>
+
         <!-- /.navbar-collapse -->
     </div>
     <!-- /.container -->

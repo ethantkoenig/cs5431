@@ -5,12 +5,13 @@ import server.models.Key;
 import server.models.User;
 import server.utils.RouteUtils;
 import server.utils.ValidateUtils;
-import spark.ModelAndView;
 import spark.template.freemarker.FreeMarkerEngine;
 import utils.ByteUtil;
 import utils.Crypto;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static server.utils.RouteUtils.queryParam;
@@ -33,10 +34,9 @@ public class UserController {
      */
     private static void registerUser() {
         path("/register", () -> {
-            get("", (request, response) -> {
-                Map<String, Object> emptyModel = new HashMap<>();
-                return new ModelAndView(emptyModel, "register.ftl");
-            }, new FreeMarkerEngine());
+            get("", (request, response) ->
+                            RouteUtils.modelAndView(request, "register.ftl").get()
+                    , new FreeMarkerEngine());
 
             post("", (request, response) -> {
                 response.type("application/json");
@@ -46,7 +46,7 @@ public class UserController {
                     return "invalid username";
                 } else if (!ValidateUtils.validPassword(password)) {
                     return "invalid password";
-                } else if (UserAccess.getUserbyUsername(username) != null) {
+                } else if (UserAccess.getUserbyUsername(username).isPresent()) {
                     return "username already taken";
                 }
                 byte[] salt = Crypto.generateSalt();
@@ -63,20 +63,20 @@ public class UserController {
      */
     private static void loginUser() {
         path("/login", () -> {
-            get("", (request, response) -> {
-                Map<String, Object> emptyModel = new HashMap<>();
-                return new ModelAndView(emptyModel, "login.ftl");
-            }, new FreeMarkerEngine());
+            get("", (request, response) ->
+                            RouteUtils.modelAndView(request, "login.ftl").get()
+                    , new FreeMarkerEngine());
 
             post("", wrapRoute((request, response) -> {
                 response.type("application/json");
                 String username = queryParam(request, "username");
                 String password = queryParam(request, "password");
-                User user = UserAccess.getUserbyUsername(username);
-                if (user == null) {
+                Optional<User> optUser = UserAccess.getUserbyUsername(username);
+                if (!optUser.isPresent()) {
                     // TODO handle
                     return "user does not exist";
                 }
+                User user = optUser.get();
                 byte[] hash = Crypto.hashAndSalt(password, user.getSalt());
                 if (!Arrays.equals(hash, user.getHashedPassword())) {
                     // TODO handle
@@ -98,20 +98,21 @@ public class UserController {
     private static void viewUser() {
         get("/user/:name", (request, response) -> {
             String name = request.params(":name");
-            User user = UserAccess.getUserbyUsername(name);
-            if (user == null) {
+            Optional<User> optUser = UserAccess.getUserbyUsername(name);
+            if (!optUser.isPresent()) {
                 // TODO 404 handling
                 response.redirect("/");
                 return null;
             }
+            User user = optUser.get();
             List<String> hashes = UserAccess.getKeysByUserID(user.getId()).stream()
                     .map(Key::getPublicKey)
                     .map(ByteUtil::bytesToHexString)
                     .collect(Collectors.toList());
-            Map<String, Object> model = new HashMap<>();
-            model.put("username", user.getUsername());
-            model.put("hashes", hashes);
-            return new ModelAndView(model, "user.ftl");
+            return RouteUtils.modelAndView(request, "user.ftl")
+                    .add("username", user.getUsername())
+                    .add("hashes", hashes)
+                    .get();
         }, new FreeMarkerEngine());
     }
 
@@ -119,7 +120,7 @@ public class UserController {
         post("/user/keys", wrapRoute((request, response) -> {
             byte[] publicKey = RouteUtils.queryParamHex(request, "publickey");
             byte[] privateKey = RouteUtils.queryParamHex(request, "privatekey");
-            User user = RouteUtils.loggedInUser(request);
+            User user = RouteUtils.forceLoggedInUser(request);
             UserAccess.insertKey(user.getId(), publicKey, privateKey);
             return "ok";
         }));

@@ -7,6 +7,7 @@ import spark.Route;
 import utils.ByteUtil;
 
 import java.sql.SQLException;
+import java.util.Optional;
 
 public final class RouteUtils {
 
@@ -27,17 +28,28 @@ public final class RouteUtils {
         };
     }
 
-    public static User loggedInUser(Request request)
-            throws NotLoggedInException, SQLException {
+    public static MapModelAndView modelAndView(Request request, String viewName)
+            throws SQLException {
+        Optional<User> optUser = loggedInUser(request);
+        boolean loggedIn = optUser.isPresent();
+        String username = loggedInUser(request).map(User::getUsername).orElse("");
+        return new MapModelAndView(viewName)
+                .add("loggedIn", loggedIn)
+                .add("loggedInUsername", username);
+    }
+
+    public static Optional<User> loggedInUser(Request request)
+            throws SQLException {
         String username = request.session().attribute("username");
         if (username == null) {
-            throw new NotLoggedInException();
+            return Optional.empty();
         }
-        User user = UserAccess.getUserbyUsername(username);
-        if (user == null) {
-            throw new NotLoggedInException();
-        }
-        return user;
+        return UserAccess.getUserbyUsername(username);
+    }
+
+    public static User forceLoggedInUser(Request request)
+            throws NotLoggedInException, SQLException {
+        return loggedInUser(request).orElseThrow(NotLoggedInException::new);
     }
 
     public static String queryParam(Request request, String paramName)
