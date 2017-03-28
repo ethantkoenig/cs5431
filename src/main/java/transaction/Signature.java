@@ -14,7 +14,7 @@ import java.security.PublicKey;
 /**
  * Represents a signature for a transaction.
  */
-public class Signature {
+public final class Signature {
 
     private final byte[] signature;
 

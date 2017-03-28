@@ -6,7 +6,10 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Various system-wide constants and configurations. These "constants" should be
  * modified only in tests.
  */
-public class Config {
+public final class Config {
+
+    // Disallow instances of this class
+    private Config() { }
 
     private final static int DEFAULT_PBKDF2_COST = 12;
     public final static AtomicInteger PBKDF2_COST =

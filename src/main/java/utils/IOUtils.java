@@ -12,7 +12,10 @@ import java.util.Optional;
 /**
  * Various IO utilities
  */
-public class IOUtils {
+public final class IOUtils {
+
+    // Disallow instances of this class
+    private IOUtils() { }
 
     /**
      * Fill the buffer with input from the input stream

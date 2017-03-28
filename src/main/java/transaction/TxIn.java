@@ -13,7 +13,7 @@ import java.util.Arrays;
  * Contains a reference to a previous transactions output in the form
  * of a SHA256 hash of the transaction, and the output index to be spent.
  */
-public class TxIn {
+public final class TxIn {
 
     public final ShaTwoFiftySix previousTxn;
     public final int txIdx;

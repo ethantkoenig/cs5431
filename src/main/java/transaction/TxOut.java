@@ -17,7 +17,7 @@ import java.util.Optional;
  * Contains the value associated with this output and the public key
  * required to claim this output.
  */
-public class TxOut {
+public final class TxOut {
 
     public final long value;
     public final PublicKey ownerPubKey;

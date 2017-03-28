@@ -24,7 +24,7 @@ import java.util.logging.Logger;
  * Main transaction class.
  * Contains an array of inputs, outputs and signatures.
  */
-public class Transaction extends HashCache {
+public final class Transaction extends HashCache {
     private final static Logger LOGGER = Logger.getLogger(Logger.class.getName());
 
     private final TxIn[] txIn;

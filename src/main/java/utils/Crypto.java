@@ -16,13 +16,16 @@ import java.security.spec.X509EncodedKeySpec;
 /**
  * Various crypto-related functions
  */
-public class Crypto {
+public final class Crypto {
     public static final int PRIVATE_KEY_LEN_IN_BYTES = 150;
     public static final int PUBLIC_KEY_LEN_IN_BYTES = 91;
 
     private static final SecureRandom RANDOM = new SecureRandom();
 
     private static boolean initialized = false;
+
+    // Disallow instances of this class
+    private Crypto() { }
 
     public static void init() {
         if (!initialized) {
