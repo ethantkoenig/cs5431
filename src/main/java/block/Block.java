@@ -194,24 +194,26 @@ public class Block extends HashCache implements Iterable<Transaction>, CanBeSeri
      */
     public Optional<UnspentTransactions> verify(UnspentTransactions unspentTransactions)
             throws GeneralSecurityException, IOException {
-        UnspentTransactions copy = unspentTransactions.copy();
+        if (!this.checkHash()) {
+            return Optional.empty();
+        } else if (this.reward.value != REWARD_AMOUNT) {
+            return Optional.empty();
+        }
 
+        UnspentTransactions copy = unspentTransactions.copy();
         for (Transaction tx : transactions) {
             if (!tx.verify(copy)) {
                 return Optional.empty();
             }
         }
-        if (this.reward.value != REWARD_AMOUNT) {
-            return Optional.empty();
-        }
+        copy.put(getShaTwoFiftySix(), 0, reward);
         return Optional.of(copy);
     }
 
     public boolean verifyGenesis(PublicKey privilegedKey) {
         if (this.transactions.length > 0) {
             return false;
-        }
-        if (this.reward.value != REWARD_AMOUNT) {
+        } else if (this.reward.value != REWARD_AMOUNT) {
             return false;
         }
         return this.reward.ownerPubKey.equals(privilegedKey);

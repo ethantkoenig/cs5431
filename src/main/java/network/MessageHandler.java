@@ -5,12 +5,13 @@ import block.UnspentTransactions;
 import transaction.Transaction;
 import utils.ByteUtil;
 import utils.CanBeSerialized;
-import utils.ShaTwoFiftySix;
 
 import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
@@ -20,14 +21,11 @@ import java.util.logging.Logger;
 public class MessageHandler {
     private static final Logger LOGGER = Logger.getLogger(MessageHandler.class.getName());
 
-    private MiningBundle bundle;
-    private BlockingQueue<OutgoingMessage> broadcastQueue;
+    private final MiningBundle bundle;
+    private final BlockingQueue<OutgoingMessage> broadcastQueue;
 
-    // The block currently being mined by the mining thread
-    private Block currentHashingBlock;
-
-    // The incomplete block to add incoming transactions to
-    private Block currentAddToBlock;
+    // list to add incoming transactions to
+    private final List<Transaction> unminedTransactions = new ArrayList<>();
     private MinerThread minerThread;
     private LinkedList<Block> miningQueue = new LinkedList<>();
     private FixedSizeSet<IncomingMessage> recentTransactionsReceived = new FixedSizeSet<>();
@@ -54,7 +52,7 @@ public class MessageHandler {
             return;
         }
         recentTransactionsReceived.add(msg);
-        addTransactionToBlock(tx);
+        addTransaction(tx);
     }
 
     /**
@@ -65,7 +63,12 @@ public class MessageHandler {
                 !bundle.getBlockChain().containsBlockWithHash(block.previousBlockHash)) {
             return false;
         }
-        addBlockToChain(block);
+        try {
+            addBlockToChain(block);
+        } catch (GeneralSecurityException | IOException e) {
+            LOGGER.severe(e.getMessage());
+            return false;
+        }
         return true;
     }
 
@@ -90,40 +93,37 @@ public class MessageHandler {
         Block block = miningQueue.removeLast();
         // If there is no current miner thread then start a new one.
         if (minerThread == null || !minerThread.isAlive()) {
-            currentHashingBlock = block;
             block.addReward(bundle.getKeyPair().getPublic());
             minerThread = new MinerThread(block, broadcastQueue);
             minerThread.start();
         }
     }
 
-    private void addBlockToChain(Block block) {
-        if (currentAddToBlock == null) {
+    private void addBlockToChain(Block block) throws GeneralSecurityException, IOException {
+        if (bundle.getBlockChain().getCurrentHead() == null) {
             if (block.verifyGenesis(bundle.privilegedKey)) {
                 LOGGER.info("Received the genesis block");
                 LOGGER.info(String.format("Genesis hash: %s", block.getShaTwoFiftySix().toString()));
                 if (!bundle.getBlockChain().insertBlock(block)) {
+                    LOGGER.severe("Unable to add genesis block");
                     return;
                 }
-                currentHashingBlock = bundle.getBlockChain().getCurrentHead();
-                LOGGER.info("[!] Creating block to put transaction on.");
-                ShaTwoFiftySix previousBlockHash = bundle.getBlockChain().getCurrentHead().getShaTwoFiftySix();
-                currentAddToBlock = Block.empty(previousBlockHash);
                 bundle.getUnspentTransactions().put(block.getShaTwoFiftySix(), 0, block.reward);
             } else {
-                LOGGER.info("Received invalid genesis block");
+                LOGGER.warning("Received invalid genesis block");
             }
             return;
         }
-        if (currentHashingBlock != null) {
-            ArrayList<Transaction> difference = block.getTransactionDifferences(currentHashingBlock);
-            for (Transaction transaction : difference) {
-                currentAddToBlock.addTransaction(transaction);
-            }
+
+        Optional<UnspentTransactions> verifiedUnspentTransactions = bundle.getBlockChain().verifyBlock(block);
+        if (!verifiedUnspentTransactions.isPresent()) {
+            LOGGER.warning("Received invalid block");
+            return;
         }
 
         LOGGER.info(String.format("Received valid block: hash=%s", block.getShaTwoFiftySix()));
-        //interrupt the mining thread
+
+        // interrupt the mining thread
         if (minerThread != null && minerThread.isAlive()) {
             LOGGER.info("[-] Received block. Stopping current mining thread.");
             minerThread.stopMining();
@@ -132,43 +132,42 @@ public class MessageHandler {
         // Add block to chain
         LOGGER.info("[+] Adding completed block to block chain");
         bundle.getBlockChain().insertBlock(block);
-        bundle.getUnspentTransactions().put(block.getShaTwoFiftySix(), 0, block.reward);
-
+        bundle.setUnspentTransactions(verifiedUnspentTransactions.get());
+        unminedTransactions.clear();
         startMiningThread();
     }
 
-    private void addTransactionToBlock(Transaction transaction)
+    private void addTransaction(Transaction transaction)
             throws IOException {
-        if (currentAddToBlock == null) {
-            if (bundle.getBlockChain().getCurrentHead() == null) {
-                LOGGER.warning("Received transaction before genesis block received");
-                return;
-            }
-            LOGGER.info("[!] Creating block to put transaction on.");
-            ShaTwoFiftySix previousBlockHash
-                    = bundle.getBlockChain().getCurrentHead().getShaTwoFiftySix();
-            currentAddToBlock = Block.empty(previousBlockHash);
+        if (bundle.getBlockChain().getCurrentHead() == null) {
+            LOGGER.warning("Received transaction before genesis block received");
+            return;
+        } else if (unminedTransactions.size() == Block.NUM_TRANSACTIONS_PER_BLOCK) {
+            LOGGER.warning("Dropping incoming transaction, resend when a new block has been mined");
+            return;
         }
 
         //verify transaction
         LOGGER.info("[!] Verifying transaction.");
         UnspentTransactions copy = bundle.getUnspentTransactions().copy();
-        if (transaction.verify(copy)) {
-            bundle.setUnspentTransactions(copy);
-            LOGGER.info("[!] Transaction verified. Adding transaction to block.");
-            LOGGER.info(transaction.toString());
-            currentAddToBlock.addTransaction(transaction);
-        } else {
-            LOGGER.severe("The received transaction was not verified! Not adding to block.");
+        if (!transaction.verify(copy)) {
+            LOGGER.warning("The received transaction was not verified! Not adding to block.");
         }
-        if (currentAddToBlock.isFull()) {
+        bundle.setUnspentTransactions(copy);
+        LOGGER.info("[!] Transaction verified.");
+        LOGGER.info(transaction.toString());
+        unminedTransactions.add(transaction);
+        if (unminedTransactions.size() == Block.NUM_TRANSACTIONS_PER_BLOCK) {
             // currentAddToBlock is full, so start mining it
             LOGGER.info("[+] Starting mining thread");
 
-            miningQueue.addFirst(currentAddToBlock);
-            currentAddToBlock = null;
+            Block blockToMine = Block.empty(bundle.getBlockChain().getCurrentHead().getShaTwoFiftySix());
+            for (Transaction t : unminedTransactions) {
+                blockToMine.addTransaction(t);
+            }
+            miningQueue.addFirst(blockToMine);
             startMiningThread();
-            addTransactionToBlock(transaction);
+            addTransaction(transaction);
         }
     }
 }

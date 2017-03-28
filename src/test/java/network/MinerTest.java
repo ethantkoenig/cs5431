@@ -44,8 +44,6 @@ public class MinerTest extends RandomizedTest {
         simulation.sendBytes(randomBytes(1024), 0); // should be ignored
         simulation.sendBytes(randomBytes(1024), 1); // should be ignored
 
-        Thread.sleep(100); // TODO actually fix the race conditions
-
         simulation.sendGetBlocksRequest(genesisBlock.getShaTwoFiftySix(), 1, 1);
         Block getBlockResponse = assertSingleBlockMessage(simulation.getNextMessage(true));
         Assert.assertEquals(genesisBlock, getBlockResponse);

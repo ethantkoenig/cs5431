@@ -55,8 +55,6 @@ public class Node {
 
         LOGGER.info("[+] Accepting connections");
 
-        new ConnectionThread(new Socket("localhost", port), this.messageQueue).start();
-
         while (true) {
             ConnectionThread connectionThread = null;
             try {
@@ -98,6 +96,14 @@ public class Node {
      * @param message the type message object containing type and payload
      */
     public synchronized void broadcast(OutgoingMessage message) {
+        // broadcast message to self
+        try {
+            messageQueue.put(new IncomingMessage(message.type, message.payload));
+        } catch (InterruptedException e) {
+            LOGGER.severe(e.getMessage());
+        }
+
+        // broadcast message to others
         Set<ConnectionThread> toRemove = new HashSet<>();
         for (ConnectionThread connectionThread : connections) {
             try {
