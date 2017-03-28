@@ -127,7 +127,7 @@ public class MinerTest extends RandomizedTest {
 
 
         Transaction txBadIndex = new Transaction.Builder()
-                .addInput(new TxIn(genesisBlock.getShaTwoFiftySix(), 1), pair1.getPrivate())
+                .addInput(new TxIn(txId.getShaTwoFiftySix(), 1), pair1.getPrivate())
                 .addOutput(new TxOut(Block.REWARD_AMOUNT, pair1.getPublic()))
                 .build();
 
@@ -143,7 +143,7 @@ public class MinerTest extends RandomizedTest {
 
 
         Transaction txBadAmount = new Transaction.Builder()
-                .addInput(new TxIn(genesisBlock.getShaTwoFiftySix(), 0), pair1.getPrivate())
+                .addInput(new TxIn(txId.getShaTwoFiftySix(), 0), pair1.getPrivate())
                 .addOutput(new TxOut(Block.REWARD_AMOUNT + 1, pair1.getPublic()))
                 .build();
 
@@ -159,7 +159,7 @@ public class MinerTest extends RandomizedTest {
 
 
         Transaction txWrongOwner = new Transaction.Builder()
-                .addInput(new TxIn(genesisBlock.getShaTwoFiftySix(), 0), pair0.getPrivate())
+                .addInput(new TxIn(txId.getShaTwoFiftySix(), 0), pair0.getPrivate())
                 .addOutput(new TxOut(Block.REWARD_AMOUNT, pair1.getPublic()))
                 .build();
 
@@ -175,7 +175,7 @@ public class MinerTest extends RandomizedTest {
 
 
         Transaction txZeroOutput = new Transaction.Builder()
-                .addInput(new TxIn(genesisBlock.getShaTwoFiftySix(), 0), pair1.getPrivate())
+                .addInput(new TxIn(txId.getShaTwoFiftySix(), 0), pair1.getPrivate())
                 .addOutput(new TxOut(Block.REWARD_AMOUNT, pair1.getPublic()))
                 .addOutput(new TxOut(0, pair1.getPublic()))
                 .build();
@@ -192,7 +192,7 @@ public class MinerTest extends RandomizedTest {
 
 
         Transaction txNegativeOutput = new Transaction.Builder()
-                .addInput(new TxIn(genesisBlock.getShaTwoFiftySix(), 0), pair1.getPrivate())
+                .addInput(new TxIn(txId.getShaTwoFiftySix(), 0), pair1.getPrivate())
                 .addOutput(new TxOut(Block.REWARD_AMOUNT + 1, pair1.getPublic()))
                 .addOutput(new TxOut(-1, pair1.getPublic()))
                 .build();
