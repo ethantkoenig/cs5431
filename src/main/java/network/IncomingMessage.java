@@ -12,7 +12,11 @@ import java.util.logging.Logger;
 public class IncomingMessage extends Message {
     private static final Logger LOGGER = Logger.getLogger(IncomingMessage.class.getName());
 
-    private final MessageResponder responder;
+    private final MessageResponder responder; // may be null
+
+    public IncomingMessage(byte type, byte[] payload) {
+        this(type, payload, null);
+    }
 
     public IncomingMessage(byte type, byte[] payload,
                            MessageResponder responder) {
@@ -21,6 +25,10 @@ public class IncomingMessage extends Message {
     }
 
     public void respond(OutgoingMessage message) throws IOException {
+        if (responder == null) {
+            LOGGER.warning("Cannot response to this message: " + this);
+            return;
+        }
         responder.respond(message);
     }
 
