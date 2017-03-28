@@ -5,7 +5,9 @@ import transaction.Transaction;
 import transaction.TxOut;
 import utils.*;
 
-import java.io.*;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.PublicKey;
 import java.util.*;
@@ -14,13 +16,13 @@ import java.util.logging.Logger;
 /**
  * Represents a block of transactions in the ledger
  */
-public class Block extends HashCache implements Iterable<Transaction> {
+public class Block extends HashCache implements Iterable<Transaction>, CanBeSerialized {
     private final static Logger LOGGER = Logger.getLogger(Block.class.getName());
+    public final static Deserializer<Block> DESERIALIZER = new BlockDeserializer();
 
     public final static int NUM_TRANSACTIONS_PER_BLOCK = 2;
     public final static int NONCE_SIZE_IN_BYTES = 128;
     public final static int REWARD_AMOUNT = 50000;
-    public final static int MAX_BLOCKS_PER_MSG = 500;
 
     public final ShaTwoFiftySix previousBlockHash;
     public final Transaction[] transactions;
@@ -48,95 +50,24 @@ public class Block extends HashCache implements Iterable<Transaction> {
     }
 
     /**
-     * @param input input bytes to deserialize
-     * @return Array of deserialized blocks, if length is invalid, returns an
-     *   empty one element array
-     */
-    public static Optional<Block[]> deserializeBlocks(byte[] input)
-            throws IOException, GeneralSecurityException {
-        return deserializeBlocks(new DataInputStream(new ByteArrayInputStream(input)));
-    }
-
-    /**
-     * @param input input bytes to deserialize
-     * @return Array of deserialized blocks
-     */
-    public static Optional<Block[]> deserializeBlocks(DataInputStream input)
-        throws IOException, GeneralSecurityException {
-        int numBlocks = input.readInt();
-        if (numBlocks > 0 && numBlocks < MAX_BLOCKS_PER_MSG) {
-            Block[] blocks = new Block[numBlocks];
-            for (int i = 0; i < numBlocks; ++i) {
-                Block b = Block.deserialize(input);
-                if (b.checkHash()) {
-                    blocks[i] = b;
-                } else {
-                    return Optional.empty();
-                }
-            }
-            return Optional.of(blocks);
-        } else {
-            LOGGER.severe("Invalid number of blocks: " + numBlocks);
-            return Optional.empty();
-        }
-    }
-
-    /**
-     * @param input input bytes to deserialize
-     * @return deserialized block
-     */
-    public static Block deserialize(byte[] input) throws IOException, GeneralSecurityException {
-        return deserialize(new DataInputStream(new ByteArrayInputStream(input)));
-    }
-
-    /**
-     * @param input input bytes to deserialize
-     * @return deserialized block
-     */
-    public static Block deserialize(DataInputStream input)
-            throws IOException, GeneralSecurityException {
-        ShaTwoFiftySix hash = ShaTwoFiftySix.deserialize(input);
-        int numBlocks = input.readInt();
-        Block block = new Block(hash, numBlocks);
-
-        for (int i = 0; i < numBlocks; i++) {
-            block.transactions[i] = Transaction.deserialize(input);
-        }
-        PublicKey rewardKey = Crypto.deserializePublicKey(input);
-        block.reward = new TxOut(REWARD_AMOUNT, rewardKey);
-        IOUtils.fill(input, block.nonce);
-        return block;
-    }
-
-    public static byte[] serializeBlocks(List<Block> blocks) throws IOException {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        DataOutputStream dataOut = new DataOutputStream(outputStream);
-        dataOut.writeInt(blocks.size());
-        for (Block b : blocks) {
-            b.serialize(dataOut);
-        }
-        return outputStream.toByteArray();
-    }
-
-    /**
      * Writes the serialization of this block to {@code outputStream}
      *
      * @param outputStream output to write the serialized block to
      * @throws IOException
      */
+    @Override
     public void serialize(DataOutputStream outputStream) throws IOException {
-        previousBlockHash.writeTo(outputStream);
-        outputStream.writeInt(transactions.length);
-
         for (Transaction transaction : transactions) {
             if (transaction == null) {
-                throw new IllegalStateException("Cannot serialize non-full block");
+                throw new IllegalStateException("Cannot serialize a non-full block");
             }
-            transaction.serializeWithSignatures(outputStream);
         }
         if (reward == null) {
-            throw new IllegalStateException("Cannot serialize block without reward");
+            throw new IllegalStateException("Cannot serialize a block without a reward");
         }
+
+        previousBlockHash.writeTo(outputStream);
+        CanBeSerialized.serializeArray(outputStream, transactions);
         outputStream.write(reward.ownerPubKey.getEncoded());
         outputStream.write(nonce);
     }
@@ -304,6 +235,29 @@ public class Block extends HashCache implements Iterable<Transaction> {
     @Override
     public Iterator<Transaction> iterator() {
         return Arrays.stream(transactions).iterator();
+    }
+
+    private static final class BlockDeserializer implements Deserializer<Block> {
+
+        @Override
+        public Block deserialize(DataInputStream input) throws DeserializationException, IOException {
+            ShaTwoFiftySix hash = ShaTwoFiftySix.deserialize(input);
+
+            List<Transaction> transactions = Deserializer.deserializeList(input, Transaction.DESERIALIZER);
+            Block block = new Block(hash, transactions.size());
+            for (int i = 0; i < transactions.size(); i++) {
+                block.transactions[i] = transactions.get(i);
+            }
+
+            try {
+                PublicKey rewardKey = Crypto.deserializePublicKey(input);
+                block.reward = new TxOut(REWARD_AMOUNT, rewardKey);
+                IOUtils.fill(input, block.nonce);
+                return block;
+            } catch (GeneralSecurityException e) {
+                throw new DeserializationException("Misformatted reward public key");
+            }
+        }
     }
 }
 

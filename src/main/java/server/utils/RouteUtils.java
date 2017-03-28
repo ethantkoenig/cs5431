@@ -8,7 +8,10 @@ import utils.ByteUtil;
 
 import java.sql.SQLException;
 
-public class RouteUtils {
+public final class RouteUtils {
+
+    // Disallow instances of this class
+    private RouteUtils() { }
 
     public static Route wrapRoute(Route route) {
         return (request, response) -> {

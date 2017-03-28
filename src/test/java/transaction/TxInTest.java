@@ -16,12 +16,12 @@ public class TxInTest extends RandomizedTest {
 
 
     @Test
-    public void testSerialize() throws GeneralSecurityException, IOException {
+    public void testSerialize() throws Exception {
         ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(randomBytes(256));
         TxIn input = new TxIn(hash, 4);
 
         byte[] serialized = ByteUtil.asByteArray(input::serialize);
-        TxIn deserialized = TxIn.deserialize(new DataInputStream(
+        TxIn deserialized = TxIn.DESERIALIZER.deserialize(new DataInputStream(
                 new ByteArrayInputStream(serialized)
         ));
 

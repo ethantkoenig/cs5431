@@ -1,5 +1,8 @@
 package transaction;
 
+import utils.CanBeSerialized;
+import utils.DeserializationException;
+import utils.Deserializer;
 import utils.ShaTwoFiftySix;
 
 import java.io.DataInputStream;
@@ -13,7 +16,8 @@ import java.util.Arrays;
  * Contains a reference to a previous transactions output in the form
  * of a SHA256 hash of the transaction, and the output index to be spent.
  */
-public class TxIn {
+public final class TxIn implements CanBeSerialized {
+    public static final Deserializer<TxIn> DESERIALIZER = new TxInDeserializer();
 
     public final ShaTwoFiftySix previousTxn;
     public final int txIdx;
@@ -21,12 +25,6 @@ public class TxIn {
     public TxIn(ShaTwoFiftySix previousTxn, int index) {
         this.previousTxn = previousTxn;
         txIdx = index;
-    }
-
-    public static TxIn deserialize(DataInputStream input) throws IOException {
-        ShaTwoFiftySix sha = ShaTwoFiftySix.deserialize(input);
-        int index = input.readInt();
-        return new TxIn(sha, index);
     }
 
     public void serialize(DataOutputStream outputStream) throws IOException {
@@ -48,5 +46,14 @@ public class TxIn {
     @Override
     public int hashCode() {
         return Arrays.hashCode(new Object[]{previousTxn, txIdx});
+    }
+
+    private static final class TxInDeserializer implements Deserializer<TxIn> {
+        @Override
+        public TxIn deserialize(DataInputStream inputStream) throws DeserializationException, IOException {
+            ShaTwoFiftySix sha = ShaTwoFiftySix.deserialize(inputStream);
+            int index = inputStream.readInt();
+            return new TxIn(sha, index);
+        }
     }
 }

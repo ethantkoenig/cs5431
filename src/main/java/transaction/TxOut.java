@@ -1,11 +1,13 @@
 package transaction;
 
+import utils.CanBeSerialized;
 import utils.Crypto;
+import utils.DeserializationException;
+import utils.Deserializer;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
 import java.security.PublicKey;
 import java.util.Arrays;
@@ -17,7 +19,9 @@ import java.util.Optional;
  * Contains the value associated with this output and the public key
  * required to claim this output.
  */
-public class TxOut {
+public final class TxOut implements CanBeSerialized {
+
+    public final static Deserializer<TxOut> DESERIALIZER = new TxOutDeserializer();
 
     public final long value;
     public final PublicKey ownerPubKey;
@@ -27,13 +31,6 @@ public class TxOut {
     public TxOut(long value, PublicKey ownerPubKey) {
         this.value = value;
         this.ownerPubKey = ownerPubKey;
-    }
-
-    public static TxOut deserialize(DataInputStream input)
-            throws GeneralSecurityException, IOException {
-        PublicKey ownerKey = Crypto.deserializePublicKey(input);
-        long value = input.readLong();
-        return new TxOut(value, ownerKey);
     }
 
     public void serialize(DataOutputStream outputStream) throws IOException {
@@ -62,5 +59,18 @@ public class TxOut {
     @Override
     public int hashCode() {
         return Arrays.hashCode(new Object[]{value, ownerPubKey});
+    }
+
+    private static final class TxOutDeserializer implements Deserializer<TxOut> {
+        @Override
+        public TxOut deserialize(DataInputStream inputStream) throws DeserializationException, IOException {
+            try {
+                PublicKey ownerKey = Crypto.deserializePublicKey(inputStream);
+                long value = inputStream.readLong();
+                return new TxOut(value, ownerKey);
+            } catch (GeneralSecurityException e) {
+                throw new DeserializationException("Invalid public key");
+            }
+        }
     }
 }

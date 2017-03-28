@@ -11,6 +11,8 @@ import transaction.TxIn;
 import transaction.TxOut;
 import utils.ByteUtil;
 import utils.Config;
+import utils.Deserializer;
+import utils.ShaTwoFiftySix;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -44,10 +46,7 @@ public class MinerTest extends RandomizedTest {
 
         Thread.sleep(100); // TODO actually fix the race conditions
 
-        simulation.sendMessage(new OutgoingMessage(
-                Message.GET_BLOCK,
-                Message.getBlockPayload(genesisBlock.getShaTwoFiftySix(), 1)
-        ), 1);
+        simulation.sendGetBlocksRequest(genesisBlock.getShaTwoFiftySix(), 1, 1);
         Block getBlockResponse = assertSingleBlockMessage(simulation.getNextMessage(true));
         Assert.assertEquals(genesisBlock, getBlockResponse);
 
@@ -79,10 +78,7 @@ public class MinerTest extends RandomizedTest {
 
         Thread.sleep(200); // TODO actually fix the race conditions
 
-        simulation.sendMessage(new OutgoingMessage(
-                Message.GET_BLOCK,
-                Message.getBlockPayload(block.getShaTwoFiftySix(), 2)
-        ), 2);
+        simulation.sendGetBlocksRequest(block.getShaTwoFiftySix(), 2, 2);
         while (true) {
             // may receive mined block from other node, so repeatedly check
             // for actual GET_BLOCK response
@@ -99,14 +95,13 @@ public class MinerTest extends RandomizedTest {
 
     private Transaction assertTransactionMessage(Message msg) throws Exception {
         Assert.assertEquals(Message.TRANSACTION, msg.type);
-        return Transaction.deserialize(msg.payload);
+        return Transaction.DESERIALIZER.deserialize(msg.payload);
     }
 
     private Block[] assertBlockMessage(Message msg) throws Exception {
         Assert.assertEquals(Message.BLOCK, msg.type);
-        return TestUtils.assertPresent(
-                Block.deserializeBlocks(msg.payload)
-        );
+        return Deserializer.deserializeList(msg.payload, Block.DESERIALIZER)
+                .toArray(new Block[0]);
     }
 
     private Block assertSingleBlockMessage(Message msg) throws Exception {
@@ -144,8 +139,14 @@ public class MinerTest extends RandomizedTest {
         }
 
         private void sendTransaction(Transaction transaction, int node) throws IOException {
-            byte[] serialized = ByteUtil.asByteArray(transaction::serializeWithSignatures);
+            byte[] serialized = ByteUtil.asByteArray(transaction::serialize);
             sendMessage(new OutgoingMessage(Message.TRANSACTION, serialized), node);
+        }
+
+        private void sendGetBlocksRequest(ShaTwoFiftySix hash, int numRequested, int node) throws IOException {
+            GetBlocksRequest request = new GetBlocksRequest(hash, numRequested);
+            byte[] payload = ByteUtil.asByteArray(request::serialize);
+            sendMessage(new OutgoingMessage(Message.GET_BLOCK, payload), node);
         }
 
         private void sendMessage(OutgoingMessage message, int node) throws IOException {

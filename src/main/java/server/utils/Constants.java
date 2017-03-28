@@ -2,11 +2,14 @@ package server.utils;
 
 import java.net.InetSocketAddress;
 
-public class Constants {
+public final class Constants {
     /**
      * Address of cryptocurrency node to connect to for transactions
      */
     private static InetSocketAddress nodeAddress;
+
+    // Disallow instances of this class
+    private Constants() { }
 
     public static InetSocketAddress getNodeAddress() {
         if (nodeAddress == null) {

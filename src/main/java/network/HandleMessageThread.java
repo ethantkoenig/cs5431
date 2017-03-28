@@ -3,13 +3,12 @@ package network;
 import block.Block;
 import block.BlockChain;
 import transaction.Transaction;
+import utils.ByteUtil;
+import utils.DeserializationException;
+import utils.Deserializer;
 import utils.ShaTwoFiftySix;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
 import java.io.IOException;
-import java.security.GeneralSecurityException;
-import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
@@ -47,74 +46,75 @@ public class HandleMessageThread extends Thread {
      */
     @Override
     public void run() {
+        while (true) {
+            handleNextMessage();
+        }
+    }
+
+    private void handleNextMessage() {
         try {
-            IncomingMessage message;
-            while ((message = messageQueue.take()) != null) {
-                switch (message.type) {
-                    case Message.TRANSACTION:
-                        LOGGER.info("[!] Received transaction!");
-                        Transaction transaction =
-                                Transaction.deserialize(message.payload);
-                        handler.txMsgHandler(message, transaction);
-                        break;
-                    case Message.BLOCK:
-                        Optional<Block[]> opt = Block.deserializeBlocks(message.payload);
-                        if (!opt.isPresent()) {
-                            LOGGER.info("(WW) received misformatted BLOCK message or block that did not pass hashcheck.");
-                            break;
-                        }
-                        Block[] blocks = opt.get();
-                        boolean added = false;
-                        // TODO check that blocks are in "correct" order (parent, child, grandchild, ...)
-                        for (int i = blocks.length - 1; i >= 0; i--) {
-                            Block block = blocks[i];
-                            if (handler.blockHandler(block)) {
-                                for (Block descendant : orphanedBlocks.popDescendantsOf(block.getShaTwoFiftySix())) {
-                                    if (!handler.blockHandler(descendant)) {
-                                        LOGGER.severe("Unexpectedly unable to handle block");
-                                    }
-                                }
-                                added = true;
-                                break;
-                            } else {
-                                orphanedBlocks.add(block);
+            handleMessageRecklessly(messageQueue.take());
+        } catch (DeserializationException | InterruptedException | IOException e) {
+            LOGGER.severe("Error handling message: " + e.getMessage());
+        }
+    }
+
+    private void handleMessageRecklessly(IncomingMessage message)
+            throws DeserializationException, InterruptedException, IOException {
+        switch (message.type) {
+            case Message.TRANSACTION:
+                LOGGER.info("[!] Received transaction!");
+                Transaction transaction = Transaction.DESERIALIZER.deserialize(message.payload);
+                handler.txMsgHandler(message, transaction);
+                break;
+            case Message.BLOCK:
+                Block[] blocks = Deserializer.deserializeList(message.payload, Block.DESERIALIZER)
+                        .toArray(new Block[0]);
+                boolean added = false;
+                // TODO check that blocks are in "correct" order (parent, child, grandchild, ...)
+                for (int i = blocks.length - 1; i >= 0; i--) {
+                    Block block = blocks[i];
+                    if (handler.blockHandler(block)) {
+                        for (Block descendant : orphanedBlocks.popDescendantsOf(block.getShaTwoFiftySix())) {
+                            if (!handler.blockHandler(descendant)) {
+                                LOGGER.severe("Unexpectedly unable to handle block");
                             }
                         }
-                        if (!added) {
-                            message.respond(new OutgoingMessage(
-                                    Message.GET_BLOCK,
-                                    Message.getBlockPayload(blocks[0].getShaTwoFiftySix(), 10)
-                            ));
-                        }
+                        added = true;
                         break;
-                    case Message.GET_BLOCK:
-                        handleGetBlockRequest(message);
-                        break;
-                    default:
-                        LOGGER.severe(String.format("Unexpected message type: %d", message.type));
+                    } else {
+                        orphanedBlocks.add(block);
+                    }
                 }
-            }
-        } catch (InterruptedException | GeneralSecurityException | IOException e) {
-            e.printStackTrace();
-            LOGGER.severe("Error receiving and/or handling message: " + e.getMessage());
+                if (!added) {
+                    ShaTwoFiftySix hash = blocks[0].getShaTwoFiftySix();
+                    GetBlocksRequest request = new GetBlocksRequest(hash, 10);
+                    byte[] payload = ByteUtil.asByteArray(request::serialize);
+                    message.respond(new OutgoingMessage(Message.GET_BLOCK, payload));
+                }
+                break;
+            case Message.GET_BLOCK:
+                handleGetBlockRequest(message);
+                break;
+            default:
+                LOGGER.severe(String.format("Unexpected message type: %d", message.type));
         }
     }
 
     private void handleGetBlockRequest(IncomingMessage message)
-            throws IOException {
-        DataInputStream input =
-                new DataInputStream(new ByteArrayInputStream(message.payload));
-        // TODO move deserialization elsewhere
-        ShaTwoFiftySix lastHash = ShaTwoFiftySix.deserialize(input);
-        int aToGet = input.readInt();
+            throws DeserializationException, IOException {
+        GetBlocksRequest request = GetBlocksRequest.DESERIALIZER.deserialize(message.payload);
         BlockChain chain = bundle.getBlockChain();
-        if (aToGet <= 0 || aToGet >= Message.MAX_BLOCKS_TO_GET) {
-            LOGGER.info("GET_BLOCK message received with invalid number of blocks to get");
+        if (request.numBlocksRequested <= 0 ||
+                request.numBlocksRequested >= Message.MAX_BLOCKS_TO_GET) {
+            String msg = String.format("GET_BLOCK request, invalid number of requested blocks: %d",
+                    request.numBlocksRequested);
+            LOGGER.info(msg);
             return;
-        } else if (!chain.containsBlockWithHash(lastHash)) {
+        } else if (!chain.containsBlockWithHash(request.hash)) {
             LOGGER.info("GET_BLOCK message received with unknown hash");
             return;
         }
-        handler.getBlockMsgHandler(message, aToGet, lastHash);
+        handler.getBlockMsgHandler(message, request);
     }
 }

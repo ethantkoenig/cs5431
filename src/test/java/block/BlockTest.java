@@ -7,10 +7,7 @@ import testutils.RandomizedTest;
 import testutils.TestUtils;
 import transaction.Transaction;
 import transaction.TxOut;
-import utils.ByteUtil;
-import utils.Crypto;
-import utils.Pair;
-import utils.ShaTwoFiftySix;
+import utils.*;
 
 import java.security.KeyPair;
 import java.security.PublicKey;
@@ -55,7 +52,7 @@ public class BlockTest extends RandomizedTest {
         }
         block.addReward(randomKeyPair().getPublic());
 
-        Block deserialized = Block.deserialize(ByteUtil.asByteArray(block::serialize));
+        Block deserialized = Block.DESERIALIZER.deserialize(ByteUtil.asByteArray(block::serialize));
 
         TestUtils.assertEqualsWithHashCode(errorMessage, block, deserialized);
         Assert.assertEquals(errorMessage,
@@ -96,7 +93,7 @@ public class BlockTest extends RandomizedTest {
         Block block = Block.genesis();
         block.addReward(randomKeyPair().getPublic());
 
-        Block deserialized = Block.deserialize(ByteUtil.asByteArray(block::serialize));
+        Block deserialized = Block.DESERIALIZER.deserialize(ByteUtil.asByteArray(block::serialize));
 
         TestUtils.assertEqualsWithHashCode(errorMessage, block, deserialized);
         Assert.assertEquals(errorMessage,
