@@ -1,24 +1,19 @@
 package utils;
 
+import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.junit.Assert;
-import org.junit.Test;
+import org.junit.runner.RunWith;
 import testutils.RandomizedTest;
 
+@RunWith(JUnitQuickcheck.class)
 public class LongsTest extends RandomizedTest {
 
-    @Test
-    public void testSumWillOverflow() {
-        long a, b;
-        a = random.nextInt();
-        b = random.nextInt();
-        Assert.assertFalse(errorMessage, Longs.sumWillOverflow(a, b));
-
-        a = nonNegativeLong();
-        b = Long.MAX_VALUE - a + 1;
-        Assert.assertTrue(errorMessage, Longs.sumWillOverflow(a, b));
-
-        a = -nonNegativeLong();
-        b = Long.MIN_VALUE - (a + 1);
-        Assert.assertTrue(errorMessage, Longs.sumWillOverflow(a, b));
+    @Property
+    public void testSumWillOverflow(long a, long b) {
+        long sum = a + b;
+        Assert.assertEquals(
+                Long.signum(a) == Long.signum(b) && Long.signum(sum) != Long.signum(b),
+                Longs.sumWillOverflow(a, b));
     }
 }

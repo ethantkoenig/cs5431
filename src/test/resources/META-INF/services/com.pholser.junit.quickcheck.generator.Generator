@@ -6,5 +6,6 @@ generators.model.TransactionGenerator
 generators.model.TxInGenerator
 generators.model.TxOutGenerator
 generators.model.UnspentTransactionsGenerator
+generators.server.models.KeyGenerator
 testutils.PairGenerator
 
