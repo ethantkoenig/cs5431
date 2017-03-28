@@ -3,6 +3,7 @@ package block;
 import transaction.Transaction;
 import transaction.TxIn;
 import transaction.TxOut;
+import utils.DeserializationException;
 import utils.ShaTwoFiftySix;
 
 import java.io.*;
@@ -85,12 +86,12 @@ public class BlockChain {
      * Finds all the ancestors of {@code Block} with hash {@code hash} contained in {@code this} and returns them from
      * youngest to oldest.
      *
-     * @param hash The SHA-256 hash of the first {@code Block} that will appear in the list
+     * @param hash      The SHA-256 hash of the first {@code Block} that will appear in the list
      * @param numAncest the number of ancestors from {@code Block} with
-     *   {@code hash} to return.
+     *                  {@code hash} to return.
      * @return A {@code List} of all ancestor {@code Block}s related to the
-     *   {@code Block} with hash {@code hash}, from youngest to oldest, or an
-     *    empty list if no such {@code Block} exists
+     * {@code Block} with hash {@code hash}, from youngest to oldest, or an
+     * empty list if no such {@code Block} exists
      */
     public List<Block> getAncestorsStartingAt(ShaTwoFiftySix hash, int numAncest) {
         ArrayList<Block> result = new ArrayList<>();
@@ -113,8 +114,8 @@ public class BlockChain {
      *
      * @param hash The SHA-256 hash of the first {@code Block} that will appear in the list
      * @return A {@code List} of all ancestor {@code Block}s related to the
-     *   {@code Block} with hash {@code hash}, from youngest to oldest, or an
-     *    empty list if no such {@code Block} exists
+     * {@code Block} with hash {@code hash}, from youngest to oldest, or an
+     * empty list if no such {@code Block} exists
      */
     public List<Block> getAncestorsStartingAt(ShaTwoFiftySix hash) {
         return getAncestorsStartingAt(hash, blocks.size());
@@ -220,7 +221,7 @@ public class BlockChain {
      * @return true in success, exception otherwise.
      * @throws IOException
      */
-    public boolean importBlockChain(File blockdir) throws IOException, GeneralSecurityException {
+    public boolean importBlockChain(File blockdir) throws IOException, DeserializationException {
         File[] blocks = blockdir.listFiles();
         if (blocks == null) return false;
         ArrayList<BlockWrapper> blocksOnDisk = new ArrayList<>();
@@ -237,6 +238,7 @@ public class BlockChain {
 
     /**
      * Destroys the Blockchain
+     *
      * @return true in successs, false or exception otherwise.
      */
     public boolean destroyBlockchain(File dir) {
@@ -267,8 +269,8 @@ public class BlockChain {
         }
 
         private static BlockWrapper deserialize(DataInputStream input)
-                throws IOException, GeneralSecurityException {
-            Block block = Block.deserialize(input);
+                throws DeserializationException, IOException {
+            Block block = Block.DESERIALIZER.deserialize(input);
             int depth = input.readInt();
             int insertionPosition = input.readInt();
             return new BlockWrapper(block, depth, insertionPosition);
@@ -294,7 +296,7 @@ public class BlockChain {
 
         @Override
         public int hashCode() {
-            return Arrays.hashCode(new Object[] { block, depth, insertionPosition });
+            return Arrays.hashCode(new Object[]{block, depth, insertionPosition});
         }
     }
 }

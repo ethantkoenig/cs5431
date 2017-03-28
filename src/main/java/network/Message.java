@@ -31,21 +31,4 @@ public abstract class Message {
     public String toString() {
         return String.format("Message[type=%d, payload={len:%d}]", type, payload.length);
     }
-
-    /**
-     * Write the serialization of a payload of GET_BLOCK message type
-     *
-     * @param hash     A ShaTwofiftysix hash object of the requesting hash
-     * @param numToGet int of the amount of ancestors to get of {@code hash}}
-     * @return A byte array which is formatted as a payload of the GET_BLOCK
-     * message format
-     */
-    public static byte[] getBlockPayload(ShaTwoFiftySix hash, int numToGet)
-            throws IOException {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        DataOutputStream dataOut = new DataOutputStream(outputStream);
-        hash.writeTo(dataOut);
-        dataOut.writeInt(numToGet);
-        return outputStream.toByteArray();
-    }
 }

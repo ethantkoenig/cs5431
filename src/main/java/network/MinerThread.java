@@ -7,7 +7,8 @@ import java.io.IOException;
 import java.util.Random;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
-import java.util.Arrays;
+
+import static utils.CanBeSerialized.serializeSingleton;
 
 /**
  * The MinerThread is run as a background thread by a Node and is responsible for mining.
@@ -56,7 +57,7 @@ public class MinerThread extends Thread {
     public void run() {
         LOGGER.info("[+] MiningThread started");
 
-        Block finalBlock = null;
+        Block finalBlock = null; // TODO give this var a better name
         try {
             finalBlock = tryNonces();
         } catch (Exception e) {
@@ -71,13 +72,12 @@ public class MinerThread extends Thread {
         LOGGER.info("[+] Successfully mined block! Broadcasting to other nodes.");
         // Put message on broadcast queue
         try {
-            byte[] payload = Block.serializeBlocks(Arrays.asList(finalBlock));
+            final Block minedBlock = finalBlock;
+            byte[] payload = ByteUtil.asByteArray(out -> serializeSingleton(out, minedBlock));
             broadcastQueue.put(new OutgoingMessage(Message.BLOCK, payload));
         } catch (InterruptedException | IOException e) {
             e.printStackTrace();
         }
 
     }
-
-
 }

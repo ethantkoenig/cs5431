@@ -7,7 +7,6 @@ import server.access.UserAccess;
 import server.models.Key;
 import server.models.User;
 import server.utils.Constants;
-import server.utils.RouteUtils;
 import spark.ModelAndView;
 import spark.template.freemarker.FreeMarkerEngine;
 import transaction.Transaction;
@@ -15,7 +14,6 @@ import transaction.TxIn;
 import transaction.TxOut;
 import utils.ByteUtil;
 import utils.Crypto;
-import utils.IOUtils;
 import utils.ShaTwoFiftySix;
 
 import java.io.DataOutputStream;
@@ -79,7 +77,7 @@ public class TransactionController {
     }
 
     private static void sendTransaction(Transaction transaction) throws IOException {
-        byte[] payload = ByteUtil.asByteArray(transaction::serializeWithSignatures);
+        byte[] payload = ByteUtil.asByteArray(transaction::serialize);
         try (Socket socket = new Socket(
                 Constants.getNodeAddress().getAddress(),
                 Constants.getNodeAddress().getPort())) {

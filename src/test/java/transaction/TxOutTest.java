@@ -16,12 +16,12 @@ import java.security.KeyPair;
 public class TxOutTest extends RandomizedTest {
 
     @Test
-    public void testSerialize() throws GeneralSecurityException, IOException {
+    public void testSerialize() throws Exception {
         KeyPair pair = randomKeyPair();
         TxOut output = new TxOut(100, pair.getPublic());
 
         byte[] serialized = ByteUtil.asByteArray(output::serialize);
-        TxOut deserialized = TxOut.deserialize(new DataInputStream(
+        TxOut deserialized = TxOut.DESERIALIZER.deserialize(new DataInputStream(
                 new ByteArrayInputStream(serialized)
         ));
 
