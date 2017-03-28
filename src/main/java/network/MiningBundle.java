@@ -13,9 +13,8 @@ import java.security.PublicKey;
  */
 public class MiningBundle {
 
-    private BlockChain blockChain;
-
-    private KeyPair keyPair;
+    private final BlockChain blockChain;
+    private final KeyPair keyPair;
     public final PublicKey privilegedKey;
 
     private UnspentTransactions unspentTransactions;
@@ -29,14 +28,6 @@ public class MiningBundle {
         this.keyPair = keyPair;
         this.privilegedKey = privilegedKey;
         this.unspentTransactions = unspentTransactions;
-    }
-
-    public void setBlockChain(BlockChain blockChain) {
-        this.blockChain = blockChain;
-    }
-
-    public void setKeyPair(KeyPair keyPair) {
-        this.keyPair = keyPair;
     }
 
     public void setUnspentTransactions(UnspentTransactions unspentTransactions) {
