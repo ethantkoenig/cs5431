@@ -19,8 +19,7 @@ import java.util.logging.Logger;
 public class Node {
     private static final Logger LOGGER = Logger.getLogger(Node.class.getName());
 
-    private int port;
-    private ServerSocket serverSocket;
+    private final ServerSocket serverSocket;
 
     // Synchronized blocking queue to hold incoming messages
     protected BlockingQueue<IncomingMessage> messageQueue;
@@ -32,11 +31,11 @@ public class Node {
     // The connections list holds all of the Nodes current connections
     protected ArrayList<ConnectionThread> connections;
 
-    public Node(int port) {
+    public Node(ServerSocket serverSocket) {
         this.connections = new ArrayList<>();
         this.messageQueue = new SynchronousQueue<>();
         this.broadcastQueue = new SynchronousQueue<>();
-        this.port = port;
+        this.serverSocket = serverSocket;
     }
 
     /**
@@ -47,12 +46,6 @@ public class Node {
      * @throws IOException in serverSocket.accept() if host socket has closed
      */
     public void accept() throws IOException {
-        try {
-            serverSocket = new ServerSocket(port);
-        } catch (IOException e) {
-            LOGGER.severe(String.format("Could not listen on port: %s.%n", port));
-        }
-
         LOGGER.info("[+] Accepting connections");
 
         while (true) {
@@ -65,7 +58,7 @@ public class Node {
             }
             LOGGER.info("[+] Received connection!");
             connectionThread.start();
-            synchronized(this) {
+            synchronized (this) {
                 connections.add(connectionThread);
             }
         }

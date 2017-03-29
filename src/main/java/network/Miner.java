@@ -6,6 +6,7 @@ import block.UnspentTransactions;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.ArrayList;
@@ -18,16 +19,13 @@ public class Miner extends Node {
 
     private MiningBundle miningBundle;
 
-    public Miner(int port, KeyPair myKeyPair, PublicKey privilegedKey) {
-        super(port);
+    public Miner(ServerSocket serverSocket, KeyPair myKeyPair, PublicKey privilegedKey) {
+        super(serverSocket);
 
         BlockChain blockChain = new BlockChain();
         UnspentTransactions unspentTransactions = UnspentTransactions.empty();
-
         miningBundle = new MiningBundle(blockChain, myKeyPair, privilegedKey, unspentTransactions);
-
     }
-
 
     public void connectAll(ArrayList<InetSocketAddress> hosts) {
         for (InetSocketAddress address : hosts) {
