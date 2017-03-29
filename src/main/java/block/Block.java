@@ -1,6 +1,7 @@
 package block;
 
 
+import org.bouncycastle.crypto.digests.SHA256Digest;
 import transaction.Transaction;
 import transaction.TxOut;
 import utils.*;
@@ -11,6 +12,7 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.PublicKey;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 
 /**
@@ -57,6 +59,11 @@ public class Block extends HashCache implements Iterable<Transaction>, CanBeSeri
      */
     @Override
     public void serialize(DataOutputStream outputStream) throws IOException {
+        serializeWithoutNonce(outputStream);
+        outputStream.write(nonce);
+    }
+
+    public void serializeWithoutNonce(DataOutputStream outputStream) throws IOException {
         for (Transaction transaction : transactions) {
             if (transaction == null) {
                 throw new IllegalStateException("Cannot serialize a non-full block");
@@ -69,13 +76,12 @@ public class Block extends HashCache implements Iterable<Transaction>, CanBeSeri
         previousBlockHash.writeTo(outputStream);
         CanBeSerialized.serializeArray(outputStream, transactions);
         outputStream.write(reward.ownerPubKey.getEncoded());
-        outputStream.write(nonce);
     }
 
     /**
      * Add one to the nonce byte array
      */
-    public void nonceAddOne() throws Exception {
+    public void nonceAddOne() {
         ByteUtil.addOne(this.nonce);
         invalidateCache();
     }
@@ -146,6 +152,33 @@ public class Block extends HashCache implements Iterable<Transaction>, CanBeSeri
         }
         // Should never get here
         return false;
+    }
+
+    /**
+     * Update the `nonce` of `this` to make the SHA-256 hash have the correct number of zeros.
+     *
+     * @return Whether we finished finding a valid nonce
+     */
+    public boolean findValidNonce(AtomicBoolean quit) throws IOException {
+        SHA256Digest digest = new SHA256Digest();
+        byte[] ser = ByteUtil.asByteArray(this::serializeWithoutNonce);
+        digest.update(ser, 0, ser.length);
+
+        byte[] hash = new byte[ShaTwoFiftySix.HASH_SIZE_IN_BYTES];
+        int hashGoal = Config.HASH_GOAL.get();
+
+        do {
+            if (quit.get()) {
+                return false;
+            }
+            SHA256Digest copy = new SHA256Digest(digest);
+            nonceAddOne();
+            copy.update(nonce, 0, nonce.length);
+            copy.doFinal(hash, 0);
+        } while (!ShaTwoFiftySix.create(hash).get()
+                .checkHashZeros(hashGoal));
+
+        return true;
     }
 
     /**
