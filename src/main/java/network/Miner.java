@@ -7,6 +7,8 @@ import block.UnspentTransactions;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.ArrayList;
@@ -22,7 +24,8 @@ public class Miner extends Node {
     public Miner(ServerSocket serverSocket, KeyPair myKeyPair, PublicKey privilegedKey) {
         super(serverSocket);
 
-        BlockChain blockChain = new BlockChain();
+        Path blockChainPath = Paths.get("blockchain" + serverSocket.getLocalPort());
+        BlockChain blockChain = new BlockChain(blockChainPath);
         UnspentTransactions unspentTransactions = UnspentTransactions.empty();
         miningBundle = new MiningBundle(blockChain, myKeyPair, privilegedKey, unspentTransactions);
     }
@@ -39,7 +42,8 @@ public class Miner extends Node {
         // Start network.BroadcastThread
         new BroadcastThread(this::broadcast, this.broadcastQueue).start();
 
-        if (miningBundle.getKeyPair().getPublic().equals(miningBundle.privilegedKey)) {
+        if (miningBundle.getKeyPair().getPublic().equals(miningBundle.privilegedKey)
+                && miningBundle.getBlockChain().getCurrentHead() == null) {
             Block genesis = Block.genesis();
             genesis.addReward(miningBundle.privilegedKey);
             MinerThread minerThread = new MinerThread(genesis, broadcastQueue);

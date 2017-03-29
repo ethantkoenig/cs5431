@@ -168,10 +168,11 @@ public class BlockTest extends RandomizedTest {
 
     @Test
     public void testCheckHash() throws Exception {
+        Config.HASH_GOAL.set(1);
         Block block = randomBlock(randomShaTwoFiftySix());
         for (int i = 0; i < 1000; i++) {
             block.nonceAddOne();
-            if (block.checkHashWith(1)) {
+            if (block.checkHash()) {
                 ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(ByteUtil.asByteArray(block::serialize));
                 Assert.assertTrue(hash.checkHashZeros(1));
             }

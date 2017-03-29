@@ -98,13 +98,8 @@ public class Block extends HashCache implements Iterable<Transaction>, CanBeSeri
      * Check that hashing the block with the current nonce does in fact result in a hash
      * with hashGoalZeros number of leading zeros.
      */
-    public boolean checkHash() throws IOException, GeneralSecurityException {
-        return checkHashWith(Config.HASH_GOAL.get());
-    }
-
-    /* package */ boolean checkHashWith(int goal) throws IOException, GeneralSecurityException {
-        ShaTwoFiftySix hash = getShaTwoFiftySix();
-        return hash.checkHashZeros(goal);
+    public boolean checkHash() {
+        return getShaTwoFiftySix().checkHashZeros(Config.HASH_GOAL.get());
     }
 
     /**
@@ -222,11 +217,10 @@ public class Block extends HashCache implements Iterable<Transaction>, CanBeSeri
      * @param unspentTransactions A list of unspent {@code Transaction}s that may be spent by {@code this Block}. This
      *                            collection will not be modified.
      * @return The new {@code Map} with spent transactions removed, if verification passes. Otherwise {@code Optional.empty()}.
-     * @throws GeneralSecurityException
      * @throws IOException
      */
     public Optional<UnspentTransactions> verify(UnspentTransactions unspentTransactions)
-            throws GeneralSecurityException, IOException {
+            throws IOException {
         if (!this.checkHash()) {
             return Optional.empty();
         } else if (this.reward.value != REWARD_AMOUNT) {

@@ -3,20 +3,22 @@ package block;
 import org.junit.Assert;
 import org.junit.Test;
 import testutils.RandomizedTest;
-import testutils.TestUtils;
 import transaction.Transaction;
 import transaction.TxIn;
 import transaction.TxOut;
+import utils.Config;
 import utils.Crypto;
 import utils.Pair;
 import utils.ShaTwoFiftySix;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.io.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.Assert.*;
 
@@ -28,7 +30,7 @@ public class BlockChainTest extends RandomizedTest {
     @Test
     public void testVerify() throws Exception {
         // Test getUnspentTransactionsAt(...) and verifyBlock(...)
-        BlockChain bc = new BlockChain();
+        BlockChain bc = new BlockChain(Files.createTempDirectory("test"));
         assertEquals(UnspentTransactions.empty(),
                 bc.getUnspentTransactionsAt(randomBlock(randomShaTwoFiftySix())));
 
@@ -37,7 +39,7 @@ public class BlockChainTest extends RandomizedTest {
 
         Block genesis = Block.genesis();
         genesis.addReward(senderPair.getPublic());
-        bc.insertBlock(genesis);
+        Assert.assertTrue(bc.insertBlock(genesis));
 
         Assert.assertTrue(errorMessage, bc.verifyBlock(genesis).isPresent());
         UnspentTransactions unspentTxs = UnspentTransactions.empty();
@@ -45,20 +47,22 @@ public class BlockChainTest extends RandomizedTest {
         Block next = Block.empty(genesis.getShaTwoFiftySix());
         next.addReward(senderPair.getPublic());
 
-        Pair<ShaTwoFiftySix,Integer> prevTxOut = new Pair<>(genesis.getShaTwoFiftySix(),0);
+        ShaTwoFiftySix prevTxOut = genesis.getShaTwoFiftySix();
 
         for (int i = 0; i < Block.NUM_TRANSACTIONS_PER_BLOCK; ++i) {
             Transaction tx = new Transaction.Builder()
-                    .addInput(new TxIn(prevTxOut.getLeft(),0), senderPair.getPrivate())
+                    .addInput(new TxIn(prevTxOut,0), senderPair.getPrivate())
                     .addOutput(new TxOut(Block.REWARD_AMOUNT - (i + 1), senderPair.getPublic()))
                     .addOutput(new TxOut(1, recipientPair.getPublic()))
                     .build();
             next.addTransaction(tx);
             unspentTxs.put(tx.getShaTwoFiftySix(), 1, tx.getOutput(1));
-            prevTxOut = new Pair<>(tx.getShaTwoFiftySix(),i);
+            prevTxOut = tx.getShaTwoFiftySix();
         }
 
-        unspentTxs.put(prevTxOut.getLeft(), 0,
+        next.findValidNonce(new AtomicBoolean(false));
+
+        unspentTxs.put(prevTxOut, 0,
                 next.transactions[Block.NUM_TRANSACTIONS_PER_BLOCK-1].getOutput(0));
         unspentTxs.put(next.getShaTwoFiftySix(), 0, next.reward);
 
@@ -79,7 +83,7 @@ public class BlockChainTest extends RandomizedTest {
         Block genesis = Block.genesis();
         PublicKey PK = randomKeyPair().getPublic();
         genesis.addReward(PK);
-        BlockChain bc = new BlockChain(genesis);
+        BlockChain bc = new BlockChain(Files.createTempDirectory("test"), genesis);
         assertEquals(Optional.of(genesis), bc.getBlockWithHash(genesis.getShaTwoFiftySix()));
 
         Block prev = genesis;
@@ -96,7 +100,7 @@ public class BlockChainTest extends RandomizedTest {
     public void insertBlock() throws Exception {
         Block genesis = Block.genesis();
         genesis.addReward(randomKeyPair().getPublic());
-        BlockChain bc = new BlockChain(genesis);
+        BlockChain bc = new BlockChain(Files.createTempDirectory("test"), genesis);
 
         ShaTwoFiftySix randomHash = randomShaTwoFiftySix();
         Block b = randomBlock(randomHash);
@@ -107,7 +111,7 @@ public class BlockChainTest extends RandomizedTest {
 
     @Test
     public void insertBlockEmpty() throws Exception {
-        BlockChain bc = new BlockChain();
+        BlockChain bc = new BlockChain(Files.createTempDirectory("test"));
         assertFalse(errorMessage, bc.insertBlock(randomBlock(randomShaTwoFiftySix())));
 
         Block genesis = Block.genesis();
@@ -119,7 +123,7 @@ public class BlockChainTest extends RandomizedTest {
 
     @Test
     public void insertDuplicateGenesis() throws Exception {
-        BlockChain bc = new BlockChain();
+        BlockChain bc = new BlockChain(Files.createTempDirectory("test"));
         PublicKey key1 = randomKeyPair().getPublic();
         PublicKey key2 = randomKeyPair().getPublic();
 
@@ -137,7 +141,7 @@ public class BlockChainTest extends RandomizedTest {
     public void getCurrentHead() throws Exception {
         Block genesis = Block.genesis();
         genesis.addReward(randomKeyPair().getPublic());
-        BlockChain bc = new BlockChain(genesis);
+        BlockChain bc = new BlockChain(Files.createTempDirectory("test"), genesis);
 
         assertEquals(genesis, bc.getCurrentHead());
 
@@ -176,7 +180,7 @@ public class BlockChainTest extends RandomizedTest {
     public void getAncestorsStartingAt() throws Exception {
         Block genesis = Block.genesis();
         genesis.addReward(randomKeyPair().getPublic());
-        BlockChain bc = new BlockChain(genesis);
+        BlockChain bc = new BlockChain(Files.createTempDirectory("test"), genesis);
 
         assertEquals(genesis, bc.getCurrentHead());
 
@@ -229,7 +233,7 @@ public class BlockChainTest extends RandomizedTest {
         Block genesis = Block.genesis();
         PublicKey PK = randomKeyPair().getPublic();
         genesis.addReward(PK);
-        BlockChain bc = new BlockChain(genesis);
+        BlockChain bc = new BlockChain(Files.createTempDirectory("test"), genesis);
         Assert.assertTrue(bc.containsBlockWithHash(genesis.getShaTwoFiftySix()));
 
         Block prev = genesis;
@@ -252,7 +256,7 @@ public class BlockChainTest extends RandomizedTest {
         Block genesis = Block.genesis();
         PublicKey PK = randomKeyPair().getPublic();
         genesis.addReward(PK);
-        BlockChain bc = new BlockChain(genesis);
+        BlockChain bc = new BlockChain(Files.createTempDirectory("test"), genesis);
         Assert.assertTrue(bc.containsBlock(genesis));
 
         Block prev = genesis;
@@ -272,29 +276,30 @@ public class BlockChainTest extends RandomizedTest {
 
     @Test
     public void importMainChain() throws Exception {
+        Config.HASH_GOAL.set(1);
         Block genesis = Block.genesis();
-        PublicKey PK = Crypto.signatureKeyPair().getPublic();
-        genesis.addReward(PK);
-        BlockChain bc = new BlockChain(genesis);
+        genesis.addReward(randomKeyPair().getPublic());
+        genesis.findValidNonce(new AtomicBoolean(false));
+        Path blockChainPath = Files.createTempDirectory("test");
+        BlockChain bc = new BlockChain(blockChainPath, genesis);
         Assert.assertTrue(bc.containsBlockWithHash(genesis.getShaTwoFiftySix()));
 
         Block prev = genesis;
         List<Block> blocks = new ArrayList<>();
         blocks.add(genesis);
 
-        for (int i = 0; i < 100; ++i) {
+        for (int i = 0; i < 10; ++i) {
             Block next = randomBlock(prev.getShaTwoFiftySix());
+            next.findValidNonce(new AtomicBoolean(false));
             bc.insertBlock(next);
+            blocks.add(next);
             prev = next;
         }
-        bc.storeBlockChain();
-        BlockChain newbc = new BlockChain();
-        newbc.importBlockChain(new File("blockchain" + bc.getCurrentHead().getShaTwoFiftySix()));
-        for (Block b : blocks) {
-            Assert.assertTrue(newbc.containsBlock(b));
-        }
 
-        newbc.destroyBlockchain(new File("blockchain" + bc.getCurrentHead().getShaTwoFiftySix()));
+        BlockChain newBlockChain = new BlockChain(blockChainPath);
+        for (Block b : blocks) {
+            Assert.assertTrue(newBlockChain.containsBlock(b));
+        }
     }
 }
 

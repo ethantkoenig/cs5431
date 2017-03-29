@@ -1,9 +1,11 @@
 package utils;
 
 import java.io.DataOutputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.io.File;
 
 public interface CanBeSerialized {
 
@@ -13,6 +15,12 @@ public interface CanBeSerialized {
      * @param outputStream output to write the serialized block to
      */
     void serialize(DataOutputStream outputStream) throws IOException;
+
+    default void writeToDisk(File writeto) throws IOException {
+        try (DataOutputStream writer = new DataOutputStream(new FileOutputStream(writeto))) {
+            this.serialize(writer);
+        }
+    }
 
     static <U extends CanBeSerialized> void serializeArray(DataOutputStream outputStream,
                                                            U[] values)

@@ -15,8 +15,8 @@ import utils.Crypto;
 import utils.Pair;
 import utils.ShaTwoFiftySix;
 
-import java.io.File;
-import java.security.*;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.Map;
 
@@ -34,17 +34,22 @@ public class BlockChainProperties {
 
     }
 
-    @Property(trials = 10)
+    @Property(trials = 5)
     public void deserializeSerializeInverse(BlockChain blockchain) throws Exception {
         // Store blockchain, reload
-        blockchain.storeBlockChain();
-        BlockChain bc = new BlockChain();
-        bc.importBlockChain(new File("blockchain" + blockchain.getCurrentHead().getShaTwoFiftySix()));
+        BlockChain bc = new BlockChain(blockchain.blockStorePath);
 
         // Get UTXO set, check equality
+        int blockChainHeadDepth = blockchain.getAncestorsStartingAt(
+                blockchain.getCurrentHead().getShaTwoFiftySix()
+        ).size();
+        int bcHeadDepth = bc.getAncestorsStartingAt(bc.getCurrentHead().getShaTwoFiftySix()).size();
+        Assert.assertEquals(blockChainHeadDepth, bcHeadDepth);
         UnspentTransactions oldutxos = blockchain.getUnspentTransactionsAt(blockchain.getCurrentHead());
         UnspentTransactions newutxos = bc.getUnspentTransactionsAt(bc.getCurrentHead());
-        Assert.assertTrue(oldutxos.equals(newutxos));
+        if (blockchain.getCurrentHead().equals(bc.getCurrentHead())) {
+            Assert.assertEquals(oldutxos, newutxos);
+        }
 
         Map<PublicKey,PrivateKey> keys = SigningKeyPairGenerator.getKeyMapping();
         ArrayList<Transaction> txs = new ArrayList<>();
@@ -72,6 +77,5 @@ public class BlockChainProperties {
         newblock.verify(newutxos);
         newblock.verify(oldutxos);
         bc.insertBlock(newblock);
-        bc.destroyBlockchain(new File("blockchain" + blockchain.getCurrentHead().getShaTwoFiftySix()));
     }
 }
