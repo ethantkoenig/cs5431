@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.security.PublicKey;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 
 /**
@@ -80,7 +81,7 @@ public class Block extends HashCache implements Iterable<Transaction>, CanBeSeri
     /**
      * Add one to the nonce byte array
      */
-    public void nonceAddOne() throws Exception {
+    public void nonceAddOne() {
         ByteUtil.addOne(this.nonce);
         invalidateCache();
     }
@@ -155,8 +156,10 @@ public class Block extends HashCache implements Iterable<Transaction>, CanBeSeri
 
     /**
      * Update the `nonce` of `this` to make the SHA-256 hash have the correct number of zeros.
+     *
+     * @return Whether we finished finding a valid nonce
      */
-    public void findValidNonce() throws Exception {
+    public boolean findValidNonce(AtomicBoolean quit) throws IOException {
         SHA256Digest digest = new SHA256Digest();
         byte[] ser = ByteUtil.asByteArray(this::serializeWithoutNonce);
         digest.update(ser, 0, ser.length);
@@ -164,16 +167,18 @@ public class Block extends HashCache implements Iterable<Transaction>, CanBeSeri
         byte[] hash = new byte[ShaTwoFiftySix.HASH_SIZE_IN_BYTES];
         int hashGoal = Config.HASH_GOAL.get();
 
-        while (true) {
+        do {
+            if (quit.get()) {
+                return false;
+            }
             SHA256Digest copy = new SHA256Digest(digest);
             nonceAddOne();
             copy.update(nonce, 0, nonce.length);
             copy.doFinal(hash, 0);
-            if (ShaTwoFiftySix.create(hash).get()
-                    .checkHashZeros(hashGoal)) {
-                return;
-            }
-        }
+        } while (!ShaTwoFiftySix.create(hash).get()
+                .checkHashZeros(hashGoal));
+
+        return true;
     }
 
     /**

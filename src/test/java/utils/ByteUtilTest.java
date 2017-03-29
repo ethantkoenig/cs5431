@@ -27,9 +27,9 @@ public class ByteUtilTest extends RandomizedTest {
         ByteUtil.addOne(a);
         Assert.assertArrayEquals(errorMessage, bytes(0x0b, 0x00), a);
 
-        assertThrows(errorMessage,
-                () -> ByteUtil.addOne(bytes(0xff, 0xff)),
-                IllegalArgumentException.class);
+        a = bytes(0xff, 0xff);
+        ByteUtil.addOne(a);
+        Assert.assertArrayEquals(bytes(0, 0), a);
     }
 
     @Test

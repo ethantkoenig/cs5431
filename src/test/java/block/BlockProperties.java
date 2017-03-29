@@ -14,6 +14,7 @@ import utils.ShaTwoFiftySix;
 
 import java.security.KeyPair;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @RunWith(JUnitQuickcheck.class)
 public class BlockProperties extends RandomizedTest {
@@ -36,7 +37,7 @@ public class BlockProperties extends RandomizedTest {
         b.addTransaction(txA);
         b.addTransaction(txB);
 
-        b.findValidNonce();
+        b.findValidNonce(new AtomicBoolean(false));
         Assert.assertTrue(b.checkHash());
     }
 }
