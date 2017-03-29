@@ -71,9 +71,8 @@ public class HandleMessageThread extends Thread {
                 Block[] blocks = Deserializer.deserializeList(message.payload, Block.DESERIALIZER)
                         .toArray(new Block[0]);
                 boolean added = false;
-                // TODO check that blocks are in "correct" order (parent, child, grandchild, ...)
-                for (int i = blocks.length - 1; i >= 0; i--) {
-                    Block block = blocks[i];
+                // TODO check that blocks are in "correct" order (grandchild, child, parent ...)
+                for (Block block : blocks) {
                     if (handler.blockHandler(block)) {
                         for (Block descendant : orphanedBlocks.popDescendantsOf(block.getShaTwoFiftySix())) {
                             if (!handler.blockHandler(descendant)) {
@@ -87,7 +86,7 @@ public class HandleMessageThread extends Thread {
                     }
                 }
                 if (!added) {
-                    ShaTwoFiftySix hash = blocks[0].getShaTwoFiftySix();
+                    ShaTwoFiftySix hash = blocks[blocks.length - 1].getShaTwoFiftySix();
                     GetBlocksRequest request = new GetBlocksRequest(hash, 10);
                     byte[] payload = ByteUtil.asByteArray(request::serialize);
                     message.respond(new OutgoingMessage(Message.GET_BLOCK, payload));

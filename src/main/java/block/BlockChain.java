@@ -3,12 +3,17 @@ package block;
 import transaction.Transaction;
 import transaction.TxIn;
 import transaction.TxOut;
+import utils.ByteUtil;
+import utils.CanBeSerialized;
 import utils.DeserializationException;
 import utils.ShaTwoFiftySix;
 
 import java.io.*;
-import java.security.GeneralSecurityException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
+import java.util.logging.Logger;
 
 /**
  * A {@code BlockChain} represents a forest of related {@code Blocks} which together represent a secure public ledger.
@@ -16,22 +21,55 @@ import java.util.*;
  * Created by eperdew on 2/25/17.
  */
 public class BlockChain {
+    private final static Logger LOGGER = Logger.getLogger(BlockChain.class.getName());
     private LinkedHashMap<ShaTwoFiftySix, BlockWrapper> blocks = new LinkedHashMap<>();
 
     private Block currentHead;
     private int headDepth;
+    public final Path blockStorePath;
 
-    public BlockChain() {
-        // no-op
+    public BlockChain(Path blockStorePath) {
+        this.blockStorePath = blockStorePath;
+        try {
+            Files.createDirectories(blockStorePath);
+            for (Path blockPath : Files.newDirectoryStream(blockStorePath)) {
+                Path filenamePath = blockPath.getFileName();
+                if (filenamePath == null) {
+                    continue;
+                }
+                String filename = filenamePath.toString();
+                ShaTwoFiftySix hash = ByteUtil.hexStringToByteArray(filename)
+                        .flatMap(ShaTwoFiftySix::create)
+                        .orElseThrow(() -> new DeserializationException("Invalid block filename: " + filename));
+                try (InputStream inputStream = new FileInputStream(blockPath.toFile())) {
+                    BlockWrapper wrapper = BlockWrapper.deserialize(new DataInputStream(inputStream));
+                    if (!wrapper.block.checkHash()) {
+                        LOGGER.severe("Loaded block has invalid hash: " + filename);
+                        continue;
+                    }
+                    blocks.put(hash, wrapper);
+                    updateHead(wrapper);
+                }
+            }
+        } catch (DeserializationException | IOException e) {
+            LOGGER.severe("Unable to create blockchain directory: " + e.getMessage());
+        }
     }
-
     /**
      * Creates a new {@code BlockChain} with {@code genesisBlock} as its root.
      */
-    public BlockChain(Block genesisBlock) {
-        blocks.put(genesisBlock.getShaTwoFiftySix(), new BlockWrapper(genesisBlock, 0, blocks.size()));
-        currentHead = genesisBlock;
-        headDepth = 0;
+    public BlockChain(Path blockStorePath, Block genesisBlock) {
+        this(blockStorePath);
+        if (!insertBlock(genesisBlock)) {
+            LOGGER.severe("Unable to add genesis block");
+        }
+    }
+
+    private void updateHead(BlockWrapper wrapper) {
+        if (wrapper.depth > headDepth || currentHead == null) {
+            currentHead = wrapper.block;
+            headDepth = wrapper.depth;
+        }
     }
 
     /**
@@ -39,8 +77,15 @@ public class BlockChain {
      * @return The block corresponding to {@code hash} if it exists, or {@code Optional.empty} otherwise
      */
     public Optional<Block> getBlockWithHash(ShaTwoFiftySix hash) {
-        return Optional.ofNullable(blocks.get(hash))
-                .map(p -> p.block);
+        return getBlockWrapperWithHash(hash).map(wrapper -> wrapper.block);
+    }
+
+    private Optional<BlockWrapper> getBlockWrapperWithHash(ShaTwoFiftySix hash) {
+        return Optional.ofNullable(blocks.get(hash));
+    }
+
+    private Path pathForHash(ShaTwoFiftySix hash) {
+        return Paths.get(blockStorePath.toString(), hash.toString());
     }
 
     /**
@@ -52,26 +97,32 @@ public class BlockChain {
      * @return Whether the insertion was successful.
      */
     public boolean insertBlock(Block b) {
-        if (blocks.containsKey(b.previousBlockHash)) {
-            Integer depth = blocks.get(b.previousBlockHash).depth + 1;
-            blocks.put(b.getShaTwoFiftySix(), new BlockWrapper(b, depth, blocks.size()));
-            if (depth > headDepth) {
+        try {
+            Optional<BlockWrapper> optPrevBlock = getBlockWrapperWithHash(b.previousBlockHash);
+            if (optPrevBlock.isPresent()) {
+                BlockWrapper prevBlock = optPrevBlock.get();
+                BlockWrapper newBlock = new BlockWrapper(b, prevBlock.depth + 1, blocks.size());
+                blocks.put(b.getShaTwoFiftySix(), newBlock);
+                newBlock.writeToDisk(pathForHash(b.getShaTwoFiftySix()).toFile());
+                updateHead(newBlock);
+                return true;
+            } else if (b.previousBlockHash.equals(ShaTwoFiftySix.zero())) { // genesis block
+                if (!blocks.isEmpty()) {
+                    return false;
+                }
+                BlockWrapper newblock = new BlockWrapper(b, 0, blocks.size());
+                blocks.put(b.getShaTwoFiftySix(), newblock);
+                newblock.writeToDisk(pathForHash(b.getShaTwoFiftySix()).toFile());
                 currentHead = b;
-                headDepth = depth;
+                headDepth = 0;
+                return true;
             }
-            return true;
-        } else if (b.previousBlockHash.equals(ShaTwoFiftySix.zero())) { // genesis block
-            if (!blocks.isEmpty()) {
-                return false;
-            }
-            blocks.put(b.getShaTwoFiftySix(), new BlockWrapper(b, 0, blocks.size()));
-            currentHead = b;
-            headDepth = 0;
-            return true;
+        }
+        catch (IOException e) {
+            LOGGER.severe(e.getMessage());
         }
         return false;
     }
-
     /**
      * Returns the current head {@code Block} of {@code this}. The head {@code Block} is the most recent node in the
      * longest chain of {@code Block}s.
@@ -98,13 +149,16 @@ public class BlockChain {
 
         if (hash == null) return result;
 
-        while (blocks.containsKey(hash) && numAncest > 0) {
-            Block current = blocks.get(hash).block;
+        while (containsBlockWithHash(hash) && numAncest > 0) {
+            Optional<Block> optCurrent = getBlockWithHash(hash);
+            if (!optCurrent.isPresent()) {
+                return result;
+            }
+            Block current = optCurrent.get();
             result.add(current);
             hash = current.previousBlockHash;
             --numAncest;
         }
-
         return result;
     }
 
@@ -118,7 +172,7 @@ public class BlockChain {
      * empty list if no such {@code Block} exists
      */
     public List<Block> getAncestorsStartingAt(ShaTwoFiftySix hash) {
-        return getAncestorsStartingAt(hash, blocks.size());
+        return getAncestorsStartingAt(hash, Integer.MAX_VALUE);
     }
 
     /**
@@ -135,13 +189,11 @@ public class BlockChain {
         for (int i = ancestors.size() - 1; i >= 0; --i) {
             Block b = ancestors.get(i);
             for (Transaction tx : b) {
-
                 for (int j = 0; j < tx.numInputs; ++j) {
                     TxIn inRef = tx.getInput(j);
                     unspentTxs.remove(inRef.previousTxn, inRef.txIdx);
                 }
                 for (int j = 0; j < tx.numOutputs; ++j) {
-
                     TxOut out = tx.getOutput(j);
                     unspentTxs.put(tx.getShaTwoFiftySix(), j, out);
                 }
@@ -158,7 +210,7 @@ public class BlockChain {
      * @param block The {@code Block} to verify. It may or may not be in {@code this BlockChain}
      * @return The {@code UnspentTransactions} of {@code block}, or {@code Optional.empty()} if verification failed
      */
-    public Optional<UnspentTransactions> verifyBlock(Block block) throws GeneralSecurityException, IOException {
+    public Optional<UnspentTransactions> verifyBlock(Block block) throws  IOException {
         Optional<Block> optParent = getBlockWithHash(block.previousBlockHash);
 
         if (optParent.isPresent()) {
@@ -180,7 +232,7 @@ public class BlockChain {
      * @return Whether there is a {@code Block} with hash {@code hash} in this {@code BlockChain}
      */
     public boolean containsBlockWithHash(ShaTwoFiftySix hash) {
-        return blocks.containsKey(hash);
+        return getBlockWithHash(hash).isPresent();
     }
 
     /**
@@ -188,69 +240,11 @@ public class BlockChain {
      * @return Whether {@code Block b} is contained within this {@code BlockChain}
      */
     public boolean containsBlock(Block b) {
-        return blocks.containsKey(b.getShaTwoFiftySix());
+        return containsBlockWithHash(b.getShaTwoFiftySix());
     }
 
-
-    /**
-     * Writes all blocks in the blockchain to a directory 'blockchain'
-     *
-     * @return true in success, exception otherwise.
-     * @throws IOException
-     */
-    public boolean storeBlockChain() throws IOException {
-        File blockdir = new File("blockchain" + currentHead.getShaTwoFiftySix());
-        if (blockdir.mkdir()) {
-            int i = 0; // Still need to enforce ordering on the filesystem
-            for (Map.Entry<ShaTwoFiftySix, BlockWrapper> entry : blocks.entrySet()) {
-                File block = new File(blockdir.getPath() + '/' + i + entry.getKey());
-                DataOutputStream data = new DataOutputStream(new FileOutputStream(block));
-                entry.getValue().serialize(data);
-                i++;
-            }
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Reads in a file containing a series of blocks to be used to construct the blockchain.
-     * Note that since the main chain is stored in reverse order, we read in the file, deserializing
-     * blocks into an arraylist, then reversing that list and reinserting the blocks into the chain.
-     *
-     * @return true in success, exception otherwise.
-     * @throws IOException
-     */
-    public boolean importBlockChain(File blockdir) throws IOException, DeserializationException {
-        File[] blocks = blockdir.listFiles();
-        if (blocks == null) return false;
-        ArrayList<BlockWrapper> blocksOnDisk = new ArrayList<>();
-        for (File block : blocks) {
-            BlockWrapper w = BlockWrapper.deserialize(new DataInputStream(new FileInputStream(block)));
-            blocksOnDisk.add(w);
-        }
-        Collections.sort(blocksOnDisk);
-        for (BlockWrapper w : blocksOnDisk) {
-            insertBlock(w.block);
-        }
-        return true;
-    }
-
-    /**
-     * Destroys the Blockchain
-     *
-     * @return true in successs, false or exception otherwise.
-     */
-    public boolean destroyBlockchain(File dir) {
-        File[] files = dir.listFiles();
-        if (files == null) return false;
-        for (File f : files) {
-            if (!f.delete()) return false;
-        }
-        return dir.delete();
-    }
-
-    private static final class BlockWrapper implements Comparable<BlockWrapper> {
+    // TODO storing insertion position may no longer be necessary
+    private static final class BlockWrapper implements Comparable<BlockWrapper>, CanBeSerialized {
         private final Block block;
         private final int depth;
         // the position in which it was inserted, used for reconstruction
@@ -262,7 +256,7 @@ public class BlockChain {
             this.insertionPosition = insertionPosition;
         }
 
-        private void serialize(DataOutputStream outputStream) throws IOException {
+        public void serialize(DataOutputStream outputStream) throws IOException {
             block.serialize(outputStream);
             outputStream.writeInt(depth);
             outputStream.writeInt(insertionPosition);

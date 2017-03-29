@@ -12,6 +12,8 @@ import transaction.TxOut;
 import utils.ShaTwoFiftySix;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PrivateKey;
@@ -47,7 +49,14 @@ public class BlockChainGenerator extends Generator<BlockChain> {
             return null;
         }
 
-        BlockChain blockchain = new BlockChain(genesis);
+        Path blockChainPath;
+        try {
+            blockChainPath = Files.createTempDirectory("test");
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+        BlockChain blockchain = new BlockChain(blockChainPath, genesis);
 
         Block second = Block.empty(genesis.getShaTwoFiftySix());
         ShaTwoFiftySix prevHash = genesis.getShaTwoFiftySix();

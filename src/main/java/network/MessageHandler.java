@@ -114,7 +114,6 @@ public class MessageHandler {
             }
             return;
         }
-
         Optional<UnspentTransactions> verifiedUnspentTransactions = bundle.getBlockChain().verifyBlock(block);
         if (!verifiedUnspentTransactions.isPresent()) {
             LOGGER.warning("Received invalid block");
@@ -152,6 +151,7 @@ public class MessageHandler {
         UnspentTransactions copy = bundle.getUnspentTransactions().copy();
         if (!transaction.verify(copy)) {
             LOGGER.warning("The received transaction was not verified! Not adding to block.");
+            return;
         }
         bundle.setUnspentTransactions(copy);
         LOGGER.info("[!] Transaction verified.");
