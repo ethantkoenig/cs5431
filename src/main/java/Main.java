@@ -11,6 +11,9 @@ import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Optional;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.FileInputStream;
 
 public class Main {
 
@@ -52,7 +55,7 @@ public class Main {
 
     private static boolean runNodeWithThrowing(String[] args) throws GeneralSecurityException, IOException {
         if (args.length < 5) {
-            System.err.println("usage: node <port> <public-key> <private-key> <privileged-key> (<ip-address>:<port>)*");
+            System.err.println("usage: node <port> <public-key> <private-key> <privileged-key> <File for list of nodes>");
             return false;
         }
         int port = Integer.parseInt(args[1]);
@@ -61,16 +64,34 @@ public class Main {
         PublicKey privilegedKey = Crypto.loadPublicKey(args[4]);
 
         Miner miner = new Miner(port, new KeyPair(myPublic, myPrivate), privilegedKey);
-        for (int i = 5; i < args.length; i++) {
-            Optional<InetSocketAddress> optAddr = IOUtils.parseAddress(args[i]);
+
+        BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(args[5]), "UFT-8"));
+        String currentLine = "";
+
+        try {
+            currentLine = br.readLine();
+        } catch (IOException e) {
+            br.close();
+            System.err.println(String.format("Error: %s", e.getMessage()));
+        }
+
+        while(currentLine != null) {
+            Optional<InetSocketAddress> optAddr = IOUtils.parseAddress(currentLine);
             if (!optAddr.isPresent()) {
-                String msg = String.format("Invalid address %s", args[i]);
+                String msg = String.format("Invalid address %s", currentLine);
                 System.err.println(msg);
                 continue;
             }
             InetSocketAddress addr = optAddr.get();
             miner.connect(addr.getHostName(), addr.getPort());
+            try {
+                currentLine = br.readLine();
+            } catch (IOException e) {
+                br.close();
+                System.err.println(String.format("Error: %s", e.getMessage()));
+            }
         }
+        br.close();
         miner.startMiner();
         return true;
     }
