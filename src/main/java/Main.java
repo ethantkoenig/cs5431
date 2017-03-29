@@ -6,6 +6,7 @@ import utils.IOUtils;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PrivateKey;
@@ -50,7 +51,8 @@ public class Main {
         }
     }
 
-    private static boolean runNodeWithThrowing(String[] args) throws GeneralSecurityException, IOException {
+    private static boolean runNodeWithThrowing(String[] args)
+            throws GeneralSecurityException, IOException {
         if (args.length < 5) {
             System.err.println("usage: node <port> <public-key> <private-key> <privileged-key> (<ip-address>:<port>)*");
             return false;
@@ -60,7 +62,7 @@ public class Main {
         PrivateKey myPrivate = Crypto.loadPrivateKey(args[3]);
         PublicKey privilegedKey = Crypto.loadPublicKey(args[4]);
 
-        Miner miner = new Miner(port, new KeyPair(myPublic, myPrivate), privilegedKey);
+        Miner miner = new Miner(new ServerSocket(port), new KeyPair(myPublic, myPrivate), privilegedKey);
         for (int i = 5; i < args.length; i++) {
             Optional<InetSocketAddress> optAddr = IOUtils.parseAddress(args[i]);
             if (!optAddr.isPresent()) {

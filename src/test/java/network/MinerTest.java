@@ -36,9 +36,9 @@ public class MinerTest extends RandomizedTest {
         KeyPair pair0 = randomKeyPair();
         KeyPair pair1 = randomKeyPair();
 
-        MinerSimulation simulation = new MinerSimulation(10100);
-        simulation.addNode(10101, pair0, pair1.getPublic());
-        simulation.addNode(10102, pair1, pair1.getPublic());
+        MinerSimulation simulation = new MinerSimulation();
+        simulation.addNode(pair0, pair1.getPublic());
+        simulation.addNode(pair1, pair1.getPublic());
 
         Block genesisBlock = assertSingleBlockMessage(simulation.getNextMessage());
 
@@ -58,7 +58,7 @@ public class MinerTest extends RandomizedTest {
         TestUtils.assertEqualsWithHashCode(errorMessage, transaction1, deserialized);
 
         KeyPair pair2 = randomKeyPair();
-        simulation.addNode(10103, pair2, pair1.getPublic());
+        simulation.addNode(pair2, pair1.getPublic());
 
         Thread.sleep(200); // TODO actually fix the race conditions
 
@@ -99,9 +99,9 @@ public class MinerTest extends RandomizedTest {
         KeyPair pair0 = randomKeyPair();
         KeyPair pair1 = randomKeyPair();
 
-        MinerSimulation simulation = new MinerSimulation(10103);
-        simulation.addNode(10104, pair0, pair1.getPublic());
-        simulation.addNode(10105, pair1, pair1.getPublic());
+        MinerSimulation simulation = new MinerSimulation();
+        simulation.addNode(pair0, pair1.getPublic());
+        simulation.addNode(pair1, pair1.getPublic());
 
         Block genesisBlock = assertSingleBlockMessage(simulation.getNextMessage());
 
@@ -232,21 +232,22 @@ public class MinerTest extends RandomizedTest {
         private final ServerSocket serverSocket;
         private final List<Integer> minerPortNums = new ArrayList<>();
 
-        private MinerSimulation(int portNum) throws Exception {
-            serverSocket = new ServerSocket(portNum);
+        private MinerSimulation() throws Exception {
+            serverSocket = new ServerSocket(0);
         }
 
-        private void addNode(int portNum, KeyPair keyPair, PublicKey privilegedKey) throws Exception {
+        private void addNode(KeyPair keyPair, PublicKey privilegedKey) throws Exception {
             final List<Integer> portNumsToConnectTo = new ArrayList<>(minerPortNums);
+            ServerSocket socket = new ServerSocket(0);
             new Thread(() -> {
-                Miner miner = new Miner(portNum, keyPair, privilegedKey);
+                Miner miner = new Miner(socket, keyPair, privilegedKey);
                 miner.connect("localhost", serverSocket.getLocalPort());
                 for (int portNumToConnectTo : portNumsToConnectTo) {
                     miner.connect("localhost", portNumToConnectTo);
                 }
                 miner.startMiner();
             }).start();
-            minerPortNums.add(portNum);
+            minerPortNums.add(socket.getLocalPort());
             ConnectionThread conn = new ConnectionThread(serverSocket.accept(), queue);
             conn.start();
             connectionThreads.add(conn);
