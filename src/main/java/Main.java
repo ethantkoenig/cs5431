@@ -14,6 +14,7 @@ import java.util.Optional;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.FileInputStream;
+import java.nio.charset.StandardCharsets;
 
 public class Main {
 
@@ -54,7 +55,7 @@ public class Main {
     }
 
     private static boolean runNodeWithThrowing(String[] args) throws GeneralSecurityException, IOException {
-        if (args.length < 5) {
+        if (args.length < 6) {
             System.err.println("usage: node <port> <public-key> <private-key> <privileged-key> <File for list of nodes>");
             return false;
         }
@@ -65,7 +66,7 @@ public class Main {
 
         Miner miner = new Miner(port, new KeyPair(myPublic, myPrivate), privilegedKey);
 
-        BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(args[5]), "UFT-8"));
+        BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(args[5]), StandardCharsets.UTF_8));
         String currentLine = "";
 
         try {
@@ -80,15 +81,16 @@ public class Main {
             if (!optAddr.isPresent()) {
                 String msg = String.format("Invalid address %s", currentLine);
                 System.err.println(msg);
-                continue;
+            } else {
+                InetSocketAddress addr = optAddr.get();
+                miner.connect(addr.getHostName(), addr.getPort());
             }
-            InetSocketAddress addr = optAddr.get();
-            miner.connect(addr.getHostName(), addr.getPort());
             try {
                 currentLine = br.readLine();
             } catch (IOException e) {
                 br.close();
                 System.err.println(String.format("Error: %s", e.getMessage()));
+                break;
             }
         }
         br.close();
