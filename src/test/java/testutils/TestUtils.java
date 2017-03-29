@@ -19,15 +19,14 @@ import java.util.Optional;
 public class TestUtils {
 
     /**
-     * @param port port number to use
      * @return a pair of sockets connected to each other
      * @throws IOException
      */
-    public static Pair<Socket, Socket> sockets(int port)
+    public static Pair<Socket, Socket> sockets()
             throws IOException {
-        ServerSocket serverSocket = new ServerSocket(port);
+        ServerSocket serverSocket = new ServerSocket(0);
 
-        Socket left = new Socket(InetAddress.getLocalHost(), port);
+        Socket left = new Socket(InetAddress.getLocalHost(), serverSocket.getLocalPort());
         Socket right = serverSocket.accept();
         return new Pair<>(left, right);
     }

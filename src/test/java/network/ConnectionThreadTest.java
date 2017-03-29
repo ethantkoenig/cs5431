@@ -14,7 +14,7 @@ public class ConnectionThreadTest extends RandomizedTest {
 
     @Test
     public void testRun() throws Exception {
-        Pair<Socket, Socket> pair = TestUtils.sockets(10000);
+        Pair<Socket, Socket> pair = TestUtils.sockets();
 
         BlockingQueue<IncomingMessage> leftQueue = new ArrayBlockingQueue<>(5);
         ConnectionThread leftThread = new ConnectionThread(pair.getLeft(), leftQueue);
