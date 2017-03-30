@@ -34,7 +34,7 @@ This executable will run our project.
 To launch a node (i.e. a ledger-keeping, block-mining component of the
 cryptocurrency network), run
 
-$ bin/cs5431 node <port no> <public> <private> <privileged> (<address>*)
+$ bin/cs5431 node <port no> <public> <private> <privileged> <adress list>
 
 Arguments:
 * port_no : port number to bind to
@@ -43,10 +43,11 @@ Arguments:
 * privileged  : filepath to the "privileged" public key (generated via client)
                 the "privileged" public key is a public key belonging to a
                 particular node, which allows that node to mine the genesis block.
-* address : other nodes to connect to; these are nodes that have already been started.
-            This means that the first node to start up should not have any
-            address arguments, the second node should should the first node's
-            address, etc. Each address should be of the form "(ip address):(port no)"
+* address : filepath to list of addresses of other nodes to connect to; these are 
+            nodes that have already been started. This means that the first node to
+            start up should not have any address arguments in the file, the second 
+            node should should the first node's address, etc. Each address should be
+            on a seperate line of the form "(ip address):(port no)"
 
 Make sure that the "privileged node" (i.e. the node whose public key is the
 privileged key) starts last.
