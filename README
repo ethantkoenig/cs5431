@@ -1,4 +1,4 @@
-# CS 5431 - Milestone 2 README
+# CS 5431 - Milestone 3 README
 
 James Cassell (jcc384)
 Evan King (esk79)
@@ -34,7 +34,7 @@ This executable will run our project.
 To launch a node (i.e. a ledger-keeping, block-mining component of the
 cryptocurrency network), run
 
-$ bin/cs5431 node <port no> <public> <private> <privileged> <adress list>
+$ bin/cs5431 node <port no> <public> <private> <privileged> <address list>
 
 Arguments:
 * port_no : port number to bind to
@@ -47,10 +47,7 @@ Arguments:
             nodes that have already been started. This means that the first node to
             start up should not have any address arguments in the file, the second 
             node should should the first node's address, etc. Each address should be
-            on a seperate line of the form "(ip address):(port no)"
-
-Make sure that the "privileged node" (i.e. the node whose public key is the
-privileged key) starts last.
+            on a separate line of the form "(ip address):(port no)"
 
 For example, to launch three nodes locally, run
 
@@ -89,9 +86,105 @@ This will open an interactive shell, which supports the following commands:
     command. Transaction hashes should be given as hex strings, which can be
     gleaned from the nodes' output.
 
+### Running the Webserver
+
+To run the webserver,
+
+1. Run a MySQL instance (on the default port, 3306)
+2. Store the password for MySQL in $MYSQL_PASS
+3. Create a keystore
+
+   You can download one from https://www.dropbox.com/s/pcxxzcgfbr5ilko/KeyStore.jks?dl=0
+   or make your own if you don't trust us.
+
+4. Store the keystore password in $KEYSTORE_PASSWORD (the password for the Dropbox
+   keystore is "password")
+5. Run
+
+  $ bin/cs5431 webserver path/to/keystore <address-of-node>
+
+Arguments:
+* address-of-node : address (of the form <ip-address>:<port-num>) that the
+                    webserver will connect to perform transactions
 
 ## Testing and FindBugs
 
 If you would like to run our unit tests and run a FindBugs analysis, run
 
 $ ./gradlew check
+
+## Example commands for making transactions and blocks
+
+Run
+
+$ echo "localhost:4444" > nodes.txt
+$ bin/cs5431 client
+  > generate key1.pub key1.priv
+  > generate key2.pub key2.priv
+  > setNodeList nodes.txt
+  > ... more commands to run later, look for the angle brackets
+
+$ bin/cs5431 node 4444 key1.pub key1.priv key2.pub some/empty/file # in another terminal
+
+$ bin/cs5341 node 4445 key2.pub key2.priv key2.pub nodes.txt # in another terminal
+
+You should see some output from the two nodes. In particular, you
+should see a print hexidecimal string starting with (at least) four zeros.
+This is the SHA-256 hash of the genesis block, which contains a reward
+transaction for key2 (of value 50000).
+
+Back to the client, run
+  > transact
+  1 input
+    (for the hash, enter the hash of the genesis block, as a hex string)
+    index: 0 (indices are 0-based, and the reward only has 1 output)
+    key: key2.priv (key2 owns the reward, so key2 must sign a transaction
+                    spending those funds)
+  2 outputs
+    (at index 0)
+    recipient key: key1.pub
+    amount: 30000
+    (at index 1)
+    recipient key: key2.pub
+    amount: 20000
+  <SHA-256 hash for this transaction printed here>
+
+Both nodes should accept this transaction as valid.
+
+You can construct another transaction, spending the outputs of the transaction
+you made above. Make sure you sign each input of this transaction with the
+private key corresponding to the public key of the corresponding output from the
+previous transaction. (This demo will work better if you only spend key1's
+output in this second transaction.)
+
+Once you've issued a second transaction, both nodes should start mining, and one
+node should successfully mine a block, and share it with the other node. (There is
+a small chance both nodes mine a different block at the same time; in this case,
+each node should still share their block with the other).
+
+Now let's make a transaction via the webapp. Launch the webapp
+
+$ cs5431/bin webserver keystore.jks localhost:4444 # in another terminal
+
+Open the website in a browser (https://localhost:5000) and create an account.
+Go to your user page (/user/<your-username>), and upload the public/private key
+for key2 using the form on the left of the page. The keys should be entered as
+hex-strings, which you can get by running
+
+$ echo $(xxd -p key2.pub | tr -d "\n") # similarly for key2.priv
+
+Submit the form, and navigate to /transact. Here you can send key2's output from
+the first transaction in the text-based client you created to key1.
+
+Enter the sender key (key2) and recipient key (key1) as hexstrings. You can get the
+input transaction hash from the first transaction you made via the text-based client.
+Enter 1 as the input index, and 20000 as the amount. Submit the transaction, and the
+two nodes should accept the transaction.
+
+Note: right now, the webapp only supports single-input, single-output transactions.
+Our current system for issuing transaction from the webserver is temporary, since
+we ultimately want to sign transactions client-side, but currently store private
+keys and sign transactions on the server. We didn't want to invest too much time
+or effort into a temporary solution that will eventually need to be discarded (or
+at least heavily refactored), so our webapp's transaction functionality is very
+simple.
