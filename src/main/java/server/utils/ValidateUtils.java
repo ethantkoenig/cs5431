@@ -6,7 +6,8 @@ package server.utils;
 public final class ValidateUtils {
 
     // Disallow instances of this class
-    private ValidateUtils() { }
+    private ValidateUtils() {
+    }
 
     public static final int MIN_USERNAME_LENGTH = 6;
     public static final int MAX_USERNAME_LENGTH = 24;

@@ -51,7 +51,7 @@ public class BlockChainProperties {
             Assert.assertEquals(oldutxos, newutxos);
         }
 
-        Map<PublicKey,PrivateKey> keys = SigningKeyPairGenerator.getKeyMapping();
+        Map<PublicKey, PrivateKey> keys = SigningKeyPairGenerator.getKeyMapping();
         ArrayList<Transaction> txs = new ArrayList<>();
 
         for (Map.Entry<Pair<ShaTwoFiftySix, Integer>, TxOut> utxo : newutxos) {

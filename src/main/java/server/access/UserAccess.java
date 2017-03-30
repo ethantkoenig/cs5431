@@ -5,7 +5,10 @@ import server.models.User;
 import server.utils.DbUtil;
 import server.utils.Statements;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -18,7 +21,8 @@ import java.util.logging.Logger;
 public final class UserAccess {
 
     // Disallow instances of this class
-    private UserAccess() { }
+    private UserAccess() {
+    }
 
     private static final Logger LOGGER = Logger.getLogger(UserAccess.class.getName());
 

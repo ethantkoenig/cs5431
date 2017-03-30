@@ -5,12 +5,9 @@ import org.junit.Test;
 import testutils.RandomizedTest;
 import testutils.TestUtils;
 import utils.ByteUtil;
-import utils.Crypto;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
-import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 
 public class TxOutTest extends RandomizedTest {

@@ -17,7 +17,8 @@ public class TransactionProperties {
         Crypto.init();
     }
 
-    @Property public void deserializeSerializeInverse(Transaction tx) throws Exception {
+    @Property
+    public void deserializeSerializeInverse(Transaction tx) throws Exception {
         byte[] ser = ByteUtil.asByteArray(tx::serialize);
         Transaction deser = Transaction.DESERIALIZER.deserialize(ser);
 

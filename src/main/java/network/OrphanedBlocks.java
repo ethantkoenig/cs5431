@@ -7,7 +7,7 @@ import java.util.*;
 
 /**
  * Data structure for tracking "orphaned" blocks
- *
+ * <p>
  * "Orphaned" blocks are blocks that cannot be added to the blockchain because
  * we don't know their full ancestry.
  */

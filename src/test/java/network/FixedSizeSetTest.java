@@ -11,7 +11,7 @@ public class FixedSizeSetTest {
     @Test
     public void testAdd() throws Exception {
         FixedSizeSet<Integer> set = new FixedSizeSet<>();
-        for (int i = 1; i <= 101; i++){
+        for (int i = 1; i <= 101; i++) {
             set.add(i);
         }
         Assert.assertFalse(set.contains(1));

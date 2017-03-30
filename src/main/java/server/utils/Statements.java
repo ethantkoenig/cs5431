@@ -8,7 +8,8 @@ import java.sql.SQLException;
 public final class Statements {
 
     // Disallow instances of this class
-    private Statements() { }
+    private Statements() {
+    }
 
     // Update statements
     public static final String DB_NAME = "yaccoin";

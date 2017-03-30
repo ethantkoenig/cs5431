@@ -7,15 +7,9 @@ import com.pholser.junit.quickcheck.generator.Size;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import testutils.Generators;
 import transaction.TxOut;
-import utils.Pair;
 import utils.ShaTwoFiftySix;
 
-import java.security.KeyPair;
-import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 public class UnspentTransactionsGenerator extends Generator<UnspentTransactions> {
 
@@ -45,7 +39,7 @@ public class UnspentTransactionsGenerator extends Generator<UnspentTransactions>
 
         ArrayList<Integer> offsets = new ArrayList<>();
         for (int i = 0; i < numTxs; ++i) {
-            offsets.add(random.nextInt(0,15));
+            offsets.add(random.nextInt(0, 15));
         }
 
         TxOutGenerator outGen = new TxOutGenerator();

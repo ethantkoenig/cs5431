@@ -9,7 +9,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 public final class Config {
 
     // Disallow instances of this class
-    private Config() { }
+    private Config() {
+    }
 
     private final static int DEFAULT_PBKDF2_COST = 12;
     public final static AtomicInteger PBKDF2_COST =

@@ -4,18 +4,18 @@ import server.Application;
 import utils.Crypto;
 import utils.IOUtils;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Optional;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.FileInputStream;
-import java.nio.charset.StandardCharsets;
 
 public class Main {
 
@@ -79,7 +79,7 @@ public class Main {
             System.err.println(String.format("Error: %s", e.getMessage()));
         }
 
-        while(currentLine != null) {
+        while (currentLine != null) {
             Optional<InetSocketAddress> optAddr = IOUtils.parseAddress(currentLine);
             if (!optAddr.isPresent()) {
                 String msg = String.format("Invalid address %s", currentLine);

@@ -5,13 +5,9 @@ import block.UnspentTransactions;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
-import utils.Pair;
 import utils.ShaTwoFiftySix;
 
 import java.security.KeyPair;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.util.Map;
 
 public class BlockGenerator extends Generator<Block> {
 
@@ -31,8 +27,7 @@ public class BlockGenerator extends Generator<Block> {
             ShaTwoFiftySix previousBlock,
             UnspentTransactions unspentTxs,
             SourceOfRandomness random,
-            GenerationStatus status)
-    {
+            GenerationStatus status) {
         Block block = Block.empty(previousBlock);
         TransactionGenerator txGen = new TransactionGenerator(unspentTxs);
         for (int i = 0; i < Block.NUM_TRANSACTIONS_PER_BLOCK; ++i) {

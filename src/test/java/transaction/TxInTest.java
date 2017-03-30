@@ -9,8 +9,6 @@ import utils.ShaTwoFiftySix;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
-import java.io.IOException;
-import java.security.GeneralSecurityException;
 
 public class TxInTest extends RandomizedTest {
 

@@ -1,10 +1,9 @@
-
-$(document).ready(function() {
-    $('#logout').click(function(e) {
+$(document).ready(function () {
+    $('#logout').click(function (e) {
         $.ajax({
             type: 'DELETE',
             url: '/logout',
-            success: function() {
+            success: function () {
                 window.location.replace("/");
             }
         });

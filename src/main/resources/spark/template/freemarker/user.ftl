@@ -22,7 +22,7 @@
 
 
     <form method="post" action="/user/keys" id="keyform">
-      <input type="submit" value="Submit">
+        <input type="submit" value="Submit">
     </form>
 
 </div>

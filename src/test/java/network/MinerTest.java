@@ -2,7 +2,6 @@ package network;
 
 
 import block.Block;
-import generators.model.BlockGenerator;
 import org.junit.Assert;
 import org.junit.Test;
 import testutils.RandomizedTest;
@@ -149,7 +148,7 @@ public class MinerTest extends RandomizedTest {
                 .build();
 
         Transaction txNonexistentBlock = new Transaction.Builder()
-                .addInput(new TxIn(randomShaTwoFiftySix(),0), pair0.getPrivate())
+                .addInput(new TxIn(randomShaTwoFiftySix(), 0), pair0.getPrivate())
                 .addOutput(new TxOut(50, pair0.getPublic()))
                 .build();
 
@@ -345,7 +344,7 @@ public class MinerTest extends RandomizedTest {
     }
 
     private static void mineBlock(Block b) throws Exception {
-        while(!b.checkHash()) {
+        while (!b.checkHash()) {
             b.nonceAddOne();
         }
     }

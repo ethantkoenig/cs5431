@@ -55,6 +55,7 @@ public class BlockChain {
             LOGGER.severe("Unable to create blockchain directory: " + e.getMessage());
         }
     }
+
     /**
      * Creates a new {@code BlockChain} with {@code genesisBlock} as its root.
      */
@@ -117,12 +118,12 @@ public class BlockChain {
                 headDepth = 0;
                 return true;
             }
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             LOGGER.severe(e.getMessage());
         }
         return false;
     }
+
     /**
      * Returns the current head {@code Block} of {@code this}. The head {@code Block} is the most recent node in the
      * longest chain of {@code Block}s.
@@ -210,7 +211,7 @@ public class BlockChain {
      * @param block The {@code Block} to verify. It may or may not be in {@code this BlockChain}
      * @return The {@code UnspentTransactions} of {@code block}, or {@code Optional.empty()} if verification failed
      */
-    public Optional<UnspentTransactions> verifyBlock(Block block) throws  IOException {
+    public Optional<UnspentTransactions> verifyBlock(Block block) throws IOException {
         Optional<Block> optParent = getBlockWithHash(block.previousBlockHash);
 
         if (optParent.isPresent()) {

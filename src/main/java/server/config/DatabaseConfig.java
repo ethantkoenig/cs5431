@@ -17,7 +17,8 @@ import java.util.logging.Logger;
 public final class DatabaseConfig {
 
     // Disallow instances of this class
-    private DatabaseConfig() { }
+    private DatabaseConfig() {
+    }
 
     private static final Logger LOGGER = Logger.getLogger(DatabaseConfig.class.getName());
 

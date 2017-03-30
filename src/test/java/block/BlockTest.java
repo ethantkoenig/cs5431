@@ -12,7 +12,6 @@ import utils.*;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.Collections;
-import java.util.Optional;
 
 public class BlockTest extends RandomizedTest {
 

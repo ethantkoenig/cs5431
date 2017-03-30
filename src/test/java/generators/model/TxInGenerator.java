@@ -30,7 +30,7 @@ public class TxInGenerator extends Generator<TxIn> {
         int index = random.nextInt(0, unspentTxs.size() - 1);
 
         int i = 0;
-        for (Map.Entry<Pair<ShaTwoFiftySix, Integer>, TxOut> e: unspentTxs) {
+        for (Map.Entry<Pair<ShaTwoFiftySix, Integer>, TxOut> e : unspentTxs) {
             if (i == index) {
                 unspentTxs.remove(e.getKey().getLeft(), e.getKey().getRight());
                 return new Pair<>(

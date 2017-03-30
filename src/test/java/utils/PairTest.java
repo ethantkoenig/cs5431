@@ -19,7 +19,7 @@ public class PairTest extends RandomizedTest {
         String left = randomAsciiString(random.nextInt(16));
         String right = randomAsciiString(random.nextInt(16));
         Pair<String, String> pair = new Pair<>(left, right);
-        Assert.assertEquals(errorMessage, right, pair.getRight()) ;
+        Assert.assertEquals(errorMessage, right, pair.getRight());
     }
 
     @Test

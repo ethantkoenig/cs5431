@@ -3,7 +3,8 @@ package utils;
 public final class Longs {
 
     // Disallow instances of this class
-    private Longs() { }
+    private Longs() {
+    }
 
     /**
      * @return whether adding {@code a} and {@code b} results in arithmetic

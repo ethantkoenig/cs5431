@@ -6,7 +6,8 @@ import testutils.RandomizedTest;
 
 import java.util.Arrays;
 
-import static testutils.TestUtils.*;
+import static testutils.TestUtils.assertPresent;
+import static testutils.TestUtils.bytes;
 
 public class ByteUtilTest extends RandomizedTest {
 

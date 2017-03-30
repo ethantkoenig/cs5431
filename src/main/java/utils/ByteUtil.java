@@ -14,7 +14,8 @@ import java.util.Optional;
 public final class ByteUtil {
 
     // Disallow instances of this class
-    private ByteUtil() { }
+    private ByteUtil() {
+    }
 
     public static void addOne(byte[] b) {
         for (int i = b.length - 1; i >= 0; i--) {

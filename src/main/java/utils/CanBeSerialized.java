@@ -1,11 +1,11 @@
 package utils;
 
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-import java.io.File;
 
 public interface CanBeSerialized {
 

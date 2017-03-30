@@ -26,7 +26,7 @@ public abstract class HashCache {
 
     /**
      * Invalidate the cached SHA-256 hash.
-     *
+     * <p>
      * Call this after any function that mutates `this` in a way that changes the hash.
      */
     public void invalidateCache() {

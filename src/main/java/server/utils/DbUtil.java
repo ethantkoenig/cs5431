@@ -12,7 +12,8 @@ public final class DbUtil {
     private static final String dbPassword = System.getenv("MYSQL_PASS");
 
     // Disallow instances of this class
-    private DbUtil() { }
+    private DbUtil() {
+    }
 
     public static Connection getConnection(Boolean initial) {
         Connection connection = null;

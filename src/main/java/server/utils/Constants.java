@@ -9,7 +9,8 @@ public final class Constants {
     private static InetSocketAddress nodeAddress;
 
     // Disallow instances of this class
-    private Constants() { }
+    private Constants() {
+    }
 
     public static InetSocketAddress getNodeAddress() {
         if (nodeAddress == null) {

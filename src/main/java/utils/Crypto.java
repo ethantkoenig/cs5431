@@ -25,7 +25,8 @@ public final class Crypto {
     private static boolean initialized = false;
 
     // Disallow instances of this class
-    private Crypto() { }
+    private Crypto() {
+    }
 
     public static void init() {
         if (!initialized) {

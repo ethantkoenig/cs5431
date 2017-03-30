@@ -1,7 +1,6 @@
 package block;
 
 import com.pholser.junit.quickcheck.Property;
-import com.pholser.junit.quickcheck.generator.Size;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -10,10 +9,8 @@ import testutils.RandomizedTest;
 import transaction.Transaction;
 import utils.Config;
 import utils.Crypto;
-import utils.ShaTwoFiftySix;
 
 import java.security.KeyPair;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @RunWith(JUnitQuickcheck.class)

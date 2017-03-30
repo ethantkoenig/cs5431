@@ -12,7 +12,8 @@ import java.util.Optional;
 public final class RouteUtils {
 
     // Disallow instances of this class
-    private RouteUtils() { }
+    private RouteUtils() {
+    }
 
     public static Route wrapRoute(Route route) {
         return (request, response) -> {

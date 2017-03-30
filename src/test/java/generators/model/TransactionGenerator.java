@@ -21,7 +21,6 @@ import java.util.Optional;
 public class TransactionGenerator extends Generator<Transaction> {
 
 
-
     private static int DEFAULT_MAX_INPUTS = 5;
     private static int DEFAULT_MAX_OUTPUTS = 5;
 
@@ -91,7 +90,7 @@ public class TransactionGenerator extends Generator<Transaction> {
         Transaction.Builder builder = new Transaction.Builder();
 
         for (int i = 0; i < numInputs; ++i) {
-            Pair<TxOut,TxIn> p = txInGen.generateWithRespectTo(unspentTxs, random, status);
+            Pair<TxOut, TxIn> p = txInGen.generateWithRespectTo(unspentTxs, random, status);
             valueMoved += p.getLeft().value;
             builder.addInput(p.getRight(), keyMapping.get(p.getLeft().ownerPubKey));
         }
@@ -105,7 +104,7 @@ public class TransactionGenerator extends Generator<Transaction> {
             if (j == numOutputs - 1) {
                 outVal = valueLeft;
             } else {
-                outVal = valueMoved/numOutputs;
+                outVal = valueMoved / numOutputs;
             }
             valueLeft -= outVal;
 

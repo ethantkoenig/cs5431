@@ -8,7 +8,6 @@ import transaction.TxIn;
 import transaction.TxOut;
 import utils.Config;
 import utils.Crypto;
-import utils.Pair;
 import utils.ShaTwoFiftySix;
 
 import java.nio.file.Files;
@@ -51,7 +50,7 @@ public class BlockChainTest extends RandomizedTest {
 
         for (int i = 0; i < Block.NUM_TRANSACTIONS_PER_BLOCK; ++i) {
             Transaction tx = new Transaction.Builder()
-                    .addInput(new TxIn(prevTxOut,0), senderPair.getPrivate())
+                    .addInput(new TxIn(prevTxOut, 0), senderPair.getPrivate())
                     .addOutput(new TxOut(Block.REWARD_AMOUNT - (i + 1), senderPair.getPublic()))
                     .addOutput(new TxOut(1, recipientPair.getPublic()))
                     .build();
@@ -63,7 +62,7 @@ public class BlockChainTest extends RandomizedTest {
         next.findValidNonce(new AtomicBoolean(false));
 
         unspentTxs.put(prevTxOut, 0,
-                next.transactions[Block.NUM_TRANSACTIONS_PER_BLOCK-1].getOutput(0));
+                next.transactions[Block.NUM_TRANSACTIONS_PER_BLOCK - 1].getOutput(0));
         unspentTxs.put(next.getShaTwoFiftySix(), 0, next.reward);
 
         Assert.assertTrue(errorMessage, bc.verifyBlock(next).isPresent());
@@ -198,11 +197,11 @@ public class BlockChainTest extends RandomizedTest {
         Block newHead = prev;
         assertEquals(blocks, bc.getAncestorsStartingAt(newHead.getShaTwoFiftySix()));
 
-        assertEquals(blocks.subList(0,2),
-                     bc.getAncestorsStartingAt(newHead.getShaTwoFiftySix(),2));
+        assertEquals(blocks.subList(0, 2),
+                bc.getAncestorsStartingAt(newHead.getShaTwoFiftySix(), 2));
 
-        assertEquals(blocks.subList(1,3),
-                     bc.getAncestorsStartingAt(blocks.get(1).getShaTwoFiftySix(),2));
+        assertEquals(blocks.subList(1, 3),
+                bc.getAncestorsStartingAt(blocks.get(1).getShaTwoFiftySix(), 2));
 
         prev = genesis;
         blocks = new ArrayList<>();
@@ -222,7 +221,7 @@ public class BlockChainTest extends RandomizedTest {
         assertEquals(errorMessage, new ArrayList<>(), bc.getAncestorsStartingAt(null, -1));
 
         assertEquals(errorMessage, new ArrayList<>(),
-                     bc.getAncestorsStartingAt(prev.getShaTwoFiftySix(), -1));
+                bc.getAncestorsStartingAt(prev.getShaTwoFiftySix(), -1));
 
         assertEquals(errorMessage, new ArrayList<>(), bc.getAncestorsStartingAt(null, 10));
 
@@ -246,7 +245,7 @@ public class BlockChainTest extends RandomizedTest {
             prev = next;
         }
 
-        for (Block b: blocks) {
+        for (Block b : blocks) {
             Assert.assertTrue(bc.containsBlockWithHash(b.getShaTwoFiftySix()));
         }
     }
@@ -269,7 +268,7 @@ public class BlockChainTest extends RandomizedTest {
             prev = next;
         }
 
-        for (Block b: blocks) {
+        for (Block b : blocks) {
             Assert.assertTrue(bc.containsBlock(b));
         }
     }

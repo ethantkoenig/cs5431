@@ -15,7 +15,8 @@ import java.util.Optional;
 public final class IOUtils {
 
     // Disallow instances of this class
-    private IOUtils() { }
+    private IOUtils() {
+    }
 
     /**
      * Fill the buffer with input from the input stream
