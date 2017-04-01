@@ -62,7 +62,7 @@ public class BlockChainProperties {
             txs.add(tx);
         }
 
-        Block newblock = Block.empty(bc.getCurrentHead().getShaTwoFiftySix());
+        MiningBlock newblock = MiningBlock.empty(bc.getCurrentHead().getShaTwoFiftySix());
         for (Transaction tx : txs) {
             newblock.addTransaction(tx);
             if (newblock.isFull()) {

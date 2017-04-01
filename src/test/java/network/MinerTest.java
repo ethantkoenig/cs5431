@@ -1,7 +1,7 @@
 package network;
 
 
-import block.Block;
+import block.MiningBlock;
 import org.junit.Assert;
 import org.junit.Test;
 import testutils.RandomizedTest;
@@ -39,18 +39,18 @@ public class MinerTest extends RandomizedTest {
         simulation.addNode(pair0, pair1.getPublic());
         simulation.addNode(pair1, pair1.getPublic());
 
-        Block genesisBlock = assertSingleBlockMessage(simulation.getNextMessage());
+        MiningBlock genesisBlock = assertSingleBlockMessage(simulation.getNextMessage());
 
         simulation.sendBytes(randomBytes(1024), 0); // should be ignored
         simulation.sendBytes(randomBytes(1024), 1); // should be ignored
 
         simulation.sendGetBlocksRequest(genesisBlock.getShaTwoFiftySix(), 1, 1);
-        Block getBlockResponse = assertSingleBlockMessage(simulation.getNextMessage(true));
+        MiningBlock getBlockResponse = assertSingleBlockMessage(simulation.getNextMessage(true));
         Assert.assertEquals(genesisBlock, getBlockResponse);
 
         Transaction transaction1 = new Transaction.Builder()
                 .addInput(new TxIn(genesisBlock.getShaTwoFiftySix(), 0), pair1.getPrivate())
-                .addOutput(new TxOut(Block.REWARD_AMOUNT, pair0.getPublic()))
+                .addOutput(new TxOut(MiningBlock.REWARD_AMOUNT, pair0.getPublic()))
                 .build();
         simulation.sendTransaction(transaction1, 0);
         Transaction deserialized = assertTransactionMessage(simulation.getNextMessage());
@@ -63,13 +63,13 @@ public class MinerTest extends RandomizedTest {
 
         Transaction transaction2 = new Transaction.Builder()
                 .addInput(new TxIn(transaction1.getShaTwoFiftySix(), 0), pair0.getPrivate())
-                .addOutput(new TxOut(Block.REWARD_AMOUNT, pair2.getPublic()))
+                .addOutput(new TxOut(MiningBlock.REWARD_AMOUNT, pair2.getPublic()))
                 .build();
         simulation.sendTransaction(transaction2, 1);
         deserialized = assertTransactionMessage(simulation.getNextMessage());
         TestUtils.assertEqualsWithHashCode(errorMessage, transaction2, deserialized);
 
-        Block block = assertSingleBlockMessage(simulation.getNextMessage());
+        MiningBlock block = assertSingleBlockMessage(simulation.getNextMessage());
         boolean minedBy0 = block.reward.ownerPubKey.equals(pair0.getPublic());
         boolean minedBy1 = block.reward.ownerPubKey.equals(pair1.getPublic());
         Assert.assertTrue(minedBy0 || minedBy1);
@@ -80,10 +80,10 @@ public class MinerTest extends RandomizedTest {
         while (true) {
             // may receive mined block from other node, so repeatedly check
             // for actual GET_BLOCK response
-            Block[] blocks = assertBlockMessage(simulation.getNextMessage());
+            MiningBlock[] blocks = assertBlockMessage(simulation.getNextMessage());
             if (blocks.length == 2) {
                 Assert.assertArrayEquals(
-                        new Block[]{block, genesisBlock},
+                        new MiningBlock[]{block, genesisBlock},
                         blocks
                 );
                 break;
@@ -92,7 +92,7 @@ public class MinerTest extends RandomizedTest {
 
         Transaction transaction3 = new Transaction.Builder()
                 .addInput(new TxIn(transaction2.getShaTwoFiftySix(), 0), pair2.getPrivate())
-                .addOutput(new TxOut(Block.REWARD_AMOUNT, pair0.getPublic()))
+                .addOutput(new TxOut(MiningBlock.REWARD_AMOUNT, pair0.getPublic()))
                 .build();
         simulation.sendTransaction(transaction3, 0);
         deserialized = assertTransactionMessage(simulation.getNextMessage());
@@ -102,13 +102,13 @@ public class MinerTest extends RandomizedTest {
 
         Transaction transaction4 = new Transaction.Builder()
                 .addInput(new TxIn(transaction3.getShaTwoFiftySix(), 0), pair0.getPrivate())
-                .addOutput(new TxOut(Block.REWARD_AMOUNT, pair1.getPublic()))
+                .addOutput(new TxOut(MiningBlock.REWARD_AMOUNT, pair1.getPublic()))
                 .build();
         simulation.sendTransaction(transaction4, 2);
         deserialized = assertTransactionMessage(simulation.getNextMessage());
         TestUtils.assertEqualsWithHashCode(errorMessage, transaction4, deserialized);
 
-        Block block2 = assertSingleBlockMessage(simulation.getNextMessage());
+        MiningBlock block2 = assertSingleBlockMessage(simulation.getNextMessage());
         minedBy0 = block2.reward.ownerPubKey.equals(pair0.getPublic());
         minedBy1 = block2.reward.ownerPubKey.equals(pair1.getPublic());
         boolean minedBy2 = block2.reward.ownerPubKey.equals(pair2.getPublic());
@@ -120,7 +120,7 @@ public class MinerTest extends RandomizedTest {
         while (true) {
             // may receive mined block from other node, so repeatedly check
             // for actual GET_BLOCK response
-            Block[] blocks = assertBlockMessage(simulation.getNextMessage());
+            MiningBlock[] blocks = assertBlockMessage(simulation.getNextMessage());
             if (blocks.length == 3) {
                 Assert.assertEquals(block2, blocks[0]);
                 Assert.assertEquals(genesisBlock, blocks[2]);
@@ -140,11 +140,11 @@ public class MinerTest extends RandomizedTest {
         simulation.addNode(pair0, pair1.getPublic());
         simulation.addNode(pair1, pair1.getPublic());
 
-        Block genesisBlock = assertSingleBlockMessage(simulation.getNextMessage());
+        MiningBlock genesisBlock = assertSingleBlockMessage(simulation.getNextMessage());
 
         Transaction txId = new Transaction.Builder()
                 .addInput(new TxIn(genesisBlock.getShaTwoFiftySix(), 0), pair1.getPrivate())
-                .addOutput(new TxOut(Block.REWARD_AMOUNT, pair1.getPublic()))
+                .addOutput(new TxOut(MiningBlock.REWARD_AMOUNT, pair1.getPublic()))
                 .build();
 
         Transaction txNonexistentBlock = new Transaction.Builder()
@@ -152,7 +152,7 @@ public class MinerTest extends RandomizedTest {
                 .addOutput(new TxOut(50, pair0.getPublic()))
                 .build();
 
-        Block badBlock = Block.empty(genesisBlock.getShaTwoFiftySix());
+        MiningBlock badBlock = MiningBlock.empty(genesisBlock.getShaTwoFiftySix());
         badBlock.addTransaction(txId);
         badBlock.addTransaction(txNonexistentBlock);
         badBlock.addReward(pair1.getPublic());
@@ -165,10 +165,10 @@ public class MinerTest extends RandomizedTest {
 
         Transaction txBadIndex = new Transaction.Builder()
                 .addInput(new TxIn(txId.getShaTwoFiftySix(), 1), pair1.getPrivate())
-                .addOutput(new TxOut(Block.REWARD_AMOUNT, pair1.getPublic()))
+                .addOutput(new TxOut(MiningBlock.REWARD_AMOUNT, pair1.getPublic()))
                 .build();
 
-        badBlock = Block.empty(genesisBlock.getShaTwoFiftySix());
+        badBlock = MiningBlock.empty(genesisBlock.getShaTwoFiftySix());
         badBlock.addTransaction(txId);
         badBlock.addTransaction(txBadIndex);
         badBlock.addReward(pair1.getPublic());
@@ -181,10 +181,10 @@ public class MinerTest extends RandomizedTest {
 
         Transaction txBadAmount = new Transaction.Builder()
                 .addInput(new TxIn(txId.getShaTwoFiftySix(), 0), pair1.getPrivate())
-                .addOutput(new TxOut(Block.REWARD_AMOUNT + 1, pair1.getPublic()))
+                .addOutput(new TxOut(MiningBlock.REWARD_AMOUNT + 1, pair1.getPublic()))
                 .build();
 
-        badBlock = Block.empty(genesisBlock.getShaTwoFiftySix());
+        badBlock = MiningBlock.empty(genesisBlock.getShaTwoFiftySix());
         badBlock.addTransaction(txId);
         badBlock.addTransaction(txBadAmount);
         badBlock.addReward(pair1.getPublic());
@@ -197,10 +197,10 @@ public class MinerTest extends RandomizedTest {
 
         Transaction txWrongOwner = new Transaction.Builder()
                 .addInput(new TxIn(txId.getShaTwoFiftySix(), 0), pair0.getPrivate())
-                .addOutput(new TxOut(Block.REWARD_AMOUNT, pair1.getPublic()))
+                .addOutput(new TxOut(MiningBlock.REWARD_AMOUNT, pair1.getPublic()))
                 .build();
 
-        badBlock = Block.empty(genesisBlock.getShaTwoFiftySix());
+        badBlock = MiningBlock.empty(genesisBlock.getShaTwoFiftySix());
         badBlock.addTransaction(txId);
         badBlock.addTransaction(txWrongOwner);
         badBlock.addReward(pair1.getPublic());
@@ -213,11 +213,11 @@ public class MinerTest extends RandomizedTest {
 
         Transaction txZeroOutput = new Transaction.Builder()
                 .addInput(new TxIn(txId.getShaTwoFiftySix(), 0), pair1.getPrivate())
-                .addOutput(new TxOut(Block.REWARD_AMOUNT, pair1.getPublic()))
+                .addOutput(new TxOut(MiningBlock.REWARD_AMOUNT, pair1.getPublic()))
                 .addOutput(new TxOut(0, pair1.getPublic()))
                 .build();
 
-        badBlock = Block.empty(genesisBlock.getShaTwoFiftySix());
+        badBlock = MiningBlock.empty(genesisBlock.getShaTwoFiftySix());
         badBlock.addTransaction(txId);
         badBlock.addTransaction(txZeroOutput);
         badBlock.addReward(pair1.getPublic());
@@ -229,11 +229,11 @@ public class MinerTest extends RandomizedTest {
 
         Transaction txNegativeOutput = new Transaction.Builder()
                 .addInput(new TxIn(txId.getShaTwoFiftySix(), 0), pair1.getPrivate())
-                .addOutput(new TxOut(Block.REWARD_AMOUNT + 1, pair1.getPublic()))
+                .addOutput(new TxOut(MiningBlock.REWARD_AMOUNT + 1, pair1.getPublic()))
                 .addOutput(new TxOut(-1, pair1.getPublic()))
                 .build();
 
-        badBlock = Block.empty(genesisBlock.getShaTwoFiftySix());
+        badBlock = MiningBlock.empty(genesisBlock.getShaTwoFiftySix());
         badBlock.addTransaction(txId);
         badBlock.addTransaction(txNegativeOutput);
         badBlock.addReward(pair1.getPublic());
@@ -249,14 +249,14 @@ public class MinerTest extends RandomizedTest {
         return Transaction.DESERIALIZER.deserialize(msg.payload);
     }
 
-    private static Block[] assertBlockMessage(Message msg) throws Exception {
+    private static MiningBlock[] assertBlockMessage(Message msg) throws Exception {
         Assert.assertEquals(Message.BLOCK, msg.type);
-        return Deserializer.deserializeList(msg.payload, Block.DESERIALIZER)
-                .toArray(new Block[0]);
+        return Deserializer.deserializeList(msg.payload, MiningBlock.DESERIALIZER)
+                .toArray(new MiningBlock[0]);
     }
 
-    private static Block assertSingleBlockMessage(Message msg) throws Exception {
-        Block[] blocks = assertBlockMessage(msg);
+    private static MiningBlock assertSingleBlockMessage(Message msg) throws Exception {
+        MiningBlock[] blocks = assertBlockMessage(msg);
         Assert.assertEquals(1, blocks.length);
         return blocks[0];
     }
@@ -295,7 +295,7 @@ public class MinerTest extends RandomizedTest {
             sendMessage(new OutgoingMessage(Message.TRANSACTION, serialized), node);
         }
 
-        private void sendBlock(Block block, int node) throws IOException {
+        private void sendBlock(MiningBlock block, int node) throws IOException {
             byte[] serialized = ByteUtil.asByteArray(block::serialize);
             sendMessage(new OutgoingMessage(Message.BLOCK, serialized), node);
         }
@@ -343,7 +343,7 @@ public class MinerTest extends RandomizedTest {
         }
     }
 
-    private static void mineBlock(Block b) throws Exception {
+    private static void mineBlock(MiningBlock b) throws Exception {
         while (!b.checkHash()) {
             b.nonceAddOne();
         }

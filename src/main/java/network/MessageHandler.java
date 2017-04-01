@@ -1,6 +1,6 @@
 package network;
 
-import block.Block;
+import block.MiningBlock;
 import block.UnspentTransactions;
 import transaction.Transaction;
 import utils.ByteUtil;
@@ -27,7 +27,7 @@ public class MessageHandler {
     // list to add incoming transactions to
     private final List<Transaction> unminedTransactions = new ArrayList<>();
     private MinerThread minerThread;
-    private LinkedList<Block> miningQueue = new LinkedList<>();
+    private LinkedList<MiningBlock> miningQueue = new LinkedList<>();
     private FixedSizeSet<IncomingMessage> recentTransactionsReceived = new FixedSizeSet<>();
 
     public MessageHandler(BlockingQueue<OutgoingMessage> broadcast, MiningBundle miningBundle) {
@@ -58,7 +58,7 @@ public class MessageHandler {
     /**
      * @return whether {@code block} was successfully handled
      */
-    public boolean blockHandler(Block block) {
+    public boolean blockHandler(MiningBlock block) {
         if (!block.isGenesisBlock() &&
                 !bundle.getBlockChain().containsBlockWithHash(block.previousBlockHash)) {
             return false;
@@ -80,7 +80,7 @@ public class MessageHandler {
      * @param request Request for blocks
      */
     public void getBlockMsgHandler(IncomingMessage message, GetBlocksRequest request) throws IOException {
-        List<Block> ancestors = bundle.getBlockChain()
+        List<MiningBlock> ancestors = bundle.getBlockChain()
                 .getAncestorsStartingAt(request.hash, request.numBlocksRequested);
         byte[] payload = ByteUtil.asByteArray(out -> CanBeSerialized.serializeList(out, ancestors));
         OutgoingMessage returnMsg = new OutgoingMessage(Message.BLOCK, payload);
@@ -90,7 +90,7 @@ public class MessageHandler {
     private void startMiningThread() {
         if (miningQueue.isEmpty()) return;
 
-        Block block = miningQueue.removeLast();
+        MiningBlock block = miningQueue.removeLast();
         // If there is no current miner thread then start a new one.
         if (minerThread == null || !minerThread.isAlive()) {
             block.addReward(bundle.getKeyPair().getPublic());
@@ -99,7 +99,7 @@ public class MessageHandler {
         }
     }
 
-    private void addBlockToChain(Block block) throws GeneralSecurityException, IOException {
+    private void addBlockToChain(MiningBlock block) throws GeneralSecurityException, IOException {
         if (bundle.getBlockChain().getCurrentHead() == null) {
             if (block.verifyGenesis(bundle.privilegedKey)) {
                 LOGGER.info("Received the genesis block");
@@ -141,7 +141,7 @@ public class MessageHandler {
         if (bundle.getBlockChain().getCurrentHead() == null) {
             LOGGER.warning("Received transaction before genesis block received");
             return;
-        } else if (unminedTransactions.size() == Block.NUM_TRANSACTIONS_PER_BLOCK) {
+        } else if (unminedTransactions.size() == MiningBlock.NUM_TRANSACTIONS_PER_BLOCK) {
             LOGGER.warning("Dropping incoming transaction, resend when a new block has been mined");
             return;
         }
@@ -157,11 +157,11 @@ public class MessageHandler {
         LOGGER.info("[!] Transaction verified.");
         LOGGER.info(transaction.toString());
         unminedTransactions.add(transaction);
-        if (unminedTransactions.size() == Block.NUM_TRANSACTIONS_PER_BLOCK) {
+        if (unminedTransactions.size() == MiningBlock.NUM_TRANSACTIONS_PER_BLOCK) {
             // currentAddToBlock is full, so start mining it
             LOGGER.info("[+] Starting mining thread");
 
-            Block blockToMine = Block.empty(bundle.getBlockChain().getCurrentHead().getShaTwoFiftySix());
+            MiningBlock blockToMine = MiningBlock.empty(bundle.getBlockChain().getCurrentHead().getShaTwoFiftySix());
             for (Transaction t : unminedTransactions) {
                 blockToMine.addTransaction(t);
             }

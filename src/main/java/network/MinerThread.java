@@ -1,6 +1,6 @@
 package network;
 
-import block.Block;
+import block.MiningBlock;
 import utils.ByteUtil;
 
 import java.io.IOException;
@@ -20,12 +20,12 @@ import static utils.CanBeSerialized.serializeSingleton;
 public class MinerThread extends Thread {
 
     private static final Logger LOGGER = Logger.getLogger(MinerThread.class.getName());
-    private Block block;
+    private MiningBlock block;
     private boolean stopMining = false;
 
     private final BlockingQueue<OutgoingMessage> broadcastQueue;
 
-    public MinerThread(Block block, BlockingQueue<OutgoingMessage> broadcastQueue) {
+    public MinerThread(MiningBlock block, BlockingQueue<OutgoingMessage> broadcastQueue) {
         this.block = block;
         this.broadcastQueue = broadcastQueue;
     }
@@ -36,7 +36,7 @@ public class MinerThread extends Thread {
      *
      * @throws IOException if error hashing block
      */
-    private Block tryNonces() throws Exception {
+    private MiningBlock tryNonces() throws Exception {
         LOGGER.info("[!] Trying nonces...");
         block.setRandomNonce(new Random());
 
@@ -57,7 +57,7 @@ public class MinerThread extends Thread {
     public void run() {
         LOGGER.info("[+] MiningThread started");
 
-        Block finalBlock = null; // TODO give this var a better name
+        MiningBlock finalBlock = null; // TODO give this var a better name
         try {
             finalBlock = tryNonces();
         } catch (Exception e) {
@@ -72,7 +72,7 @@ public class MinerThread extends Thread {
         LOGGER.info("[+] Successfully mined block! Broadcasting to other nodes.");
         // Put message on broadcast queue
         try {
-            final Block minedBlock = finalBlock;
+            final MiningBlock minedBlock = finalBlock;
             byte[] payload = ByteUtil.asByteArray(out -> serializeSingleton(out, minedBlock));
             broadcastQueue.put(new OutgoingMessage(Message.BLOCK, payload));
         } catch (InterruptedException | IOException e) {

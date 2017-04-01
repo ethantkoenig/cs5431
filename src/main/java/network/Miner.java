@@ -1,6 +1,6 @@
 package network;
 
-import block.Block;
+import block.MiningBlock;
 import block.BlockChain;
 import block.UnspentTransactions;
 
@@ -44,7 +44,7 @@ public class Miner extends Node {
 
         if (miningBundle.getKeyPair().getPublic().equals(miningBundle.privilegedKey)
                 && miningBundle.getBlockChain().getCurrentHead() == null) {
-            Block genesis = Block.genesis();
+            MiningBlock genesis = MiningBlock.genesis();
             genesis.addReward(miningBundle.privilegedKey);
             MinerThread minerThread = new MinerThread(genesis, broadcastQueue);
             minerThread.start();

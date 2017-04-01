@@ -24,7 +24,7 @@ public class BlockChain {
     private final static Logger LOGGER = Logger.getLogger(BlockChain.class.getName());
     private LinkedHashMap<ShaTwoFiftySix, BlockWrapper> blocks = new LinkedHashMap<>();
 
-    private Block currentHead;
+    private MiningBlock currentHead;
     private int headDepth;
     public final Path blockStorePath;
 
@@ -59,7 +59,7 @@ public class BlockChain {
     /**
      * Creates a new {@code BlockChain} with {@code genesisBlock} as its root.
      */
-    public BlockChain(Path blockStorePath, Block genesisBlock) {
+    public BlockChain(Path blockStorePath, MiningBlock genesisBlock) {
         this(blockStorePath);
         if (!insertBlock(genesisBlock)) {
             LOGGER.severe("Unable to add genesis block");
@@ -77,7 +77,7 @@ public class BlockChain {
      * @param hash The SHA-256 hash of the block
      * @return The block corresponding to {@code hash} if it exists, or {@code Optional.empty} otherwise
      */
-    public Optional<Block> getBlockWithHash(ShaTwoFiftySix hash) {
+    public Optional<MiningBlock> getBlockWithHash(ShaTwoFiftySix hash) {
         return getBlockWrapperWithHash(hash).map(wrapper -> wrapper.block);
     }
 
@@ -90,14 +90,14 @@ public class BlockChain {
     }
 
     /**
-     * Inserts {@code Block b} into this {@code BlockChain}, if possible.
+     * Inserts {@code MiningBlock b} into this {@code BlockChain}, if possible.
      * <p>
-     * Fails if {@code Block b}'s parent is not in {@code this}.
+     * Fails if {@code MiningBlock b}'s parent is not in {@code this}.
      *
-     * @param b The {@code Block} to insert
+     * @param b The {@code MiningBlock} to insert
      * @return Whether the insertion was successful.
      */
-    public boolean insertBlock(Block b) {
+    public boolean insertBlock(MiningBlock b) {
         try {
             Optional<BlockWrapper> optPrevBlock = getBlockWrapperWithHash(b.previousBlockHash);
             if (optPrevBlock.isPresent()) {
@@ -125,37 +125,37 @@ public class BlockChain {
     }
 
     /**
-     * Returns the current head {@code Block} of {@code this}. The head {@code Block} is the most recent node in the
-     * longest chain of {@code Block}s.
+     * Returns the current head {@code MiningBlock} of {@code this}. The head {@code MiningBlock} is the most recent node in the
+     * longest chain of {@code MiningBlock}s.
      *
-     * @return The current head {@code Block} of {@code this}.
+     * @return The current head {@code MiningBlock} of {@code this}.
      */
-    public Block getCurrentHead() {
+    public MiningBlock getCurrentHead() {
         return currentHead;
     }
 
     /**
-     * Finds all the ancestors of {@code Block} with hash {@code hash} contained in {@code this} and returns them from
+     * Finds all the ancestors of {@code MiningBlock} with hash {@code hash} contained in {@code this} and returns them from
      * youngest to oldest.
      *
-     * @param hash      The SHA-256 hash of the first {@code Block} that will appear in the list
-     * @param numAncest the number of ancestors from {@code Block} with
+     * @param hash      The SHA-256 hash of the first {@code MiningBlock} that will appear in the list
+     * @param numAncest the number of ancestors from {@code MiningBlock} with
      *                  {@code hash} to return.
-     * @return A {@code List} of all ancestor {@code Block}s related to the
-     * {@code Block} with hash {@code hash}, from youngest to oldest, or an
-     * empty list if no such {@code Block} exists
+     * @return A {@code List} of all ancestor {@code MiningBlock}s related to the
+     * {@code MiningBlock} with hash {@code hash}, from youngest to oldest, or an
+     * empty list if no such {@code MiningBlock} exists
      */
-    public List<Block> getAncestorsStartingAt(ShaTwoFiftySix hash, int numAncest) {
-        ArrayList<Block> result = new ArrayList<>();
+    public List<MiningBlock> getAncestorsStartingAt(ShaTwoFiftySix hash, int numAncest) {
+        ArrayList<MiningBlock> result = new ArrayList<>();
 
         if (hash == null) return result;
 
         while (containsBlockWithHash(hash) && numAncest > 0) {
-            Optional<Block> optCurrent = getBlockWithHash(hash);
+            Optional<MiningBlock> optCurrent = getBlockWithHash(hash);
             if (!optCurrent.isPresent()) {
                 return result;
             }
-            Block current = optCurrent.get();
+            MiningBlock current = optCurrent.get();
             result.add(current);
             hash = current.previousBlockHash;
             --numAncest;
@@ -164,31 +164,31 @@ public class BlockChain {
     }
 
     /**
-     * Finds all the ancestors of {@code Block} with hash {@code hash} contained in {@code this} and returns them from
+     * Finds all the ancestors of {@code MiningBlock} with hash {@code hash} contained in {@code this} and returns them from
      * youngest to oldest.
      *
-     * @param hash The SHA-256 hash of the first {@code Block} that will appear in the list
-     * @return A {@code List} of all ancestor {@code Block}s related to the
-     * {@code Block} with hash {@code hash}, from youngest to oldest, or an
-     * empty list if no such {@code Block} exists
+     * @param hash The SHA-256 hash of the first {@code MiningBlock} that will appear in the list
+     * @return A {@code List} of all ancestor {@code MiningBlock}s related to the
+     * {@code MiningBlock} with hash {@code hash}, from youngest to oldest, or an
+     * empty list if no such {@code MiningBlock} exists
      */
-    public List<Block> getAncestorsStartingAt(ShaTwoFiftySix hash) {
+    public List<MiningBlock> getAncestorsStartingAt(ShaTwoFiftySix hash) {
         return getAncestorsStartingAt(hash, Integer.MAX_VALUE);
     }
 
     /**
-     * Gets a set of {@code UnspentTransactions} with respect to a {@code Block} in {@code this BlockChain}.
+     * Gets a set of {@code UnspentTransactions} with respect to a {@code MiningBlock} in {@code this BlockChain}.
      *
      * @param block The {@code block} for which to generate unspent transactions. Must be in {@code this BlockChain}.
-     * @return The set of unspent transactions with respect to {@code Block}
+     * @return The set of unspent transactions with respect to {@code MiningBlock}
      */
-    public UnspentTransactions getUnspentTransactionsAt(Block block) {
-        List<Block> ancestors = getAncestorsStartingAt(block.getShaTwoFiftySix());
+    public UnspentTransactions getUnspentTransactionsAt(MiningBlock block) {
+        List<MiningBlock> ancestors = getAncestorsStartingAt(block.getShaTwoFiftySix());
 
         UnspentTransactions unspentTxs = UnspentTransactions.empty();
 
         for (int i = ancestors.size() - 1; i >= 0; --i) {
-            Block b = ancestors.get(i);
+            MiningBlock b = ancestors.get(i);
             for (Transaction tx : b) {
                 for (int j = 0; j < tx.numInputs; ++j) {
                     TxIn inRef = tx.getInput(j);
@@ -206,16 +206,16 @@ public class BlockChain {
     }
 
     /**
-     * Verifies a {@code Block} w.r.t. {@code this BlockChain}.
+     * Verifies a {@code MiningBlock} w.r.t. {@code this BlockChain}.
      *
-     * @param block The {@code Block} to verify. It may or may not be in {@code this BlockChain}
+     * @param block The {@code MiningBlock} to verify. It may or may not be in {@code this BlockChain}
      * @return The {@code UnspentTransactions} of {@code block}, or {@code Optional.empty()} if verification failed
      */
-    public Optional<UnspentTransactions> verifyBlock(Block block) throws IOException {
-        Optional<Block> optParent = getBlockWithHash(block.previousBlockHash);
+    public Optional<UnspentTransactions> verifyBlock(MiningBlock block) throws IOException {
+        Optional<MiningBlock> optParent = getBlockWithHash(block.previousBlockHash);
 
         if (optParent.isPresent()) {
-            Block parent = optParent.get();
+            MiningBlock parent = optParent.get();
             return block.verify(getUnspentTransactionsAt(parent));
         } else if (block.isGenesisBlock()) {
             if (block.verifyGenesis(block.reward.ownerPubKey)) {
@@ -229,8 +229,8 @@ public class BlockChain {
     }
 
     /**
-     * @param hash The SHA-256 hash of the {@code Block}
-     * @return Whether there is a {@code Block} with hash {@code hash} in this {@code BlockChain}
+     * @param hash The SHA-256 hash of the {@code MiningBlock}
+     * @return Whether there is a {@code MiningBlock} with hash {@code hash} in this {@code BlockChain}
      */
     public boolean containsBlockWithHash(ShaTwoFiftySix hash) {
         return getBlockWithHash(hash).isPresent();
@@ -238,20 +238,20 @@ public class BlockChain {
 
     /**
      * @param b The {@code block} to check
-     * @return Whether {@code Block b} is contained within this {@code BlockChain}
+     * @return Whether {@code MiningBlock b} is contained within this {@code BlockChain}
      */
-    public boolean containsBlock(Block b) {
+    public boolean containsBlock(MiningBlock b) {
         return containsBlockWithHash(b.getShaTwoFiftySix());
     }
 
     // TODO storing insertion position may no longer be necessary
     private static final class BlockWrapper implements Comparable<BlockWrapper>, CanBeSerialized {
-        private final Block block;
+        private final MiningBlock block;
         private final int depth;
         // the position in which it was inserted, used for reconstruction
         private final int insertionPosition;
 
-        private BlockWrapper(Block block, int depth, int insertionPosition) {
+        private BlockWrapper(MiningBlock block, int depth, int insertionPosition) {
             this.block = block;
             this.depth = depth;
             this.insertionPosition = insertionPosition;
@@ -265,7 +265,7 @@ public class BlockChain {
 
         private static BlockWrapper deserialize(DataInputStream input)
                 throws DeserializationException, IOException {
-            Block block = Block.DESERIALIZER.deserialize(input);
+            MiningBlock block = MiningBlock.DESERIALIZER.deserialize(input);
             int depth = input.readInt();
             int insertionPosition = input.readInt();
             return new BlockWrapper(block, depth, insertionPosition);

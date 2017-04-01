@@ -14,7 +14,7 @@ import java.security.KeyPair;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @RunWith(JUnitQuickcheck.class)
-public class BlockProperties extends RandomizedTest {
+public class MiningBlockProperties extends RandomizedTest {
 
     @BeforeClass
     public static void initCrypto() {
@@ -29,7 +29,7 @@ public class BlockProperties extends RandomizedTest {
 
     @Property
     public void findValidNonceFindsValidNonce(KeyPair reward, Transaction txA, Transaction txB) throws Exception {
-        Block b = Block.empty(randomShaTwoFiftySix());
+        MiningBlock b = MiningBlock.empty(randomShaTwoFiftySix());
         b.addReward(reward.getPublic());
         b.addTransaction(txA);
         b.addTransaction(txB);

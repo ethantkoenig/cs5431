@@ -13,7 +13,7 @@ import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.Collections;
 
-public class BlockTest extends RandomizedTest {
+public class MiningBlockTest extends RandomizedTest {
 
     @BeforeClass
     public static void setupClass() {
@@ -22,16 +22,16 @@ public class BlockTest extends RandomizedTest {
 
     @Test
     public void testEquals() throws Exception {
-        Block b1 = randomBlock(ShaTwoFiftySix.zero());
+        MiningBlock b1 = randomBlock(ShaTwoFiftySix.zero());
 
         Assert.assertNotEquals(errorMessage, b1, new Object());
 
-        Block b2 = Block.empty(ShaTwoFiftySix.zero());
+        MiningBlock b2 = MiningBlock.empty(ShaTwoFiftySix.zero());
         for (Transaction tx : b1) {
             b2.addTransaction(tx);
         }
         b2.addReward(b1.reward.ownerPubKey);
-        for (int i = 0; i < Block.NONCE_SIZE_IN_BYTES; ++i) {
+        for (int i = 0; i < MiningBlock.NONCE_SIZE_IN_BYTES; ++i) {
             b2.nonce[i] = b1.nonce[i];
         }
 
@@ -45,13 +45,13 @@ public class BlockTest extends RandomizedTest {
     @Test
     public void testSerialize() throws Exception {
         ShaTwoFiftySix previousBlockHash = ShaTwoFiftySix.hashOf(randomBytes(256));
-        Block block = Block.empty(previousBlockHash);
-        for (int i = 0; i < Block.NUM_TRANSACTIONS_PER_BLOCK; i++) {
+        MiningBlock block = MiningBlock.empty(previousBlockHash);
+        for (int i = 0; i < MiningBlock.NUM_TRANSACTIONS_PER_BLOCK; i++) {
             block.transactions[i] = randomTransaction();
         }
         block.addReward(randomKeyPair().getPublic());
 
-        Block deserialized = Block.DESERIALIZER.deserialize(ByteUtil.asByteArray(block::serialize));
+        MiningBlock deserialized = MiningBlock.DESERIALIZER.deserialize(ByteUtil.asByteArray(block::serialize));
 
         TestUtils.assertEqualsWithHashCode(errorMessage, block, deserialized);
         Assert.assertEquals(errorMessage,
@@ -62,11 +62,11 @@ public class BlockTest extends RandomizedTest {
 
     @Test
     public void testAddReward() throws Exception {
-        Block b = Block.empty(ShaTwoFiftySix.zero());
+        MiningBlock b = MiningBlock.empty(ShaTwoFiftySix.zero());
         PublicKey key = randomKeyPair().getPublic();
         b.addReward(key);
 
-        Assert.assertEquals(Block.REWARD_AMOUNT, b.reward.value);
+        Assert.assertEquals(MiningBlock.REWARD_AMOUNT, b.reward.value);
         Assert.assertEquals(key, b.reward.ownerPubKey);
 
         TestUtils.assertThrows(errorMessage, () -> b.addReward(key), IllegalStateException.class);
@@ -74,9 +74,9 @@ public class BlockTest extends RandomizedTest {
 
     @Test
     public void testAddTransaction() throws Exception {
-        Block b = Block.empty(ShaTwoFiftySix.zero());
+        MiningBlock b = MiningBlock.empty(ShaTwoFiftySix.zero());
 
-        for (int i = 0; i < Block.NUM_TRANSACTIONS_PER_BLOCK; ++i) {
+        for (int i = 0; i < MiningBlock.NUM_TRANSACTIONS_PER_BLOCK; ++i) {
             Assert.assertFalse(errorMessage, b.isFull());
             Transaction tx = randomTransaction();
             b.addTransaction(tx);
@@ -89,10 +89,10 @@ public class BlockTest extends RandomizedTest {
 
     @Test
     public void testSerializeGenesis() throws Exception {
-        Block block = Block.genesis();
+        MiningBlock block = MiningBlock.genesis();
         block.addReward(randomKeyPair().getPublic());
 
-        Block deserialized = Block.DESERIALIZER.deserialize(ByteUtil.asByteArray(block::serialize));
+        MiningBlock deserialized = MiningBlock.DESERIALIZER.deserialize(ByteUtil.asByteArray(block::serialize));
 
         TestUtils.assertEqualsWithHashCode(errorMessage, block, deserialized);
         Assert.assertEquals(errorMessage,
@@ -105,8 +105,8 @@ public class BlockTest extends RandomizedTest {
     public void testVerify() throws Exception {
         Config.HASH_GOAL.set(1);
         ShaTwoFiftySix previousBlockHash = ShaTwoFiftySix.hashOf(randomBytes(256));
-        Pair<Block, UnspentTransactions> pair = randomValidBlock(previousBlockHash);
-        Block block = pair.getLeft();
+        Pair<MiningBlock, UnspentTransactions> pair = randomValidBlock(previousBlockHash);
+        MiningBlock block = pair.getLeft();
         block.addReward(randomKeyPair().getPublic());
         while (!block.checkHash()) { // mine the block
             block.nonceAddOne();
@@ -115,7 +115,7 @@ public class BlockTest extends RandomizedTest {
         UnspentTransactions result = TestUtils.assertPresent(block.verify(pair.getRight()));
 
         UnspentTransactions expected = UnspentTransactions.empty();
-        Transaction lastTxn = block.transactions[Block.NUM_TRANSACTIONS_PER_BLOCK - 1];
+        Transaction lastTxn = block.transactions[MiningBlock.NUM_TRANSACTIONS_PER_BLOCK - 1];
         // TODO currently assumes that last transaction will only have one output
         expected.put(lastTxn.getShaTwoFiftySix(), 0, lastTxn.getOutput(0));
         expected.put(block.getShaTwoFiftySix(), 0, block.reward);
@@ -134,19 +134,19 @@ public class BlockTest extends RandomizedTest {
         Assert.assertFalse(errorMessage,
                 randomBlock(randomShaTwoFiftySix()).verifyGenesis(pair.getPublic()));
 
-        Block genesis = Block.genesis();
+        MiningBlock genesis = MiningBlock.genesis();
         genesis.addReward(pair.getPublic());
         Assert.assertTrue(errorMessage, genesis.verifyGenesis(pair.getPublic()));
 
-        genesis.reward = new TxOut(Block.REWARD_AMOUNT + 1, pair.getPublic());
+        genesis.reward = new TxOut(MiningBlock.REWARD_AMOUNT + 1, pair.getPublic());
         Assert.assertFalse(errorMessage, genesis.verifyGenesis(pair.getPublic()));
     }
 
     @Test
     public void testGetTransactionDifferences() throws Exception {
         ShaTwoFiftySix previousBlockHash = ShaTwoFiftySix.hashOf(randomBytes(256));
-        Block block1 = Block.empty(previousBlockHash);
-        Block block2 = Block.empty(previousBlockHash);
+        MiningBlock block1 = MiningBlock.empty(previousBlockHash);
+        MiningBlock block2 = MiningBlock.empty(previousBlockHash);
 
         Transaction txn1 = randomTransaction();
         Transaction txn2 = randomTransaction();
@@ -168,7 +168,7 @@ public class BlockTest extends RandomizedTest {
     @Test
     public void testCheckHash() throws Exception {
         Config.HASH_GOAL.set(1);
-        Block block = randomBlock(randomShaTwoFiftySix());
+        MiningBlock block = randomBlock(randomShaTwoFiftySix());
         for (int i = 0; i < 1000; i++) {
             block.nonceAddOne();
             if (block.checkHash()) {
@@ -180,7 +180,7 @@ public class BlockTest extends RandomizedTest {
 
     @Test
     public void testSerializeFailures() throws Exception {
-        Block block = Block.empty(randomShaTwoFiftySix());
+        MiningBlock block = MiningBlock.empty(randomShaTwoFiftySix());
 
         TestUtils.assertThrows(errorMessage, () -> block.getShaTwoFiftySix(), IllegalStateException.class);
 

@@ -18,9 +18,9 @@ import java.util.logging.Logger;
 /**
  * Represents a block of transactions in the ledger
  */
-public class Block extends HashCache implements Iterable<Transaction>, CanBeSerialized {
-    private final static Logger LOGGER = Logger.getLogger(Block.class.getName());
-    public final static Deserializer<Block> DESERIALIZER = new BlockDeserializer();
+public class MiningBlock implements CanBeSerialized {
+    private final static Logger LOGGER = Logger.getLogger(MiningBlock.class.getName());
+    public final static Deserializer<MiningBlock> DESERIALIZER = new BlockDeserializer();
 
     public final static int NUM_TRANSACTIONS_PER_BLOCK = 2;
     public final static int NONCE_SIZE_IN_BYTES = 128;
@@ -29,53 +29,13 @@ public class Block extends HashCache implements Iterable<Transaction>, CanBeSeri
     public final ShaTwoFiftySix previousBlockHash;
     public final Transaction[] transactions;
     public TxOut reward;
-    public final byte[] nonce = new byte[NONCE_SIZE_IN_BYTES];
+    public final byte[] nonce;
 
-    private Block(ShaTwoFiftySix previousBlockHash, int numTransactions) {
+    private MiningBlock(ShaTwoFiftySix previousBlockHash, Transaction[] transactions, TxOut reward) {
         this.previousBlockHash = previousBlockHash;
-        this.transactions = new Transaction[numTransactions];
-    }
-
-    /**
-     * @return a genesis block
-     */
-    public static Block genesis() {
-        return new Block(ShaTwoFiftySix.zero(), 0);
-    }
-
-    /**
-     * @param previousBlockHash SHA-256 hash of the previous Block
-     * @return an empty block.
-     */
-    public static Block empty(ShaTwoFiftySix previousBlockHash) {
-        return new Block(previousBlockHash, NUM_TRANSACTIONS_PER_BLOCK);
-    }
-
-    /**
-     * Writes the serialization of this block to {@code outputStream}
-     *
-     * @param outputStream output to write the serialized block to
-     * @throws IOException
-     */
-    @Override
-    public void serialize(DataOutputStream outputStream) throws IOException {
-        serializeWithoutNonce(outputStream);
-        outputStream.write(nonce);
-    }
-
-    public void serializeWithoutNonce(DataOutputStream outputStream) throws IOException {
-        for (Transaction transaction : transactions) {
-            if (transaction == null) {
-                throw new IllegalStateException("Cannot serialize a non-full block");
-            }
-        }
-        if (reward == null) {
-            throw new IllegalStateException("Cannot serialize a block without a reward");
-        }
-
-        previousBlockHash.writeTo(outputStream);
-        CanBeSerialized.serializeArray(outputStream, transactions);
-        outputStream.write(reward.ownerPubKey.getEncoded());
+        this.transactions = transactions;
+        this.reward = reward;
+        this.nonce = new byte[NONCE_SIZE_IN_BYTES];
     }
 
     /**
@@ -83,7 +43,6 @@ public class Block extends HashCache implements Iterable<Transaction>, CanBeSeri
      */
     public void nonceAddOne() {
         ByteUtil.addOne(this.nonce);
-        invalidateCache();
     }
 
     /**
@@ -91,7 +50,6 @@ public class Block extends HashCache implements Iterable<Transaction>, CanBeSeri
      */
     public void setRandomNonce(Random random) {
         random.nextBytes(nonce);
-        invalidateCache();
     }
 
     /**
@@ -103,7 +61,7 @@ public class Block extends HashCache implements Iterable<Transaction>, CanBeSeri
     }
 
     /**
-     * @return Whether {@code this} is a genesis {@code Block}
+     * @return Whether {@code this} is a genesis {@code MiningBlock}
      */
     public boolean isGenesisBlock() {
         return previousBlockHash.equals(ShaTwoFiftySix.zero());
@@ -117,36 +75,6 @@ public class Block extends HashCache implements Iterable<Transaction>, CanBeSeri
             LOGGER.severe(e.getMessage());
             throw new RuntimeException(e);
         }
-    }
-
-    /**
-     * @return true if block has all NUM_TRANSACTIONS_PER_BLOCK filled
-     */
-    public boolean isFull() {
-        for (Transaction transaction : transactions) {
-            if (transaction == null)
-                return false;
-        }
-        return true;
-    }
-
-    /**
-     * Add a transaction to the block
-     *
-     * @param newTransaction the transaction to be added
-     * @return true if successful
-     */
-    public boolean addTransaction(Transaction newTransaction) {
-        if (this.isFull()) return false;
-        invalidateCache();
-        for (int i = 0; i < transactions.length; i++) {
-            if (transactions[i] == null) {
-                transactions[i] = newTransaction;
-                return true;
-            }
-        }
-        // Should never get here
-        return false;
     }
 
     /**
@@ -182,7 +110,7 @@ public class Block extends HashCache implements Iterable<Transaction>, CanBeSeri
      * @param other the block that we are comparing against
      * @return ArrayList the list of transactions that are in block other but not in this block
      */
-    public ArrayList<Transaction> getTransactionDifferences(Block other) {
+    public ArrayList<Transaction> getTransactionDifferences(MiningBlock other) {
         HashSet<Transaction> transSet = new HashSet<>();
         for (Transaction thisTransaction : transactions) {
             transSet.add(thisTransaction);
@@ -198,23 +126,12 @@ public class Block extends HashCache implements Iterable<Transaction>, CanBeSeri
     }
 
     /**
-     * Add a reward transaction
-     */
-    public void addReward(PublicKey publicKey) {
-        if (reward != null) {
-            throw new IllegalStateException("Cannot reset block's reward");
-        }
-        invalidateCache();
-        reward = new TxOut(REWARD_AMOUNT, publicKey);
-    }
-
-    /**
      * Verifies the validity of {@code this} with respect to {@code unspentTransactions}.
      * <p>
-     * A {@code Block} is said to be valid with respect to a set of unspent transactions if its inputs only contain
+     * A {@code MiningBlock} is said to be valid with respect to a set of unspent transactions if its inputs only contain
      * outputs from that set, it contains no double spends, and every input has a valid signature.
      *
-     * @param unspentTransactions A list of unspent {@code Transaction}s that may be spent by {@code this Block}. This
+     * @param unspentTransactions A list of unspent {@code Transaction}s that may be spent by {@code this MiningBlock}. This
      *                            collection will not be modified.
      * @return The new {@code Map} with spent transactions removed, if verification passes. Otherwise {@code Optional.empty()}.
      * @throws IOException
@@ -248,8 +165,8 @@ public class Block extends HashCache implements Iterable<Transaction>, CanBeSeri
 
     @Override
     public boolean equals(Object other) {
-        if (other instanceof Block) {
-            Block b = (Block) other;
+        if (other instanceof MiningBlock) {
+            MiningBlock b = (MiningBlock) other;
             // Relying on collision resistance of SHA-256 to check for equality
             return getShaTwoFiftySix().equals(b.getShaTwoFiftySix());
         }
@@ -261,19 +178,36 @@ public class Block extends HashCache implements Iterable<Transaction>, CanBeSeri
         return getShaTwoFiftySix().hashCode();
     }
 
-    @Override
-    public Iterator<Transaction> iterator() {
-        return Arrays.stream(transactions).iterator();
+    public ShaTwoFiftySix getShaTwoFiftySix() throws IOException, GeneralSecurityException {
+        return ShaTwoFiftySix.hashOf(ByteUtil.asByteArray(this::serialize));
     }
 
-    private static final class BlockDeserializer implements Deserializer<Block> {
+    /**
+     * Writes the serialization of this block to {@code outputStream}
+     *
+     * @param outputStream output to write the serialized block to
+     * @throws IOException
+     */
+    @Override
+    public void serialize(DataOutputStream outputStream) throws IOException {
+        serializeWithoutNonce(outputStream);
+        outputStream.write(nonce);
+    }
+
+    public void serializeWithoutNonce(DataOutputStream outputStream) throws IOException {
+        previousBlockHash.writeTo(outputStream);
+        CanBeSerialized.serializeArray(outputStream, transactions);
+        outputStream.write(reward.ownerPubKey.getEncoded());
+    }
+
+    private static final class BlockDeserializer implements Deserializer<MiningBlock> {
 
         @Override
-        public Block deserialize(DataInputStream input) throws DeserializationException, IOException {
+        public MiningBlock deserialize(DataInputStream input) throws DeserializationException, IOException {
             ShaTwoFiftySix hash = ShaTwoFiftySix.deserialize(input);
 
             List<Transaction> transactions = Deserializer.deserializeList(input, Transaction.DESERIALIZER);
-            Block block = new Block(hash, transactions.size());
+            MiningBlock block = new MiningBlock(hash, transactions.size());
             for (int i = 0; i < transactions.size(); i++) {
                 block.transactions[i] = transactions.get(i);
             }
@@ -286,6 +220,68 @@ public class Block extends HashCache implements Iterable<Transaction>, CanBeSeri
             } catch (GeneralSecurityException e) {
                 throw new DeserializationException("Misformatted reward public key");
             }
+        }
+    }
+
+    public static final class BlockBuilder {
+        private ShaTwoFiftySix previousBlockHash;
+        private TxOut reward;
+        private Transaction[] transactions;
+
+        public BlockBuilder(ShaTwoFiftySix previousBlockHash) {
+            this.previousBlockHash = previousBlockHash;
+            transactions = new Transaction[MiningBlock.NUM_TRANSACTIONS_PER_BLOCK];
+        }
+
+        /**
+         * @return a genesis BlockBuilder
+         */
+        public static BlockBuilder genesis() {
+            return new BlockBuilder(ShaTwoFiftySix.zero());
+        }
+
+
+        public MiningBlock build() {
+
+        }
+
+        /**
+         * Add a reward transaction
+         */
+        public BlockBuilder addReward(PublicKey publicKey) {
+            reward = new TxOut(REWARD_AMOUNT, publicKey);
+            return this;
+        }
+
+        /**
+         * Add a transaction to the Block in progress
+         *
+         * @param newTransaction the transaction to be added
+         * @return true if successful
+         */
+        public BlockBuilder addTransaction(Transaction newTransaction) {
+            if (this.isFull()) {
+                throw new IllegalStateException("Tried to add a Transaction to a full BlockBuilder");
+            }
+            for (int i = 0; i < transactions.length; i++) {
+                if (transactions[i] == null) {
+                    transactions[i] = newTransaction;
+                    return this;
+                }
+            }
+            // Should never get here
+            return this;
+        }
+
+        /**
+         * @return true if block has all `NUM_TRANSACTIONS_PER_BLOCK` filled
+         */
+        public boolean isFull() {
+            for (Transaction transaction : transactions) {
+                if (transaction == null)
+                    return false;
+            }
+            return true;
         }
     }
 }

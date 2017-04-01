@@ -1,6 +1,6 @@
 package generators.model;
 
-import block.Block;
+import block.MiningBlock;
 import block.UnspentTransactions;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
@@ -9,28 +9,28 @@ import utils.ShaTwoFiftySix;
 
 import java.security.KeyPair;
 
-public class BlockGenerator extends Generator<Block> {
+public class BlockGenerator extends Generator<MiningBlock> {
 
     public BlockGenerator() {
-        super(Block.class);
+        super(MiningBlock.class);
     }
 
     @Override
-    public Block generate(SourceOfRandomness random, GenerationStatus status) {
+    public MiningBlock generate(SourceOfRandomness random, GenerationStatus status) {
         UnspentTransactions unspentTxs =
                 new UnspentTransactionsGenerator().generate(random, status);
         ShaTwoFiftySix randomHash = gen().type(ShaTwoFiftySix.class).generate(random, status);
         return generate(randomHash, unspentTxs, random, status);
     }
 
-    public Block generate(
+    public MiningBlock generate(
             ShaTwoFiftySix previousBlock,
             UnspentTransactions unspentTxs,
             SourceOfRandomness random,
             GenerationStatus status) {
-        Block block = Block.empty(previousBlock);
+        MiningBlock block = MiningBlock.empty(previousBlock);
         TransactionGenerator txGen = new TransactionGenerator(unspentTxs);
-        for (int i = 0; i < Block.NUM_TRANSACTIONS_PER_BLOCK; ++i) {
+        for (int i = 0; i < MiningBlock.NUM_TRANSACTIONS_PER_BLOCK; ++i) {
             block.addTransaction(txGen.generate(random, status));
         }
 

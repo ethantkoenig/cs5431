@@ -1,6 +1,6 @@
 package network;
 
-import block.Block;
+import block.MiningBlock;
 import org.junit.Test;
 import testutils.RandomizedTest;
 import utils.ShaTwoFiftySix;
@@ -17,13 +17,13 @@ public class OrphanedBlocksTest extends RandomizedTest {
     @Test
     public void test1() throws Exception {
         int numBlocks = random.nextInt(100);
-        List<Block> blocks = new ArrayList<>();
+        List<MiningBlock> blocks = new ArrayList<>();
 
-        Block genesis = randomBlock(ShaTwoFiftySix.zero());
+        MiningBlock genesis = randomBlock(ShaTwoFiftySix.zero());
         blocks.add(genesis);
         for (int i = 1; i < numBlocks; i++) {
             int parentIndex = random.nextInt(i);
-            Block block = randomBlock(blocks.get(parentIndex).getShaTwoFiftySix());
+            MiningBlock block = randomBlock(blocks.get(parentIndex).getShaTwoFiftySix());
             blocks.add(block);
         }
 
@@ -32,12 +32,12 @@ public class OrphanedBlocksTest extends RandomizedTest {
             orphanedBlocks.add(blocks.get(i));
         }
 
-        List<Block> poppedBlocks = orphanedBlocks.popDescendantsOf(ShaTwoFiftySix.zero());
+        List<MiningBlock> poppedBlocks = orphanedBlocks.popDescendantsOf(ShaTwoFiftySix.zero());
         assertEquals(errorMessage, numBlocks, poppedBlocks.size());
 
-        Set<Block> generatedBlocks = new HashSet<>(blocks);
+        Set<MiningBlock> generatedBlocks = new HashSet<>(blocks);
         Set<ShaTwoFiftySix> encounteredBlocks = new HashSet<>();
-        for (Block popped : poppedBlocks) {
+        for (MiningBlock popped : poppedBlocks) {
             assertTrue(generatedBlocks.contains(popped));
             if (!popped.isGenesisBlock()) {
                 assertTrue(encounteredBlocks.contains(popped.previousBlockHash));

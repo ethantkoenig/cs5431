@@ -1,6 +1,6 @@
 package network;
 
-import block.Block;
+import block.MiningBlock;
 import org.junit.Assert;
 import org.junit.Test;
 import testutils.RandomizedTest;
@@ -16,7 +16,7 @@ public class MinerThreadTest extends RandomizedTest {
     @Test
     public void test() throws Exception {
         Config.HASH_GOAL.set(1);
-        Block block = randomBlock(randomShaTwoFiftySix());
+        MiningBlock block = randomBlock(randomShaTwoFiftySix());
         BlockingQueue<OutgoingMessage> queue = new ArrayBlockingQueue<>(5);
         MinerThread minerThread = new MinerThread(block, queue);
 
@@ -35,7 +35,7 @@ public class MinerThreadTest extends RandomizedTest {
     @Test
     public void testStop() throws Exception {
         Config.HASH_GOAL.set(10); // really big, so miner won't succeed
-        Block block = randomBlock(randomShaTwoFiftySix());
+        MiningBlock block = randomBlock(randomShaTwoFiftySix());
         BlockingQueue<OutgoingMessage> queue = new ArrayBlockingQueue<>(5);
         MinerThread minerThread = new MinerThread(block, queue);
 

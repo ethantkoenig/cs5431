@@ -1,6 +1,6 @@
 package network;
 
-import block.Block;
+import block.MiningBlock;
 import block.BlockChain;
 import transaction.Transaction;
 import utils.ByteUtil;
@@ -68,13 +68,13 @@ public class HandleMessageThread extends Thread {
                 handler.txMsgHandler(message, transaction);
                 break;
             case Message.BLOCK:
-                Block[] blocks = Deserializer.deserializeList(message.payload, Block.DESERIALIZER)
-                        .toArray(new Block[0]);
+                MiningBlock[] blocks = Deserializer.deserializeList(message.payload, MiningBlock.DESERIALIZER)
+                        .toArray(new MiningBlock[0]);
                 boolean added = false;
                 // TODO check that blocks are in "correct" order (grandchild, child, parent ...)
-                for (Block block : blocks) {
+                for (MiningBlock block : blocks) {
                     if (handler.blockHandler(block)) {
-                        for (Block descendant : orphanedBlocks.popDescendantsOf(block.getShaTwoFiftySix())) {
+                        for (MiningBlock descendant : orphanedBlocks.popDescendantsOf(block.getShaTwoFiftySix())) {
                             if (!handler.blockHandler(descendant)) {
                                 LOGGER.severe("Unexpectedly unable to handle block");
                             }

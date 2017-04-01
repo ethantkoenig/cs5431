@@ -1,6 +1,6 @@
 package generators.model;
 
-import block.Block;
+import block.MiningBlock;
 import block.BlockChain;
 import block.UnspentTransactions;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
@@ -29,7 +29,7 @@ public class BlockChainGenerator extends Generator<BlockChain> {
 
     @Override
     public BlockChain generate(SourceOfRandomness random, GenerationStatus status) {
-        Block genesis = Block.genesis();
+        MiningBlock genesis = MiningBlock.genesis();
         KeyPair privilegedKey = gen().type(KeyPair.class).generate(random, status);
 
         genesis.addReward(privilegedKey.getPublic());
@@ -54,16 +54,16 @@ public class BlockChainGenerator extends Generator<BlockChain> {
         }
         BlockChain blockchain = new BlockChain(blockChainPath, genesis);
 
-        Block second = Block.empty(genesis.getShaTwoFiftySix());
+        MiningBlock second = MiningBlock.empty(genesis.getShaTwoFiftySix());
         ShaTwoFiftySix prevHash = genesis.getShaTwoFiftySix();
         try {
-            for (int i = 0; i < Block.NUM_TRANSACTIONS_PER_BLOCK - 1; ++i) {
+            for (int i = 0; i < MiningBlock.NUM_TRANSACTIONS_PER_BLOCK - 1; ++i) {
                 Transaction dummy = new Transaction.Builder()
                         .addInput(
                                 new TxIn(prevHash, 0),
                                 privilegedKey.getPrivate())
                         .addOutput(
-                                new TxOut(Block.REWARD_AMOUNT, privilegedKey.getPublic()))
+                                new TxOut(MiningBlock.REWARD_AMOUNT, privilegedKey.getPublic()))
                         .build();
                 prevHash = dummy.getShaTwoFiftySix();
                 second.addTransaction(dummy);
@@ -78,14 +78,14 @@ public class BlockChainGenerator extends Generator<BlockChain> {
         Transaction.Builder txBuilder = new Transaction.Builder();
         txBuilder.addInput(new TxIn(prevHash, 0), privilegedKey.getPrivate());
 
-        long valueLeft = Block.REWARD_AMOUNT;
+        long valueLeft = MiningBlock.REWARD_AMOUNT;
         int numOut = 20;
         for (int i = 0; i < numOut; ++i) {
             long outVal;
             if (i == numOut - 1) {
                 outVal = valueLeft;
             } else {
-                outVal = Block.REWARD_AMOUNT / numOut;
+                outVal = MiningBlock.REWARD_AMOUNT / numOut;
             }
             valueLeft -= outVal;
 
@@ -119,16 +119,16 @@ public class BlockChainGenerator extends Generator<BlockChain> {
 
         blockchain.insertBlock(second);
 
-        ArrayList<Block> blocksToGrowFrom = new ArrayList<>();
+        ArrayList<MiningBlock> blocksToGrowFrom = new ArrayList<>();
         blocksToGrowFrom.add(second);
 
         int numBlocksToPut = random.nextInt(MIN_BLOCKS, MAX_BLOCKS);
 
         for (int i = 0; i < numBlocksToPut; ++i) {
-            Block parent = blocksToGrowFrom.get(
+            MiningBlock parent = blocksToGrowFrom.get(
                     random.nextInt(0, blocksToGrowFrom.size() - 1));
             UnspentTransactions unspentTxs = blockchain.getUnspentTransactionsAt(parent);
-            Block child = new BlockGenerator().generate(
+            MiningBlock child = new BlockGenerator().generate(
                     parent.getShaTwoFiftySix(),
                     unspentTxs,
                     random,

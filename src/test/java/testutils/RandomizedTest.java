@@ -1,6 +1,6 @@
 package testutils;
 
-import block.Block;
+import block.MiningBlock;
 import block.UnspentTransactions;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -85,9 +85,9 @@ public abstract class RandomizedTest {
                 .build();
     }
 
-    protected Block randomBlock(ShaTwoFiftySix previousHash) throws GeneralSecurityException, IOException {
-        Block b = Block.empty(previousHash);
-        for (int i = 0; i < Block.NUM_TRANSACTIONS_PER_BLOCK; ++i) {
+    protected MiningBlock randomBlock(ShaTwoFiftySix previousHash) throws GeneralSecurityException, IOException {
+        MiningBlock b = MiningBlock.empty(previousHash);
+        for (int i = 0; i < MiningBlock.NUM_TRANSACTIONS_PER_BLOCK; ++i) {
             b.addTransaction(randomTransaction());
         }
         b.addReward(randomKeyPair().getPublic());
@@ -95,7 +95,7 @@ public abstract class RandomizedTest {
         return b;
     }
 
-    protected Pair<Block, UnspentTransactions> randomValidBlock(ShaTwoFiftySix previousHash)
+    protected Pair<MiningBlock, UnspentTransactions> randomValidBlock(ShaTwoFiftySix previousHash)
             throws GeneralSecurityException, IOException {
         KeyPair senderPair = randomKeyPair();
         KeyPair recipientPair = randomKeyPair();
@@ -106,9 +106,9 @@ public abstract class RandomizedTest {
                 .addOutput(output)
                 .build();
 
-        Block block = Block.empty(previousHash);
+        MiningBlock block = MiningBlock.empty(previousHash);
 
-        for (int i = 0; i < Block.NUM_TRANSACTIONS_PER_BLOCK; i++) {
+        for (int i = 0; i < MiningBlock.NUM_TRANSACTIONS_PER_BLOCK; i++) {
             senderPair = recipientPair;
             recipientPair = randomKeyPair();
 
