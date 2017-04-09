@@ -4,8 +4,7 @@ import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import transaction.TxOut;
-
-import java.security.KeyPair;
+import utils.ECDSAKeyPair;
 
 public class TxOutGenerator extends Generator<TxOut> {
 
@@ -19,6 +18,6 @@ public class TxOutGenerator extends Generator<TxOut> {
     @Override
     public TxOut generate(SourceOfRandomness random, GenerationStatus status) {
         return new TxOut(random.nextLong(MIN_VALUE, MAX_VALUE),
-                gen().type(KeyPair.class).generate(random, status).getPublic());
+                gen().type(ECDSAKeyPair.class).generate(random, status).publicKey);
     }
 }

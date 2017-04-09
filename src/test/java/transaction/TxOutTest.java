@@ -5,17 +5,18 @@ import org.junit.Test;
 import testutils.RandomizedTest;
 import testutils.TestUtils;
 import utils.ByteUtil;
+import utils.Crypto;
+import utils.ECDSAKeyPair;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
-import java.security.KeyPair;
 
 public class TxOutTest extends RandomizedTest {
 
     @Test
     public void testSerialize() throws Exception {
-        KeyPair pair = randomKeyPair();
-        TxOut output = new TxOut(100, pair.getPublic());
+        ECDSAKeyPair pair = Crypto.signatureKeyPair();
+        TxOut output = new TxOut(100, pair.publicKey);
 
         byte[] serialized = ByteUtil.asByteArray(output::serialize);
         TxOut deserialized = TxOut.DESERIALIZER.deserialize(new DataInputStream(
@@ -28,14 +29,14 @@ public class TxOutTest extends RandomizedTest {
 
     @Test
     public void testEquals() throws Exception {
-        KeyPair pair = randomKeyPair();
+        ECDSAKeyPair pair = Crypto.signatureKeyPair();
         long value = random.nextInt(Integer.MAX_VALUE);
-        TxOut output1 = new TxOut(value, pair.getPublic());
-        TxOut output2 = new TxOut(value, pair.getPublic());
+        TxOut output1 = new TxOut(value, pair.publicKey);
+        TxOut output2 = new TxOut(value, pair.publicKey);
 
-        KeyPair otherPair = randomKeyPair();
-        TxOut anotherOutput = new TxOut(random.nextInt(Integer.MAX_VALUE), otherPair.getPublic());
-        TxOut output3 = new TxOut(value, otherPair.getPublic());
+        ECDSAKeyPair otherPair = Crypto.signatureKeyPair();
+        TxOut anotherOutput = new TxOut(random.nextInt(Integer.MAX_VALUE), otherPair.publicKey);
+        TxOut output3 = new TxOut(value, otherPair.publicKey);
 
         TestUtils.assertEqualsWithHashCode(errorMessage, output1, output1);
         TestUtils.assertEqualsWithHashCode(errorMessage, output1, output2);

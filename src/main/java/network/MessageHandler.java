@@ -93,7 +93,7 @@ public class MessageHandler {
         Block block = miningQueue.removeLast();
         // If there is no current miner thread then start a new one.
         if (minerThread == null || !minerThread.isAlive()) {
-            block.addReward(bundle.getKeyPair().getPublic());
+            block.addReward(bundle.getKeyPair().publicKey);
             minerThread = new MinerThread(block, broadcastQueue);
             minerThread.start();
         }

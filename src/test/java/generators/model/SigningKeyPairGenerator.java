@@ -5,25 +5,22 @@ import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.junit.BeforeClass;
 import testutils.InsecureSecureRandom;
-import testutils.SeededRandom;
-import utils.Crypto;
+import utils.*;
 
-import java.security.*;
-import java.security.spec.ECGenParameterSpec;
+import java.security.GeneralSecurityException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 
-public class SigningKeyPairGenerator extends Generator<KeyPair> {
+public class SigningKeyPairGenerator extends Generator<ECDSAKeyPair> {
 
-    private static final Map<PublicKey, PrivateKey> keyMapping = new HashMap<>();
+    private static final Map<ECDSAPublicKey, ECDSAPrivateKey> keyMapping = new HashMap<>();
 
-    public static Map<PublicKey, PrivateKey> getKeyMapping() {
+    public static Map<ECDSAPublicKey, ECDSAPrivateKey> getKeyMapping() {
         return keyMapping;
     }
 
     public SigningKeyPairGenerator() {
-        super(KeyPair.class);
+        super(ECDSAKeyPair.class);
     }
 
     @BeforeClass
@@ -32,30 +29,15 @@ public class SigningKeyPairGenerator extends Generator<KeyPair> {
     }
 
     @Override
-    public KeyPair generate(SourceOfRandomness random, GenerationStatus status) {
-        SeededRandom seededRandom = SeededRandom.fixedSeed(random.nextLong());
-        Random rand = seededRandom.random();
-
-        KeyPairGenerator generator = null;
+    public ECDSAKeyPair generate(SourceOfRandomness random, GenerationStatus status) {
+        Config.setSecureRandom(new InsecureSecureRandom(random.toJDKRandom()));
         try {
-            generator = KeyPairGenerator.getInstance("ECDSA", "BC");
-        } catch (NoSuchAlgorithmException | NoSuchProviderException e) {
+            ECDSAKeyPair keys = Crypto.signatureKeyPair();
+            keyMapping.put(keys.publicKey, keys.privateKey);
+            return keys;
+        } catch (GeneralSecurityException e) {
             e.printStackTrace();
-            assert false;
             return null;
         }
-
-        ECGenParameterSpec ecSpec = new ECGenParameterSpec("P-256");
-        SecureRandom secureRandom = new InsecureSecureRandom(rand);
-        try {
-            generator.initialize(ecSpec, secureRandom);
-        } catch (InvalidAlgorithmParameterException e) {
-            e.printStackTrace();
-        }
-
-        KeyPair keys = generator.generateKeyPair();
-        keyMapping.put(keys.getPublic(), keys.getPrivate());
-
-        return keys;
     }
 }

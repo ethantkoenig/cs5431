@@ -4,10 +4,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import testutils.RandomizedTest;
-
-import java.io.ByteArrayInputStream;
-import java.security.KeyPair;
-import java.security.PublicKey;
+import testutils.TestUtils;
 
 public class CryptoTest extends RandomizedTest {
 
@@ -18,7 +15,7 @@ public class CryptoTest extends RandomizedTest {
 
     @Test
     public void testHashAndSalt() throws Exception {
-        Config.PBKDF2_COST.set(5);
+        Config.setPbkdf2Cost(5);
 
         String pass = "password";
         byte[] salt = Crypto.generateSalt();
@@ -29,32 +26,35 @@ public class CryptoTest extends RandomizedTest {
 
     @Test
     public void testSignatureKeyPair() throws Exception {
-        KeyPair pair = Crypto.signatureKeyPair();
-        Assert.assertNotNull(pair);
+        Assert.assertNotNull(Crypto.signatureKeyPair());
     }
 
     @Test
     public void testDeserializePublicKey() throws Exception {
-        PublicKey publicKey = Crypto.signatureKeyPair().getPublic();
+        ECDSAPublicKey publicKey = Crypto.signatureKeyPair().publicKey;
 
-        PublicKey deserializedKey = Crypto.deserializePublicKey(
-                new ByteArrayInputStream(publicKey.getEncoded())
+        ECDSAPublicKey deserializedKey = ECDSAPublicKey.DESERIALIZER.deserialize(
+                ByteUtil.asByteArray(publicKey::serialize)
         );
-        Assert.assertEquals(publicKey, deserializedKey);
+        TestUtils.assertEqualsWithHashCode(errorMessage, publicKey, deserializedKey);
     }
 
     @Test
     public void testSign() throws Exception {
         byte[] content = randomBytes(random.nextInt(1024));
 
-        KeyPair pair = Crypto.signatureKeyPair();
-        byte[] signature = Crypto.sign(content, pair.getPrivate());
+        ECDSAKeyPair pair = Crypto.signatureKeyPair();
+        ECDSASignature signature = Crypto.sign(content, pair.privateKey);
         Assert.assertTrue(errorMessage,
-                Crypto.verify(content, signature, pair.getPublic()));
+                Crypto.verify(content, signature, pair.publicKey));
+
+        byte[] otherContent = randomBytes(random.nextInt(1024));
+        Assert.assertFalse(errorMessage,
+                Crypto.verify(otherContent, signature, pair.publicKey));
 
         // test that deserialized public keys can correctly verify
-        PublicKey deserializedKey = Crypto.deserializePublicKey(
-                new ByteArrayInputStream(pair.getPublic().getEncoded())
+        ECDSAPublicKey deserializedKey = ECDSAPublicKey.DESERIALIZER.deserialize(
+                ByteUtil.asByteArray(pair.publicKey::serialize)
         );
         Assert.assertTrue(errorMessage,
                 Crypto.verify(content, signature, deserializedKey));

@@ -7,10 +7,10 @@ import testutils.RandomizedTest;
 import testutils.TestUtils;
 import transaction.TxOut;
 import utils.Crypto;
+import utils.ECDSAKeyPair;
 import utils.ShaTwoFiftySix;
 
 import java.security.GeneralSecurityException;
-import java.security.KeyPair;
 
 public class UnspentTransactionsTest extends RandomizedTest {
 
@@ -24,8 +24,8 @@ public class UnspentTransactionsTest extends RandomizedTest {
         UnspentTransactions ut = UnspentTransactions.empty();
         ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(randomBytes(1024));
 
-        KeyPair pair = Crypto.signatureKeyPair();
-        TxOut out = new TxOut(1024, pair.getPublic());
+        ECDSAKeyPair pair = Crypto.signatureKeyPair();
+        TxOut out = new TxOut(1024, pair.publicKey);
         ut.put(hash, 0, out);
 
         Assert.assertTrue(errorMessage, ut.contains(hash, 0));
@@ -40,8 +40,8 @@ public class UnspentTransactionsTest extends RandomizedTest {
         UnspentTransactions ut = UnspentTransactions.empty();
         ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(randomBytes(1024));
 
-        KeyPair pair = Crypto.signatureKeyPair();
-        TxOut out = new TxOut(1024, pair.getPublic());
+        ECDSAKeyPair pair = Crypto.signatureKeyPair();
+        TxOut out = new TxOut(1024, pair.publicKey);
         ut.put(hash, 0, out);
 
         TxOut got = ut.get(hash, 0);
@@ -60,8 +60,8 @@ public class UnspentTransactionsTest extends RandomizedTest {
         UnspentTransactions ut = UnspentTransactions.empty();
         ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(randomBytes(1024));
 
-        KeyPair pair = Crypto.signatureKeyPair();
-        TxOut out = new TxOut(1024, pair.getPublic());
+        ECDSAKeyPair pair = Crypto.signatureKeyPair();
+        TxOut out = new TxOut(1024, pair.publicKey);
         ut.put(hash, 0, out);
 
         UnspentTransactions copy = ut.copy();
@@ -78,8 +78,8 @@ public class UnspentTransactionsTest extends RandomizedTest {
         UnspentTransactions ut = UnspentTransactions.empty();
         ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(randomBytes(1024));
 
-        KeyPair pair = Crypto.signatureKeyPair();
-        TxOut out = new TxOut(1024, pair.getPublic());
+        ECDSAKeyPair pair = Crypto.signatureKeyPair();
+        TxOut out = new TxOut(1024, pair.publicKey);
         ut.put(hash, 0, out);
 
         UnspentTransactions copy = ut.copy();

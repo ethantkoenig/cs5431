@@ -10,13 +10,8 @@ import org.junit.runner.RunWith;
 import transaction.Transaction;
 import transaction.TxIn;
 import transaction.TxOut;
-import utils.Config;
-import utils.Crypto;
-import utils.Pair;
-import utils.ShaTwoFiftySix;
+import utils.*;
 
-import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.Map;
 
@@ -30,8 +25,7 @@ public class BlockChainProperties {
 
     @Before
     public void setConfig() {
-        Config.HASH_GOAL.set(0);
-
+        Config.setHashGoal(0);
     }
 
     @Property(trials = 5)
@@ -51,7 +45,7 @@ public class BlockChainProperties {
             Assert.assertEquals(oldutxos, newutxos);
         }
 
-        Map<PublicKey, PrivateKey> keys = SigningKeyPairGenerator.getKeyMapping();
+        Map<ECDSAPublicKey, ECDSAPrivateKey> keys = SigningKeyPairGenerator.getKeyMapping();
         ArrayList<Transaction> txs = new ArrayList<>();
 
         for (Map.Entry<Pair<ShaTwoFiftySix, Integer>, TxOut> utxo : newutxos) {
@@ -70,8 +64,7 @@ public class BlockChainProperties {
             }
         }
 
-        PublicKey key = Crypto.signatureKeyPair().getPublic();
-        newblock.addReward(key);
+        newblock.addReward(Crypto.signatureKeyPair().publicKey);
 
         // Verify the block against the old UTXO set and the new one, then insert
         newblock.verify(newutxos);

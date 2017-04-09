@@ -4,6 +4,7 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.Collections;
 import java.util.List;
 
@@ -44,5 +45,12 @@ public interface CanBeSerialized {
                                                                U value)
             throws IOException {
         serializeList(outputStream, Collections.singletonList(value));
+    }
+
+    static void serializeBigInteger(DataOutputStream outputStream, BigInteger value)
+            throws IOException {
+        byte[] bytes = value.toByteArray();
+        outputStream.writeInt(bytes.length);
+        outputStream.write(bytes);
     }
 }

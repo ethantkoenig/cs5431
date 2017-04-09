@@ -8,8 +8,6 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -27,12 +25,12 @@ public final class Transaction extends HashCache implements CanBeSerialized {
 
     private final TxIn[] txIn;
     private final TxOut[] txOut;
-    private final Signature[] signatures;
+    private final ECDSASignature[] signatures;
 
     public final int numInputs;
     public final int numOutputs;
 
-    private Transaction(TxIn[] txIn, TxOut[] txOut, Signature[] signatures) {
+    private Transaction(TxIn[] txIn, TxOut[] txOut, ECDSASignature[] signatures) {
         this.txIn = txIn;
         this.txOut = txOut;
         this.signatures = signatures;
@@ -40,17 +38,17 @@ public final class Transaction extends HashCache implements CanBeSerialized {
         numOutputs = txOut.length;
     }
 
-    private static Transaction createAndSign(TxIn[] inputs, TxOut[] outputs, PrivateKey[] keys)
-            throws IOException, GeneralSecurityException {
+    private static Transaction createAndSign(TxIn[] inputs, TxOut[] outputs, ECDSAPrivateKey[] keys)
+            throws IOException {
         if (inputs.length != keys.length) {
             throw new IllegalStateException();
         }
         Transaction txn = new Transaction(inputs, outputs, null);
         byte[] body = ByteUtil.asByteArray(txn::serializeWithoutSignatures);
 
-        Signature[] signatures = new Signature[keys.length];
+        ECDSASignature[] signatures = new ECDSASignature[keys.length];
         for (int i = 0; i < keys.length; i++) {
-            signatures[i] = Signature.sign(body, keys[i]);
+            signatures[i] = Crypto.sign(body, keys[i]);
         }
 
         return new Transaction(inputs, outputs, signatures);
@@ -75,10 +73,10 @@ public final class Transaction extends HashCache implements CanBeSerialized {
      */
     public void serialize(DataOutputStream outputStream) throws IOException {
         if (signatures == null) {
-            throw new IllegalStateException("Cannot fully serializeWithoutSignatures unsigned transaction");
+            throw new IllegalStateException("Cannot fully serialize unsigned transaction");
         }
         serializeWithoutSignatures(outputStream);
-        for (Signature signature : signatures) {
+        for (ECDSASignature signature : signatures) {
             signature.serialize(outputStream);
         }
     }
@@ -120,7 +118,7 @@ public final class Transaction extends HashCache implements CanBeSerialized {
      * @return whether the signature was verified
      * @throws IOException
      */
-    public boolean verifySignature(int inputIndex, PublicKey key)
+    public boolean verifySignature(int inputIndex, ECDSAPublicKey key)
             throws IOException {
         if (signatures == null) {
             throw new IllegalStateException("Cannot verify unsigned transaction");
@@ -131,7 +129,11 @@ public final class Transaction extends HashCache implements CanBeSerialized {
         }
 
         // TODO: eventually find a way to not re-serializeWithoutSignatures every time
-        return signatures[inputIndex].verify(ByteUtil.asByteArray(this::serializeWithoutSignatures), key);
+        return Crypto.verify(
+                ByteUtil.asByteArray(this::serializeWithoutSignatures),
+                signatures[inputIndex],
+                key
+        );
     }
 
     /**
@@ -143,7 +145,6 @@ public final class Transaction extends HashCache implements CanBeSerialized {
      *                       that are spent by {@code this Transaction} will be removed. If verification fails, there
      *                       are no guarantees as to the state of this {@code Map}.
      * @return Whether this {@code Transaction} was successfully verified.
-     * @throws GeneralSecurityException
      * @throws IOException
      */
     public boolean verify(UnspentTransactions unspentOutputs)
@@ -244,7 +245,9 @@ public final class Transaction extends HashCache implements CanBeSerialized {
         builder.append("----TxOut----\n");
         for (int i = 0; i < txOut.length; ++i) {
             builder.append("value: " + txOut[i].value);
-            builder.append(", toKey: " + ByteUtil.bytesToHexString(txOut[i].ownerPubKey.getEncoded()) + "\n");
+            builder.append(", toKey: " + ByteUtil.bytesToHexString(
+                    ByteUtil.forceByteArray(txOut[i].ownerPubKey::serialize)
+            ) + "\n");
         }
         return builder.toString();
     }
@@ -256,10 +259,10 @@ public final class Transaction extends HashCache implements CanBeSerialized {
 
     public static class Builder {
         List<TxIn> inputs = new ArrayList<>();
-        List<PrivateKey> privateKeys = new ArrayList<>();
+        List<ECDSAPrivateKey> privateKeys = new ArrayList<>();
         List<TxOut> outputs = new ArrayList<>();
 
-        public Builder addInput(TxIn input, PrivateKey key) {
+        public Builder addInput(TxIn input, ECDSAPrivateKey key) {
             inputs.add(input);
             privateKeys.add(key);
             return this;
@@ -270,11 +273,11 @@ public final class Transaction extends HashCache implements CanBeSerialized {
             return this;
         }
 
-        public Transaction build() throws IOException, GeneralSecurityException {
+        public Transaction build() throws IOException {
             return Transaction.createAndSign(
                     inputs.toArray(new TxIn[inputs.size()]),
                     outputs.toArray(new TxOut[outputs.size()]),
-                    privateKeys.toArray(new PrivateKey[privateKeys.size()])
+                    privateKeys.toArray(new ECDSAPrivateKey[privateKeys.size()])
             );
         }
     }
@@ -288,9 +291,9 @@ public final class Transaction extends HashCache implements CanBeSerialized {
             TxOut[] outputs = Deserializer.deserializeList(inputStream, TxOut.DESERIALIZER)
                     .toArray(new TxOut[0]);
 
-            Signature[] signatures = new Signature[inputs.length];
+            ECDSASignature[] signatures = new ECDSASignature[inputs.length];
             for (int i = 0; i < inputs.length; i++) {
-                signatures[i] = Signature.deserialize(inputStream);
+                signatures[i] = ECDSASignature.DESERIALIZER.deserialize(inputStream);
             }
             return new Transaction(inputs, outputs, signatures);
         }

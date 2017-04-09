@@ -2,9 +2,8 @@ package network;
 
 import block.BlockChain;
 import block.UnspentTransactions;
-
-import java.security.KeyPair;
-import java.security.PublicKey;
+import utils.ECDSAKeyPair;
+import utils.ECDSAPublicKey;
 
 /**
  * A wrapper object to pass from the network.Miner object to the miner HandleMessageThread
@@ -14,15 +13,15 @@ import java.security.PublicKey;
 public class MiningBundle {
 
     private final BlockChain blockChain;
-    private final KeyPair keyPair;
-    public final PublicKey privilegedKey;
+    private final ECDSAKeyPair keyPair;
+    public final ECDSAPublicKey privilegedKey;
 
     private UnspentTransactions unspentTransactions;
 
     public MiningBundle(
             BlockChain blockChain,
-            KeyPair keyPair,
-            PublicKey privilegedKey,
+            ECDSAKeyPair keyPair,
+            ECDSAPublicKey privilegedKey,
             UnspentTransactions unspentTransactions) {
         this.blockChain = blockChain;
         this.keyPair = keyPair;
@@ -38,7 +37,7 @@ public class MiningBundle {
         return blockChain;
     }
 
-    public KeyPair getKeyPair() {
+    public ECDSAKeyPair getKeyPair() {
         return keyPair;
     }
 

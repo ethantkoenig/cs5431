@@ -1,26 +1,36 @@
 package utils;
 
+import org.bouncycastle.crypto.params.ECDomainParameters;
+import org.bouncycastle.crypto.params.ECPrivateKeyParameters;
+import org.bouncycastle.crypto.params.ECPublicKeyParameters;
+import org.bouncycastle.crypto.signers.ECDSASigner;
+import org.bouncycastle.jce.ECNamedCurveTable;
+import org.bouncycastle.jce.interfaces.ECPrivateKey;
+import org.bouncycastle.jce.interfaces.ECPublicKey;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.jce.spec.ECNamedCurveParameterSpec;
 
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
+import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigInteger;
 import java.security.*;
-import java.security.spec.ECGenParameterSpec;
 import java.security.spec.KeySpec;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.security.spec.X509EncodedKeySpec;
 
 /**
  * Various crypto-related functions
  */
 public final class Crypto {
-    public static final int PRIVATE_KEY_LEN_IN_BYTES = 150;
-    public static final int PUBLIC_KEY_LEN_IN_BYTES = 91;
-
-    private static final SecureRandom RANDOM = new SecureRandom();
+    static final ECNamedCurveParameterSpec SPEC =
+            ECNamedCurveTable.getParameterSpec("P-256");
+    private static final ECDomainParameters PARAMETERS = new ECDomainParameters(
+            SPEC.getCurve(),
+            SPEC.getG(),
+            SPEC.getN()
+    );
 
     private static boolean initialized = false;
 
@@ -35,41 +45,50 @@ public final class Crypto {
         }
     }
 
-    public static KeyPair signatureKeyPair() throws GeneralSecurityException {
+    public static ECDSAKeyPair signatureKeyPair() throws GeneralSecurityException {
         KeyPairGenerator keyGen = KeyPairGenerator.getInstance("ECDSA", "BC");
-        ECGenParameterSpec ecSpec = new ECGenParameterSpec("P-256");
-        keyGen.initialize(ecSpec, new SecureRandom());
-        return keyGen.generateKeyPair();
+        keyGen.initialize(SPEC, Config.secureRandom());
+        KeyPair pair = keyGen.generateKeyPair();
+
+        ECPrivateKey ecPrivateKey = (ECPrivateKey) pair.getPrivate();
+        ECDSAPrivateKey privateKey = new ECDSAPrivateKey(ecPrivateKey.getD());
+
+        ECPublicKey ecPublicKey = (ECPublicKey) pair.getPublic();
+        ECDSAPublicKey publicKey = new ECDSAPublicKey(ecPublicKey.getQ());
+        return new ECDSAKeyPair(privateKey, publicKey);
     }
 
-    public static PublicKey deserializePublicKey(InputStream input)
-            throws GeneralSecurityException, IOException {
-        byte[] array = new byte[PUBLIC_KEY_LEN_IN_BYTES];
-        IOUtils.fill(input, array);
-        return parsePublicKey(array);
+    public static ECDSASignature sign(byte[] toSign, ECDSAPrivateKey key) {
+        ECDSASigner signer = new ECDSASigner();
+        signer.init(true, new ECPrivateKeyParameters(key.d, PARAMETERS));
+        BigInteger[] signatureIntegers = signer.generateSignature(toSign);
+        if (signatureIntegers.length != 2) {
+            throw new AssertionError("Invalid ECDSA signature");
+        }
+        return new ECDSASignature(signatureIntegers[0], signatureIntegers[1]);
     }
 
-    public static PublicKey parsePublicKey(byte[] bytes) throws GeneralSecurityException {
-        return KeyFactory.getInstance("ECDSA", "BC").generatePublic(new X509EncodedKeySpec(bytes));
+    public static boolean verify(byte[] content, ECDSASignature signature, ECDSAPublicKey key) {
+        ECDSASigner signer = new ECDSASigner();
+        signer.init(false, new ECPublicKeyParameters(key.point, PARAMETERS));
+
+        return signer.verifySignature(content, signature.r, signature.s);
     }
 
-    public static PrivateKey parsePrivateKey(byte[] bytes) throws GeneralSecurityException {
-        return KeyFactory.getInstance("ECDSA", "BC").generatePrivate(new PKCS8EncodedKeySpec(bytes));
+    public static ECDSAPublicKey loadPublicKey(String filename)
+            throws DeserializationException, IOException {
+        InputStream inputStream = new FileInputStream(filename);
+        return ECDSAPublicKey.DESERIALIZER.deserialize(
+                new DataInputStream(inputStream)
+        );
     }
 
-    public static byte[] sign(byte[] toSign, PrivateKey key) throws GeneralSecurityException {
-        Signature signature = Signature.getInstance("ECDSA");
-        signature.initSign(key, new SecureRandom());
-        signature.update(toSign);
-        return signature.sign();
-    }
-
-    public static boolean verify(byte[] content, byte[] signed, PublicKey key)
-            throws GeneralSecurityException {
-        Signature signature = Signature.getInstance("ECDSA");
-        signature.initVerify(key);
-        signature.update(content);
-        return signature.verify(signed);
+    public static ECDSAPrivateKey loadPrivateKey(String filename)
+            throws DeserializationException, IOException {
+        InputStream inputStream = new FileInputStream(filename);
+        return ECDSAPrivateKey.DESERIALIZER.deserialize(
+                new DataInputStream(inputStream)
+        );
     }
 
     public static byte[] sha256(byte[] content) throws GeneralSecurityException {
@@ -78,30 +97,14 @@ public final class Crypto {
     }
 
     public static byte[] pbkdf2(String content, byte[] salt) throws Exception {
-        KeySpec spec = new PBEKeySpec(content.toCharArray(), salt, Config.PBKDF2_COST.get(), 2048);
+        KeySpec spec = new PBEKeySpec(content.toCharArray(), salt, Config.pbkdf2Cost(), 2048);
         SecretKeyFactory f = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
         return f.generateSecret(spec).getEncoded();
     }
 
-    public static PublicKey loadPublicKey(String filename)
-            throws GeneralSecurityException, IOException {
-        InputStream inputStream = new FileInputStream(filename);
-        byte[] keyBytes = new byte[Crypto.PUBLIC_KEY_LEN_IN_BYTES];
-        IOUtils.fill(inputStream, keyBytes);
-        return parsePublicKey(keyBytes);
-    }
-
-    public static PrivateKey loadPrivateKey(String filename)
-            throws GeneralSecurityException, IOException {
-        InputStream inputStream = new FileInputStream(filename);
-        byte[] keyBytes = new byte[Crypto.PRIVATE_KEY_LEN_IN_BYTES];
-        IOUtils.fill(inputStream, keyBytes);
-        return parsePrivateKey(keyBytes);
-    }
-
     public static byte[] generateSalt() {
         byte[] salt = new byte[16];
-        RANDOM.nextBytes(salt);
+        Config.secureRandom().nextBytes(salt);
         return salt;
     }
 

@@ -1,5 +1,6 @@
 package cli;
 
+import utils.DeserializationException;
 import utils.IOUtils;
 
 import java.io.*;
@@ -188,7 +189,7 @@ public class ClientInterface {
                 }
                 try {
                     GenerateTransaction.run(buffer, socketAddresses);
-                } catch (GeneralSecurityException | IOException e) {
+                } catch (DeserializationException | IOException e) {
                     outputStream.println(String.format("Error: %s", e.getMessage()));
                     return false;
                 }
