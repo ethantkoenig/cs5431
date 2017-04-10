@@ -119,7 +119,7 @@ public class UserController {
     private static void addUserPublicKey() {
         post("/user/keys", wrapRoute((request, response) -> {
             byte[] publicKey = RouteUtils.queryParamHex(request, "publickey");
-            byte[] privateKey = RouteUtils.queryParamHex(request, "privatekey");
+            String privateKey = RouteUtils.queryParam(request, "privatekey");
             User user = RouteUtils.forceLoggedInUser(request);
             UserAccess.insertKey(user.getId(), publicKey, privateKey);
             return "ok";
