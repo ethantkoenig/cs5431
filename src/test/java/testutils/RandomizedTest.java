@@ -2,21 +2,17 @@ package testutils;
 
 import block.Block;
 import block.UnspentTransactions;
+import crypto.Crypto;
+import crypto.ECDSAKeyPair;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import transaction.Transaction;
 import transaction.TxIn;
 import transaction.TxOut;
-import utils.Crypto;
-import utils.Pair;
-import utils.ShaTwoFiftySix;
+import utils.*;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.SecureRandom;
-import java.security.spec.ECGenParameterSpec;
 import java.util.Random;
 
 /**
@@ -25,8 +21,6 @@ import java.util.Random;
 public abstract class RandomizedTest {
 
     protected Random random;
-    private SecureRandom secureRandom;
-    private KeyPairGenerator generator;
     protected String errorMessage;
 
     @BeforeClass
@@ -40,23 +34,7 @@ public abstract class RandomizedTest {
         random = seededRandom.random();
         errorMessage = seededRandom.errorMessage();
 
-        generator = KeyPairGenerator.getInstance("ECDSA", "BC");
-        ECGenParameterSpec ecSpec = new ECGenParameterSpec("P-256");
-        secureRandom = new InsecureSecureRandom(random);
-        generator.initialize(ecSpec, secureRandom);
-    }
-
-    protected KeyPair randomKeyPair() throws GeneralSecurityException {
-        KeyPair pair = generator.generateKeyPair();
-        return pair;
-    }
-
-    protected long nonNegativeLong() {
-        long l = random.nextLong();
-        if (l < 0) {
-            l = ~l;
-        }
-        return l;
+        Config.setSecureRandom(new InsecureSecureRandom(random));
     }
 
     protected byte[] randomBytes(int length) {
@@ -75,13 +53,13 @@ public abstract class RandomizedTest {
     }
 
     protected Transaction randomTransaction() throws GeneralSecurityException, IOException {
-        KeyPair senderPair = randomKeyPair();
-        KeyPair recipientPair = randomKeyPair();
+        ECDSAKeyPair senderPair = Crypto.signatureKeyPair();
+        ECDSAKeyPair recipientPair = Crypto.signatureKeyPair();
 
         ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(randomBytes(256));
         return new Transaction.Builder()
-                .addInput(new TxIn(hash, 0), senderPair.getPrivate())
-                .addOutput(new TxOut(100, recipientPair.getPublic()))
+                .addInput(new TxIn(hash, 0), senderPair.privateKey)
+                .addOutput(new TxOut(100, recipientPair.publicKey))
                 .build();
     }
 
@@ -90,19 +68,19 @@ public abstract class RandomizedTest {
         for (int i = 0; i < Block.NUM_TRANSACTIONS_PER_BLOCK; ++i) {
             b.addTransaction(randomTransaction());
         }
-        b.addReward(randomKeyPair().getPublic());
+        b.addReward(Crypto.signatureKeyPair().publicKey);
         b.setRandomNonce(random);
         return b;
     }
 
     protected Pair<Block, UnspentTransactions> randomValidBlock(ShaTwoFiftySix previousHash)
             throws GeneralSecurityException, IOException {
-        KeyPair senderPair = randomKeyPair();
-        KeyPair recipientPair = randomKeyPair();
+        ECDSAKeyPair senderPair = Crypto.signatureKeyPair();
+        ECDSAKeyPair recipientPair = Crypto.signatureKeyPair();
 
-        TxOut output = new TxOut(1 + random.nextInt(1024), recipientPair.getPublic());
+        TxOut output = new TxOut(1 + random.nextInt(1024), recipientPair.publicKey);
         Transaction initTransaction = new Transaction.Builder()
-                .addInput(new TxIn(randomShaTwoFiftySix(), 0), senderPair.getPrivate())
+                .addInput(new TxIn(randomShaTwoFiftySix(), 0), senderPair.privateKey)
                 .addOutput(output)
                 .build();
 
@@ -110,16 +88,16 @@ public abstract class RandomizedTest {
 
         for (int i = 0; i < Block.NUM_TRANSACTIONS_PER_BLOCK; i++) {
             senderPair = recipientPair;
-            recipientPair = randomKeyPair();
+            recipientPair = Crypto.signatureKeyPair();
 
             Transaction previous = i > 0 ? block.transactions[i - 1] : initTransaction;
 
             block.transactions[i] = new Transaction.Builder()
                     .addInput(
                             new TxIn(previous.getShaTwoFiftySix(), 0),
-                            senderPair.getPrivate()
+                            senderPair.privateKey
                     )
-                    .addOutput(new TxOut(output.value, recipientPair.getPublic()))
+                    .addOutput(new TxOut(output.value, recipientPair.publicKey))
                     .build();
         }
 

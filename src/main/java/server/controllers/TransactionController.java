@@ -13,15 +13,13 @@ import transaction.Transaction;
 import transaction.TxIn;
 import transaction.TxOut;
 import utils.ByteUtil;
-import utils.Crypto;
+import crypto.ECDSAPrivateKey;
+import crypto.ECDSAPublicKey;
 import utils.ShaTwoFiftySix;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
-import java.security.GeneralSecurityException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
 
 import static server.utils.RouteUtils.*;
 import static spark.Spark.*;
@@ -52,17 +50,12 @@ public class TransactionController {
                     return "no such key under user";
                 }
 
-                PublicKey recipientPublicKey;
-                PrivateKey senderPrivateKey;
-
-                try {
-                    recipientPublicKey = Crypto.parsePublicKey(recipientPublicKeyBytes);
-                    senderPrivateKey = Crypto.parsePrivateKey(senderKey.getEncryptedPrivateKey());
-                } catch (GeneralSecurityException e) {
-                    // TODO handle
-                    response.status(400);
-                    return "bad keys";
-                }
+                ECDSAPublicKey recipientPublicKey = ECDSAPublicKey.DESERIALIZER.deserialize(
+                        recipientPublicKeyBytes
+                );
+                ECDSAPrivateKey senderPrivateKey = ECDSAPrivateKey.DESERIALIZER.deserialize(
+                        senderKey.getEncryptedPrivateKey()
+                );
 
                 Transaction transaction = new Transaction.Builder()
                         .addInput(new TxIn(inputHash, index), senderPrivateKey)

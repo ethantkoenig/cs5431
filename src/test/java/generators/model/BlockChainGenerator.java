@@ -9,13 +9,12 @@ import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import transaction.Transaction;
 import transaction.TxIn;
 import transaction.TxOut;
+import crypto.ECDSAKeyPair;
 import utils.ShaTwoFiftySix;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.GeneralSecurityException;
-import java.security.KeyPair;
 import java.util.ArrayList;
 
 public class BlockChainGenerator extends Generator<BlockChain> {
@@ -30,9 +29,9 @@ public class BlockChainGenerator extends Generator<BlockChain> {
     @Override
     public BlockChain generate(SourceOfRandomness random, GenerationStatus status) {
         Block genesis = Block.genesis();
-        KeyPair privilegedKey = gen().type(KeyPair.class).generate(random, status);
+        ECDSAKeyPair privilegedKey = gen().type(ECDSAKeyPair.class).generate(random, status);
 
-        genesis.addReward(privilegedKey.getPublic());
+        genesis.addReward(privilegedKey.publicKey);
 
         try {
             while (!genesis.checkHash()) {
@@ -61,14 +60,14 @@ public class BlockChainGenerator extends Generator<BlockChain> {
                 Transaction dummy = new Transaction.Builder()
                         .addInput(
                                 new TxIn(prevHash, 0),
-                                privilegedKey.getPrivate())
+                                privilegedKey.privateKey)
                         .addOutput(
-                                new TxOut(Block.REWARD_AMOUNT, privilegedKey.getPublic()))
+                                new TxOut(Block.REWARD_AMOUNT, privilegedKey.publicKey))
                         .build();
                 prevHash = dummy.getShaTwoFiftySix();
                 second.addTransaction(dummy);
             }
-        } catch (IOException | GeneralSecurityException e) {
+        } catch (IOException e) {
             // We should not reach this case
             e.printStackTrace();
             assert false;
@@ -76,7 +75,7 @@ public class BlockChainGenerator extends Generator<BlockChain> {
         }
 
         Transaction.Builder txBuilder = new Transaction.Builder();
-        txBuilder.addInput(new TxIn(prevHash, 0), privilegedKey.getPrivate());
+        txBuilder.addInput(new TxIn(prevHash, 0), privilegedKey.privateKey);
 
         long valueLeft = Block.REWARD_AMOUNT;
         int numOut = 20;
@@ -89,14 +88,14 @@ public class BlockChainGenerator extends Generator<BlockChain> {
             }
             valueLeft -= outVal;
 
-            TxOut out = new TxOut(outVal, privilegedKey.getPublic());
+            TxOut out = new TxOut(outVal, privilegedKey.publicKey);
             txBuilder.addOutput(out);
         }
 
         Transaction distributer;
         try {
             distributer = txBuilder.build();
-        } catch (IOException | GeneralSecurityException e) {
+        } catch (IOException e) {
             // We should not reach this case
             e.printStackTrace();
             assert false;
@@ -104,7 +103,7 @@ public class BlockChainGenerator extends Generator<BlockChain> {
         }
 
         second.addTransaction(distributer);
-        second.addReward(privilegedKey.getPublic());
+        second.addReward(privilegedKey.publicKey);
 
         try {
             while (!second.checkHash()) {

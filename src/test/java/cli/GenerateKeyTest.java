@@ -3,11 +3,12 @@ package cli;
 import org.junit.Assert;
 import org.junit.Test;
 import testutils.RandomizedTest;
-import utils.Crypto;
+import crypto.Crypto;
+import crypto.ECDSAPrivateKey;
+import crypto.ECDSAPublicKey;
+import crypto.ECDSASignature;
 
 import java.io.File;
-import java.security.PrivateKey;
-import java.security.PublicKey;
 
 public class GenerateKeyTest extends RandomizedTest {
 
@@ -17,11 +18,11 @@ public class GenerateKeyTest extends RandomizedTest {
         File publicFile = File.createTempFile("public", ".tmp");
         GenerateKey.generateKey(privateFile.getAbsolutePath(), publicFile.getAbsolutePath());
 
-        PrivateKey privateKey = Crypto.loadPrivateKey(privateFile.getAbsolutePath());
-        PublicKey publicKey = Crypto.loadPublicKey(publicFile.getAbsolutePath());
+        ECDSAPrivateKey privateKey = Crypto.loadPrivateKey(privateFile.getAbsolutePath());
+        ECDSAPublicKey publicKey = Crypto.loadPublicKey(publicFile.getAbsolutePath());
 
         byte[] content = randomBytes(random.nextInt(1024));
-        byte[] signature = Crypto.sign(content, privateKey);
+        ECDSASignature signature = Crypto.sign(content, privateKey);
         Assert.assertTrue(errorMessage, Crypto.verify(content, signature, publicKey));
     }
 }

@@ -4,17 +4,15 @@ import block.UnspentTransactions;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
+import crypto.ECDSAKeyPair;
+import crypto.ECDSAPrivateKey;
+import crypto.ECDSAPublicKey;
 import transaction.Transaction;
 import transaction.TxIn;
 import transaction.TxOut;
-import utils.Pair;
-import utils.ShaTwoFiftySix;
+import utils.*;
 
 import java.io.IOException;
-import java.security.GeneralSecurityException;
-import java.security.KeyPair;
-import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.util.Map;
 import java.util.Optional;
 
@@ -49,8 +47,8 @@ public class TransactionGenerator extends Generator<Transaction> {
         int numInputs = random.nextInt(1, DEFAULT_MAX_INPUTS);
         for (int i = 0; i < numInputs; ++i) {
             TxIn in = gen().type(TxIn.class).generate(random, status);
-            KeyPair keys = gen().type(KeyPair.class).generate(random, status);
-            builder.addInput(in, keys.getPrivate());
+            ECDSAKeyPair keys = gen().type(ECDSAKeyPair.class).generate(random, status);
+            builder.addInput(in, keys.privateKey);
         }
 
         int numOutputs = random.nextInt(1, DEFAULT_MAX_OUTPUTS);
@@ -61,7 +59,7 @@ public class TransactionGenerator extends Generator<Transaction> {
 
         try {
             return builder.build();
-        } catch (GeneralSecurityException | IOException e) {
+        } catch (IOException e) {
             // We should not ever encounter this
             e.printStackTrace();
             assert false;
@@ -78,7 +76,7 @@ public class TransactionGenerator extends Generator<Transaction> {
             return null;
         }
 
-        Map<PublicKey, PrivateKey> keyMapping = SigningKeyPairGenerator.getKeyMapping();
+        Map<ECDSAPublicKey, ECDSAPrivateKey> keyMapping = SigningKeyPairGenerator.getKeyMapping();
 
         int numInputs = random.nextInt(1, Math.min(unspentTxs.size(), DEFAULT_MAX_INPUTS));
         int numOutputs = random.nextInt(1, DEFAULT_MAX_OUTPUTS);
@@ -98,7 +96,7 @@ public class TransactionGenerator extends Generator<Transaction> {
         long valueLeft = valueMoved;
 
         for (int j = 0; j < numOutputs; ++j) {
-            KeyPair keys = keyGen.generate(random, status);
+            ECDSAKeyPair keys = keyGen.generate(random, status);
 
             long outVal;
             if (j == numOutputs - 1) {
@@ -108,14 +106,14 @@ public class TransactionGenerator extends Generator<Transaction> {
             }
             valueLeft -= outVal;
 
-            TxOut out = new TxOut(outVal, keys.getPublic());
+            TxOut out = new TxOut(outVal, keys.publicKey);
             builder.addOutput(out);
         }
 
         Transaction result;
         try {
             result = builder.build();
-        } catch (IOException | GeneralSecurityException e) {
+        } catch (IOException e) {
             // We should not reach this case unless something goes seriously wrong
             e.printStackTrace();
             assert false;

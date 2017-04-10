@@ -7,7 +7,8 @@ import transaction.Transaction;
 import transaction.TxIn;
 import transaction.TxOut;
 import utils.ByteUtil;
-import utils.Crypto;
+import crypto.Crypto;
+import utils.DeserializationException;
 import utils.ShaTwoFiftySix;
 
 import java.io.BufferedReader;
@@ -15,7 +16,6 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.security.GeneralSecurityException;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,11 +36,11 @@ public class GenerateTransaction {
      * @param socketAddresses list of addresses to send transaction to
      */
     public static void run(BufferedReader input, List<InetSocketAddress> socketAddresses)
-            throws GeneralSecurityException, IOException {
+            throws DeserializationException, IOException {
         new GenerateTransaction(input).runTransaction(socketAddresses);
     }
 
-    private void runTransaction(List<InetSocketAddress> addresses) throws GeneralSecurityException, IOException {
+    private void runTransaction(List<InetSocketAddress> addresses) throws DeserializationException, IOException {
         Optional<Transaction> transaction = getTransaction();
         if (!transaction.isPresent()) {
             return;
@@ -51,7 +51,7 @@ public class GenerateTransaction {
                 transaction.get().getShaTwoFiftySix()));
     }
 
-    private Optional<Transaction> getTransaction() throws GeneralSecurityException, IOException {
+    private Optional<Transaction> getTransaction() throws DeserializationException, IOException {
         Transaction.Builder builder = new Transaction.Builder();
         try {
             getInputs(builder);
@@ -76,7 +76,7 @@ public class GenerateTransaction {
     }
 
     private void getInputs(Transaction.Builder builder)
-            throws InvalidInputException, IOException, GeneralSecurityException {
+            throws DeserializationException, InvalidInputException, IOException {
         int numInputs = (int) promptUserInt("Number of inputs");
         for (int i = 0; i < numInputs; i++) {
             System.out.println(String.format("[Input %d]", i));
@@ -93,7 +93,7 @@ public class GenerateTransaction {
     }
 
     private void getOutputs(Transaction.Builder builder)
-            throws InvalidInputException, IOException, GeneralSecurityException {
+            throws DeserializationException, InvalidInputException, IOException {
         int numOutputs = (int) promptUserInt("Number of outputs");
         for (int i = 0; i < numOutputs; i++) {
             System.out.println(String.format("[Output %d]", i));

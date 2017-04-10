@@ -5,9 +5,8 @@ import block.UnspentTransactions;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
+import crypto.ECDSAKeyPair;
 import utils.ShaTwoFiftySix;
-
-import java.security.KeyPair;
 
 public class BlockGenerator extends Generator<Block> {
 
@@ -34,9 +33,9 @@ public class BlockGenerator extends Generator<Block> {
             block.addTransaction(txGen.generate(random, status));
         }
 
-        KeyPair keys = new SigningKeyPairGenerator().generate(random, status);
+        ECDSAKeyPair keys = new SigningKeyPairGenerator().generate(random, status);
 
-        block.addReward(keys.getPublic());
+        block.addReward(keys.publicKey);
 
         try {
             while (!block.checkHash()) {

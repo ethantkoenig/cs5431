@@ -7,10 +7,10 @@ import org.junit.Test;
 import testutils.RandomizedTest;
 import testutils.TestUtils;
 import utils.ByteUtil;
-import utils.Crypto;
+import crypto.Crypto;
+import crypto.ECDSAKeyPair;
 import utils.ShaTwoFiftySix;
 
-import java.security.KeyPair;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -35,19 +35,19 @@ public class TransactionTest extends RandomizedTest {
 
     @Test
     public void testEqualsHashCode() throws Exception {
-        KeyPair senderPair = randomKeyPair();
-        KeyPair recipientPair = randomKeyPair();
+        ECDSAKeyPair senderPair = Crypto.signatureKeyPair();
+        ECDSAKeyPair recipientPair = Crypto.signatureKeyPair();
 
         ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(randomBytes(256));
         long value = random.nextInt(Integer.MAX_VALUE);
         Transaction tx1 = new Transaction.Builder()
-                .addInput(new TxIn(hash, 2), senderPair.getPrivate())
-                .addOutput(new TxOut(value, recipientPair.getPublic()))
+                .addInput(new TxIn(hash, 2), senderPair.privateKey)
+                .addOutput(new TxOut(value, recipientPair.publicKey))
                 .build();
 
         Transaction tx2 = new Transaction.Builder()
-                .addInput(new TxIn(hash, 2), senderPair.getPrivate())
-                .addOutput(new TxOut(value, recipientPair.getPublic()))
+                .addInput(new TxIn(hash, 2), senderPair.privateKey)
+                .addOutput(new TxOut(value, recipientPair.publicKey))
                 .build();
 
         Transaction anotherTx = randomTransaction();
@@ -60,22 +60,22 @@ public class TransactionTest extends RandomizedTest {
 
     @Test
     public void testRollback() throws Exception {
-        KeyPair initialPair = randomKeyPair();
-        KeyPair middlePair = randomKeyPair();
-        KeyPair finalPair = randomKeyPair();
+        ECDSAKeyPair initialPair = Crypto.signatureKeyPair();
+        ECDSAKeyPair middlePair = Crypto.signatureKeyPair();
+        ECDSAKeyPair finalPair = Crypto.signatureKeyPair();
 
-        TxOut middleOut0 = new TxOut(100, middlePair.getPublic());
-        TxOut middleOut1 = new TxOut(200, middlePair.getPublic());
+        TxOut middleOut0 = new TxOut(100, middlePair.publicKey);
+        TxOut middleOut1 = new TxOut(200, middlePair.publicKey);
         Transaction transaction1 = new Transaction.Builder()
-                .addInput(new TxIn(randomShaTwoFiftySix(), 0), initialPair.getPrivate())
+                .addInput(new TxIn(randomShaTwoFiftySix(), 0), initialPair.privateKey)
                 .addOutput(middleOut0)
                 .addOutput(middleOut1)
                 .build();
 
-        TxOut finalOut0 = new TxOut(300, finalPair.getPublic());
+        TxOut finalOut0 = new TxOut(300, finalPair.publicKey);
         Transaction transaction2 = new Transaction.Builder()
-                .addInput(new TxIn(transaction1.getShaTwoFiftySix(), 0), middlePair.getPrivate())
-                .addInput(new TxIn(transaction1.getShaTwoFiftySix(), 1), middlePair.getPrivate())
+                .addInput(new TxIn(transaction1.getShaTwoFiftySix(), 0), middlePair.privateKey)
+                .addInput(new TxIn(transaction1.getShaTwoFiftySix(), 1), middlePair.privateKey)
                 .addOutput(finalOut0)
                 .build();
 
@@ -98,63 +98,63 @@ public class TransactionTest extends RandomizedTest {
 
     @Test
     public void doTransaction() throws Exception {
-        KeyPair senderPair = randomKeyPair();
-        KeyPair recipientPair = randomKeyPair();
+        ECDSAKeyPair senderPair = Crypto.signatureKeyPair();
+        ECDSAKeyPair recipientPair = Crypto.signatureKeyPair();
 
         ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(randomBytes(256));
         Transaction tx = new Transaction.Builder()
-                .addInput(new TxIn(hash, 2), senderPair.getPrivate())
-                .addOutput(new TxOut(100, recipientPair.getPublic()))
+                .addInput(new TxIn(hash, 2), senderPair.privateKey)
+                .addOutput(new TxOut(100, recipientPair.publicKey))
                 .build();
 
         Assert.assertTrue(errorMessage,
-                tx.verifySignature(0, senderPair.getPublic()));
+                tx.verifySignature(0, senderPair.publicKey));
 
         byte[] serialized = ByteUtil.asByteArray(tx::serialize);
         Transaction deserialized = Transaction.DESERIALIZER.deserialize(serialized);
 
         Assert.assertTrue(tx.equals(deserialized));
-        Assert.assertTrue(deserialized.verifySignature(0, senderPair.getPublic()));
+        Assert.assertTrue(deserialized.verifySignature(0, senderPair.publicKey));
     }
 
     //  Sign transaction with key that does not match, should fail.
     @Test
     public void failTransaction() throws Exception {
-        KeyPair senderPair = randomKeyPair();
-        KeyPair recipientPair = randomKeyPair();
+        ECDSAKeyPair senderPair = Crypto.signatureKeyPair();
+        ECDSAKeyPair recipientPair = Crypto.signatureKeyPair();
 
         ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(randomBytes(256));
         Transaction txn = new Transaction.Builder()
-                .addInput(new TxIn(hash, 1), senderPair.getPrivate())
-                .addOutput(new TxOut(1000, recipientPair.getPublic()))
+                .addInput(new TxIn(hash, 1), senderPair.privateKey)
+                .addOutput(new TxOut(1000, recipientPair.publicKey))
                 .build();
 
         ShaTwoFiftySix hash2 = ShaTwoFiftySix.hashOf(randomBytes(256));
         Transaction tx = new Transaction.Builder()
-                .addInput(new TxIn(hash2, 2), senderPair.getPrivate())
-                .addOutput(new TxOut(100, recipientPair.getPublic()))
+                .addInput(new TxIn(hash2, 2), senderPair.privateKey)
+                .addOutput(new TxOut(100, recipientPair.publicKey))
                 .build();
 
         Assert.assertFalse(errorMessage, tx.equals(txn));
 
         Assert.assertFalse(errorMessage,
-                txn.verifySignature(0, recipientPair.getPublic()));
+                txn.verifySignature(0, recipientPair.publicKey));
     }
 
     @Test
     public void doThreeOutTransaction() throws Exception {
-        KeyPair senderPair = randomKeyPair();
+        ECDSAKeyPair senderPair = Crypto.signatureKeyPair();
 
-        KeyPair recipientPair1 = randomKeyPair();
-        KeyPair recipientPair2 = randomKeyPair();
-        KeyPair recipientPair3 = randomKeyPair();
+        ECDSAKeyPair recipientPair1 = Crypto.signatureKeyPair();
+        ECDSAKeyPair recipientPair2 = Crypto.signatureKeyPair();
+        ECDSAKeyPair recipientPair3 = Crypto.signatureKeyPair();
 
         ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(randomBytes(256));
         Transaction txn = new Transaction.Builder()
-                .addInput(new TxIn(hash, 4), senderPair.getPrivate())
-                .addOutput(new TxOut(100, recipientPair1.getPublic()))
-                .addOutput(new TxOut(200, recipientPair2.getPublic()))
-                .addOutput(new TxOut(300, recipientPair3.getPublic()))
+                .addInput(new TxIn(hash, 4), senderPair.privateKey)
+                .addOutput(new TxOut(100, recipientPair1.publicKey))
+                .addOutput(new TxOut(200, recipientPair2.publicKey))
+                .addOutput(new TxOut(300, recipientPair3.publicKey))
                 .build();
 
         byte[] serialized = ByteUtil.asByteArray(txn::serialize);
@@ -162,27 +162,27 @@ public class TransactionTest extends RandomizedTest {
 
         Assert.assertTrue(txn.equals(deserialized));
         Assert.assertTrue(errorMessage,
-                txn.verifySignature(0, senderPair.getPublic()));
+                txn.verifySignature(0, senderPair.publicKey));
     }
 
     @Test
     public void doMultiInOutTransaction() throws Exception {
-        KeyPair senderPair1 = randomKeyPair();
-        KeyPair senderPair2 = randomKeyPair();
-        KeyPair senderPair3 = randomKeyPair();
+        ECDSAKeyPair senderPair1 = Crypto.signatureKeyPair();
+        ECDSAKeyPair senderPair2 = Crypto.signatureKeyPair();
+        ECDSAKeyPair senderPair3 = Crypto.signatureKeyPair();
 
-        KeyPair recipientPair1 = randomKeyPair();
-        KeyPair recipientPair2 = randomKeyPair();
-        KeyPair recipientPair3 = randomKeyPair();
+        ECDSAKeyPair recipientPair1 = Crypto.signatureKeyPair();
+        ECDSAKeyPair recipientPair2 = Crypto.signatureKeyPair();
+        ECDSAKeyPair recipientPair3 = Crypto.signatureKeyPair();
 
         ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(randomBytes(256));
         Transaction txn = new Transaction.Builder()
-                .addInput(new TxIn(hash, 0), senderPair1.getPrivate())
-                .addInput(new TxIn(hash, 2), senderPair2.getPrivate())
-                .addInput(new TxIn(hash, 5), senderPair3.getPrivate())
-                .addOutput(new TxOut(100, recipientPair1.getPublic()))
-                .addOutput(new TxOut(200, recipientPair2.getPublic()))
-                .addOutput(new TxOut(300, recipientPair3.getPublic()))
+                .addInput(new TxIn(hash, 0), senderPair1.privateKey)
+                .addInput(new TxIn(hash, 2), senderPair2.privateKey)
+                .addInput(new TxIn(hash, 5), senderPair3.privateKey)
+                .addOutput(new TxOut(100, recipientPair1.publicKey))
+                .addOutput(new TxOut(200, recipientPair2.publicKey))
+                .addOutput(new TxOut(300, recipientPair3.publicKey))
                 .build();
 
         byte[] serialized = ByteUtil.asByteArray(txn::serialize);
@@ -191,64 +191,64 @@ public class TransactionTest extends RandomizedTest {
         Assert.assertTrue(txn.equals(deserialized));
 
         Assert.assertTrue(errorMessage,
-                txn.verifySignature(0, senderPair1.getPublic()));
+                txn.verifySignature(0, senderPair1.publicKey));
         Assert.assertFalse(errorMessage,
-                txn.verifySignature(0, senderPair2.getPublic()));
+                txn.verifySignature(0, senderPair2.publicKey));
         Assert.assertFalse(errorMessage,
-                txn.verifySignature(0, senderPair3.getPublic()));
+                txn.verifySignature(0, senderPair3.publicKey));
 
         Assert.assertFalse(errorMessage,
-                txn.verifySignature(1, senderPair1.getPublic()));
+                txn.verifySignature(1, senderPair1.publicKey));
         Assert.assertTrue(errorMessage,
-                txn.verifySignature(1, senderPair2.getPublic()));
+                txn.verifySignature(1, senderPair2.publicKey));
         Assert.assertFalse(errorMessage,
-                txn.verifySignature(1, senderPair3.getPublic()));
+                txn.verifySignature(1, senderPair3.publicKey));
 
         Assert.assertFalse(errorMessage,
-                txn.verifySignature(2, senderPair1.getPublic()));
+                txn.verifySignature(2, senderPair1.publicKey));
         Assert.assertFalse(errorMessage,
-                txn.verifySignature(2, senderPair2.getPublic()));
+                txn.verifySignature(2, senderPair2.publicKey));
         Assert.assertTrue(errorMessage,
-                txn.verifySignature(2, senderPair3.getPublic()));
+                txn.verifySignature(2, senderPair3.publicKey));
     }
 
     @Test
     public void testVerificationFailure() throws Exception {
-        KeyPair badSpender = randomKeyPair();
-        TxOut unspent = new TxOut(50, badSpender.getPublic());
+        ECDSAKeyPair badSpender = Crypto.signatureKeyPair();
+        TxOut unspent = new TxOut(50, badSpender.publicKey);
         ShaTwoFiftySix hash = randomShaTwoFiftySix();
 
         UnspentTransactions unspentTxs = UnspentTransactions.empty();
         unspentTxs.put(hash, 0, unspent);
 
         Transaction tx = new Transaction.Builder()
-                .addInput(new TxIn(hash, 0), randomKeyPair().getPrivate())
-                .addOutput(new TxOut(50, badSpender.getPublic()))
+                .addInput(new TxIn(hash, 0), Crypto.signatureKeyPair().privateKey)
+                .addOutput(new TxOut(50, badSpender.publicKey))
                 .build();
 
         Assert.assertFalse(tx.verify(unspentTxs.copy()));
 
         tx = new Transaction.Builder()
-                .addInput(new TxIn(hash, 0), badSpender.getPrivate())
-                .addOutput(new TxOut(49, badSpender.getPublic()))
+                .addInput(new TxIn(hash, 0), badSpender.privateKey)
+                .addOutput(new TxOut(49, badSpender.publicKey))
                 .build();
 
         Assert.assertFalse(tx.verify(unspentTxs.copy()));
 
         tx = new Transaction.Builder()
-                .addInput(new TxIn(hash, 0), badSpender.getPrivate())
-                .addOutput(new TxOut(70, badSpender.getPublic()))
-                .addOutput(new TxOut(-20, badSpender.getPublic()))
+                .addInput(new TxIn(hash, 0), badSpender.privateKey)
+                .addOutput(new TxOut(70, badSpender.publicKey))
+                .addOutput(new TxOut(-20, badSpender.publicKey))
                 .build();
         Assert.assertFalse(tx.verify(unspentTxs.copy()));
 
         tx = new Transaction.Builder()
-                .addInput(new TxIn(hash, 0), badSpender.getPrivate())
-                .addOutput(new TxOut(1L << 62, badSpender.getPublic()))
-                .addOutput(new TxOut(1L << 62, badSpender.getPublic()))
-                .addOutput(new TxOut(1L << 62, badSpender.getPublic()))
-                .addOutput(new TxOut(1L << 62, badSpender.getPublic()))
-                .addOutput(new TxOut(50, badSpender.getPublic()))
+                .addInput(new TxIn(hash, 0), badSpender.privateKey)
+                .addOutput(new TxOut(1L << 62, badSpender.publicKey))
+                .addOutput(new TxOut(1L << 62, badSpender.publicKey))
+                .addOutput(new TxOut(1L << 62, badSpender.publicKey))
+                .addOutput(new TxOut(1L << 62, badSpender.publicKey))
+                .addOutput(new TxOut(50, badSpender.publicKey))
                 .build();
         Assert.assertFalse(tx.verify(unspentTxs.copy()));
     }

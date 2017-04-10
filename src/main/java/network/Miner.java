@@ -3,14 +3,14 @@ package network;
 import block.Block;
 import block.BlockChain;
 import block.UnspentTransactions;
+import crypto.ECDSAKeyPair;
+import crypto.ECDSAPublicKey;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.KeyPair;
-import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
@@ -21,7 +21,7 @@ public class Miner extends Node {
 
     private MiningBundle miningBundle;
 
-    public Miner(ServerSocket serverSocket, KeyPair myKeyPair, PublicKey privilegedKey) {
+    public Miner(ServerSocket serverSocket, ECDSAKeyPair myKeyPair, ECDSAPublicKey privilegedKey) {
         super(serverSocket);
 
         Path blockChainPath = Paths.get("blockchain" + serverSocket.getLocalPort());
@@ -42,7 +42,7 @@ public class Miner extends Node {
         // Start network.BroadcastThread
         new BroadcastThread(this::broadcast, this.broadcastQueue).start();
 
-        if (miningBundle.getKeyPair().getPublic().equals(miningBundle.privilegedKey)
+        if (miningBundle.getKeyPair().publicKey.equals(miningBundle.privilegedKey)
                 && miningBundle.getBlockChain().getCurrentHead() == null) {
             Block genesis = Block.genesis();
             genesis.addReward(miningBundle.privilegedKey);

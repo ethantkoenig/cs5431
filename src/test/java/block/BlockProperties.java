@@ -8,9 +8,9 @@ import org.junit.runner.RunWith;
 import testutils.RandomizedTest;
 import transaction.Transaction;
 import utils.Config;
-import utils.Crypto;
+import crypto.Crypto;
+import crypto.ECDSAKeyPair;
 
-import java.security.KeyPair;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @RunWith(JUnitQuickcheck.class)
@@ -24,13 +24,13 @@ public class BlockProperties extends RandomizedTest {
 
     @BeforeClass
     public static void setHashGoal() {
-        Config.HASH_GOAL.set(2);
+        Config.setHashGoal(1);
     }
 
     @Property
-    public void findValidNonceFindsValidNonce(KeyPair reward, Transaction txA, Transaction txB) throws Exception {
+    public void findValidNonceFindsValidNonce(ECDSAKeyPair reward, Transaction txA, Transaction txB) throws Exception {
         Block b = Block.empty(randomShaTwoFiftySix());
-        b.addReward(reward.getPublic());
+        b.addReward(reward.publicKey);
         b.addTransaction(txA);
         b.addTransaction(txB);
 

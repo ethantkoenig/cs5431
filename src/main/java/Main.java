@@ -1,8 +1,11 @@
 import cli.ClientInterface;
+import crypto.Crypto;
+import crypto.ECDSAKeyPair;
+import crypto.ECDSAPrivateKey;
+import crypto.ECDSAPublicKey;
 import network.Miner;
 import server.Application;
-import utils.Crypto;
-import utils.IOUtils;
+import utils.*;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -12,9 +15,6 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
-import java.security.KeyPair;
-import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.util.Optional;
 
 public class Main {
@@ -63,11 +63,19 @@ public class Main {
             return false;
         }
         int port = Integer.parseInt(args[1]);
-        PublicKey myPublic = Crypto.loadPublicKey(args[2]);
-        PrivateKey myPrivate = Crypto.loadPrivateKey(args[3]);
-        PublicKey privilegedKey = Crypto.loadPublicKey(args[4]);
+        ECDSAPublicKey myPublic;
+        ECDSAPrivateKey myPrivate;
+        ECDSAPublicKey privilegedKey;
+        try {
+            myPublic = Crypto.loadPublicKey(args[2]);
+            myPrivate = Crypto.loadPrivateKey(args[3]);
+            privilegedKey = Crypto.loadPublicKey(args[4]);
+        } catch (DeserializationException e) {
+            System.err.println(String.format("Error: %s", e.getMessage()));
+            return false;
+        }
 
-        Miner miner = new Miner(new ServerSocket(port), new KeyPair(myPublic, myPrivate), privilegedKey);
+        Miner miner = new Miner(new ServerSocket(port), new ECDSAKeyPair(myPrivate, myPublic), privilegedKey);
 
         BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(args[5]), StandardCharsets.UTF_8));
         String currentLine = "";

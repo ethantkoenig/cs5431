@@ -40,6 +40,14 @@ public final class ByteUtil {
         return bia.compareTo(bib);
     }
 
+    public static byte[] forceByteArray(Serializer serializer) {
+        try {
+            return asByteArray(serializer);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public static byte[] asByteArray(Serializer serializer) throws IOException {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         serializer.serialize(new DataOutputStream(outputStream));

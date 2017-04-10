@@ -1,13 +1,14 @@
 package cli;
 
 
-import utils.Crypto;
+import crypto.Crypto;
+import crypto.ECDSAKeyPair;
 
+import java.io.DataOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.security.GeneralSecurityException;
-import java.security.KeyPair;
 
 public class GenerateKey {
 
@@ -20,18 +21,18 @@ public class GenerateKey {
      */
     public static void generateKey(String privateFilename, String publicFilename)
             throws GeneralSecurityException, IOException {
-        KeyPair pair = Crypto.signatureKeyPair();
+        ECDSAKeyPair pair = Crypto.signatureKeyPair();
 
         OutputStream privateOutput = new FileOutputStream(privateFilename);
         try {
-            privateOutput.write(pair.getPrivate().getEncoded());
+            pair.privateKey.serialize(new DataOutputStream(privateOutput));
         } finally {
             privateOutput.close();
         }
 
         OutputStream publicOutput = new FileOutputStream(publicFilename);
         try {
-            publicOutput.write(pair.getPublic().getEncoded());
+            pair.publicKey.serialize(new DataOutputStream(publicOutput));
         } finally {
             publicOutput.close();
         }

@@ -1,6 +1,7 @@
 package block;
 
 
+import crypto.ECDSAPublicKey;
 import org.bouncycastle.crypto.digests.SHA256Digest;
 import transaction.Transaction;
 import transaction.TxOut;
@@ -10,7 +11,6 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.security.PublicKey;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
@@ -75,7 +75,7 @@ public class Block extends HashCache implements Iterable<Transaction>, CanBeSeri
 
         previousBlockHash.writeTo(outputStream);
         CanBeSerialized.serializeArray(outputStream, transactions);
-        outputStream.write(reward.ownerPubKey.getEncoded());
+        reward.ownerPubKey.serialize(outputStream);
     }
 
     /**
@@ -99,7 +99,7 @@ public class Block extends HashCache implements Iterable<Transaction>, CanBeSeri
      * with hashGoalZeros number of leading zeros.
      */
     public boolean checkHash() {
-        return getShaTwoFiftySix().checkHashZeros(Config.HASH_GOAL.get());
+        return getShaTwoFiftySix().checkHashZeros(Config.hashGoal());
     }
 
     /**
@@ -160,7 +160,7 @@ public class Block extends HashCache implements Iterable<Transaction>, CanBeSeri
         digest.update(ser, 0, ser.length);
 
         byte[] hash = new byte[ShaTwoFiftySix.HASH_SIZE_IN_BYTES];
-        int hashGoal = Config.HASH_GOAL.get();
+        int hashGoal = Config.hashGoal();
 
         do {
             if (quit.get()) {
@@ -200,7 +200,7 @@ public class Block extends HashCache implements Iterable<Transaction>, CanBeSeri
     /**
      * Add a reward transaction
      */
-    public void addReward(PublicKey publicKey) {
+    public void addReward(ECDSAPublicKey publicKey) {
         if (reward != null) {
             throw new IllegalStateException("Cannot reset block's reward");
         }
@@ -237,7 +237,7 @@ public class Block extends HashCache implements Iterable<Transaction>, CanBeSeri
         return Optional.of(copy);
     }
 
-    public boolean verifyGenesis(PublicKey privilegedKey) {
+    public boolean verifyGenesis(ECDSAPublicKey privilegedKey) {
         if (this.transactions.length > 0) {
             return false;
         } else if (this.reward.value != REWARD_AMOUNT) {
@@ -278,14 +278,10 @@ public class Block extends HashCache implements Iterable<Transaction>, CanBeSeri
                 block.transactions[i] = transactions.get(i);
             }
 
-            try {
-                PublicKey rewardKey = Crypto.deserializePublicKey(input);
-                block.reward = new TxOut(REWARD_AMOUNT, rewardKey);
-                IOUtils.fill(input, block.nonce);
-                return block;
-            } catch (GeneralSecurityException e) {
-                throw new DeserializationException("Misformatted reward public key");
-            }
+            ECDSAPublicKey rewardKey = ECDSAPublicKey.DESERIALIZER.deserialize(input);
+            block.reward = new TxOut(REWARD_AMOUNT, rewardKey);
+            IOUtils.fill(input, block.nonce);
+            return block;
         }
     }
 }

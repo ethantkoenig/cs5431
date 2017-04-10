@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -66,5 +67,10 @@ public interface Deserializer<T> {
         byte[] bytes = new byte[length];
         IOUtils.fill(inputStream, bytes);
         return bytes;
+    }
+
+    static BigInteger deserializeBigInteger(DataInputStream inputStream, int maxLength)
+            throws DeserializationException, IOException {
+        return new BigInteger(deserializeBytes(inputStream, maxLength));
     }
 }

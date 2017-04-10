@@ -12,7 +12,6 @@ import java.io.DataInputStream;
 
 public class TxInTest extends RandomizedTest {
 
-
     @Test
     public void testSerialize() throws Exception {
         ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(randomBytes(256));

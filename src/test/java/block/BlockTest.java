@@ -1,5 +1,8 @@
 package block;
 
+import crypto.Crypto;
+import crypto.ECDSAKeyPair;
+import crypto.ECDSAPublicKey;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -9,8 +12,6 @@ import transaction.Transaction;
 import transaction.TxOut;
 import utils.*;
 
-import java.security.KeyPair;
-import java.security.PublicKey;
 import java.util.Collections;
 
 public class BlockTest extends RandomizedTest {
@@ -49,7 +50,7 @@ public class BlockTest extends RandomizedTest {
         for (int i = 0; i < Block.NUM_TRANSACTIONS_PER_BLOCK; i++) {
             block.transactions[i] = randomTransaction();
         }
-        block.addReward(randomKeyPair().getPublic());
+        block.addReward(Crypto.signatureKeyPair().publicKey);
 
         Block deserialized = Block.DESERIALIZER.deserialize(ByteUtil.asByteArray(block::serialize));
 
@@ -63,7 +64,7 @@ public class BlockTest extends RandomizedTest {
     @Test
     public void testAddReward() throws Exception {
         Block b = Block.empty(ShaTwoFiftySix.zero());
-        PublicKey key = randomKeyPair().getPublic();
+        ECDSAPublicKey key = Crypto.signatureKeyPair().publicKey;
         b.addReward(key);
 
         Assert.assertEquals(Block.REWARD_AMOUNT, b.reward.value);
@@ -90,7 +91,7 @@ public class BlockTest extends RandomizedTest {
     @Test
     public void testSerializeGenesis() throws Exception {
         Block block = Block.genesis();
-        block.addReward(randomKeyPair().getPublic());
+        block.addReward(Crypto.signatureKeyPair().publicKey);
 
         Block deserialized = Block.DESERIALIZER.deserialize(ByteUtil.asByteArray(block::serialize));
 
@@ -103,11 +104,11 @@ public class BlockTest extends RandomizedTest {
 
     @Test
     public void testVerify() throws Exception {
-        Config.HASH_GOAL.set(1);
+        Config.setHashGoal(1);
         ShaTwoFiftySix previousBlockHash = ShaTwoFiftySix.hashOf(randomBytes(256));
         Pair<Block, UnspentTransactions> pair = randomValidBlock(previousBlockHash);
         Block block = pair.getLeft();
-        block.addReward(randomKeyPair().getPublic());
+        block.addReward(Crypto.signatureKeyPair().publicKey);
         while (!block.checkHash()) { // mine the block
             block.nonceAddOne();
         }
@@ -130,16 +131,16 @@ public class BlockTest extends RandomizedTest {
 
     @Test
     public void testVerifyGenesis() throws Exception {
-        KeyPair pair = randomKeyPair();
+        ECDSAKeyPair pair = Crypto.signatureKeyPair();
         Assert.assertFalse(errorMessage,
-                randomBlock(randomShaTwoFiftySix()).verifyGenesis(pair.getPublic()));
+                randomBlock(randomShaTwoFiftySix()).verifyGenesis(pair.publicKey));
 
         Block genesis = Block.genesis();
-        genesis.addReward(pair.getPublic());
-        Assert.assertTrue(errorMessage, genesis.verifyGenesis(pair.getPublic()));
+        genesis.addReward(pair.publicKey);
+        Assert.assertTrue(errorMessage, genesis.verifyGenesis(pair.publicKey));
 
-        genesis.reward = new TxOut(Block.REWARD_AMOUNT + 1, pair.getPublic());
-        Assert.assertFalse(errorMessage, genesis.verifyGenesis(pair.getPublic()));
+        genesis.reward = new TxOut(Block.REWARD_AMOUNT + 1, pair.publicKey);
+        Assert.assertFalse(errorMessage, genesis.verifyGenesis(pair.publicKey));
     }
 
     @Test
@@ -167,7 +168,7 @@ public class BlockTest extends RandomizedTest {
 
     @Test
     public void testCheckHash() throws Exception {
-        Config.HASH_GOAL.set(1);
+        Config.setHashGoal(1);
         Block block = randomBlock(randomShaTwoFiftySix());
         for (int i = 0; i < 1000; i++) {
             block.nonceAddOne();

@@ -1,17 +1,12 @@
 package transaction;
 
-import utils.CanBeSerialized;
-import utils.Crypto;
-import utils.DeserializationException;
-import utils.Deserializer;
+import crypto.ECDSAPublicKey;
+import utils.*;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.security.GeneralSecurityException;
-import java.security.PublicKey;
 import java.util.Arrays;
-import java.util.Optional;
 
 
 /**
@@ -24,24 +19,24 @@ public final class TxOut implements CanBeSerialized {
     public final static Deserializer<TxOut> DESERIALIZER = new TxOutDeserializer();
 
     public final long value;
-    public final PublicKey ownerPubKey;
+    public final ECDSAPublicKey ownerPubKey;
 
-    private transient Optional<byte[]> encodedPubKeyCache = Optional.empty();
+//     private transient Optional<byte[]> encodedPubKeyCache = Optional.empty();
 
-    public TxOut(long value, PublicKey ownerPubKey) {
+    public TxOut(long value, ECDSAPublicKey ownerPubKey) {
         this.value = value;
         this.ownerPubKey = ownerPubKey;
     }
 
     public void serialize(DataOutputStream outputStream) throws IOException {
-        byte[] encodedPubKey;
-        if (encodedPubKeyCache.isPresent()) {
-            encodedPubKey = encodedPubKeyCache.get();
-        } else {
-            encodedPubKey = ownerPubKey.getEncoded();
-            encodedPubKeyCache = Optional.of(encodedPubKey);
-        }
-        outputStream.write(encodedPubKey);
+//        byte[] encodedPubKey;
+//        if (encodedPubKeyCache.isPresent()) {
+//            encodedPubKey = encodedPubKeyCache.get();
+//        } else {
+//            encodedPubKey = ;
+//            encodedPubKeyCache = Optional.of(encodedPubKey);
+//        }
+        outputStream.write(ByteUtil.asByteArray(ownerPubKey::serialize));
         outputStream.writeLong(value);
     }
 
@@ -64,13 +59,9 @@ public final class TxOut implements CanBeSerialized {
     private static final class TxOutDeserializer implements Deserializer<TxOut> {
         @Override
         public TxOut deserialize(DataInputStream inputStream) throws DeserializationException, IOException {
-            try {
-                PublicKey ownerKey = Crypto.deserializePublicKey(inputStream);
-                long value = inputStream.readLong();
-                return new TxOut(value, ownerKey);
-            } catch (GeneralSecurityException e) {
-                throw new DeserializationException("Invalid public key");
-            }
+            ECDSAPublicKey ownerKey = ECDSAPublicKey.DESERIALIZER.deserialize(inputStream);
+            long value = inputStream.readLong();
+            return new TxOut(value, ownerKey);
         }
     }
 }

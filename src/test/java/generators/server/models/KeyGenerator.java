@@ -5,7 +5,7 @@ import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.junit.BeforeClass;
 import server.models.Key;
-import utils.Crypto;
+import crypto.Crypto;
 
 import java.security.KeyPair;
 
