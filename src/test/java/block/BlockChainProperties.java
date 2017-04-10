@@ -2,6 +2,9 @@ package block;
 
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
+import crypto.Crypto;
+import crypto.ECDSAPrivateKey;
+import crypto.ECDSAPublicKey;
 import generators.model.SigningKeyPairGenerator;
 import org.junit.Assert;
 import org.junit.Before;

@@ -2,6 +2,10 @@ package transaction;
 
 
 import block.UnspentTransactions;
+import crypto.Crypto;
+import crypto.ECDSAPrivateKey;
+import crypto.ECDSAPublicKey;
+import crypto.ECDSASignature;
 import utils.*;
 
 import java.io.DataInputStream;

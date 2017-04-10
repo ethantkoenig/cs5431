@@ -7,7 +7,7 @@ import transaction.Transaction;
 import transaction.TxIn;
 import transaction.TxOut;
 import utils.ByteUtil;
-import utils.Crypto;
+import crypto.Crypto;
 import utils.DeserializationException;
 import utils.ShaTwoFiftySix;
 

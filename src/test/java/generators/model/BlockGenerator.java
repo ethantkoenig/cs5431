@@ -5,7 +5,7 @@ import block.UnspentTransactions;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
-import utils.ECDSAKeyPair;
+import crypto.ECDSAKeyPair;
 import utils.ShaTwoFiftySix;
 
 public class BlockGenerator extends Generator<Block> {

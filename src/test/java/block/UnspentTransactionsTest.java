@@ -6,8 +6,8 @@ import org.junit.Test;
 import testutils.RandomizedTest;
 import testutils.TestUtils;
 import transaction.TxOut;
-import utils.Crypto;
-import utils.ECDSAKeyPair;
+import crypto.Crypto;
+import crypto.ECDSAKeyPair;
 import utils.ShaTwoFiftySix;
 
 import java.security.GeneralSecurityException;

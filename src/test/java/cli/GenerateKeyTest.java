@@ -3,10 +3,10 @@ package cli;
 import org.junit.Assert;
 import org.junit.Test;
 import testutils.RandomizedTest;
-import utils.Crypto;
-import utils.ECDSAPrivateKey;
-import utils.ECDSAPublicKey;
-import utils.ECDSASignature;
+import crypto.Crypto;
+import crypto.ECDSAPrivateKey;
+import crypto.ECDSAPublicKey;
+import crypto.ECDSASignature;
 
 import java.io.File;
 

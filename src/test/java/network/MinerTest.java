@@ -2,6 +2,9 @@ package network;
 
 
 import block.Block;
+import crypto.Crypto;
+import crypto.ECDSAKeyPair;
+import crypto.ECDSAPublicKey;
 import org.junit.Assert;
 import org.junit.Test;
 import testutils.RandomizedTest;

@@ -2,6 +2,8 @@ package testutils;
 
 import block.Block;
 import block.UnspentTransactions;
+import crypto.Crypto;
+import crypto.ECDSAKeyPair;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import transaction.Transaction;
@@ -11,9 +13,6 @@ import utils.*;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.security.KeyPairGenerator;
-import java.security.SecureRandom;
-import java.security.spec.ECGenParameterSpec;
 import java.util.Random;
 
 /**

@@ -9,7 +9,7 @@ import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import transaction.Transaction;
 import transaction.TxIn;
 import transaction.TxOut;
-import utils.ECDSAKeyPair;
+import crypto.ECDSAKeyPair;
 import utils.ShaTwoFiftySix;
 
 import java.io.IOException;

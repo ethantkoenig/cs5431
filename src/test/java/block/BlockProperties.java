@@ -8,8 +8,8 @@ import org.junit.runner.RunWith;
 import testutils.RandomizedTest;
 import transaction.Transaction;
 import utils.Config;
-import utils.Crypto;
-import utils.ECDSAKeyPair;
+import crypto.Crypto;
+import crypto.ECDSAKeyPair;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 

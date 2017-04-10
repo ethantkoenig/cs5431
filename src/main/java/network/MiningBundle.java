@@ -2,8 +2,8 @@ package network;
 
 import block.BlockChain;
 import block.UnspentTransactions;
-import utils.ECDSAKeyPair;
-import utils.ECDSAPublicKey;
+import crypto.ECDSAKeyPair;
+import crypto.ECDSAPublicKey;
 
 /**
  * A wrapper object to pass from the network.Miner object to the miner HandleMessageThread

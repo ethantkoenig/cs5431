@@ -1,5 +1,6 @@
 package transaction;
 
+import crypto.ECDSAPublicKey;
 import utils.*;
 
 import java.io.DataInputStream;

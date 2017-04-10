@@ -1,4 +1,8 @@
 import cli.ClientInterface;
+import crypto.Crypto;
+import crypto.ECDSAKeyPair;
+import crypto.ECDSAPrivateKey;
+import crypto.ECDSAPublicKey;
 import network.Miner;
 import server.Application;
 import utils.*;

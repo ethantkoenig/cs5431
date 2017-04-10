@@ -1,6 +1,7 @@
 package block;
 
 
+import crypto.ECDSAPublicKey;
 import org.bouncycastle.crypto.digests.SHA256Digest;
 import transaction.Transaction;
 import transaction.TxOut;

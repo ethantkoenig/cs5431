@@ -13,8 +13,8 @@ import transaction.Transaction;
 import transaction.TxIn;
 import transaction.TxOut;
 import utils.ByteUtil;
-import utils.ECDSAPrivateKey;
-import utils.ECDSAPublicKey;
+import crypto.ECDSAPrivateKey;
+import crypto.ECDSAPublicKey;
 import utils.ShaTwoFiftySix;
 
 import java.io.DataOutputStream;

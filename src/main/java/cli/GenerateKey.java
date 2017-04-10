@@ -1,8 +1,8 @@
 package cli;
 
 
-import utils.Crypto;
-import utils.ECDSAKeyPair;
+import crypto.Crypto;
+import crypto.ECDSAKeyPair;
 
 import java.io.DataOutputStream;
 import java.io.FileOutputStream;

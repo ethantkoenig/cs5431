@@ -1,5 +1,8 @@
 package block;
 
+import crypto.Crypto;
+import crypto.ECDSAKeyPair;
+import crypto.ECDSAPublicKey;
 import org.junit.Assert;
 import org.junit.Test;
 import testutils.RandomizedTest;
@@ -116,8 +119,8 @@ public class BlockChainTest extends RandomizedTest {
     @Test
     public void insertDuplicateGenesis() throws Exception {
         BlockChain bc = new BlockChain(Files.createTempDirectory("test"));
-        utils.ECDSAPublicKey key1 = Crypto.signatureKeyPair().publicKey;
-        utils.ECDSAPublicKey key2 = Crypto.signatureKeyPair().publicKey;
+        ECDSAPublicKey key1 = Crypto.signatureKeyPair().publicKey;
+        ECDSAPublicKey key2 = Crypto.signatureKeyPair().publicKey;
 
         Block genesis1 = Block.genesis();
         genesis1.addReward(key1);

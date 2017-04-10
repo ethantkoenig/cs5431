@@ -3,8 +3,8 @@ package network;
 import block.Block;
 import block.BlockChain;
 import block.UnspentTransactions;
-import utils.ECDSAKeyPair;
-import utils.ECDSAPublicKey;
+import crypto.ECDSAKeyPair;
+import crypto.ECDSAPublicKey;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;

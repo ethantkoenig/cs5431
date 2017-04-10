@@ -1,7 +1,10 @@
-package utils;
+package crypto;
 
 import org.bouncycastle.math.ec.ECCurve;
 import org.bouncycastle.math.ec.ECPoint;
+import utils.CanBeSerialized;
+import utils.DeserializationException;
+import utils.Deserializer;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;

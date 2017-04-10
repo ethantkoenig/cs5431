@@ -5,7 +5,7 @@ import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import utils.ByteUtil;
-import utils.Crypto;
+import crypto.Crypto;
 
 import static testutils.TestUtils.assertEqualsWithHashCode;
 

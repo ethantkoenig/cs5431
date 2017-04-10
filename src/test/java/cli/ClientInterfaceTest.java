@@ -8,7 +8,7 @@ import org.junit.Test;
 import testutils.RandomizedTest;
 import testutils.TestUtils;
 import transaction.Transaction;
-import utils.Crypto;
+import crypto.Crypto;
 
 import java.io.*;
 import java.net.ServerSocket;
