@@ -1,5 +1,6 @@
 package block;
 
+import crypto.ECDSAPublicKey;
 import transaction.TxOut;
 import utils.Pair;
 import utils.ShaTwoFiftySix;
@@ -49,9 +50,7 @@ public class UnspentTransactions
         return map.remove(new Pair<>(hash, index));
     }
 
-    public int size() {
-        return map.size();
-    }
+    public int size() { return map.size(); }
 
     @Override
     public boolean equals(Object o) {
@@ -72,5 +71,20 @@ public class UnspentTransactions
     @Override
     public Iterator<Map.Entry<Pair<ShaTwoFiftySix, Integer>, TxOut>> iterator() {
         return map.entrySet().iterator();
+    }
+
+    /**
+     *
+     * @param key is the public key of which we want to learn the number of coins associated with it.
+     * @return the number of coins tied to this public key.
+     */
+    public long displayAmount(ECDSAPublicKey key) {
+        long amt = 0;
+        for (Map.Entry<Pair<ShaTwoFiftySix, Integer>, TxOut> entry : map.entrySet()) {
+            if (entry.getValue().getKey().equals(key)) {
+                amt += entry.getValue().getValue();
+            }
+        }
+        return amt;
     }
 }
