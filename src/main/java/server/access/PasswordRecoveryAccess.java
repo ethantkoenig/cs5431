@@ -60,7 +60,6 @@ public class PasswordRecoveryAccess {
     // TODO: time stuff is annoying
     private static boolean checkData(Date dt) {
         return true;
-
     }
 
 }

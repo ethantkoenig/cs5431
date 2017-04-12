@@ -129,8 +129,20 @@ public final class Statements {
                 "INSERT INTO passrecover (userid, guidhash) VALUES (?, ?)"),
                 statement -> {
                     statement.setInt(1, userID);
-                    statement.setString(3, GUIDHash);
+                    statement.setString(2, GUIDHash);
                 }
         );
     }
+
+    public static PreparedStatement updateUserPassword(Connection connection, int userID,  byte[] salt, byte[] hashedPassword) throws SQLException {
+        return prepareStatement(connection.prepareStatement(
+                "UPDATE users SET pass = ?, salt = ? WHERE userid = ?"),
+                statement -> {
+                    statement.setBytes(1, hashedPassword);
+                    statement.setBytes(2, salt);
+                    statement.setInt(3, userID);
+                }
+        );
+    }
+
 }

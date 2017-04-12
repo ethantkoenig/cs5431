@@ -1,17 +1,21 @@
 package server.controllers;
 
 
+import crypto.Crypto;
+import server.access.PasswordRecoveryAccess;
+import server.access.UserAccess;
 import server.utils.Mail;
 import server.utils.RouteUtils;
+import server.utils.ValidateUtils;
 import spark.template.freemarker.FreeMarkerEngine;
 import utils.Config;
 
 import java.math.BigInteger;
 import java.security.SecureRandom;
 
+import static server.utils.RouteUtils.queryParam;
+import static server.utils.RouteUtils.wrapRoute;
 import static spark.Spark.*;
-import static spark.Spark.post;
-import static server.utils.RouteUtils.*;
 
 
 /**
@@ -24,9 +28,6 @@ public class PasswordRecoveryController {
 
     public static void recoverPassword() {
         path("/recover", () -> {
-            get("", (request, response) ->
-                            RouteUtils.modelAndView(request, "recover.ftl").get()
-                    , new FreeMarkerEngine());
 
             post("", wrapRoute((request, response) -> {
                 String email = queryParam(request, "email");
@@ -34,6 +35,39 @@ public class PasswordRecoveryController {
                 mail.sendEmail(email, link);
                 return "ok";
             }));
+
+            get("", (request, response) -> {
+                if (request.queryParams().contains("guid")){
+                    String guid = queryParam(request, "guid");
+                    int userID = PasswordRecoveryAccess.getPasswordRecoveryUserID(guid);
+                    if (userID != -1) {
+                        return RouteUtils.modelAndView(request, "resetpass.ftl")
+                                .add("guid", guid)
+                                .get();
+                    }
+                }
+                return RouteUtils.modelAndView(request, "recover.ftl").get();
+            }, new FreeMarkerEngine());
+
+            post("/reset", wrapRoute((request, response) -> {
+                String password = queryParam(request, "password");
+                String passwordConfirm = queryParam(request, "passwordConfirm");
+                if (!(password.equals(passwordConfirm) && ValidateUtils.validPassword(password))) {
+                    //error handling
+                    return "Invalid password";
+                }
+                String guid = queryParam(request, "guid");
+                int userID = PasswordRecoveryAccess.getPasswordRecoveryUserID(guid);
+                if (userID != -1) {
+                    //update password for userid with new password.
+                    byte[] salt = Crypto.generateSalt();
+                    byte[] hash = Crypto.hashAndSalt(password, salt);
+                    UserAccess.updateUserPass(userID, salt, hash);
+                    return "Successfully updated password";
+                }
+                return "ok";
+            }));
+
         });
     }
 

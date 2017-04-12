@@ -110,4 +110,19 @@ public final class UserAccess {
             }
         }
     }
+
+    /**
+     * Updates a users password in the users table in the yaccoin database
+     */
+    public static void updateUserPass(int userID, byte[] salt, byte[] hashedPassword) throws SQLException {
+        try (Connection conn = DbUtil.getConnection(false);
+             PreparedStatement preparedStmt = Statements.updateUserPassword(conn, userID, salt, hashedPassword)
+        ) {
+            int rowCount = preparedStmt.executeUpdate();
+            if (rowCount != 1) {
+                String msg = String.format("Update affected %d rows, expected 1", rowCount);
+                LOGGER.severe(msg);
+            }
+        }
+    }
 }
