@@ -4,6 +4,7 @@ package server.controllers;
 import crypto.Crypto;
 import server.access.PasswordRecoveryAccess;
 import server.access.UserAccess;
+import server.models.User;
 import server.utils.Mail;
 import server.utils.RouteUtils;
 import server.utils.ValidateUtils;
@@ -12,6 +13,7 @@ import utils.Config;
 
 import java.math.BigInteger;
 import java.security.SecureRandom;
+import java.util.Optional;
 
 import static server.utils.RouteUtils.queryParam;
 import static server.utils.RouteUtils.wrapRoute;
@@ -31,8 +33,14 @@ public class PasswordRecoveryController {
 
             post("", wrapRoute((request, response) -> {
                 String email = queryParam(request, "email");
-                String link = request.url() + "/" + nextGUID();
-                mail.sendEmail(email, link);
+                String guid = nextGUID();
+                String link = request.url() + "?guid=" + guid;
+                Optional<User> user = UserAccess.getUserbyEmail(email);
+                if (user.isPresent()){
+                    PasswordRecoveryAccess.insertPasswordRecovery(user.get().getId(), guid);
+                    mail.sendEmail(email, link);
+                }
+                // Failed but do not want to give hacker any reason to know anything happened.
                 return "ok";
             }));
 

@@ -4,7 +4,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-// TODO: probably doesnt belong in utils but not sure where else to put it as of yet
 public final class Statements {
 
     // Disallow instances of this class
@@ -18,6 +17,7 @@ public final class Statements {
     public static final String CREATE_USERS_TABLE = "CREATE TABLE users ("
             + "id int NOT NULL AUTO_INCREMENT,"
             + "username varchar(32) NOT NULL,"
+            + "email varchar(128) NOT NULL,"
             + "salt varbinary(32) NOT NULL,"
             + "pass varbinary(2048) NOT NULL,"
             + "PRIMARY KEY (id),"
@@ -37,7 +37,7 @@ public final class Statements {
     public static final String CREATE_PASSWORD_RECOVERY_TABLE = "CREATE TABLE passrecover ("
             + "userid int NOT NULL,"
             + "dt DATETIME DEFAULT CURRENT_TIMESTAMP,"
-            + "guidhash varchar(32) NOT NULL,"
+            + "guidhash varchar(2048) NOT NULL,"
             + "FOREIGN KEY (userid)"
             + "  REFERENCES users(id)"
             + ")";
@@ -68,6 +68,14 @@ public final class Statements {
         );
     }
 
+    public static PreparedStatement selectUserByEmail(Connection connection, String email)
+            throws SQLException {
+        return prepareStatement(connection.prepareStatement(
+                "SELECT * FROM users WHERE email = ?"),
+                statement -> statement.setString(1, email)
+        );
+    }
+
     public static PreparedStatement getKeysByUserID(Connection connection, int userID)
             throws SQLException {
         return prepareStatement(connection.prepareStatement(
@@ -89,14 +97,16 @@ public final class Statements {
 
     public static PreparedStatement insertUser(Connection connection,
                                                String username,
+                                               String email,
                                                byte[] salt,
                                                byte[] hashedPassword) throws SQLException {
         return prepareStatement(connection.prepareStatement(
-                "INSERT INTO users (username, salt, pass) VALUES (?, ?, ?)"),
+                "INSERT INTO users (username, email, salt, pass) VALUES (?, ?, ?, ?)"),
                 statement -> {
                     statement.setString(1, username);
-                    statement.setBytes(2, salt);
-                    statement.setBytes(3, hashedPassword);
+                    statement.setString(2, email);
+                    statement.setBytes(3, salt);
+                    statement.setBytes(4, hashedPassword);
                 }
         );
     }
@@ -136,7 +146,7 @@ public final class Statements {
 
     public static PreparedStatement updateUserPassword(Connection connection, int userID,  byte[] salt, byte[] hashedPassword) throws SQLException {
         return prepareStatement(connection.prepareStatement(
-                "UPDATE users SET pass = ?, salt = ? WHERE userid = ?"),
+                "UPDATE users SET pass = ?, salt = ? WHERE id = ?"),
                 statement -> {
                     statement.setBytes(1, hashedPassword);
                     statement.setBytes(2, salt);

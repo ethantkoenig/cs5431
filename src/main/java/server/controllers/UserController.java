@@ -42,16 +42,19 @@ public class UserController {
                 response.type("application/json");
                 String username = request.queryParams("username");
                 String password = request.queryParams("password");
+                String email = request.queryParams("email");
                 if (!ValidateUtils.validUsername(username)) {
                     return "invalid username";
                 } else if (!ValidateUtils.validPassword(password)) {
                     return "invalid password";
+                }else if (!ValidateUtils.validEmail(email)) {
+                    return "invalid email";
                 } else if (UserAccess.getUserbyUsername(username).isPresent()) {
                     return "username already taken";
                 }
                 byte[] salt = Crypto.generateSalt();
                 byte[] hash = Crypto.hashAndSalt(password, salt);
-                UserAccess.insertUser(username, salt, hash);
+                UserAccess.insertUser(username, email, salt, hash);
                 request.session(true).attribute("username", username);
                 return "{\"message\":\"User registered.\"}";
             });

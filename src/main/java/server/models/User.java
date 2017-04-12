@@ -8,12 +8,14 @@ public class User {
     private String username;
     private byte[] salt;
     private byte[] hashedPassword;
+    private String email;
 
-    public User(int id, String username, byte[] salt, byte[] hashedPassword) {
+    public User(int id, String username, String email, byte[] salt, byte[] hashedPassword) {
         this.id = id;
         this.username = username;
         this.salt = Arrays.copyOf(salt, salt.length);
         this.hashedPassword = Arrays.copyOf(hashedPassword, hashedPassword.length);
+        this.email = email;
     }
 
     public int getId() {
@@ -34,5 +36,9 @@ public class User {
 
     public byte[] getHashedPassword() {
         return Arrays.copyOf(hashedPassword, hashedPassword.length);
+    }
+
+    public String getEmail() {
+        return email;
     }
 }

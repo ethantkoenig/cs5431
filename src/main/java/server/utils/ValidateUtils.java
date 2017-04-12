@@ -35,6 +35,12 @@ public final class ValidateUtils {
         return str.matches(".*[A-Z].*$");
     }
 
+    public static boolean containsEmail(String str) {
+        return str.matches(
+                "^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@"
+                        + "[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$");
+    }
+
     /**
      * @return whether the given username is valid
      */
@@ -51,5 +57,12 @@ public final class ValidateUtils {
                 && containsNumber(password)
                 && containsLowercase(password)
                 && containsUpperCase(password);
+    }
+
+    /**
+     * @return whether the given email is valid
+     */
+    public static boolean validEmail(String email) {
+        return containsEmail(email);
     }
 }
