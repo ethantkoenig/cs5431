@@ -4,6 +4,7 @@ import crypto.ECDSAKeyPair;
 import crypto.ECDSAPrivateKey;
 import crypto.ECDSAPublicKey;
 import network.Miner;
+import network.Node;
 import server.Application;
 import utils.*;
 
@@ -31,6 +32,10 @@ public class Main {
                     System.exit(1);
                 }
                 break;
+            case "miner":
+                if (!runMiner(args)) {
+                    System.exit(1);
+                }
             case "client":
                 new ClientInterface().startInterface();
                 break;
@@ -46,17 +51,24 @@ public class Main {
         }
     }
 
+    private static boolean runMiner(String[] args) {
+        return runNode(args, true);
+    }
 
     private static boolean runNode(String[] args) {
+        return runNode(args, false);
+    }
+
+    private static boolean runNode(String[] args, boolean isMining) {
         try {
-            return runNodeWithThrowing(args);
+            return runNodeWithThrowing(args, isMining);
         } catch (GeneralSecurityException | IOException e) {
             System.err.println(String.format("Error: %s", e.getMessage()));
             return false;
         }
     }
 
-    private static boolean runNodeWithThrowing(String[] args)
+    private static boolean runNodeWithThrowing(String[] args, boolean isMining)
             throws GeneralSecurityException, IOException {
         if (args.length < 6) {
             System.err.println("usage: node <port> <public-key> <private-key> <privileged-key> <File for list of nodes>");
@@ -66,6 +78,8 @@ public class Main {
         ECDSAPublicKey myPublic;
         ECDSAPrivateKey myPrivate;
         ECDSAPublicKey privilegedKey;
+        Miner miner;
+        Node node;
         try {
             myPublic = Crypto.loadPublicKey(args[2]);
             myPrivate = Crypto.loadPrivateKey(args[3]);
@@ -75,8 +89,8 @@ public class Main {
             return false;
         }
 
-        Miner miner = new Miner(new ServerSocket(port), new ECDSAKeyPair(myPrivate, myPublic), privilegedKey);
-
+        miner = new Miner(new ServerSocket(port), new ECDSAKeyPair(myPrivate, myPublic), privilegedKey);
+        node = new Node(new ServerSocket(port), new ECDSAKeyPair(myPrivate, myPublic), privilegedKey);
         BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(args[5]), StandardCharsets.UTF_8));
         String currentLine = "";
 
@@ -94,7 +108,11 @@ public class Main {
                 System.err.println(msg);
             } else {
                 InetSocketAddress addr = optAddr.get();
-                miner.connect(addr.getHostName(), addr.getPort());
+                if (isMining) {
+                    miner.connect(addr.getHostName(), addr.getPort());
+                } else {
+                    node.connect(addr.getHostName(), addr.getPort());
+                }
             }
             try {
                 currentLine = br.readLine();
@@ -105,7 +123,11 @@ public class Main {
             }
         }
         br.close();
-        miner.startMiner();
+        if (isMining) {
+            miner.startMiner();
+        } else {
+            node.startNode();
+        }
         return true;
     }
 }
