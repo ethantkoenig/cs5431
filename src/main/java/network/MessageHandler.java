@@ -30,9 +30,14 @@ public class MessageHandler {
     private LinkedList<Block> miningQueue = new LinkedList<>();
     private FixedSizeSet<IncomingMessage> recentTransactionsReceived = new FixedSizeSet<>();
 
-    public MessageHandler(BlockingQueue<OutgoingMessage> broadcast, MiningBundle miningBundle) {
+    private boolean isMining;
+
+    public MessageHandler(BlockingQueue<OutgoingMessage> broadcast,
+                          MiningBundle miningBundle,
+                          boolean isMining) {
         this.bundle = miningBundle;
         this.broadcastQueue = broadcast;
+        this.isMining = isMining;
     }
 
     /**
@@ -51,8 +56,10 @@ public class MessageHandler {
         } else {
             return;
         }
-        recentTransactionsReceived.add(msg);
-        addTransaction(tx);
+        if (isMining) {
+            recentTransactionsReceived.add(msg);
+            addTransaction(tx);
+        }
     }
 
     /**
@@ -123,17 +130,21 @@ public class MessageHandler {
         LOGGER.info(String.format("Received valid block: hash=%s", block.getShaTwoFiftySix()));
 
         // interrupt the mining thread
-        if (minerThread != null && minerThread.isAlive()) {
-            LOGGER.info("[-] Received block. Stopping current mining thread.");
-            minerThread.stopMining();
+        if (isMining) {
+            if (minerThread != null && minerThread.isAlive()) {
+                LOGGER.info("[-] Received block. Stopping current mining thread.");
+                minerThread.stopMining();
+            }
         }
 
         // Add block to chain
         LOGGER.info("[+] Adding completed block to block chain");
         bundle.getBlockChain().insertBlock(block);
         bundle.setUnspentTransactions(verifiedUnspentTransactions.get());
-        unminedTransactions.clear();
-        startMiningThread();
+        if (isMining) {
+            unminedTransactions.clear();
+            startMiningThread();
+        }
     }
 
     private void addTransaction(Transaction transaction)
