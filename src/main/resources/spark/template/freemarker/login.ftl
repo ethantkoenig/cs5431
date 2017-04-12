@@ -4,17 +4,31 @@
 <!-- Page Content -->
 <div class="container">
 
-    <form action="/login" method="post">
-        <div class="form-group">
-            <label for="usernameInput">Username</label>
-            <input type="text" class="form-control" id="usernameInput" name="username" placeholder="Username">
+    <div class="row padding-top">
+        <div class="col-md-4 col-md-offset-4">
+            <div class="row">
+                <form action="/login" method="post">
+                    <div class="form-group">
+                        <input type="text" class="form-control" id="usernameInput" name="username"
+                               placeholder="Username">
+                    </div>
+                    <div class="form-group">
+                        <input type="password" class="form-control" id="passwordInput" name="password"
+                               placeholder="Password">
+                    </div>
+            </div>
+            <div class="row text-center">
+                <input class="btn btn-primary submit-button" type="submit" value="Login">
+            </div>
+            <div class="row text-center" style="padding-top: 10px;">
+            <#-- TODO: The reletive path here and throughout is bad. Need to figure out how the template works with paths to fix-->
+                <a href="../recover" class="show_hide">Forgot password?</a>
+            </div>
         </div>
-        <div class="form-group">
-            <label for="passwordInput">Password</label>
-            <input type="password" class="form-control" id="passwordInput" name="password" placeholder="Password">
-        </div>
-        <input class="btn btn-primary" type="submit" value="Register">
-    </form>
+        </form>
+    </div>
+</div>
+
 
 </div>
 <!-- /.container -->

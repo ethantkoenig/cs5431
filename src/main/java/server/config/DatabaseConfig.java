@@ -31,10 +31,9 @@ public final class DatabaseConfig {
             int result = statement.executeUpdate(Statements.SHOW_DB_LIKE);
             // The user does not already have this db.
             if (result == 0) {
-                //DbUtil.runScript(connection, "dbconfig.sql");
                 LOGGER.info("[+] Creating database " + Statements.DB_NAME);
                 createDB(statement);
-                createUserTable(statement);
+                createTables(statement);
             } else {
                 LOGGER.info("[!] Database already created: " + Statements.DB_NAME);
             }
@@ -48,8 +47,9 @@ public final class DatabaseConfig {
         statement.executeUpdate(Statements.USE_DB);
     }
 
-    public static void createUserTable(Statement statement) throws SQLException {
+    public static void createTables(Statement statement) throws SQLException {
         statement.executeUpdate(Statements.CREATE_USERS_TABLE);
         statement.executeUpdate(Statements.CREATE_KEYS_TABLE);
+        statement.executeUpdate(Statements.CREATE_PASSWORD_RECOVERY_TABLE);
     }
 }

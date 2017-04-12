@@ -34,6 +34,13 @@ public final class Statements {
             + "  REFERENCES users(id)"
             + "  ON DELETE CASCADE"
             + ")";
+    public static final String CREATE_PASSWORD_RECOVERY_TABLE = "CREATE TABLE passrecover ("
+            + "userid int NOT NULL,"
+            + "dt DATETIME DEFAULT CURRENT_TIMESTAMP,"
+            + "guidhash varchar(32) NOT NULL,"
+            + "FOREIGN KEY (userid)"
+            + "  REFERENCES users(id)"
+            + ")";
     public static final String SHOW_DB_LIKE = String.format("SHOW DATABASES LIKE '%s'", DB_NAME);
 
 
@@ -106,6 +113,24 @@ public final class Statements {
                     statement.setBytes(3, privateKey);
                 }
         );
+    }
 
+
+    public static PreparedStatement getPasswordRecoveryUserID(Connection connection, String GUIDHash)
+            throws SQLException {
+        return prepareStatement(connection.prepareStatement(
+                "SELECT * FROM passrecover WHERE guidhash = ?"),
+                statement -> statement.setString(1, GUIDHash)
+        );
+    }
+
+    public static PreparedStatement insertPasswordRecovery(Connection connection, int userID, String GUIDHash) throws SQLException {
+        return prepareStatement(connection.prepareStatement(
+                "INSERT INTO passrecover (userid, guidhash) VALUES (?, ?)"),
+                statement -> {
+                    statement.setInt(1, userID);
+                    statement.setString(3, GUIDHash);
+                }
+        );
     }
 }

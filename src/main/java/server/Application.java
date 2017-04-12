@@ -2,6 +2,7 @@ package server;
 
 import server.config.DatabaseConfig;
 import server.controllers.IndexController;
+import server.controllers.PasswordRecoveryController;
 import server.controllers.TransactionController;
 import server.controllers.UserController;
 import server.utils.Constants;
@@ -31,6 +32,7 @@ public class Application {
         IndexController.serveIndexPage();
         UserController.startUserController();
         TransactionController.makeTransaction();
+        PasswordRecoveryController.recoverPassword();
         return true;
     }
 
