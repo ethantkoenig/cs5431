@@ -40,22 +40,6 @@ public final class TxOut implements CanBeSerialized {
         outputStream.writeLong(value);
     }
 
-    /**
-     *
-     * @return The output owner's public key.
-     */
-    public ECDSAPublicKey getKey() {
-        return ownerPubKey;
-    }
-
-    /**
-     *
-     * @return the value associated with this output.
-     */
-    public long getValue() {
-        return value;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (o == this) {

@@ -10,6 +10,7 @@ import transaction.TxIn;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 
 /**
@@ -78,19 +79,16 @@ public class UnspentTransactions
 
     /**
      *
-     * @param keys is a list of publics key tied to a user who wants to know how many coins
+     * @param keys is a list of public keys tied to a user who wants to know how many coins
      *             they own.
      * @return the number of coins tied to these public keys.
      */
     public long getAmounts(ECDSAPublicKey[] keys) {
-        long amt = 0;
-        for (Map.Entry<Pair<ShaTwoFiftySix, Integer>, TxOut> entry : map.entrySet())
-            for (ECDSAPublicKey key : keys) {
-                if (key.equals(entry.getValue().getKey())) {
-                    amt += entry.getValue().getValue();
-                }
-            }
-        return amt;
+        return map.values().parallelStream()
+                .filter(out -> Arrays.stream(keys)
+                        .anyMatch(out.ownerPubKey::equals))
+                .mapToLong(out -> out.value)
+                .sum();
     }
 
     /**
@@ -99,62 +97,60 @@ public class UnspentTransactions
      * @return a list of hashes and indexes that can be used to query the map for the UTXO's associated
      *         with the given keys.
      */
-    private ArrayList<Pair<ShaTwoFiftySix, Integer>> getHashes(ECDSAPublicKey[] keys) {
-        ArrayList<Pair<ShaTwoFiftySix, Integer>> hashes = new ArrayList<>();
-        for (Map.Entry<Pair<ShaTwoFiftySix, Integer>, TxOut> entry : map.entrySet())
-            for (ECDSAPublicKey key : keys) {
-                if (key.equals(entry.getValue().getKey())) {
-                    hashes.add(entry.getKey());
-                }
-            }
-        return hashes;
+    private List<Pair<ShaTwoFiftySix, Integer>> getHashes(ECDSAPublicKey[] keys) {
+        return map.entrySet().parallelStream()
+                .filter(entry -> Arrays.stream(keys)
+                        .anyMatch(entry.getValue().ownerPubKey::equals))
+                .map(entry -> entry.getKey())
+                .collect(Collectors.toList());
     }
 
     /**
      *
-     * @param keypairs is a list of keypairs associated with the user wishing to construct
-     *                 a transaction.
-     * @param masterkey is the key change is to be sent to.
+     * @param publicKeys is an array of public keys associated with the user wishing
+     *                   to construct a transaction.
+     * @param masterKey is the key change is to be sent to.
      * @param destination is the receiver public key.
      * @param amount is the amount to be sent.
-     * @return a transaction from the user's public keys to the destination public key. Null if invalid amount given.
+     *
+     * @return a transaction from the user's public keys to the destination
+     *         public key. `Optional.empty()` if invalid amount given.
      *
      */
-    public Transaction buildUnsignedTransaction(ECDSAKeyPair[] keypairs, ECDSAPublicKey masterkey,
-                                        ECDSAPublicKey destination, long amount) throws IOException {
-        // Generate public keys
-        ECDSAPublicKey[] publickeys = new ECDSAPublicKey[keypairs.length];
-        for (int i = 0; i < keypairs.length; i++)
-            publickeys[i] = keypairs[i].publicKey;
+    public Optional<Transaction>
+    buildUnsignedTransaction(ECDSAPublicKey[] publicKeys, ECDSAPublicKey masterKey,
+                             ECDSAPublicKey destination, long amount) throws IOException {
+        // TODO: check for overflow
+        // It doesn't matter, in the sense that it's unlikely, and our nodes
+        // would reject it anyway, but we shouldn't construct faulty transactions.
+        //
+        // Proper handling would really have us split an overflowing transaction
+        // into multiple transactions, so the return type of this method would
+        // have to change.
 
-        // Get hashes, indexes of UTXO's - add as many as needed to reach amount.
-        ArrayList<Pair<ShaTwoFiftySix, Integer>> hashes = getHashes(publickeys);
+        // Get hashes, indices of UTXO's - add as many as needed to reach amount.
+        List<Pair<ShaTwoFiftySix, Integer>> hashes = getHashes(publicKeys);
         long toBeSpent = 0;
-        ArrayList<TxIn> txins = new ArrayList<>();
-        for (Pair<ShaTwoFiftySix, Integer> txid : hashes) {
-            txins.add(new TxIn(txid.getLeft(), txid.getRight()));
-            toBeSpent += map.get(txid).getValue();
-            if (toBeSpent > amount) break;
+        List<TxIn> txIns = new ArrayList<>();
+        for (Pair<ShaTwoFiftySix, Integer> txId : hashes) {
+            txIns.add(new TxIn(txId.getLeft(), txId.getRight()));
+            toBeSpent += map.get(txId).value;
+            if (toBeSpent >= amount) break;
         }
 
-        // Return null if insufficient funds, otherwise construct 2 outputs - one to the destination,
-        // and one to the master key for change.
-        if (toBeSpent < amount) return null;
+        // Return `Optional.empty()` if insufficient funds
+        if (toBeSpent < amount) return Optional.empty();
 
-        TxOut[] outputs = new TxOut[2];
-        outputs[0] = new TxOut(amount, destination);
-        outputs[1] = new TxOut(toBeSpent - amount, masterkey);
-
-        // TODO: Construct Transaction. Need to build an unsigned transaction
-        // Make findbugs pass. This doesn't do what we want it to, it directly performs the signing.
         Transaction.Builder txb = new Transaction.Builder();
-        for (int j = 0; j < txins.size(); j++) {
-            // Don't use this it will obviously NPE
-            txb.addInput(txins.get(j), keypairs[j].privateKey);
+        for (TxIn in: txIns) {
+            txb.addInputUnsigned(in);
         }
-        txb.addOutput(outputs[0]);
-        txb.addOutput(outputs[1]);
 
-        return txb.build();
+        // construct two outputs - one to the destination
+        txb.addOutput(new TxOut(amount, destination));
+        // - and one to the master key for change
+        txb.addOutput(new TxOut(toBeSpent - amount, masterKey));
+
+        return Optional.of(txb.buildUnsigned());
     }
 }

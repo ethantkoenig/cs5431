@@ -272,6 +272,11 @@ public final class Transaction extends HashCache implements CanBeSerialized {
             return this;
         }
 
+        public Builder addInputUnsigned(TxIn input) {
+            inputs.add(input);
+            return this;
+        }
+
         public Builder addOutput(TxOut output) {
             outputs.add(output);
             return this;
@@ -283,6 +288,13 @@ public final class Transaction extends HashCache implements CanBeSerialized {
                     outputs.toArray(new TxOut[outputs.size()]),
                     privateKeys.toArray(new ECDSAPrivateKey[privateKeys.size()])
             );
+        }
+
+        public Transaction buildUnsigned() throws IOException {
+            return new Transaction(
+                    inputs.toArray(new TxIn[inputs.size()]),
+                    outputs.toArray(new TxOut[outputs.size()]),
+                    new ECDSASignature[inputs.size()]);
         }
     }
 
