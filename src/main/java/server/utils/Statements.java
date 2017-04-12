@@ -27,7 +27,7 @@ public final class Statements {
             + "keypairid int NOT NULL AUTO_INCREMENT,"
             + "userid int NOT NULL,"
             + "publickey varbinary(91) NOT NULL,"
-            + "privatekey varbinary(150) NOT NULL,"
+            + "privatekey text NOT NULL,"
             + "PRIMARY KEY (keypairid),"
             + "INDEX userid_index (userid),"
             + "FOREIGN KEY (userid)"
@@ -97,13 +97,13 @@ public final class Statements {
     public static PreparedStatement insertKey(Connection connection,
                                               int userID,
                                               byte[] publicKey,
-                                              byte[] privateKey) throws SQLException {
+                                              String privateKey) throws SQLException {
         return prepareStatement(connection.prepareStatement(
                 "INSERT INTO keypairs (userid, publickey, privatekey) VALUES (?, ?, ?)"),
                 statement -> {
                     statement.setInt(1, userID);
                     statement.setBytes(2, publicKey);
-                    statement.setBytes(3, privateKey);
+                    statement.setString(3, privateKey);
                 }
         );
 

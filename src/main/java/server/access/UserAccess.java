@@ -60,7 +60,7 @@ public final class UserAccess {
             List<Key> keys = new ArrayList<>();
             while (rs.next()) {
                 byte[] publicKeyBytes = rs.getBytes("publickey");
-                byte[] encryptedPrivateKeyBytes = rs.getBytes("privatekey");
+                String encryptedPrivateKeyBytes = rs.getString("privatekey");
                 keys.add(new Key(publicKeyBytes, encryptedPrivateKeyBytes));
             }
             return keys;
@@ -73,7 +73,7 @@ public final class UserAccess {
              ResultSet rs = preparedStmt.executeQuery()
         ) {
             if (rs.next()) {
-                byte[] encryptedPrivateKeyBytes = rs.getBytes("privatekey");
+                String encryptedPrivateKeyBytes = rs.getString("privatekey");
                 return new Key(publicKey, encryptedPrivateKeyBytes);
             }
             return null;
@@ -83,7 +83,7 @@ public final class UserAccess {
     /**
      * Add the given public/private keys to the database, under the given userID.
      */
-    public static void insertKey(int userID, byte[] publicKey, byte[] privateKey) throws SQLException {
+    public static void insertKey(int userID, byte[] publicKey, String privateKey) throws SQLException {
         try (Connection conn = DbUtil.getConnection(false);
              PreparedStatement preparedStmt = Statements.insertKey(conn, userID, publicKey, privateKey)
         ) {
