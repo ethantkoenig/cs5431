@@ -17,6 +17,7 @@ import java.net.ServerSocket;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.util.Optional;
+import java.util.Arrays;
 
 public class Main {
 
@@ -41,6 +42,10 @@ public class Main {
                 break;
             case "webserver":
                 if (!Application.run(args)) {
+                    System.exit(1);
+                }
+                String[] nodeArgs = Arrays.copyOfRange(args, 2,8);
+                if (!runNode(nodeArgs)) {
                     System.exit(1);
                 }
                 break;
