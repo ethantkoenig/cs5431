@@ -61,7 +61,7 @@ public class Node {
         try {
             accept();
         } catch (IOException e) {
-            LOGGER.severe("Error accepting incoming connections in Miner: " + e.getMessage());
+            LOGGER.severe("Error accepting incoming connections in Node: " + e.getMessage());
         }
     }
 
