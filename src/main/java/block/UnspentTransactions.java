@@ -97,7 +97,7 @@ public class UnspentTransactions
      *         with the given keys.
      */
     private List<Pair<ShaTwoFiftySix, Integer>> getHashes(ECDSAPublicKey[] keys) {
-        return map.entrySet().parallelStream()
+        return map.entrySet().stream()
                 .filter(entry -> Arrays.stream(keys)
                         .anyMatch(entry.getValue().ownerPubKey::equals))
                 .map(entry -> entry.getKey())
