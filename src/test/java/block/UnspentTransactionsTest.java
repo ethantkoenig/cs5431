@@ -8,10 +8,13 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import testutils.RandomizedTest;
 import testutils.TestUtils;
+import transaction.TxIn;
 import transaction.TxOut;
 import utils.ShaTwoFiftySix;
+import transaction.Transaction;
 
 import java.security.GeneralSecurityException;
+import java.util.Optional;
 
 public class UnspentTransactionsTest extends RandomizedTest {
 
@@ -92,7 +95,7 @@ public class UnspentTransactionsTest extends RandomizedTest {
     }
 
     @Test
-    public void testUnsignedTransaction() throws GeneralSecurityException {
+    public void testGetAmounts() throws GeneralSecurityException {
         UnspentTransactions ut = UnspentTransactions.empty();
         ShaTwoFiftySix hash1 = ShaTwoFiftySix.hashOf(randomBytes(1024));
         ShaTwoFiftySix hash2 = ShaTwoFiftySix.hashOf(randomBytes(1024));
@@ -103,6 +106,7 @@ public class UnspentTransactionsTest extends RandomizedTest {
         ECDSAKeyPair pair2 = Crypto.signatureKeyPair();
         ECDSAKeyPair pair3 = Crypto.signatureKeyPair();
         ECDSAKeyPair pair4 = Crypto.signatureKeyPair();
+        ECDSAKeyPair pair5 = Crypto.signatureKeyPair();
         TxOut out1 = new TxOut(1024, pair1.publicKey);
         TxOut out2 = new TxOut(1024, pair2.publicKey);
         TxOut out3 = new TxOut(1024, pair3.publicKey);
@@ -111,6 +115,14 @@ public class UnspentTransactionsTest extends RandomizedTest {
         ut.put(hash2, 0, out2);
         ut.put(hash3, 0, out3);
         ut.put(hash4, 0, out4);
+
+        ECDSAPublicKey[] empty = new ECDSAPublicKey[1];
+        empty[0] = null;
+        Assert.assertEquals(0, ut.getAmounts(empty));
+
+        ECDSAPublicKey[] keys0 = new ECDSAPublicKey[1];
+        keys0[0] = pair5.publicKey;
+        Assert.assertEquals(0, ut.getAmounts(keys0));
 
         ECDSAPublicKey[] keys1 = new ECDSAPublicKey[1];
         keys1[0] = pair1.publicKey;
@@ -133,5 +145,78 @@ public class UnspentTransactionsTest extends RandomizedTest {
         keys4[2] = pair3.publicKey;
         keys4[3] = pair4.publicKey;
         Assert.assertEquals(4096, ut.getAmounts(keys4));
+
+        ECDSAPublicKey[] keys5 = new ECDSAPublicKey[5];
+        keys5[0] = pair1.publicKey;
+        keys5[1] = pair2.publicKey;
+        keys5[2] = pair3.publicKey;
+        keys5[3] = pair4.publicKey;
+        keys5[4] = pair5.publicKey;
+        Assert.assertEquals(4096, ut.getAmounts(keys5));
+    }
+
+    @Test
+    public void testUnsignedTransaction() throws Exception {
+        UnspentTransactions ut = UnspentTransactions.empty();
+        ShaTwoFiftySix hash1 = ShaTwoFiftySix.hashOf(randomBytes(1024));
+        ShaTwoFiftySix hash2 = ShaTwoFiftySix.hashOf(randomBytes(1024));
+        ShaTwoFiftySix hash3 = ShaTwoFiftySix.hashOf(randomBytes(1024));
+        ShaTwoFiftySix hash4 = ShaTwoFiftySix.hashOf(randomBytes(1024));
+
+        ECDSAKeyPair pair1 = Crypto.signatureKeyPair();
+        ECDSAKeyPair pair2 = Crypto.signatureKeyPair();
+        ECDSAKeyPair pair3 = Crypto.signatureKeyPair();
+        ECDSAKeyPair pair4 = Crypto.signatureKeyPair();
+        ECDSAKeyPair pair5 = Crypto.signatureKeyPair();
+        TxOut out1 = new TxOut(1024, pair1.publicKey);
+        TxOut out2 = new TxOut(1024, pair2.publicKey);
+        TxOut out3 = new TxOut(1024, pair3.publicKey);
+        TxOut out4 = new TxOut(1024, pair4.publicKey);
+        ut.put(hash1, 0, out1);
+        ut.put(hash2, 0, out2);
+        ut.put(hash3, 0, out3);
+        ut.put(hash4, 0, out4);
+
+        ECDSAPublicKey[] empty = new ECDSAPublicKey[1];
+        empty[0] = null;
+        Assert.assertEquals(Optional.empty(),
+                ut.buildUnsignedTransaction(empty, pair1.publicKey, pair2.publicKey, 1024));
+
+        ECDSAPublicKey[] keys0 = new ECDSAPublicKey[1];
+        keys0[0] = pair5.publicKey;
+        Assert.assertEquals(Optional.empty(),
+                ut.buildUnsignedTransaction(keys0, pair1.publicKey, pair2.publicKey, 1024));
+
+        ECDSAPublicKey[] keys1 = new ECDSAPublicKey[1];
+        keys1[0] = pair1.publicKey;
+        Assert.assertEquals(Optional.empty(),
+                ut.buildUnsignedTransaction(keys1, pair1.publicKey, pair2.publicKey, 2048));
+
+        Transaction tx = new Transaction.Builder()
+                .addInput(new TxIn(hash1, 0), pair1.privateKey)
+                .addOutput(new TxOut(1024, pair2.publicKey))
+                .buildUnsigned();
+        Assert.assertEquals(Optional.of(tx),
+                ut.buildUnsignedTransaction(keys1, pair1.publicKey, pair2.publicKey, 1024));
+
+        Transaction tx2 = new Transaction.Builder()
+                .addInput(new TxIn(hash1, 0), pair1.privateKey)
+                .addOutput(new TxOut(1000, pair2.publicKey))
+                .addOutput(new TxOut(24, pair1.publicKey))
+                .buildUnsigned();
+        Assert.assertEquals(Optional.of(tx2),
+                ut.buildUnsignedTransaction(keys1, pair1.publicKey, pair2.publicKey, 1000));
+
+//        ECDSAPublicKey[] keys2 = new ECDSAPublicKey[2];
+//        keys2[0] = pair1.publicKey;
+//        keys2[1] = pair2.publicKey;
+//
+//        Transaction.Builder txb = new Transaction.Builder()
+//                .addInput(new TxIn(hash1, 0), pair1.privateKey);
+        // TODO: Write tests that use multiple public keys. Currently we cannot do this with the Builder
+        // TODO: as it does not enforce ordering on insertion (so transactions that have the same inputs
+        // TODO: and outputs can be ordered differently and fail the tests.
+
+
     }
 }

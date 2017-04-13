@@ -1,12 +1,11 @@
 package block;
 
-import crypto.ECDSAKeyPair;
 import crypto.ECDSAPublicKey;
+import transaction.Transaction;
+import transaction.TxIn;
 import transaction.TxOut;
 import utils.Pair;
 import utils.ShaTwoFiftySix;
-import transaction.Transaction;
-import transaction.TxIn;
 
 import java.io.IOException;
 import java.util.*;
@@ -149,7 +148,9 @@ public class UnspentTransactions
         // construct two outputs - one to the destination
         txb.addOutput(new TxOut(amount, destination));
         // - and one to the master key for change
-        txb.addOutput(new TxOut(toBeSpent - amount, masterKey));
+        if (toBeSpent > amount) {
+            txb.addOutput(new TxOut(toBeSpent - amount, masterKey));
+        }
 
         return Optional.of(txb.buildUnsigned());
     }
