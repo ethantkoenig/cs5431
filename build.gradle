@@ -26,6 +26,7 @@ findbugs {
     reportLevel = "low"
 }
 
+applicationDefaultJvmArgs = ["-Djava.security.properties=java.security"]
 mainClassName = "Main"
 
 jar {
