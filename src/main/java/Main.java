@@ -83,8 +83,8 @@ public class Main {
         ECDSAPublicKey myPublic;
         ECDSAPrivateKey myPrivate;
         ECDSAPublicKey privilegedKey;
-        Miner miner;
-        Node node;
+        Miner miner = null;
+        Node node = null;
         try {
             myPublic = Crypto.loadPublicKey(args[2]);
             myPrivate = Crypto.loadPrivateKey(args[3]);
@@ -94,8 +94,12 @@ public class Main {
             return false;
         }
 
-        miner = new Miner(new ServerSocket(port), new ECDSAKeyPair(myPrivate, myPublic), privilegedKey);
+        if (isMining) {
+            miner = new Miner(new ServerSocket(port), new ECDSAKeyPair(myPrivate, myPublic), privilegedKey);
+        } else {
         node = new Node(new ServerSocket(port), new ECDSAKeyPair(myPrivate, myPublic), privilegedKey);
+        }
+
         BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(args[5]), StandardCharsets.UTF_8));
         String currentLine = "";
 
