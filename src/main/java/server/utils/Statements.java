@@ -22,6 +22,7 @@ public final class Statements {
             + "pass varbinary(2048) NOT NULL,"
             + "PRIMARY KEY (id),"
             + "UNIQUE (username)"
+            + "UNIQUE (email)"
             + ")";
     public static final String CREATE_KEYS_TABLE = "CREATE TABLE keypairs ("
             + "keypairid int NOT NULL AUTO_INCREMENT,"

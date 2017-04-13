@@ -16,33 +16,31 @@ import java.security.SecureRandom;
 import java.util.Optional;
 
 import static server.utils.RouteUtils.queryParam;
-import static server.utils.RouteUtils.wrapRoute;
 import static spark.Spark.*;
 
 
-/**
- * Created by EvanKing on 4/11/17.
- */
 public class PasswordRecoveryController {
 
-    private static Mail mail = new Mail();
     private static SecureRandom random = Config.secureRandom();
 
     public static void recoverPassword() {
         path("/recover", () -> {
 
-            post("", wrapRoute((request, response) -> {
+            post("", (request, response) -> {
                 String email = queryParam(request, "email");
                 String guid = nextGUID();
                 String link = request.url() + "?guid=" + guid;
                 Optional<User> user = UserAccess.getUserbyEmail(email);
                 if (user.isPresent()){
                     PasswordRecoveryAccess.insertPasswordRecovery(user.get().getId(), guid);
-                    mail.sendEmail(email, link);
+                    Mail.sendEmail(email, link);
+                    return RouteUtils.modelAndView(request, "recover.ftl")
+                            .add("success", "Check your inbox.")
+                            .get();
                 }
                 // Failed but do not want to give hacker any reason to know anything happened.
-                return "ok";
-            }));
+                return RouteUtils.modelAndView(request, "recover.ftl").get();
+            }, new FreeMarkerEngine());
 
             get("", (request, response) -> {
                 if (request.queryParams().contains("guid")){
@@ -57,25 +55,32 @@ public class PasswordRecoveryController {
                 return RouteUtils.modelAndView(request, "recover.ftl").get();
             }, new FreeMarkerEngine());
 
-            post("/reset", wrapRoute((request, response) -> {
+            post("/reset", (request, response) -> {
                 String password = queryParam(request, "password");
                 String passwordConfirm = queryParam(request, "passwordConfirm");
+                String guid = queryParam(request, "guid");
                 if (!(password.equals(passwordConfirm) && ValidateUtils.validPassword(password))) {
                     //error handling
-                    return "Invalid password";
+                    return RouteUtils.modelAndView(request, "resetpass.ftl")
+                            .add("guid", guid)
+                            .add("error", "Password must be between 12 and 24 characters, contain a lowercase letter, capital letter, and a number.")
+                            .get();
                 }
-                String guid = queryParam(request, "guid");
                 int userID = PasswordRecoveryAccess.getPasswordRecoveryUserID(guid);
                 if (userID != -1) {
                     //update password for userid with new password.
                     byte[] salt = Crypto.generateSalt();
                     byte[] hash = Crypto.hashAndSalt(password, salt);
                     UserAccess.updateUserPass(userID, salt, hash);
-                    return "Successfully updated password";
+                    return RouteUtils.modelAndView(request, "resetpass.ftl")
+                            .add("guid", guid)
+                            .add("success", "Password updated. You may go login.")
+                            .get();
                 }
-                return "ok";
-            }));
-
+                return RouteUtils.modelAndView(request, "resetpass.ftl")
+                        .add("guid", guid)
+                        .get();
+            }, new FreeMarkerEngine());
         });
     }
 

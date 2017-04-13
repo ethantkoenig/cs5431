@@ -3,15 +3,13 @@ package server.access;
 import server.utils.DbUtil;
 import server.utils.Statements;
 
+import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
 import java.sql.*;
 import java.util.logging.Logger;
 
 import static utils.ShaTwoFiftySix.hashOf;
 
-/**
- * Created by EvanKing on 4/11/17.
- */
 public class PasswordRecoveryAccess {
 
     private static final int RECOVERY_TIME = 3 * 60 * 60;
@@ -26,7 +24,7 @@ public class PasswordRecoveryAccess {
      * Check if guid exists in a record in the passrecover table and return the associate userid or -1
      */
     public static int getPasswordRecoveryUserID(String GUID) throws SQLException, GeneralSecurityException {
-        String GUIDHash = hashOf(GUID.getBytes()).toString();
+        String GUIDHash = hashOf(GUID.getBytes(Charset.forName("UTF-8"))).toString();
         try (Connection conn = DbUtil.getConnection(false);
              PreparedStatement preparedStmt = Statements.getPasswordRecoveryUserID(conn,GUIDHash);
              ResultSet rs = preparedStmt.executeQuery()
@@ -45,7 +43,7 @@ public class PasswordRecoveryAccess {
      * Add ta row to password recovery table with userid, current time, and hashed guid
      */
     public static void insertPasswordRecovery(int userID, String GUID) throws SQLException, GeneralSecurityException {
-        String GUIDHash = hashOf(GUID.getBytes()).toString();
+        String GUIDHash = hashOf(GUID.getBytes(Charset.forName("UTF-8"))).toString();
         try (Connection conn = DbUtil.getConnection(false);
              PreparedStatement preparedStmt = Statements.insertPasswordRecovery(conn, userID, GUIDHash)
         ) {
