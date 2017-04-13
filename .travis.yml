@@ -1,3 +1,6 @@
+env:
+  global:
+    - GRADLE_OPTS="-Xms128m"
 language: java
 jdk:
   oraclejdk8
