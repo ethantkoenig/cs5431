@@ -97,7 +97,7 @@ To run the webserver,
    You can download one from https://www.dropbox.com/s/pcxxzcgfbr5ilko/KeyStore.jks?dl=0
    or make your own if you don't trust us.
 
-4. Store the keystore password in $KEYSTORE_PASSWORD (the password for the Dropbox
+4. Store the keystore password in $KEYSTORE_PASS (the password for the Dropbox
    keystore is "password")
 5. Run
 
