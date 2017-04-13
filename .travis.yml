@@ -9,6 +9,6 @@ cache:
     - $HOME/.gradle/caches/
     - $HOME/.gradle/wrapper/
 script:
-    - ./gradlew check jacocoTestReport
+    - ./gradlew check jacocoTestReport --stacktrace
 after_success:
   - bash <(curl -s https://codecov.io/bash) -t 394b876c-08f1-480a-adcb-38e751f76700
