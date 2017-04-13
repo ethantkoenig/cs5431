@@ -1,13 +1,14 @@
 package block;
 
+import crypto.Crypto;
+import crypto.ECDSAKeyPair;
+import crypto.ECDSAPublicKey;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import testutils.RandomizedTest;
 import testutils.TestUtils;
 import transaction.TxOut;
-import crypto.Crypto;
-import crypto.ECDSAKeyPair;
 import utils.ShaTwoFiftySix;
 
 import java.security.GeneralSecurityException;
@@ -88,5 +89,49 @@ public class UnspentTransactionsTest extends RandomizedTest {
         TestUtils.assertEqualsWithHashCode(errorMessage, copy, ut);
         Assert.assertNotEquals(errorMessage, copy, UnspentTransactions.empty());
         Assert.assertNotEquals(errorMessage, copy, null);
+    }
+
+    @Test
+    public void testUnsignedTransaction() throws GeneralSecurityException {
+        UnspentTransactions ut = UnspentTransactions.empty();
+        ShaTwoFiftySix hash1 = ShaTwoFiftySix.hashOf(randomBytes(1024));
+        ShaTwoFiftySix hash2 = ShaTwoFiftySix.hashOf(randomBytes(1024));
+        ShaTwoFiftySix hash3 = ShaTwoFiftySix.hashOf(randomBytes(1024));
+        ShaTwoFiftySix hash4 = ShaTwoFiftySix.hashOf(randomBytes(1024));
+
+        ECDSAKeyPair pair1 = Crypto.signatureKeyPair();
+        ECDSAKeyPair pair2 = Crypto.signatureKeyPair();
+        ECDSAKeyPair pair3 = Crypto.signatureKeyPair();
+        ECDSAKeyPair pair4 = Crypto.signatureKeyPair();
+        TxOut out1 = new TxOut(1024, pair1.publicKey);
+        TxOut out2 = new TxOut(1024, pair2.publicKey);
+        TxOut out3 = new TxOut(1024, pair3.publicKey);
+        TxOut out4 = new TxOut(1024, pair4.publicKey);
+        ut.put(hash1, 0, out1);
+        ut.put(hash2, 0, out2);
+        ut.put(hash3, 0, out3);
+        ut.put(hash4, 0, out4);
+
+        ECDSAPublicKey[] keys1 = new ECDSAPublicKey[1];
+        keys1[0] = pair1.publicKey;
+        Assert.assertEquals(1024, ut.getAmounts(keys1));
+
+        ECDSAPublicKey[] keys2 = new ECDSAPublicKey[2];
+        keys2[0] = pair1.publicKey;
+        keys2[1] = pair2.publicKey;
+        Assert.assertEquals(2048, ut.getAmounts(keys2));
+
+        ECDSAPublicKey[] keys3 = new ECDSAPublicKey[3];
+        keys3[0] = pair1.publicKey;
+        keys3[1] = pair2.publicKey;
+        keys3[2] = pair3.publicKey;
+        Assert.assertEquals(3072, ut.getAmounts(keys3));
+
+        ECDSAPublicKey[] keys4 = new ECDSAPublicKey[4];
+        keys4[0] = pair1.publicKey;
+        keys4[1] = pair2.publicKey;
+        keys4[2] = pair3.publicKey;
+        keys4[3] = pair4.publicKey;
+        Assert.assertEquals(4096, ut.getAmounts(keys4));
     }
 }
