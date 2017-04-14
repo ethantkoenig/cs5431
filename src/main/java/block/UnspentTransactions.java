@@ -127,6 +127,10 @@ public class UnspentTransactions
         // into multiple transactions, so the return type of this method would
         // have to change.
 
+        if (amount <= 0) {
+            return Optional.empty();
+        }
+
         // Get hashes, indices of UTXO's - add as many as needed to reach amount.
         List<Pair<ShaTwoFiftySix, Integer>> hashes = getHashes(publicKeys);
         long toBeSpent = 0;
