@@ -31,7 +31,7 @@ public class PasswordRecoveryAccess {
                 int userid = rs.getInt("userid");
                 Date dt = rs.getDate("dt");
 
-                return checkData(dt) ? userid : -1;
+                return userid;
             }
             return -1;
         }
@@ -51,11 +51,6 @@ public class PasswordRecoveryAccess {
                 LOGGER.severe(msg);
             }
         }
-    }
-
-    // TODO: time stuff is annoying
-    private static boolean checkData(Date dt) {
-        return true;
     }
 
 }
