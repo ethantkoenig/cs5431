@@ -38,12 +38,9 @@ public class GetFundsRequest implements CanBeSerialized {
         @Override
         public GetFundsRequest deserialize(DataInputStream inputStream)
             throws DeserializationException, IOException {
-            int numKeys = inputStream.readInt();
-            ArrayList<ECDSAPublicKey> reqKeys = new ArrayList<ECDSAPublicKey>();
-            for (int i = 0; i < numKeys; ++i) {
-                reqKeys.add(ECDSAPublicKey.DESERIALIZER.deserialize(inputStream));
-            }
-            return new GetFundsRequest(numKeys, reqKeys);
+            List<ECDSAPublicKey> reqKeys = Deserializer.deserializeList(inputStream, ECDSAPublicKey.DESERIALIZER);
+
+            return new GetFundsRequest(reqKeys.size(), reqKeys);
         }
     }
 }

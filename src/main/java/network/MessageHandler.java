@@ -119,19 +119,17 @@ public class MessageHandler {
         HashMap<ECDSAPublicKey, Long> funds = new HashMap<ECDSAPublicKey, Long>();
         for (Map.Entry<Pair<ShaTwoFiftySix, Integer>, TxOut> entry : bundle.getUnspentTransactions()) {
             for (ECDSAPublicKey key : keys) {
-                if (key.equals(entry.getValue().ownerPubKey)) {
-                    if (funds.containsKey(key)) {
-                        funds.put(key, funds.get(key) + entry.getValue().value);
-                    } else {
-                        funds.put(key, entry.getValue().value);
-                    }
+                if (funds.containsKey(key)) {
+                    funds.put(key, funds.get(key) + entry.getValue().value);
+                } else if(key.equals(entry.getValue().ownerPubKey)) {
+                    funds.put(key, entry.getValue().value);
                 } else {
                     funds.put(key, 0L);
                 }
             }
         }
         // Generate a Funds message and return it to sender
-        FundsMessage toReturn = new FundsMessage(request.numKeys, funds);
+        GetFundsResponse toReturn = new GetFundsResponse(request.numKeys, funds);
         byte[] payload = ByteUtil.asByteArray(out -> toReturn.serialize(out));
         message.respond(new OutgoingMessage(Message.FUNDS, payload));
     }

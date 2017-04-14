@@ -11,14 +11,14 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class FundsMessage implements CanBeSerialized {
-    public final static Deserializer<FundsMessage> DESERIALIZER =
-        new FundsMessageDeserializer();
+public class GetFundsResponse implements CanBeSerialized {
+    public final static Deserializer<GetFundsResponse> DESERIALIZER =
+        new GetFundsResponseDeserializer();
 
     public final int numKeys;
     public final Map<ECDSAPublicKey, Long> keyFunds;
 
-    public FundsMessage(int numKeys, Map<ECDSAPublicKey, Long> keyFunds) {
+    public GetFundsResponse(int numKeys, Map<ECDSAPublicKey, Long> keyFunds) {
         this.numKeys = numKeys;
         this.keyFunds = keyFunds;
     }
@@ -32,20 +32,23 @@ public class FundsMessage implements CanBeSerialized {
         }
     }
 
-    private static final class FundsMessageDeserializer
-        implements Deserializer<FundsMessage> {
+    private static final class GetFundsResponseDeserializer
+        implements Deserializer<GetFundsResponse> {
 
         @Override
-        public FundsMessage deserialize(DataInputStream inputStream)
+        public GetFundsResponse deserialize(DataInputStream inputStream)
             throws DeserializationException, IOException {
             int numKeys = inputStream.readInt();
+            if (numKeys < 0 || numKeys > Deserializer.DEFAULT_MAX_LIST_LENGTH) {
+                throw new DeserializationException("Invalid number of keys");
+            }
             HashMap<ECDSAPublicKey, Long> keyFunds = new HashMap<ECDSAPublicKey, Long>();
             for (int i = 0; i < numKeys; ++i) {
                 ECDSAPublicKey key = ECDSAPublicKey.DESERIALIZER.deserialize(inputStream);
                 long money = inputStream.readLong();
                 keyFunds.put(key, money);
             }
-            return new FundsMessage(numKeys, keyFunds);
+            return new GetFundsResponse(numKeys, keyFunds);
         }
     }
 }
