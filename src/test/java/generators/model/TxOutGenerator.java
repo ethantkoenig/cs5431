@@ -18,6 +18,7 @@ public class TxOutGenerator extends Generator<TxOut> {
     @Override
     public TxOut generate(SourceOfRandomness random, GenerationStatus status) {
         return new TxOut(random.nextLong(MIN_VALUE, MAX_VALUE),
-                gen().type(ECDSAKeyPair.class).generate(random, status).publicKey);
+                gen().type(ECDSAKeyPair.class)
+                        .generate(random, status).publicKey);
     }
 }

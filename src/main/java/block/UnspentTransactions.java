@@ -1,12 +1,17 @@
 package block;
 
+import crypto.ECDSAPublicKey;
+import transaction.Transaction;
+import transaction.TxIn;
 import transaction.TxOut;
+import utils.Longs;
 import utils.Pair;
 import utils.ShaTwoFiftySix;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.io.IOException;
+import java.util.*;
+import java.util.stream.Collectors;
+
 
 /**
  * A map from (SHA-256, index) pairs to unspent transaction outputs.
@@ -49,9 +54,7 @@ public class UnspentTransactions
         return map.remove(new Pair<>(hash, index));
     }
 
-    public int size() {
-        return map.size();
-    }
+    public int size() { return map.size(); }
 
     @Override
     public boolean equals(Object o) {
@@ -72,5 +75,82 @@ public class UnspentTransactions
     @Override
     public Iterator<Map.Entry<Pair<ShaTwoFiftySix, Integer>, TxOut>> iterator() {
         return map.entrySet().iterator();
+    }
+
+    /**
+     *
+     * @param keys is a list of public keys tied to a user who wants to know how many coins
+     *             they own.
+     * @return the number of coins tied to these public keys.
+     */
+    public long getAmounts(ECDSAPublicKey[] keys) {
+        return map.values().parallelStream()
+                .filter(out -> Arrays.stream(keys)
+                        .anyMatch(out.ownerPubKey::equals))
+                .mapToLong(out -> out.value)
+                .sum();
+    }
+
+    /**
+     *
+     * @param keys is a list of public keys associated with a user
+     * @return a list of hashes and indexes that can be used to query the map for the UTXO's associated
+     *         with the given keys.
+     */
+    private List<Pair<ShaTwoFiftySix, Integer>> getHashes(ECDSAPublicKey[] keys) {
+        return map.entrySet().stream()
+                .filter(entry -> Arrays.stream(keys)
+                        .anyMatch(entry.getValue().ownerPubKey::equals))
+                .map(entry -> entry.getKey())
+                .collect(Collectors.toList());
+    }
+
+    /**
+     *
+     * @param publicKeys is an array of public keys associated with the user wishing
+     *                   to construct a transaction.
+     * @param masterKey is the key change is to be sent to.
+     * @param destination is the receiver public key.
+     * @param amount is the amount to be sent.
+     *
+     * @return a transaction from the user's public keys to the destination
+     *         public key. `Optional.empty()` if invalid amount given.
+     *
+     */
+    public Optional<Transaction>
+    buildUnsignedTransaction(ECDSAPublicKey[] publicKeys, ECDSAPublicKey masterKey,
+                             ECDSAPublicKey destination, long amount) throws IOException {
+
+        if (amount <= 0) {
+            return Optional.empty();
+        }
+
+        // Get hashes, indices of UTXO's - add as many as needed to reach amount.
+        List<Pair<ShaTwoFiftySix, Integer>> hashes = getHashes(publicKeys);
+        long toBeSpent = 0;
+        List<TxIn> txIns = new ArrayList<>();
+        for (Pair<ShaTwoFiftySix, Integer> txId : hashes) {
+            txIns.add(new TxIn(txId.getLeft(), txId.getRight()));
+            if (Longs.sumWillOverflow(toBeSpent, map.get(txId).value)) return Optional.empty();
+            toBeSpent += map.get(txId).value;
+            if (toBeSpent >= amount) break;
+        }
+
+        // Return `Optional.empty()` if insufficient funds
+        if (toBeSpent < amount) return Optional.empty();
+
+        Transaction.UnsignedBuilder txb = new Transaction.UnsignedBuilder();
+        for (TxIn in: txIns) {
+            txb.addInput(in);
+        }
+
+        // construct two outputs - one to the destination
+        txb.addOutput(new TxOut(amount, destination));
+        // - and one to the master key for change
+        if (toBeSpent > amount) {
+            txb.addOutput(new TxOut(toBeSpent - amount, masterKey));
+        }
+
+        return Optional.of(txb.build());
     }
 }
