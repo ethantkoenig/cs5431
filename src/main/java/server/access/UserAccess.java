@@ -52,9 +52,8 @@ public final class UserAccess {
 
     /**
      * Given an email return the user object in the DB that is associated with this username
-     * NOTE: we will need to not allow duplicate usernames.
      *
-     * @param username the username of the user being queried
+     * @param email the email of the user being queried
      * @throws SQLException
      */
     public static Optional<User> getUserbyEmail(String email) throws SQLException {

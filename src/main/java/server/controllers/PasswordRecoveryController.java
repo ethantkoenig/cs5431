@@ -21,6 +21,8 @@ import static spark.Spark.*;
 
 public class PasswordRecoveryController {
 
+    private static final String PASSWORD_ERROR = "Password must be between 12 and 24 characters, contain a lowercase letter, capital letter, and a number.";
+
     private static SecureRandom random = Config.secureRandom();
 
     public static void recoverPassword() {
@@ -63,7 +65,7 @@ public class PasswordRecoveryController {
                     //error handling
                     return RouteUtils.modelAndView(request, "resetpass.ftl")
                             .add("guid", guid)
-                            .add("error", "Password must be between 12 and 24 characters, contain a lowercase letter, capital letter, and a number.")
+                            .add("error", PASSWORD_ERROR)
                             .get();
                 }
                 int userID = PasswordRecoveryAccess.getPasswordRecoveryUserID(guid);
