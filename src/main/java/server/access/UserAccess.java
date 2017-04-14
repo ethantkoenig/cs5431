@@ -43,7 +43,31 @@ public final class UserAccess {
                 int id = rs.getInt("id");
                 byte[] salt = rs.getBytes("salt");
                 byte[] hashedPassword = rs.getBytes("pass");
-                return Optional.of(new User(id, username, salt, hashedPassword));
+                String email = rs.getString("email");
+                return Optional.of(new User(id, username, email, salt, hashedPassword));
+            }
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Given an email return the user object in the DB that is associated with this username
+     *
+     * @param email the email of the user being queried
+     * @throws SQLException
+     */
+    public static Optional<User> getUserbyEmail(String email) throws SQLException {
+        try (
+                Connection conn = DbUtil.getConnection(false);
+                PreparedStatement preparedStmt = Statements.selectUserByEmail(conn, email);
+                ResultSet rs = preparedStmt.executeQuery()
+        ) {
+            if (rs.next()) {
+                int id = rs.getInt("id");
+                byte[] salt = rs.getBytes("salt");
+                byte[] hashedPassword = rs.getBytes("pass");
+                String username = rs.getString("username");
+                return Optional.of(new User(id, username, email, salt, hashedPassword));
             }
             return Optional.empty();
         }
@@ -99,13 +123,28 @@ public final class UserAccess {
     /**
      * Inserts a user into the users table in the yaccoin database
      */
-    public static void insertUser(String username, byte[] salt, byte[] hashedPassword) throws SQLException {
+    public static void insertUser(String username, String email, byte[] salt, byte[] hashedPassword) throws SQLException {
         try (Connection conn = DbUtil.getConnection(false);
-             PreparedStatement preparedStmt = Statements.insertUser(conn, username, salt, hashedPassword)
+             PreparedStatement preparedStmt = Statements.insertUser(conn, username, email, salt, hashedPassword)
         ) {
             int rowCount = preparedStmt.executeUpdate();
             if (rowCount != 1) {
                 String msg = String.format("Insert affected %d rows, expected 1", rowCount);
+                LOGGER.severe(msg);
+            }
+        }
+    }
+
+    /**
+     * Updates a users password in the users table in the yaccoin database
+     */
+    public static void updateUserPass(int userID, byte[] salt, byte[] hashedPassword) throws SQLException {
+        try (Connection conn = DbUtil.getConnection(false);
+             PreparedStatement preparedStmt = Statements.updateUserPassword(conn, userID, salt, hashedPassword)
+        ) {
+            int rowCount = preparedStmt.executeUpdate();
+            if (rowCount != 1) {
+                String msg = String.format("Update affected %d rows, expected 1", rowCount);
                 LOGGER.severe(msg);
             }
         }
