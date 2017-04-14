@@ -4,6 +4,7 @@ import crypto.ECDSAPublicKey;
 import transaction.Transaction;
 import transaction.TxIn;
 import transaction.TxOut;
+import utils.Longs;
 import utils.Pair;
 import utils.ShaTwoFiftySix;
 
@@ -119,13 +120,6 @@ public class UnspentTransactions
     public Optional<Transaction>
     buildUnsignedTransaction(ECDSAPublicKey[] publicKeys, ECDSAPublicKey masterKey,
                              ECDSAPublicKey destination, long amount) throws IOException {
-        // TODO: check for overflow
-        // It doesn't matter, in the sense that it's unlikely, and our nodes
-        // would reject it anyway, but we shouldn't construct faulty transactions.
-        //
-        // Proper handling would really have us split an overflowing transaction
-        // into multiple transactions, so the return type of this method would
-        // have to change.
 
         if (amount <= 0) {
             return Optional.empty();
@@ -137,6 +131,7 @@ public class UnspentTransactions
         List<TxIn> txIns = new ArrayList<>();
         for (Pair<ShaTwoFiftySix, Integer> txId : hashes) {
             txIns.add(new TxIn(txId.getLeft(), txId.getRight()));
+            if (Longs.sumWillOverflow(toBeSpent, map.get(txId).value)) return Optional.empty();
             toBeSpent += map.get(txId).value;
             if (toBeSpent >= amount) break;
         }

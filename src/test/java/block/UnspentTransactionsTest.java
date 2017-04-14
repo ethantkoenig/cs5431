@@ -219,5 +219,37 @@ public class UnspentTransactionsTest extends RandomizedTest {
         Transaction result = ut.buildUnsignedTransaction(keys2, pair2.publicKey, pair1.publicKey, 1048).get();
 
         assert(txb.equalsUnordered(result));
+
+        ECDSAPublicKey[] keys3 = new ECDSAPublicKey[3];
+        keys3[0] = pair1.publicKey;
+        keys3[1] = pair2.publicKey;
+        keys3[2] = pair3.publicKey;
+
+        Transaction txb2 = new Transaction.Builder()
+                .addInputUnsigned(new TxIn(hash1, 0))
+                .addInputUnsigned(new TxIn(hash2, 0))
+                .addInputUnsigned(new TxIn(hash3, 0))
+                .addOutput(new TxOut(3070, pair1.publicKey))
+                .addOutput(new TxOut(2, pair2.publicKey)).buildUnsigned();
+        Transaction result2 = ut.buildUnsignedTransaction(keys3, pair2.publicKey, pair1.publicKey, 3070).get();
+
+        assert(txb2.equalsUnordered(result2));
+
+        ECDSAPublicKey[] keys4 = new ECDSAPublicKey[4];
+        keys4[0] = pair1.publicKey;
+        keys4[1] = pair2.publicKey;
+        keys4[2] = pair3.publicKey;
+        keys4[3] = pair4.publicKey;
+
+        Transaction txb3 = new Transaction.Builder()
+                .addInputUnsigned(new TxIn(hash1, 0))
+                .addInputUnsigned(new TxIn(hash2, 0))
+                .addInputUnsigned(new TxIn(hash3, 0))
+                .addInputUnsigned(new TxIn(hash4, 0))
+                .addOutput(new TxOut(4090, pair1.publicKey))
+                .addOutput(new TxOut(6, pair2.publicKey)).buildUnsigned();
+        Transaction result3 = ut.buildUnsignedTransaction(keys4, pair2.publicKey, pair1.publicKey, 4090).get();
+
+        assert(txb3.equalsUnordered(result3));
     }
 }
