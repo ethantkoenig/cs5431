@@ -28,8 +28,7 @@ public class PasswordRecoveryAccess {
              ResultSet rs = preparedStmt.executeQuery()
         ) {
             if (rs.next()) {
-                int userid = rs.getInt("userid");
-                return userid;
+                return rs.getInt("userid");
             }
             return -1;
         }

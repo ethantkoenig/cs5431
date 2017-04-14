@@ -1,9 +1,11 @@
 package server.utils;
 
+import com.google.inject.Inject;
 import server.access.UserAccess;
 import server.models.User;
 import spark.Request;
 import spark.Route;
+import spark.TemplateViewRoute;
 import utils.ByteUtil;
 
 import java.sql.SQLException;
@@ -11,8 +13,11 @@ import java.util.Optional;
 
 public final class RouteUtils {
 
-    // Disallow instances of this class
-    private RouteUtils() {
+    private final UserAccess userAccess;
+
+    @Inject
+    public RouteUtils(UserAccess userAccess) {
+        this.userAccess = userAccess;
     }
 
     public static Route wrapRoute(Route route) {
@@ -29,26 +34,44 @@ public final class RouteUtils {
         };
     }
 
-    public static MapModelAndView modelAndView(Request request, String viewName)
+    public static TemplateViewRoute wrapTemplate(TemplateViewRoute route) {
+        return (request, response) -> {
+            try {
+                return route.handle(request, response);
+            } catch (NotLoggedInException e) {
+                response.status(403);
+                return null;
+            } catch (InvalidParamException e) {
+                response.status(400);
+                return null;
+            }
+        };
+    }
+
+    public TemplateViewRoute template(String templatePath) {
+        return wrapTemplate((request, response) -> modelAndView(request, templatePath).get());
+    }
+
+    public MapModelAndView modelAndView(Request request, String viewName)
             throws SQLException {
         Optional<User> optUser = loggedInUser(request);
         boolean loggedIn = optUser.isPresent();
-        String username = loggedInUser(request).map(User::getUsername).orElse("");
+        String username = optUser.map(User::getUsername).orElse("");
         return new MapModelAndView(viewName)
                 .add("loggedIn", loggedIn)
                 .add("loggedInUsername", username);
     }
 
-    public static Optional<User> loggedInUser(Request request)
+    public Optional<User> loggedInUser(Request request)
             throws SQLException {
         String username = request.session().attribute("username");
         if (username == null) {
             return Optional.empty();
         }
-        return UserAccess.getUserbyUsername(username);
+        return userAccess.getUserbyUsername(username);
     }
 
-    public static User forceLoggedInUser(Request request)
+    public User forceLoggedInUser(Request request)
             throws NotLoggedInException, SQLException {
         return loggedInUser(request).orElseThrow(NotLoggedInException::new);
     }

@@ -1,5 +1,10 @@
 package server;
 
+import com.google.inject.AbstractModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import server.access.DatabaseUserAccess;
+import server.access.UserAccess;
 import server.config.DatabaseConfig;
 import server.controllers.IndexController;
 import server.controllers.PasswordRecoveryController;
@@ -29,10 +34,14 @@ public class Application {
         staticFiles.expireTime(600L);
 
         DatabaseConfig.dbInit();
-        IndexController.serveIndexPage();
-        UserController.startUserController();
-        TransactionController.makeTransaction();
-        PasswordRecoveryController.recoverPassword();
+
+        Injector injector = Guice.createInjector(new Module());
+
+        injector.getInstance(IndexController.class).init();
+        injector.getInstance(UserController.class).init();
+        injector.getInstance(TransactionController.class).init();
+        injector.getInstance(PasswordRecoveryController.class).init();
+
         return true;
     }
 
@@ -57,5 +66,12 @@ public class Application {
         }
         secure(keystorePath, keystorePassword, null, null);
         return true;
+    }
+
+    private static class Module extends AbstractModule {
+        @Override
+        protected void configure() {
+            bind(UserAccess.class).to(DatabaseUserAccess.class);
+        }
     }
 }

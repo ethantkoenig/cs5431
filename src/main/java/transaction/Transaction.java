@@ -66,12 +66,7 @@ public final class Transaction extends HashCache implements CanBeSerialized {
         CanBeSerialized.serializeArray(outputStream, txOut);
     }
 
-    /**
-     * Serialize this transaction (including signatures), and write it to {@code outputStream}
-     *
-     * @param outputStream output to write serialized transaction to
-     * @throws IOException
-     */
+    @Override
     public void serialize(DataOutputStream outputStream) throws IOException {
         if (signatures == null) {
             throw new IllegalStateException("Cannot fully serialize unsigned transaction");
