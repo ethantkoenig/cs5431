@@ -12,7 +12,7 @@ public final class Config {
     private static int HASH_GOAL = 2;
     private static String MAIL_SMTP_HOST = "smtp.gmail.com";
     private static String MAIL_FROM = "yaccoin5431@gmail.com";
-    private static String MAIL_PASSWORD = "HAfCt/9^"; //TODO: make environment variable. This is just easier for testing.
+    private static String MAIL_PASSWORD = System.getenv("EMAIL_PASS");
     private static SecureRandom SECURE_RANDOM = new SecureRandom();
 
     // Disallow instances of this class
