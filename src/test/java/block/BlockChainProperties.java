@@ -51,9 +51,9 @@ public class BlockChainProperties {
         Map<ECDSAPublicKey, ECDSAPrivateKey> keys = SigningKeyPairGenerator.getKeyMapping();
         ArrayList<Transaction> txs = new ArrayList<>();
 
-        for (Map.Entry<Pair<ShaTwoFiftySix, Integer>, TxOut> utxo : newutxos) {
+        for (Map.Entry<TxIn, TxOut> utxo : newutxos) {
             Transaction tx = new Transaction.Builder()
-                    .addInput(new TxIn(utxo.getKey().getLeft(), utxo.getKey().getRight()), keys.get(utxo.getValue().ownerPubKey))
+                    .addInput(utxo.getKey(), keys.get(utxo.getValue().ownerPubKey))
                     .addOutput(new TxOut(utxo.getValue().value, utxo.getValue().ownerPubKey))
                     .build();
             txs.add(tx);
