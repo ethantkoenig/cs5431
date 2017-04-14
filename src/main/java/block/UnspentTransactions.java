@@ -139,9 +139,9 @@ public class UnspentTransactions
         // Return `Optional.empty()` if insufficient funds
         if (toBeSpent < amount) return Optional.empty();
 
-        Transaction.Builder txb = new Transaction.Builder();
+        Transaction.UnsignedBuilder txb = new Transaction.UnsignedBuilder();
         for (TxIn in: txIns) {
-            txb.addInputUnsigned(in);
+            txb.addInput(in);
         }
 
         // construct two outputs - one to the destination
@@ -151,6 +151,6 @@ public class UnspentTransactions
             txb.addOutput(new TxOut(toBeSpent - amount, masterKey));
         }
 
-        return Optional.of(txb.buildUnsigned());
+        return Optional.of(txb.build());
     }
 }

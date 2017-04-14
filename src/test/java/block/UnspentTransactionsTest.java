@@ -192,18 +192,18 @@ public class UnspentTransactionsTest extends RandomizedTest {
         Assert.assertEquals(Optional.empty(),
                 ut.buildUnsignedTransaction(keys1, pair1.publicKey, pair2.publicKey, 2048));
 
-        Transaction tx = new Transaction.Builder()
-                .addInputUnsigned(new TxIn(hash1, 0))
+        Transaction tx = new Transaction.UnsignedBuilder()
+                .addInput(new TxIn(hash1, 0))
                 .addOutput(new TxOut(1024, pair2.publicKey))
-                .buildUnsigned();
+                .build();
         Assert.assertEquals(Optional.of(tx),
                 ut.buildUnsignedTransaction(keys1, pair1.publicKey, pair2.publicKey, 1024));
 
-        Transaction tx2 = new Transaction.Builder()
-                .addInputUnsigned(new TxIn(hash1, 0))
+        Transaction tx2 = new Transaction.UnsignedBuilder()
+                .addInput(new TxIn(hash1, 0))
                 .addOutput(new TxOut(1000, pair2.publicKey))
                 .addOutput(new TxOut(24, pair1.publicKey))
-                .buildUnsigned();
+                .build();
         Assert.assertEquals(Optional.of(tx2),
                 ut.buildUnsignedTransaction(keys1, pair1.publicKey, pair2.publicKey, 1000));
 
@@ -211,11 +211,12 @@ public class UnspentTransactionsTest extends RandomizedTest {
         keys2[0] = pair1.publicKey;
         keys2[1] = pair2.publicKey;
 
-        Transaction txb = new Transaction.Builder()
-                .addInputUnsigned(new TxIn(hash1, 0))
-                .addInputUnsigned(new TxIn(hash2, 0))
+        Transaction txb = new Transaction.UnsignedBuilder()
+                .addInput(new TxIn(hash1, 0))
+                .addInput(new TxIn(hash2, 0))
                 .addOutput(new TxOut(1048, pair1.publicKey))
-                .addOutput(new TxOut(1000, pair2.publicKey)).buildUnsigned();
+                .addOutput(new TxOut(1000, pair2.publicKey))
+                .build();
         Transaction result = ut.buildUnsignedTransaction(keys2, pair2.publicKey, pair1.publicKey, 1048).get();
 
         assert(txb.equalsUnordered(result));
@@ -225,12 +226,13 @@ public class UnspentTransactionsTest extends RandomizedTest {
         keys3[1] = pair2.publicKey;
         keys3[2] = pair3.publicKey;
 
-        Transaction txb2 = new Transaction.Builder()
-                .addInputUnsigned(new TxIn(hash1, 0))
-                .addInputUnsigned(new TxIn(hash2, 0))
-                .addInputUnsigned(new TxIn(hash3, 0))
+        Transaction txb2 = new Transaction.UnsignedBuilder()
+                .addInput(new TxIn(hash1, 0))
+                .addInput(new TxIn(hash2, 0))
+                .addInput(new TxIn(hash3, 0))
                 .addOutput(new TxOut(3070, pair1.publicKey))
-                .addOutput(new TxOut(2, pair2.publicKey)).buildUnsigned();
+                .addOutput(new TxOut(2, pair2.publicKey))
+                .build();
         Transaction result2 = ut.buildUnsignedTransaction(keys3, pair2.publicKey, pair1.publicKey, 3070).get();
 
         assert(txb2.equalsUnordered(result2));
@@ -241,13 +243,14 @@ public class UnspentTransactionsTest extends RandomizedTest {
         keys4[2] = pair3.publicKey;
         keys4[3] = pair4.publicKey;
 
-        Transaction txb3 = new Transaction.Builder()
-                .addInputUnsigned(new TxIn(hash1, 0))
-                .addInputUnsigned(new TxIn(hash2, 0))
-                .addInputUnsigned(new TxIn(hash3, 0))
-                .addInputUnsigned(new TxIn(hash4, 0))
+        Transaction txb3 = new Transaction.UnsignedBuilder()
+                .addInput(new TxIn(hash1, 0))
+                .addInput(new TxIn(hash2, 0))
+                .addInput(new TxIn(hash3, 0))
+                .addInput(new TxIn(hash4, 0))
                 .addOutput(new TxOut(4090, pair1.publicKey))
-                .addOutput(new TxOut(6, pair2.publicKey)).buildUnsigned();
+                .addOutput(new TxOut(6, pair2.publicKey))
+                .build();
         Transaction result3 = ut.buildUnsignedTransaction(keys4, pair2.publicKey, pair1.publicKey, 4090).get();
 
         assert(txb3.equalsUnordered(result3));
