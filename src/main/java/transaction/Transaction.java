@@ -311,6 +311,29 @@ public final class Transaction extends HashCache implements CanBeSerialized {
         }
     }
 
+    public static class UnsignedBuilder {
+        List<TxIn> inputs = new ArrayList<>();
+        List<TxOut> outputs = new ArrayList<>();
+
+        public UnsignedBuilder addInput(TxIn input) {
+            inputs.add(input);
+            return this;
+        }
+
+        public UnsignedBuilder addOutput(TxOut output) {
+            outputs.add(output);
+            return this;
+        }
+
+        public Transaction build() throws IOException, GeneralSecurityException {
+            return new Transaction(
+                    inputs.toArray(new TxIn[inputs.size()]),
+                    outputs.toArray(new TxOut[outputs.size()]),
+                    new ECDSASignature[]{}
+            );
+        }
+    }
+
     private static final class TransactionDeserializer implements Deserializer<Transaction> {
         @Override
         public Transaction deserialize(DataInputStream inputStream) throws DeserializationException, IOException {

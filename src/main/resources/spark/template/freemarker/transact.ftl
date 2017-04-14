@@ -4,7 +4,7 @@
 <!-- Page Content -->
 <div class="container">
 
-    <form action="/transact" method="post">
+    <form action="/transact" method="post" id="transactform">
         <div class="form-group">
             <label>Input Transaction</label>
             <input type="text" class="form-control" name="transaction">

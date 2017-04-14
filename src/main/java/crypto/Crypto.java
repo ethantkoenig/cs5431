@@ -62,7 +62,7 @@ public final class Crypto {
     public static ECDSASignature sign(byte[] toSign, ECDSAPrivateKey key) {
         ECDSASigner signer = new ECDSASigner();
         signer.init(true, new ECPrivateKeyParameters(key.d, PARAMETERS));
-        BigInteger[] signatureIntegers = signer.generateSignature(toSign);
+        BigInteger[] signatureIntegers = signer.generateSignature(sha256(toSign));
         if (signatureIntegers.length != 2) {
             throw new AssertionError("Invalid ECDSA signature");
         }
@@ -72,8 +72,7 @@ public final class Crypto {
     public static boolean verify(byte[] content, ECDSASignature signature, ECDSAPublicKey key) {
         ECDSASigner signer = new ECDSASigner();
         signer.init(false, new ECPublicKeyParameters(key.point, PARAMETERS));
-
-        return signer.verifySignature(content, signature.r, signature.s);
+        return signer.verifySignature(sha256(content), signature.r, signature.s);
     }
 
     public static ECDSAPublicKey loadPublicKey(String filename)
@@ -92,9 +91,14 @@ public final class Crypto {
         );
     }
 
-    public static byte[] sha256(byte[] content) throws GeneralSecurityException {
-        MessageDigest digest = MessageDigest.getInstance("SHA-256");
-        return digest.digest(content);
+    public static byte[] sha256(byte[] content) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            return digest.digest(content);
+        } catch (NoSuchAlgorithmException e) {
+            // should never happen
+            throw new RuntimeException(e);
+        }
     }
 
     public static byte[] pbkdf2(String content, byte[] salt) throws Exception {
