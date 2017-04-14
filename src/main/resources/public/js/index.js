@@ -20,9 +20,8 @@ $(document).ready(function () {
     $('#transactform').submit(function () {
         var action = $(this).attr("action");
         var data = $(this).serialize();
+        var password = $('#transaction-password').val();
         $.post(action, data, function (resp) {
-            // TODO better way to enter password
-            var password = prompt("What is your password?", "password");
             var decrypted = sjcl.decrypt(password, JSON.stringify(resp.encryptedKey));
             var key = new sjcl.ecc.ecdsa.secretKey(sjcl.ecc.curves.c256, new sjcl.bn(decrypted));
 
