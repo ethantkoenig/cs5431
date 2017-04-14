@@ -75,4 +75,14 @@ public class ValidateUtilsTest extends RandomizedTest {
 
         Assert.assertTrue(ValidateUtils.validPassword("ThisIsAGoodPassw0rd"));
     }
+
+    @Test
+    public void testValidEmail() {
+        Assert.assertFalse(ValidateUtils.validEmail(""));
+        Assert.assertFalse(ValidateUtils.validEmail("blah"));
+        Assert.assertFalse(ValidateUtils.validEmail("email@email"));
+
+        Assert.assertTrue(ValidateUtils.validEmail("test@test.com"));
+
+    }
 }
