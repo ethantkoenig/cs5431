@@ -126,7 +126,7 @@ public class MessageHandler {
                         funds.put(key, entry.getValue().value);
                     }
                 } else {
-                    funds.put(key, (long) 0);
+                    funds.put(key, 0L);
                 }
             }
         }
