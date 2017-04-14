@@ -9,14 +9,14 @@ import testutils.RandomizedTest;
 import transaction.Transaction;
 import transaction.TxIn;
 import transaction.TxOut;
-import utils.*;
+import utils.Config;
+import utils.ShaTwoFiftySix;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.Assert.*;
 
@@ -55,7 +55,7 @@ public class BlockChainTest extends RandomizedTest {
             prevTxOut = tx.getShaTwoFiftySix();
         }
 
-        next.findValidNonce(new AtomicBoolean(false));
+        next.findValidNonce();
 
         unspentTxs.put(prevTxOut, 0,
                 next.transactions[Block.NUM_TRANSACTIONS_PER_BLOCK - 1].getOutput(0));
@@ -272,7 +272,7 @@ public class BlockChainTest extends RandomizedTest {
         Config.setHashGoal(1);
         Block genesis = Block.genesis();
         genesis.addReward(Crypto.signatureKeyPair().publicKey);
-        genesis.findValidNonce(new AtomicBoolean(false));
+        genesis.findValidNonce();
         Path blockChainPath = Files.createTempDirectory("test");
         BlockChain bc = new BlockChain(blockChainPath, genesis);
         Assert.assertTrue(bc.containsBlockWithHash(genesis.getShaTwoFiftySix()));
@@ -283,7 +283,7 @@ public class BlockChainTest extends RandomizedTest {
 
         for (int i = 0; i < 10; ++i) {
             Block next = randomBlock(prev.getShaTwoFiftySix());
-            next.findValidNonce(new AtomicBoolean(false));
+            next.findValidNonce();
             bc.insertBlock(next);
             blocks.add(next);
             prev = next;

@@ -154,6 +154,15 @@ public class Block extends HashCache implements Iterable<Transaction>, CanBeSeri
      *
      * @return Whether we finished finding a valid nonce
      */
+    public boolean findValidNonce() throws IOException {
+        return findValidNonce(new AtomicBoolean(false));
+    }
+
+    /**
+     * Update the `nonce` of `this` to make the SHA-256 hash have the correct number of zeros.
+     *
+     * @return Whether we finished finding a valid nonce
+     */
     public boolean findValidNonce(AtomicBoolean quit) throws IOException {
         SHA256Digest digest = new SHA256Digest();
         byte[] ser = ByteUtil.asByteArray(this::serializeWithoutNonce);

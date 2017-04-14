@@ -6,6 +6,7 @@ import utils.ByteUtil;
 import java.io.IOException;
 import java.util.Random;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 
 import static utils.CanBeSerialized.serializeSingleton;
@@ -21,7 +22,7 @@ public class MinerThread extends Thread {
 
     private static final Logger LOGGER = Logger.getLogger(MinerThread.class.getName());
     private Block block;
-    private boolean stopMining = false;
+    private final AtomicBoolean stopMining = new AtomicBoolean(false);
 
     private final BlockingQueue<OutgoingMessage> broadcastQueue;
 
@@ -38,19 +39,14 @@ public class MinerThread extends Thread {
      */
     private Block tryNonces() throws Exception {
         LOGGER.info("[!] Trying nonces...");
-        block.setRandomNonce(new Random());
-
-        while (true) {
-            if (stopMining)
-                return null;
-            if (block.checkHash())
-                return block;
-            block.nonceAddOne();
+        if (!block.findValidNonce(stopMining)) {
+            return null;
         }
+        return block;
     }
 
     public void stopMining() {
-        stopMining = true;
+        stopMining.set(true);
     }
 
     @Override
