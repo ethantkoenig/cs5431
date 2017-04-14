@@ -12,9 +12,7 @@ import static utils.ShaTwoFiftySix.hashOf;
 
 public class PasswordRecoveryAccess {
 
-    private static final int RECOVERY_TIME = 3 * 60 * 60;
     private static final Logger LOGGER = Logger.getLogger(PasswordRecoveryAccess.class.getName());
-
 
     // Disallow instances of this class
     private PasswordRecoveryAccess() {

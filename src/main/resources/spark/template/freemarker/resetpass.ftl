@@ -7,10 +7,10 @@
         <div class="col-md-4 col-md-offset-4">
             <form action="/recover/reset" method="post">
                 <div class="form-group">
-                    <input type="text" class="form-control" id="passwordInput" name="password" placeholder="New password">
+                    <input type="password" class="form-control" id="passwordInput" name="password" placeholder="New password">
                 </div>
                 <div class="form-group">
-                    <input type="text" class="form-control" id="passwordConfirmInput" name="passwordConfirm" placeholder="Confirm new password">
+                    <input type="password" class="form-control" id="passwordConfirmInput" name="passwordConfirm" placeholder="Confirm new password">
                 </div>
                 <input type="hidden" name="guid" value="${guid}">
                 <input class="btn btn-primary submit-button" type="submit" value="Reset Password">

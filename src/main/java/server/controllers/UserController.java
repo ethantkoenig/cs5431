@@ -20,9 +20,9 @@ import static spark.Spark.*;
 
 public class UserController {
 
-    private static final String REGISTER_ERROR = "Password must be between 12 and 24 characters, contain a lowercase letter, capital letter, and a number. Username must be alphanumeric and between 6 and 24 characters.";
+    private static final String REGISTER_ERROR_ONE = "Password must be between 12 and 24 characters, contain a lowercase letter, capital letter, and a number. Username must be alphanumeric and between 6 and 24 characters.";
+    private static final String REGISTER_ERROR_TWO = "Username and/or email already taken.";
     private static final String LOGIN_ERROR = "Invalid username or password.";
-
 
     public static void startUserController() {
         registerUser();
@@ -48,23 +48,23 @@ public class UserController {
                 String email = request.queryParams("email");
                 if (!ValidateUtils.validUsername(username)) {
                     return RouteUtils.modelAndView(request, "register.ftl")
-                            .add("error", REGISTER_ERROR)
+                            .add("error", REGISTER_ERROR_ONE)
                             .get();
                 } else if (!ValidateUtils.validPassword(password)) {
                     return RouteUtils.modelAndView(request, "register.ftl")
-                            .add("error", REGISTER_ERROR)
+                            .add("error", REGISTER_ERROR_ONE)
                             .get();
                 }else if (!ValidateUtils.validEmail(email)) {
                     return RouteUtils.modelAndView(request, "register.ftl")
-                            .add("error", REGISTER_ERROR)
+                            .add("error", REGISTER_ERROR_ONE)
                             .get();
                 } else if (UserAccess.getUserbyUsername(username).isPresent()) {
                     return RouteUtils.modelAndView(request, "register.ftl")
-                            .add("error", REGISTER_ERROR)
+                            .add("error", REGISTER_ERROR_TWO)
                             .get();
                 } else if (UserAccess.getUserbyEmail(email).isPresent()) {
                     return RouteUtils.modelAndView(request, "register.ftl")
-                            .add("error", REGISTER_ERROR)
+                            .add("error", REGISTER_ERROR_TWO)
                             .get();
                 }
                 byte[] salt = Crypto.generateSalt();
@@ -114,7 +114,8 @@ public class UserController {
     private static void logoutUser() {
         delete("/logout", (request, response) -> {
             request.session().removeAttribute("username");
-            return RouteUtils.modelAndView(request, "login.ftl")
+            return RouteUtils.modelAndView(request, "index.ftl")
+                    .add("message", "Successfully logged out.")
                     .get();
         }, new FreeMarkerEngine());
     }

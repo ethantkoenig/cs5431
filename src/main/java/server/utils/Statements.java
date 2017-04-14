@@ -43,6 +43,7 @@ public final class Statements {
             + "  REFERENCES users(id)"
             + ")";
     public static final String SHOW_DB_LIKE = String.format("SHOW DATABASES LIKE '%s'", DB_NAME);
+    private static final int RECOVERY_TIME = 60 * 60; // 1 hour for recovery link to remain active
 
 
     @FunctionalInterface
@@ -130,7 +131,7 @@ public final class Statements {
     public static PreparedStatement getPasswordRecoveryUserID(Connection connection, String GUIDHash)
             throws SQLException {
         return prepareStatement(connection.prepareStatement(
-                "SELECT * FROM passrecover WHERE guidhash = ?"),
+                "SELECT * FROM passrecover WHERE guidhash=? and dt BETWEEN (NOW() - INTERVAL " + RECOVERY_TIME + " SECOND) AND NOW()"),
                 statement -> statement.setString(1, GUIDHash)
         );
     }
