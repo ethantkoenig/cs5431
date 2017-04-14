@@ -29,8 +29,6 @@ public class PasswordRecoveryAccess {
         ) {
             if (rs.next()) {
                 int userid = rs.getInt("userid");
-                Date dt = rs.getDate("dt");
-
                 return userid;
             }
             return -1;

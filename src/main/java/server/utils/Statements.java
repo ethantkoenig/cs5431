@@ -21,7 +21,7 @@ public final class Statements {
             + "salt varbinary(32) NOT NULL,"
             + "pass varbinary(2048) NOT NULL,"
             + "PRIMARY KEY (id),"
-            + "UNIQUE (username)"
+            + "UNIQUE (username),"
             + "UNIQUE (email)"
             + ")";
     public static final String CREATE_KEYS_TABLE = "CREATE TABLE keypairs ("
