@@ -96,6 +96,11 @@ public class HandleMessageThread extends Thread {
             case Message.GET_BLOCK:
                 handleGetBlockRequest(message);
                 break;
+            case Message.GET_FUNDS:
+                GetFundsRequest request
+                    = GetFundsRequest.DESERIALIZER.deserialize(message.payload);
+                handler.getFundsMsgHandler(message, request);
+                break;
             default:
                 LOGGER.severe(String.format("Unexpected message type: %d", message.type));
         }

@@ -2,9 +2,13 @@ package network;
 
 import block.Block;
 import block.UnspentTransactions;
+import crypto.ECDSAPublicKey;
 import transaction.Transaction;
+import transaction.TxOut;
 import utils.ByteUtil;
 import utils.CanBeSerialized;
+import utils.Pair;
+import utils.ShaTwoFiftySix;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -14,6 +18,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * The MessageHandler class manages internal state and handles incoming messages
@@ -104,6 +110,30 @@ public class MessageHandler {
             minerThread = new MinerThread(block, broadcastQueue);
             minerThread.start();
         }
+    }
+
+    public void getFundsMsgHandler(IncomingMessage message, GetFundsRequest request)
+        throws IOException {
+        // For each key, get the available funds from unspend Txs
+        List<ECDSAPublicKey> keys = request.requestedKeys;
+        HashMap<ECDSAPublicKey, Long> funds = new HashMap<ECDSAPublicKey, Long>();
+        for (Map.Entry<Pair<ShaTwoFiftySix, Integer>, TxOut> entry : bundle.getUnspentTransactions()) {
+            for (ECDSAPublicKey key : keys) {
+                if (key.equals(entry.getValue().ownerPubKey)) {
+                    if (funds.containsKey(key)) {
+                        funds.put(key, funds.get(key) + entry.getValue().value);
+                    } else {
+                        funds.put(key, entry.getValue().value);
+                    }
+                } else {
+                    funds.put(key, (long) 0);
+                }
+            }
+        }
+        // Generate a Funds message and return it to sender
+        FundsMessage toReturn = new FundsMessage(request.numKeys, funds);
+        byte[] payload = ByteUtil.asByteArray(out -> toReturn.serialize(out));
+        message.respond(new OutgoingMessage(Message.FUNDS, payload));
     }
 
     private void addBlockToChain(Block block) throws GeneralSecurityException, IOException {
