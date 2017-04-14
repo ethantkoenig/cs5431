@@ -12,7 +12,10 @@ import testutils.TestUtils;
 import transaction.Transaction;
 import transaction.TxIn;
 import transaction.TxOut;
-import utils.*;
+import utils.ByteUtil;
+import utils.Config;
+import utils.Deserializer;
+import utils.ShaTwoFiftySix;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -23,6 +26,7 @@ import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class MinerTest extends RandomizedTest {
 
@@ -154,12 +158,10 @@ public class MinerTest extends RandomizedTest {
         badBlock.addTransaction(txId);
         badBlock.addTransaction(txNonexistentBlock);
         badBlock.addReward(pair1.publicKey);
-        mineBlock(badBlock);
+        badBlock.findValidNonce(new AtomicBoolean(false));
 
         simulation.sendBlock(badBlock, 0);
         simulation.sendGetBlocksRequest(badBlock.getShaTwoFiftySix(), 1, 0);
-        simulation.assertNoMessage();
-
 
         Transaction txBadIndex = new Transaction.Builder()
                 .addInput(new TxIn(txId.getShaTwoFiftySix(), 1), pair1.privateKey)
@@ -170,12 +172,10 @@ public class MinerTest extends RandomizedTest {
         badBlock.addTransaction(txId);
         badBlock.addTransaction(txBadIndex);
         badBlock.addReward(pair1.publicKey);
-        mineBlock(badBlock);
+        badBlock.findValidNonce(new AtomicBoolean(false));
 
         simulation.sendBlock(badBlock, 0);
         simulation.sendGetBlocksRequest(badBlock.getShaTwoFiftySix(), 1, 0);
-        simulation.assertNoMessage();
-
 
         Transaction txBadAmount = new Transaction.Builder()
                 .addInput(new TxIn(txId.getShaTwoFiftySix(), 0), pair1.privateKey)
@@ -186,12 +186,10 @@ public class MinerTest extends RandomizedTest {
         badBlock.addTransaction(txId);
         badBlock.addTransaction(txBadAmount);
         badBlock.addReward(pair1.publicKey);
-        mineBlock(badBlock);
+        badBlock.findValidNonce(new AtomicBoolean(false));
 
         simulation.sendBlock(badBlock, 0);
         simulation.sendGetBlocksRequest(badBlock.getShaTwoFiftySix(), 1, 0);
-        simulation.assertNoMessage();
-
 
         Transaction txWrongOwner = new Transaction.Builder()
                 .addInput(new TxIn(txId.getShaTwoFiftySix(), 0), pair0.privateKey)
@@ -202,12 +200,10 @@ public class MinerTest extends RandomizedTest {
         badBlock.addTransaction(txId);
         badBlock.addTransaction(txWrongOwner);
         badBlock.addReward(pair1.publicKey);
-        mineBlock(badBlock);
+        badBlock.findValidNonce(new AtomicBoolean(false));
 
         simulation.sendBlock(badBlock, 0);
         simulation.sendGetBlocksRequest(badBlock.getShaTwoFiftySix(), 1, 0);
-        simulation.assertNoMessage();
-
 
         Transaction txZeroOutput = new Transaction.Builder()
                 .addInput(new TxIn(txId.getShaTwoFiftySix(), 0), pair1.privateKey)
@@ -219,11 +215,10 @@ public class MinerTest extends RandomizedTest {
         badBlock.addTransaction(txId);
         badBlock.addTransaction(txZeroOutput);
         badBlock.addReward(pair1.publicKey);
-        mineBlock(badBlock);
+        badBlock.findValidNonce(new AtomicBoolean(false));
 
         simulation.sendBlock(badBlock, 0);
         simulation.sendGetBlocksRequest(badBlock.getShaTwoFiftySix(), 1, 0);
-        simulation.assertNoMessage();
 
         Transaction txNegativeOutput = new Transaction.Builder()
                 .addInput(new TxIn(txId.getShaTwoFiftySix(), 0), pair1.privateKey)
@@ -235,10 +230,12 @@ public class MinerTest extends RandomizedTest {
         badBlock.addTransaction(txId);
         badBlock.addTransaction(txNegativeOutput);
         badBlock.addReward(pair1.publicKey);
-        mineBlock(badBlock);
+        badBlock.findValidNonce(new AtomicBoolean(false));
 
         simulation.sendBlock(badBlock, 0);
         simulation.sendGetBlocksRequest(badBlock.getShaTwoFiftySix(), 1, 0);
+
+        // should have never received message
         simulation.assertNoMessage();
     }
 
@@ -319,12 +316,12 @@ public class MinerTest extends RandomizedTest {
         }
 
         private Message getNextMessage(boolean allowDuplicate) throws Exception {
-            return getNextMessage(allowDuplicate, 5);
+            return getNextMessage(allowDuplicate, 500);
         }
 
         private Message getNextMessage(boolean allowDuplicate, long timeout) throws Exception {
             while (true) {
-                Message msg = queue.poll(timeout, TimeUnit.SECONDS);
+                Message msg = queue.poll(timeout, TimeUnit.MILLISECONDS);
                 Assert.assertNotNull(msg);
                 if (allowDuplicate || !seenMessages.contains(msg)) {
                     seenMessages.add(msg);
@@ -336,14 +333,8 @@ public class MinerTest extends RandomizedTest {
         private void assertNoMessage() throws Exception {
             TestUtils.assertThrows(
                     "Expected no response but found message",
-                    () -> getNextMessage(false, 1),
+                    () -> getNextMessage(false, 250),
                     AssertionError.class);
-        }
-    }
-
-    private static void mineBlock(Block b) throws Exception {
-        while (!b.checkHash()) {
-            b.nonceAddOne();
         }
     }
 }
