@@ -1,8 +1,16 @@
 package network;
 
+import block.BlockChain;
+import block.UnspentTransactions;
+import crypto.ECDSAKeyPair;
+import crypto.ECDSAPublicKey;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.InetSocketAddress;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
@@ -12,9 +20,10 @@ import java.util.logging.Logger;
 
 /**
  * The network.Node class represents an arbitrary node in the network that can communicate
- * with all other nodes through the use of the broadcast function.
+ * with all other nodes through the use of the broadcast function, maintains an up to date
+ * blockchain, and responds to network messages.
  *
- * @version 1.0, Feb 16 2017
+ * @version 2.0, Feb 16 2017
  */
 public class Node {
     private static final Logger LOGGER = Logger.getLogger(Node.class.getName());
@@ -27,15 +36,33 @@ public class Node {
     // Synchronized blocking queue to hold outgoing broadcast messages
     protected BlockingQueue<OutgoingMessage> broadcastQueue;
 
+    protected MiningBundle miningBundle;
 
     // The connections list holds all of the Nodes current connections
     protected ArrayList<ConnectionThread> connections;
 
-    public Node(ServerSocket serverSocket) {
+    public Node(ServerSocket serverSocket, ECDSAKeyPair myKeyPair, ECDSAPublicKey privilegedKey) {
         this.connections = new ArrayList<>();
         this.messageQueue = new SynchronousQueue<>();
         this.broadcastQueue = new SynchronousQueue<>();
         this.serverSocket = serverSocket;
+        Path blockChainPath = Paths.get("blockchain" + serverSocket.getLocalPort());
+        BlockChain blockChain = new BlockChain(blockChainPath);
+        UnspentTransactions unspentTransactions = UnspentTransactions.empty();
+        miningBundle = new MiningBundle(blockChain, myKeyPair, privilegedKey, unspentTransactions);
+    }
+
+    public void startNode() {
+        // Start network.HandleMessageThread
+        new HandleMessageThread(this.messageQueue, this.broadcastQueue, miningBundle, false).start();
+        // Start network.BroadcastThread
+        new BroadcastThread(this::broadcast, this.broadcastQueue).start();
+        // Start accepting incoming connections from other miners
+        try {
+            accept();
+        } catch (IOException e) {
+            LOGGER.severe("Error accepting incoming connections in Node: " + e.getMessage());
+        }
     }
 
     /**
@@ -61,6 +88,12 @@ public class Node {
             synchronized (this) {
                 connections.add(connectionThread);
             }
+        }
+    }
+
+    public void connectAll(ArrayList<InetSocketAddress> hosts) {
+        for (InetSocketAddress address : hosts) {
+            connect(address.getHostString(), address.getPort());
         }
     }
 

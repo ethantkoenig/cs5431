@@ -9,10 +9,10 @@ import org.junit.runner.RunWith;
 public class KeyTest {
 
     @Property
-    public void gettersAgreeWithConstructor(byte[] publicKey, byte[] encryptedPrivateKey) throws Exception {
+    public void gettersAgreeWithConstructor(byte[] publicKey, String encryptedPrivateKey) throws Exception {
         Key key = new Key(publicKey, encryptedPrivateKey);
         Assert.assertArrayEquals(publicKey, key.getPublicKey());
-        Assert.assertArrayEquals(encryptedPrivateKey, key.getEncryptedPrivateKey());
+        Assert.assertEquals(encryptedPrivateKey, key.encryptedPrivateKey);
     }
 
 }

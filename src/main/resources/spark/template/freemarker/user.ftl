@@ -15,10 +15,13 @@
     </div>
 
     Public key: <br>
-    <textarea type="text" name="publickey" form="keyform"></textarea><br>
+    <textarea name="publickey" form="keyform"></textarea><br>
 
     Private key: <br>
-    <textarea type="text" name="privatekey" form="keyform"></textarea><br>
+    <textarea name="privatekey" form="keyform" id="keyformprivatekey"></textarea><br>
+
+    Password: <br>
+    <input type="password" id="keyformpassword"><br>
 
 
     <form method="post" action="/user/keys" id="keyform">

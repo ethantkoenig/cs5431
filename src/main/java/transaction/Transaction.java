@@ -12,10 +12,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.logging.Logger;
 
 /**
@@ -237,6 +234,22 @@ public final class Transaction extends HashCache implements CanBeSerialized {
         return Arrays.equals(txIn, other.txIn) && Arrays.equals(txOut, other.txOut);
     }
 
+    public boolean equalsUnordered(Transaction tx) {
+        if (tx == null) {
+            return false;
+        }
+
+        HashSet<TxIn> theseInputs = new HashSet<>(Arrays.asList(txIn));
+        HashSet<TxIn> thoseInputs = new HashSet<>(Arrays.asList(tx.txIn));
+        HashSet<TxOut> theseOutputs = new HashSet<>(Arrays.asList(txOut));
+        HashSet<TxOut> thoseOutputs = new HashSet<>(Arrays.asList(tx.txOut));
+
+        return numInputs == tx.numInputs
+                && numOutputs == tx.numOutputs
+                && theseInputs.equals(thoseInputs)
+                && theseOutputs.equals(thoseOutputs);
+    }
+
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
@@ -282,6 +295,29 @@ public final class Transaction extends HashCache implements CanBeSerialized {
                     inputs.toArray(new TxIn[inputs.size()]),
                     outputs.toArray(new TxOut[outputs.size()]),
                     privateKeys.toArray(new ECDSAPrivateKey[privateKeys.size()])
+            );
+        }
+    }
+
+    public static class UnsignedBuilder {
+        List<TxIn> inputs = new ArrayList<>();
+        List<TxOut> outputs = new ArrayList<>();
+
+        public UnsignedBuilder addInput(TxIn input) {
+            inputs.add(input);
+            return this;
+        }
+
+        public UnsignedBuilder addOutput(TxOut output) {
+            outputs.add(output);
+            return this;
+        }
+
+        public Transaction build() throws IOException {
+            return new Transaction(
+                    inputs.toArray(new TxIn[inputs.size()]),
+                    outputs.toArray(new TxOut[outputs.size()]),
+                    new ECDSASignature[]{}
             );
         }
     }

@@ -34,10 +34,11 @@ public class HandleMessageThread extends Thread {
     // Needs reference to parent in order to call Node.broadcast()
     public HandleMessageThread(BlockingQueue<IncomingMessage> messageQueue,
                                BlockingQueue<OutgoingMessage> broadcastQueue,
-                               MiningBundle bundle) {
+                               MiningBundle bundle,
+                               boolean isMining) {
         this.messageQueue = messageQueue;
         this.bundle = bundle;
-        this.handler = new MessageHandler(broadcastQueue, bundle);
+        this.handler = new MessageHandler(broadcastQueue, bundle, isMining);
     }
 
     /**

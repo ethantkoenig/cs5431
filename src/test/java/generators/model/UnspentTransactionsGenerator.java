@@ -42,7 +42,7 @@ public class UnspentTransactionsGenerator extends Generator<UnspentTransactions>
             offsets.add(random.nextInt(0, 15));
         }
 
-        TxOutGenerator outGen = new TxOutGenerator();
+        Generator<TxOut> outGen = gen().type(TxOut.class);
         ArrayList<TxOut> outputs = new ArrayList<>();
         for (int i = 0; i < numTxs; ++i) {
             TxOut out = outGen.generate(random, status);
@@ -50,7 +50,7 @@ public class UnspentTransactionsGenerator extends Generator<UnspentTransactions>
         }
 
         for (int i = 0; i < numTxs; ++i) {
-            unspentTxs.put(hashes.get(0), offsets.get(0), outputs.get(0));
+            unspentTxs.put(hashes.get(i), offsets.get(i), outputs.get(i));
         }
 
         return unspentTxs;

@@ -37,8 +37,8 @@ public class Application {
     }
 
     private static boolean handleArgs(String args[]) {
-        if (args.length != 3) {
-            System.err.println("usage: webserver <keystore> <ip-address>:<port>");
+        if (args.length != 8) {
+            System.err.println("usage: webserver <keystore> <ip-address>:<port> <node args>");
             return false;
         }
 
