@@ -96,9 +96,9 @@ public class UnspentTransactions
      * @param keys is a list of public keys associated with a user
      * @return a list of `UnspentOutputs` owned by these `keys` that can be used to build a `Transaction`
      */
-    private List<UnspentOutput> getUnspentOutputs(ECDSAPublicKey[] keys) {
+    private List<UnspentOutput> getUnspentOutputs(List<ECDSAPublicKey> keys) {
         return map.entrySet().stream()
-                .filter(entry -> Arrays.stream(keys)
+                .filter(entry -> keys.stream()
                         .anyMatch(entry.getValue().ownerPubKey::equals))
                 .map(entry -> new UnspentOutput(
                         entry.getValue().ownerPubKey,
@@ -121,7 +121,7 @@ public class UnspentTransactions
      *
      */
     public Optional<Pair<List<ECDSAPublicKey>,Transaction>>
-    buildUnsignedTransaction(ECDSAPublicKey[] publicKeys, ECDSAPublicKey masterKey,
+    buildUnsignedTransaction(List<ECDSAPublicKey> publicKeys, ECDSAPublicKey masterKey,
                              ECDSAPublicKey destination, long amount) throws IOException {
 
         if (amount <= 0) {

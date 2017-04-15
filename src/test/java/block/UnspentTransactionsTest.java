@@ -14,6 +14,8 @@ import utils.ShaTwoFiftySix;
 import transaction.Transaction;
 
 import java.security.GeneralSecurityException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public class UnspentTransactionsTest extends RandomizedTest {
@@ -177,18 +179,17 @@ public class UnspentTransactionsTest extends RandomizedTest {
         ut.put(hash3, 0, out3);
         ut.put(hash4, 0, out4);
 
-        ECDSAPublicKey[] empty = new ECDSAPublicKey[1];
-        empty[0] = null;
+        List<ECDSAPublicKey> empty = new ArrayList<>();
         Assert.assertEquals(Optional.empty(),
                 ut.buildUnsignedTransaction(empty, pair1.publicKey, pair2.publicKey, 1024));
 
-        ECDSAPublicKey[] keys0 = new ECDSAPublicKey[1];
-        keys0[0] = pair5.publicKey;
+        List<ECDSAPublicKey> keys0 = new ArrayList<>();
+        keys0.add(pair5.publicKey);
         Assert.assertEquals(Optional.empty(),
                 ut.buildUnsignedTransaction(keys0, pair1.publicKey, pair2.publicKey, 1024));
 
-        ECDSAPublicKey[] keys1 = new ECDSAPublicKey[1];
-        keys1[0] = pair1.publicKey;
+        List<ECDSAPublicKey> keys1 = new ArrayList<>();
+        keys1.add(pair1.publicKey);
         Assert.assertEquals(Optional.empty(),
                 ut.buildUnsignedTransaction(keys1, pair1.publicKey, pair2.publicKey, 2048));
 
@@ -207,9 +208,9 @@ public class UnspentTransactionsTest extends RandomizedTest {
         Assert.assertEquals(tx2,
                 ut.buildUnsignedTransaction(keys1, pair1.publicKey, pair2.publicKey, 1000).get().getRight());
 
-        ECDSAPublicKey[] keys2 = new ECDSAPublicKey[2];
-        keys2[0] = pair1.publicKey;
-        keys2[1] = pair2.publicKey;
+        List<ECDSAPublicKey> keys2 = new ArrayList<>();
+        keys2.add(pair1.publicKey);
+        keys2.add(pair2.publicKey);
 
         Transaction txb = new Transaction.UnsignedBuilder()
                 .addInput(new TxIn(hash1, 0))
@@ -221,10 +222,10 @@ public class UnspentTransactionsTest extends RandomizedTest {
 
         assert(txb.equalsUnordered(result));
 
-        ECDSAPublicKey[] keys3 = new ECDSAPublicKey[3];
-        keys3[0] = pair1.publicKey;
-        keys3[1] = pair2.publicKey;
-        keys3[2] = pair3.publicKey;
+        List<ECDSAPublicKey> keys3 = new ArrayList<>();
+        keys3.add(pair1.publicKey);
+        keys3.add(pair2.publicKey);
+        keys3.add(pair3.publicKey);
 
         Transaction txb2 = new Transaction.UnsignedBuilder()
                 .addInput(new TxIn(hash1, 0))
@@ -237,11 +238,11 @@ public class UnspentTransactionsTest extends RandomizedTest {
 
         assert(txb2.equalsUnordered(result2));
 
-        ECDSAPublicKey[] keys4 = new ECDSAPublicKey[4];
-        keys4[0] = pair1.publicKey;
-        keys4[1] = pair2.publicKey;
-        keys4[2] = pair3.publicKey;
-        keys4[3] = pair4.publicKey;
+        List<ECDSAPublicKey> keys4 = new ArrayList<>();
+        keys4.add(pair1.publicKey);
+        keys4.add(pair2.publicKey);
+        keys4.add(pair3.publicKey);
+        keys4.add(pair4.publicKey);
 
         Transaction txb3 = new Transaction.UnsignedBuilder()
                 .addInput(new TxIn(hash1, 0))
