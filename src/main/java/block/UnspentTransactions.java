@@ -94,14 +94,17 @@ public class UnspentTransactions
     /**
      *
      * @param keys is a list of public keys associated with a user
-     * @return a list of hashes and indexes that can be used to query the map for the UTXO's associated
-     *         with the given keys.
+     * @return a list of `UnspentOutputs` owned by these `keys` that can be used to build a `Transaction`
      */
-    private List<Pair<ShaTwoFiftySix, Integer>> getHashes(ECDSAPublicKey[] keys) {
+    private List<UnspentOutput> getUnspentOutputs(List<ECDSAPublicKey> keys) {
         return map.entrySet().stream()
-                .filter(entry -> Arrays.stream(keys)
+                .filter(entry -> keys.stream()
                         .anyMatch(entry.getValue().ownerPubKey::equals))
-                .map(entry -> entry.getKey())
+                .map(entry -> new UnspentOutput(
+                        entry.getValue().ownerPubKey,
+                        entry.getKey().getLeft(),
+                        entry.getKey().getRight(),
+                        entry.getValue().value))
                 .collect(Collectors.toList());
     }
 
@@ -117,8 +120,8 @@ public class UnspentTransactions
      *         public key. `Optional.empty()` if invalid amount given.
      *
      */
-    public Optional<Transaction>
-    buildUnsignedTransaction(ECDSAPublicKey[] publicKeys, ECDSAPublicKey masterKey,
+    public Optional<Pair<List<ECDSAPublicKey>,Transaction>>
+    buildUnsignedTransaction(List<ECDSAPublicKey> publicKeys, ECDSAPublicKey masterKey,
                              ECDSAPublicKey destination, long amount) throws IOException {
 
         if (amount <= 0) {
@@ -126,13 +129,15 @@ public class UnspentTransactions
         }
 
         // Get hashes, indices of UTXO's - add as many as needed to reach amount.
-        List<Pair<ShaTwoFiftySix, Integer>> hashes = getHashes(publicKeys);
+        List<UnspentOutput> hashes = getUnspentOutputs(publicKeys);
         long toBeSpent = 0;
         List<TxIn> txIns = new ArrayList<>();
-        for (Pair<ShaTwoFiftySix, Integer> txId : hashes) {
-            txIns.add(new TxIn(txId.getLeft(), txId.getRight()));
-            if (Longs.sumWillOverflow(toBeSpent, map.get(txId).value)) return Optional.empty();
-            toBeSpent += map.get(txId).value;
+        List<ECDSAPublicKey> keysUsed = new ArrayList<>();
+        for (UnspentOutput utx: hashes) {
+            txIns.add(new TxIn(utx.txHash, utx.index));
+            if (Longs.sumWillOverflow(toBeSpent, utx.value)) return Optional.empty();
+            toBeSpent += utx.value;
+            keysUsed.add(utx.ownerKey);
             if (toBeSpent >= amount) break;
         }
 
@@ -151,6 +156,20 @@ public class UnspentTransactions
             txb.addOutput(new TxOut(toBeSpent - amount, masterKey));
         }
 
-        return Optional.of(txb.build());
+        return Optional.of(new Pair<>(keysUsed,txb.build()));
+    }
+
+    private static class UnspentOutput {
+        private final ECDSAPublicKey ownerKey;
+        private final ShaTwoFiftySix txHash;
+        private final int index;
+        private final long value;
+
+        public UnspentOutput(ECDSAPublicKey ownerKey, ShaTwoFiftySix txHash, int index, long value) {
+            this.ownerKey = ownerKey;
+            this.txHash = txHash;
+            this.index = index;
+            this.value = value;
+        }
     }
 }

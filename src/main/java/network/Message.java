@@ -15,6 +15,8 @@ public abstract class Message {
     public static final byte GET_BLOCK = 2;
     public static final byte GET_FUNDS = 3;
     public static final byte FUNDS = 4;
+    public static final byte GET_UTX_WITH_KEYS = 5;
+    public static final byte UTX_WITH_KEYS = 6;
 
     public final byte type;
     public final byte[] payload;

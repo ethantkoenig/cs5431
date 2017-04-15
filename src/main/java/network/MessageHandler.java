@@ -3,6 +3,7 @@ package network;
 import block.Block;
 import block.UnspentTransactions;
 import crypto.ECDSAPublicKey;
+import org.bouncycastle.jcajce.provider.asymmetric.ec.KeyFactorySpi;
 import transaction.Transaction;
 import transaction.TxOut;
 import utils.ByteUtil;
@@ -116,8 +117,8 @@ public class MessageHandler {
      * Responds to a sender with a `FUNDS` message containing the map from `ECDSAPublicKey`s to
      * total funds owned by those keys.
      *
-     * @param message The `GET_FUNDS` message to respond to
-     * @param request The message from the sender. Must have a non-null `responder`
+     * @param message The message from the sender. Must have a non-null `responder`
+     * @param request The `GET_FUNDS` request to respond to
      * @throws IOException
      */
     public void getFundsMsgHandler(IncomingMessage message, GetFundsRequest request)
@@ -139,6 +140,29 @@ public class MessageHandler {
         GetFundsResponse toReturn = new GetFundsResponse(request.numKeys, funds);
         byte[] payload = ByteUtil.asByteArray(toReturn::serialize);
         message.respond(new OutgoingMessage(Message.FUNDS, payload));
+    }
+
+    /**
+     * Responds to a sender with a `UTX_WITH_KEYS` message containing the unsigned `Transaction`
+     * as well as the list of public keys corresponding to the inputs.
+     *
+     * @param message The message from the sender. Must have a non-null `responder`
+     * @param request The `GET_UTX_WITH_KEYS` request to respond to
+     * @throws IOException
+     */
+    public void getUTXWithKeysMsgHandler(IncomingMessage message, GetUTXWithKeysRequest request)
+        throws IOException {
+        Optional<Pair<List<ECDSAPublicKey>,Transaction>> result =
+                bundle.getUnspentTransactions()
+                        .buildUnsignedTransaction(
+                                request.keys, request.changeKey,
+                                request.destination, request.amount);
+
+        GetUTXWithKeysResponse toReturn = result
+                .map(p -> GetUTXWithKeysResponse.success(p.getLeft(),p.getRight()))
+                .orElseGet(GetUTXWithKeysResponse::failure);
+        byte[] payload = ByteUtil.asByteArray(toReturn::serialize);
+        message.respond(new OutgoingMessage(Message.UTX_WITH_KEYS, payload));
     }
 
     private void addBlockToChain(Block block) throws GeneralSecurityException, IOException {
