@@ -112,25 +112,32 @@ public class MessageHandler {
         }
     }
 
+    /**
+     * Responds to a sender with a `FUNDS` message containing the map from `ECDSAPublicKey`s to
+     * total funds owned by those keys.
+     *
+     * @param message The `GET_FUNDS` message to respond to
+     * @param request The message from the sender. Must have a non-null `responder`
+     * @throws IOException
+     */
     public void getFundsMsgHandler(IncomingMessage message, GetFundsRequest request)
         throws IOException {
         // For each key, get the available funds from unspend Txs
         List<ECDSAPublicKey> keys = request.requestedKeys;
-        HashMap<ECDSAPublicKey, Long> funds = new HashMap<ECDSAPublicKey, Long>();
+        HashMap<ECDSAPublicKey, Long> funds = new HashMap<>();
         for (Map.Entry<Pair<ShaTwoFiftySix, Integer>, TxOut> entry : bundle.getUnspentTransactions()) {
             for (ECDSAPublicKey key : keys) {
-                if (funds.containsKey(key)) {
-                    funds.put(key, funds.get(key) + entry.getValue().value);
-                } else if(key.equals(entry.getValue().ownerPubKey)) {
-                    funds.put(key, entry.getValue().value);
-                } else {
-                    funds.put(key, 0L);
+                if (key.equals(entry.getValue().ownerPubKey)) {
+                    funds.compute(key, (k,v) -> ((v == null) ? 0L : v) + entry.getValue().value);
                 }
             }
         }
+        for (ECDSAPublicKey key: keys) {
+            funds.putIfAbsent(key, 0L);
+        }
         // Generate a Funds message and return it to sender
         GetFundsResponse toReturn = new GetFundsResponse(request.numKeys, funds);
-        byte[] payload = ByteUtil.asByteArray(out -> toReturn.serialize(out));
+        byte[] payload = ByteUtil.asByteArray(toReturn::serialize);
         message.respond(new OutgoingMessage(Message.FUNDS, payload));
     }
 
