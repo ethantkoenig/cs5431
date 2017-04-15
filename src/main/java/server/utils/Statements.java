@@ -20,6 +20,7 @@ public final class Statements {
             + "email varchar(128) NOT NULL,"
             + "salt varbinary(32) NOT NULL,"
             + "pass varbinary(2048) NOT NULL,"
+            + "failedLogins int NOT NULL DEFAULT 0,"
             + "PRIMARY KEY (id),"
             + "UNIQUE (username),"
             + "UNIQUE (email)"
@@ -153,6 +154,24 @@ public final class Statements {
                     statement.setBytes(1, hashedPassword);
                     statement.setBytes(2, salt);
                     statement.setInt(3, userID);
+                }
+        );
+    }
+
+    public static PreparedStatement incrementFailedLogins(Connection connection, String username) throws SQLException {
+        return prepareStatement(connection.prepareStatement(
+                "UPDATE users SET failedLogins = failedLogins + 1 WHERE username = ?"),
+                statement -> {
+                    statement.setString(1, username);
+                }
+        );
+    }
+
+    public static PreparedStatement resetFailedLogins(Connection connection, String username) throws SQLException {
+        return prepareStatement(connection.prepareStatement(
+                "UPDATE users SET failedLogins = 0 WHERE username = ?"),
+                statement -> {
+                    statement.setString(1, username);
                 }
         );
     }

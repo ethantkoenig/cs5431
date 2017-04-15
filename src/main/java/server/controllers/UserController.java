@@ -23,6 +23,9 @@ public class UserController {
     private static final String REGISTER_ERROR_ONE = "Password must be between 12 and 24 characters, contain a lowercase letter, capital letter, and a number. Username must be alphanumeric and between 6 and 24 characters.";
     private static final String REGISTER_ERROR_TWO = "Username and/or email already taken.";
     private static final String LOGIN_ERROR = "Invalid username or password.";
+    private static final String LOCKOUT_ALERT = "For your safety, your account has been locked due to too many failed login attempts. Please reset your password below.";
+    private static final int FAILED_LOGIN_LIMIT = 5;
+
 
     public static void startUserController() {
         registerUser();
@@ -92,7 +95,13 @@ public class UserController {
                 String username = queryParam(request, "username");
                 String password = queryParam(request, "password");
                 Optional<User> optUser = UserAccess.getUserbyUsername(username);
+                if (optUser.get().getFailedLogins() >= FAILED_LOGIN_LIMIT){
+                    return RouteUtils.modelAndView(request, "recover.ftl")
+                            .add("alert", LOCKOUT_ALERT)
+                            .get();
+                }
                 if (!optUser.isPresent()) {
+                    UserAccess.incrementFailedLogins(username);
                     return RouteUtils.modelAndView(request, "login.ftl")
                             .add("error", LOGIN_ERROR)
                             .get();
@@ -100,11 +109,13 @@ public class UserController {
                 User user = optUser.get();
                 byte[] hash = Crypto.hashAndSalt(password, user.getSalt());
                 if (!Arrays.equals(hash, user.getHashedPassword())) {
+                    UserAccess.incrementFailedLogins(username);
                     return RouteUtils.modelAndView(request, "login.ftl")
                             .add("error", LOGIN_ERROR)
                             .get();
                 }
                 request.session(true).attribute("username", username);
+                UserAccess.resetFailedLogins(username);
                 return RouteUtils.modelAndView(request, "transact.ftl")
                         .get();
             }, new FreeMarkerEngine());

@@ -44,7 +44,8 @@ public final class UserAccess {
                 byte[] salt = rs.getBytes("salt");
                 byte[] hashedPassword = rs.getBytes("pass");
                 String email = rs.getString("email");
-                return Optional.of(new User(id, username, email, salt, hashedPassword));
+                int failedLogins = rs.getInt("failedLogins");
+                return Optional.of(new User(id, username, email, salt, hashedPassword, failedLogins));
             }
             return Optional.empty();
         }
@@ -67,7 +68,8 @@ public final class UserAccess {
                 byte[] salt = rs.getBytes("salt");
                 byte[] hashedPassword = rs.getBytes("pass");
                 String username = rs.getString("username");
-                return Optional.of(new User(id, username, email, salt, hashedPassword));
+                int failedLogins = rs.getInt("failedLogins");
+                return Optional.of(new User(id, username, email, salt, hashedPassword, failedLogins));
             }
             return Optional.empty();
         }
@@ -141,6 +143,36 @@ public final class UserAccess {
     public static void updateUserPass(int userID, byte[] salt, byte[] hashedPassword) throws SQLException {
         try (Connection conn = DbUtil.getConnection(false);
              PreparedStatement preparedStmt = Statements.updateUserPassword(conn, userID, salt, hashedPassword)
+        ) {
+            int rowCount = preparedStmt.executeUpdate();
+            if (rowCount != 1) {
+                String msg = String.format("Update affected %d rows, expected 1", rowCount);
+                LOGGER.severe(msg);
+            }
+        }
+    }
+
+    /**
+     * Increments the failed login attempts associated with the given username
+     */
+    public static void incrementFailedLogins(String username) throws SQLException {
+        try (Connection conn = DbUtil.getConnection(false);
+             PreparedStatement preparedStmt = Statements.incrementFailedLogins(conn, username)
+        ) {
+            int rowCount = preparedStmt.executeUpdate();
+            if (rowCount != 1) {
+                String msg = String.format("Update affected %d rows, expected 1", rowCount);
+                LOGGER.severe(msg);
+            }
+        }
+    }
+
+    /**
+     * Resets the failed login attempts associated with the given username to 0
+     */
+    public static void resetFailedLogins(String username) throws SQLException {
+        try (Connection conn = DbUtil.getConnection(false);
+             PreparedStatement preparedStmt = Statements.resetFailedLogins(conn, username)
         ) {
             int rowCount = preparedStmt.executeUpdate();
             if (rowCount != 1) {
