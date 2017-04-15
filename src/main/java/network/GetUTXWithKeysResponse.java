@@ -23,7 +23,7 @@ public class GetUTXWithKeysResponse implements CanBeSerialized {
     public final static Deserializer<GetUTXWithKeysResponse> DESERIALIZER =
             new GetUTXWithKeysResponseDeserializer();
 
-    public GetUTXWithKeysResponse(List<ECDSAPublicKey> keysUsed, Transaction unsignedTransaction, boolean wasSuccessful) {
+    private GetUTXWithKeysResponse(List<ECDSAPublicKey> keysUsed, Transaction unsignedTransaction, boolean wasSuccessful) {
         this.keysUsed = keysUsed;
         this.unsignedTransaction = unsignedTransaction;
         this.wasSuccessful = wasSuccessful;
