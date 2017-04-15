@@ -2,9 +2,13 @@ package network;
 
 import block.Block;
 import block.UnspentTransactions;
+import crypto.ECDSAPublicKey;
 import transaction.Transaction;
+import transaction.TxOut;
 import utils.ByteUtil;
 import utils.CanBeSerialized;
+import utils.Pair;
+import utils.ShaTwoFiftySix;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -14,6 +18,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * The MessageHandler class manages internal state and handles incoming messages
@@ -104,6 +110,35 @@ public class MessageHandler {
             minerThread = new MinerThread(block, broadcastQueue);
             minerThread.start();
         }
+    }
+
+    /**
+     * Responds to a sender with a `FUNDS` message containing the map from `ECDSAPublicKey`s to
+     * total funds owned by those keys.
+     *
+     * @param message The `GET_FUNDS` message to respond to
+     * @param request The message from the sender. Must have a non-null `responder`
+     * @throws IOException
+     */
+    public void getFundsMsgHandler(IncomingMessage message, GetFundsRequest request)
+        throws IOException {
+        // For each key, get the available funds from unspend Txs
+        List<ECDSAPublicKey> keys = request.requestedKeys;
+        HashMap<ECDSAPublicKey, Long> funds = new HashMap<>();
+        for (Map.Entry<Pair<ShaTwoFiftySix, Integer>, TxOut> entry : bundle.getUnspentTransactions()) {
+            for (ECDSAPublicKey key : keys) {
+                if (key.equals(entry.getValue().ownerPubKey)) {
+                    funds.compute(key, (k,v) -> ((v == null) ? 0L : v) + entry.getValue().value);
+                }
+            }
+        }
+        for (ECDSAPublicKey key: keys) {
+            funds.putIfAbsent(key, 0L);
+        }
+        // Generate a Funds message and return it to sender
+        GetFundsResponse toReturn = new GetFundsResponse(request.numKeys, funds);
+        byte[] payload = ByteUtil.asByteArray(toReturn::serialize);
+        message.respond(new OutgoingMessage(Message.FUNDS, payload));
     }
 
     private void addBlockToChain(Block block) throws GeneralSecurityException, IOException {

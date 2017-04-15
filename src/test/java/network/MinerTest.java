@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class MinerTest extends RandomizedTest {
 
@@ -158,7 +157,7 @@ public class MinerTest extends RandomizedTest {
         badBlock.addTransaction(txId);
         badBlock.addTransaction(txNonexistentBlock);
         badBlock.addReward(pair1.publicKey);
-        badBlock.findValidNonce(new AtomicBoolean(false));
+        badBlock.findValidNonce();
 
         simulation.sendBlock(badBlock, 0);
         simulation.sendGetBlocksRequest(badBlock.getShaTwoFiftySix(), 1, 0);
@@ -172,7 +171,7 @@ public class MinerTest extends RandomizedTest {
         badBlock.addTransaction(txId);
         badBlock.addTransaction(txBadIndex);
         badBlock.addReward(pair1.publicKey);
-        badBlock.findValidNonce(new AtomicBoolean(false));
+        badBlock.findValidNonce();
 
         simulation.sendBlock(badBlock, 0);
         simulation.sendGetBlocksRequest(badBlock.getShaTwoFiftySix(), 1, 0);
@@ -186,7 +185,7 @@ public class MinerTest extends RandomizedTest {
         badBlock.addTransaction(txId);
         badBlock.addTransaction(txBadAmount);
         badBlock.addReward(pair1.publicKey);
-        badBlock.findValidNonce(new AtomicBoolean(false));
+        badBlock.findValidNonce();
 
         simulation.sendBlock(badBlock, 0);
         simulation.sendGetBlocksRequest(badBlock.getShaTwoFiftySix(), 1, 0);
@@ -200,7 +199,7 @@ public class MinerTest extends RandomizedTest {
         badBlock.addTransaction(txId);
         badBlock.addTransaction(txWrongOwner);
         badBlock.addReward(pair1.publicKey);
-        badBlock.findValidNonce(new AtomicBoolean(false));
+        badBlock.findValidNonce();
 
         simulation.sendBlock(badBlock, 0);
         simulation.sendGetBlocksRequest(badBlock.getShaTwoFiftySix(), 1, 0);
@@ -215,7 +214,7 @@ public class MinerTest extends RandomizedTest {
         badBlock.addTransaction(txId);
         badBlock.addTransaction(txZeroOutput);
         badBlock.addReward(pair1.publicKey);
-        badBlock.findValidNonce(new AtomicBoolean(false));
+        badBlock.findValidNonce();
 
         simulation.sendBlock(badBlock, 0);
         simulation.sendGetBlocksRequest(badBlock.getShaTwoFiftySix(), 1, 0);
@@ -230,7 +229,7 @@ public class MinerTest extends RandomizedTest {
         badBlock.addTransaction(txId);
         badBlock.addTransaction(txNegativeOutput);
         badBlock.addReward(pair1.publicKey);
-        badBlock.findValidNonce(new AtomicBoolean(false));
+        badBlock.findValidNonce();
 
         simulation.sendBlock(badBlock, 0);
         simulation.sendGetBlocksRequest(badBlock.getShaTwoFiftySix(), 1, 0);
