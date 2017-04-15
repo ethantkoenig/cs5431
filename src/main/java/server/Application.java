@@ -17,9 +17,9 @@ import static spark.Spark.*;
 public class Application {
 
     public static boolean run(String[] args) {
-//        if (!handleArgs(args)) {
-//            return false;
-//        }
+        if (!handleArgs(args)) {
+            return false;
+        }
 
         // Configure Spark on port 5000
         port(5000);
