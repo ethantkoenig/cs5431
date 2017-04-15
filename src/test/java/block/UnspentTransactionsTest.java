@@ -196,16 +196,16 @@ public class UnspentTransactionsTest extends RandomizedTest {
                 .addInput(new TxIn(hash1, 0))
                 .addOutput(new TxOut(1024, pair2.publicKey))
                 .build();
-        Assert.assertEquals(Optional.of(tx),
-                ut.buildUnsignedTransaction(keys1, pair1.publicKey, pair2.publicKey, 1024));
+        Assert.assertEquals(tx,
+                ut.buildUnsignedTransaction(keys1, pair1.publicKey, pair2.publicKey, 1024).get().getRight());
 
         Transaction tx2 = new Transaction.UnsignedBuilder()
                 .addInput(new TxIn(hash1, 0))
                 .addOutput(new TxOut(1000, pair2.publicKey))
                 .addOutput(new TxOut(24, pair1.publicKey))
                 .build();
-        Assert.assertEquals(Optional.of(tx2),
-                ut.buildUnsignedTransaction(keys1, pair1.publicKey, pair2.publicKey, 1000));
+        Assert.assertEquals(tx2,
+                ut.buildUnsignedTransaction(keys1, pair1.publicKey, pair2.publicKey, 1000).get().getRight());
 
         ECDSAPublicKey[] keys2 = new ECDSAPublicKey[2];
         keys2[0] = pair1.publicKey;
@@ -217,7 +217,7 @@ public class UnspentTransactionsTest extends RandomizedTest {
                 .addOutput(new TxOut(1048, pair1.publicKey))
                 .addOutput(new TxOut(1000, pair2.publicKey))
                 .build();
-        Transaction result = ut.buildUnsignedTransaction(keys2, pair2.publicKey, pair1.publicKey, 1048).get();
+        Transaction result = ut.buildUnsignedTransaction(keys2, pair2.publicKey, pair1.publicKey, 1048).get().getRight();
 
         assert(txb.equalsUnordered(result));
 
@@ -233,7 +233,7 @@ public class UnspentTransactionsTest extends RandomizedTest {
                 .addOutput(new TxOut(3070, pair1.publicKey))
                 .addOutput(new TxOut(2, pair2.publicKey))
                 .build();
-        Transaction result2 = ut.buildUnsignedTransaction(keys3, pair2.publicKey, pair1.publicKey, 3070).get();
+        Transaction result2 = ut.buildUnsignedTransaction(keys3, pair2.publicKey, pair1.publicKey, 3070).get().getRight();
 
         assert(txb2.equalsUnordered(result2));
 
@@ -251,7 +251,7 @@ public class UnspentTransactionsTest extends RandomizedTest {
                 .addOutput(new TxOut(4090, pair1.publicKey))
                 .addOutput(new TxOut(6, pair2.publicKey))
                 .build();
-        Transaction result3 = ut.buildUnsignedTransaction(keys4, pair2.publicKey, pair1.publicKey, 4090).get();
+        Transaction result3 = ut.buildUnsignedTransaction(keys4, pair2.publicKey, pair1.publicKey, 4090).get().getRight();
 
         assert(txb3.equalsUnordered(result3));
     }

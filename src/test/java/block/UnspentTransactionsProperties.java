@@ -40,7 +40,7 @@ public class UnspentTransactionsProperties {
 
         if (toSpend == 0) return;
 
-        Transaction result = utx.buildUnsignedTransaction(keyArr, keyArr[0], keyArr[1], toSpend).get();
+        Transaction result = utx.buildUnsignedTransaction(keyArr, keyArr[0], keyArr[1], toSpend).get().getRight();
 
         TxOut toSpender = result.getOutput(0);
         Assert.assertEquals(toSpender.ownerPubKey, keyArr[1]);
