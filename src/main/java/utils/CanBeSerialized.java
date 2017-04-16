@@ -23,6 +23,12 @@ public interface CanBeSerialized {
         }
     }
 
+    static void serializeBytes(DataOutputStream outputStream, byte[] bytes)
+            throws IOException {
+        outputStream.writeInt(bytes.length);
+        outputStream.write(bytes);
+    }
+
     static <U extends CanBeSerialized> void serializeArray(DataOutputStream outputStream,
                                                            U[] values)
             throws IOException {

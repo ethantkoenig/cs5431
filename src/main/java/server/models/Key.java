@@ -1,7 +1,12 @@
 package server.models;
 
 
+import crypto.ECDSAPublicKey;
+import utils.DeserializationException;
+
+import java.io.IOException;
 import java.util.Arrays;
+import java.util.Optional;
 
 public class Key {
     private final int userId;
@@ -20,5 +25,13 @@ public class Key {
 
     public byte[] getPublicKey() {
         return Arrays.copyOf(publicKey, publicKey.length);
+    }
+
+    public Optional<ECDSAPublicKey> asKey() {
+        try {
+            return Optional.of(ECDSAPublicKey.DESERIALIZER.deserialize(publicKey));
+        } catch (IOException | DeserializationException e) {
+            return Optional.empty();
+        }
     }
 }

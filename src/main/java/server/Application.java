@@ -11,10 +11,10 @@ import server.controllers.PasswordRecoveryController;
 import server.controllers.TransactionController;
 import server.controllers.UserController;
 import server.utils.Constants;
-import utils.IOUtils;
 
+import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.util.Optional;
 
 import static spark.Spark.*;
 
@@ -46,18 +46,22 @@ public class Application {
     }
 
     private static boolean handleArgs(String args[]) {
-        if (args.length != 8) {
-            System.err.println("usage: webserver <keystore> <ip-address>:<port> <node args>");
+        if (args.length != 7) {
+            System.err.println("usage: webserver <keystore> <port> <public-key> <private-key> <privileged-key> <File for list of nodes>");
             return false;
         }
 
         String keystorePath = args[1];
-        Optional<InetSocketAddress> optAddr = IOUtils.parseAddress(args[2]);
-        if (!optAddr.isPresent()) {
-            System.err.println("Invalid address: " + args[2]);
+        try {
+            int port = Integer.parseInt(args[2]);
+            Constants.setNodeAddress(new InetSocketAddress(InetAddress.getLocalHost(), port));
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        } catch (NumberFormatException e) {
+            System.err.println("Misformatted port number: " + args[2]);
             return false;
         }
-        Constants.setNodeAddress(optAddr.get());
 
         String keystorePassword = System.getenv("KEYSTORE_PASS");
         if (keystorePassword == null) {
