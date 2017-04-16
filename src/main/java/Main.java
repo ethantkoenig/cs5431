@@ -44,7 +44,7 @@ public class Main {
                 if (!Application.run(args)) {
                     System.exit(1);
                 }
-                String[] nodeArgs = Arrays.copyOfRange(args, 2,8);
+                String[] nodeArgs = Arrays.copyOfRange(args, 1,7);
                 if (!runNode(nodeArgs)) {
                     System.exit(1);
                 }

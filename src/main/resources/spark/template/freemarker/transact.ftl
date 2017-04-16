@@ -6,20 +6,8 @@
 
     <form action="/transact" method="post" id="transactform">
         <div class="form-group">
-            <label>Input Transaction</label>
-            <input type="text" class="form-control" name="transaction">
-        </div>
-        <div class="form-group">
-            <label>Input Transaction Index</label>
-            <input type="number" class="form-control" name="index">
-        </div>
-        <div class="form-group">
-            <label>Your public key</label>
-            <input type="text" class="form-control" name="senderpublickey">
-        </div>
-        <div class="form-group">
-            <label>Recipient public key</label>
-            <input type="text" class="form-control" name="recipientpublickey">
+            <label>Recipient username</label>
+            <input type="text" class="form-control" name="recipient">
         </div>
         <div class="form-group">
             <label>Amount</label>

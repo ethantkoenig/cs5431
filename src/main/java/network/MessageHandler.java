@@ -3,7 +3,6 @@ package network;
 import block.Block;
 import block.UnspentTransactions;
 import crypto.ECDSAPublicKey;
-import org.bouncycastle.jcajce.provider.asymmetric.ec.KeyFactorySpi;
 import transaction.Transaction;
 import transaction.TxOut;
 import utils.ByteUtil;
@@ -13,14 +12,9 @@ import utils.ShaTwoFiftySix;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * The MessageHandler class manages internal state and handles incoming messages
@@ -63,10 +57,8 @@ public class MessageHandler {
         } else {
             return;
         }
-        if (isMining) {
-            recentTransactionsReceived.add(msg);
-            addTransaction(tx);
-        }
+        recentTransactionsReceived.add(msg);
+        addTransaction(tx);
     }
 
     /**

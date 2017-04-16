@@ -1,8 +1,8 @@
 package network;
 
-import crypto.ECDSAKeyPair;
 import crypto.ECDSAPublicKey;
 import transaction.Transaction;
+import utils.ByteUtil;
 import utils.CanBeSerialized;
 import utils.DeserializationException;
 import utils.Deserializer;
@@ -14,23 +14,34 @@ import java.util.List;
 
 public class GetUTXWithKeysResponse implements CanBeSerialized {
 
+    private static final int MAX_PAYLOAD_LEN = 1048576;
+
     public final boolean wasSuccessful;
     /** Will be null if unsuccessful */
     public final List<ECDSAPublicKey> keysUsed;
     /** Will be `null` if unsuccessful */
-    public final Transaction unsignedTransaction;
+    public final byte[] unsignedTransaction;
 
     public final static Deserializer<GetUTXWithKeysResponse> DESERIALIZER =
             new GetUTXWithKeysResponseDeserializer();
 
-    private GetUTXWithKeysResponse(List<ECDSAPublicKey> keysUsed, Transaction unsignedTransaction, boolean wasSuccessful) {
+    private GetUTXWithKeysResponse(List<ECDSAPublicKey> keysUsed, byte[] unsignedTransaction, boolean wasSuccessful) {
         this.keysUsed = keysUsed;
         this.unsignedTransaction = unsignedTransaction;
         this.wasSuccessful = wasSuccessful;
     }
 
     public static GetUTXWithKeysResponse success(List<ECDSAPublicKey> keysUsed, Transaction unsignedTransaction) {
-        return new GetUTXWithKeysResponse(keysUsed, unsignedTransaction, true);
+        try {
+            return new GetUTXWithKeysResponse(
+                    keysUsed,
+                    ByteUtil.asByteArray(unsignedTransaction::serializeWithoutSignatures),
+                    true
+            );
+        } catch (IOException e) {
+            e.printStackTrace();
+            return failure();
+        }
     }
 
     public static GetUTXWithKeysResponse failure() {
@@ -43,7 +54,7 @@ public class GetUTXWithKeysResponse implements CanBeSerialized {
         outputStream.writeBoolean(wasSuccessful);
         if (wasSuccessful) {
             CanBeSerialized.serializeList(outputStream, keysUsed);
-            unsignedTransaction.serialize(outputStream);
+            CanBeSerialized.serializeBytes(outputStream, unsignedTransaction);
         }
     }
 
@@ -56,9 +67,9 @@ public class GetUTXWithKeysResponse implements CanBeSerialized {
             if (wasSuccessful) {
                 List<ECDSAPublicKey> keysUsed = Deserializer
                         .deserializeList(inputStream, ECDSAPublicKey.DESERIALIZER);
-                Transaction unsignedTransaction = Transaction.DESERIALIZER.deserialize(inputStream);
+                byte[] unsignedTransaction = Deserializer.deserializeBytes(inputStream, MAX_PAYLOAD_LEN);
 
-                return success(keysUsed, unsignedTransaction);
+                return new GetUTXWithKeysResponse(keysUsed, unsignedTransaction, true);
             } else {
                 return failure();
             }
