@@ -43,20 +43,20 @@ public class UserController {
     public void init() {
         path("/register", () -> {
             get("", routeUtils.template("register.ftl"), new FreeMarkerEngine());
-            post("", wrapRoute(this::register));
+            post("", wrapTemplate(this::register), new FreeMarkerEngine());
         });
 
         path("/login", () -> {
             get("", routeUtils.template("login.ftl"), new FreeMarkerEngine());
             //TODO: ethan
-            post("", (this::login), new FreeMarkerEngine());
+            post("", wrapTemplate(this::login), new FreeMarkerEngine());
         });
 
         delete("/logout", wrapTemplate(this::logout), new FreeMarkerEngine());
 
         path("/user", () -> {
             get("/:name", wrapTemplate(this::viewUser), new FreeMarkerEngine());
-            post("/keys", wrapRoute(this::addUserKey));
+            post("/keys", wrapTemplate(this::addUserKey), new FreeMarkerEngine());
         });
     }
 
@@ -138,6 +138,11 @@ public class UserController {
             response.redirect("/");
             return null;
         }
+        String loggedInUserName = null;
+        Optional<User> loggedInUser = routeUtils.loggedInUser(request);
+        if (loggedInUser.isPresent()){
+            loggedInUserName = loggedInUser.get().getUsername();
+        }
         User user = optUser.get();
         List<String> hashes = userAccess.getKeysByUserID(user.getId()).stream()
                 .map(Key::getPublicKey)
@@ -145,6 +150,7 @@ public class UserController {
                 .collect(Collectors.toList());
         return routeUtils.modelAndView(request, "user.ftl")
                 .add("username", user.getUsername())
+                .add("loggedInUser", loggedInUserName)
                 .add("hashes", hashes)
                 .get();
     }

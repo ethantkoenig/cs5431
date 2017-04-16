@@ -8,11 +8,12 @@
         <div class="col-lg-12 text-center">
             <h1>${username}</h1>
             <#list hashes as hash>
-                <textarea style="resize: none;" readonly>${hash}</textarea><br>
+                <textarea class="form-control" style="resize: none;" readonly>${hash}</textarea><br>
             </#list>
         </div>
     </div>
 
+    <#if loggedInUser?? && loggedInUser == username>
     <div class="row">
         <div class="col-sm-6 padding-top">
 
@@ -50,7 +51,9 @@
                 <option value='elem_5'>elem 5</option>
             </select>
         </div>
-    </div>
+    </#if>
+
+</div>
 
     <script>
         $('#friend-selector').multiSelect({
