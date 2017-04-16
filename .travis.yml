@@ -1,6 +1,4 @@
-env:
-  global:
-    - GRADLE_OPTS="-Xms128m"
+sudo: required # use a full-fledged VM
 language: java
 jdk:
   oraclejdk8

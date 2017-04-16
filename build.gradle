@@ -1,16 +1,3 @@
-if (System.env.TRAVIS == 'true') {
-    allprojects {
-        tasks.withType(JavaCompile) {
-            options.fork = false
-        }
-        tasks.withType(Test) {
-            // containers (currently) have 2 dedicated cores and 4GB of memory
-            maxParallelForks = 2
-            minHeapSize = '128m'
-        }
-    }
-}
-
 apply plugin: 'application'
 apply plugin: 'findbugs'
 apply plugin: 'java'
