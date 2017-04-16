@@ -14,6 +14,9 @@
     <!-- index page css -->
     <link rel="stylesheet" type="text/css" href="/css/index.css">
 
+    <!-- Multi-select css -->
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/multi-select/0.9.12/css/multi-select.min.css">
+
     <!------------------------------------------- JS ------------------------------------------>
 
     <!-- JQuery -->
@@ -23,6 +26,10 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
             integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
             crossorigin="anonymous"></script>
+
+    <!-- Multi-select js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/multi-select/0.9.12/js/jquery.multi-select.min.js"></script>
+
 
     <script src="/js/sjcl.js"></script>
     <script src="/js/bn.js"></script>

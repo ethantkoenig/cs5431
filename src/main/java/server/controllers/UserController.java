@@ -48,7 +48,8 @@ public class UserController {
 
         path("/login", () -> {
             get("", routeUtils.template("login.ftl"), new FreeMarkerEngine());
-            post("", wrapRoute(this::login));
+            //TODO: ethan
+            post("", (this::login), new FreeMarkerEngine());
         });
 
         delete("/logout", wrapTemplate(this::logout), new FreeMarkerEngine());
@@ -118,7 +119,7 @@ public class UserController {
         }
         userAccess.resetFailedLogins(user.getId()); // TODO use userID instead of username?
         request.session(true).attribute("username", username);
-        return routeUtils.modelAndView(request, "transact.ftl")
+        return routeUtils.modelAndView(request, "user.ftl")
                 .get();
     }
 
