@@ -1,11 +1,13 @@
 package network;
 
+import utils.DeserializationException;
+import utils.Deserializer;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
-import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
@@ -47,9 +49,7 @@ public class ConnectionThread extends Thread {
     public void run() {
         try {
             receive();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
+        } catch (DeserializationException | IOException | InterruptedException e) {
             e.printStackTrace();
         }
         close();
@@ -72,16 +72,11 @@ public class ConnectionThread extends Thread {
      * <p>
      * Receives incoming messages, and put them onto the messageQueue.
      */
-    private void receive() throws IOException, InterruptedException {
+    private void receive() throws DeserializationException, IOException, InterruptedException {
         DataInputStream dataInputStream = new DataInputStream(in);
+        Deserializer<IncomingMessage> deserializer = IncomingMessage.deserializer(this::send);
         while (true) {
-            Optional<IncomingMessage> optMessage = IncomingMessage.deserialize(dataInputStream, this::send);
-
-            if (!optMessage.isPresent()) {
-                close();
-                break;
-            }
-            IncomingMessage message = optMessage.get();
+            IncomingMessage message = deserializer.deserialize(dataInputStream);
             LOGGER.info("Putting message on messageQueue: " + message.toString());
             messageQueue.put(message);
         }
