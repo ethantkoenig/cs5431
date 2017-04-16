@@ -1,8 +1,10 @@
 package network;
 
+import org.junit.Assert;
 import org.junit.Test;
 import testutils.RandomizedTest;
 import testutils.TestUtils;
+import utils.DeserializationException;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -12,7 +14,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 public class IncomingMessageTest extends RandomizedTest {
 
@@ -63,13 +66,12 @@ public class IncomingMessageTest extends RandomizedTest {
         out.serialize(new DataOutputStream(byteOutput));
 
         ByteArrayInputStream byteInput = new ByteArrayInputStream(byteOutput.toByteArray());
-        IncomingMessage deserialized = TestUtils.assertPresent(errorMessage,
-                IncomingMessage.deserialize(new DataInputStream(byteInput), emptyResponder)
-        );
+        IncomingMessage deserialized = IncomingMessage.deserializer(emptyResponder)
+                .deserialize(new DataInputStream(byteInput));
         TestUtils.assertEqualsWithHashCode(errorMessage, m, deserialized);
     }
 
-    @Test
+    @Test(expected = DeserializationException.class)
     public void testDeserializeFailure() throws Exception {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         DataOutputStream dataOutputStream = new DataOutputStream(byteArrayOutputStream);
@@ -80,7 +82,7 @@ public class IncomingMessageTest extends RandomizedTest {
                 byteArrayOutputStream.toByteArray());
         DataInputStream dataInputStream = new DataInputStream(byteArrayInputStream);
 
-        assertFalse(errorMessage,
-                IncomingMessage.deserialize(dataInputStream, emptyResponder).isPresent());
+        IncomingMessage.responderlessDeserializer().deserialize(dataInputStream);
+        Assert.fail("Should have thrown");
     }
 }
