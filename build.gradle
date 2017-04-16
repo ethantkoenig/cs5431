@@ -9,6 +9,7 @@ repositories {
 }
 
 dependencies {
+    compile group: 'com.google.inject', name: 'guice', version: '4.0'
     compile group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: '1.56'
     compile "com.sparkjava:spark-core:2.5.5"
     compile group: 'org.slf4j', name: 'slf4j-simple', version: '1.6.2' //required for spark
