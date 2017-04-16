@@ -111,12 +111,12 @@ public class UserController {
         }
         byte[] hash = Crypto.hashAndSalt(password, user.getSalt());
         if (!Arrays.equals(hash, user.getHashedPassword())) {
-            userAccess.incrementFailedLogins(username); // TODO use userID instead of username?
+            userAccess.incrementFailedLogins(user.getId()); // TODO use userID instead of username?
             return routeUtils.modelAndView(request, "login.ftl")
                     .add("error", LOGIN_ERROR)
                     .get();
         }
-        userAccess.resetFailedLogins(username); // TODO use userID instead of username?
+        userAccess.resetFailedLogins(user.getId()); // TODO use userID instead of username?
         request.session(true).attribute("username", username);
         return routeUtils.modelAndView(request, "transact.ftl")
                 .get();

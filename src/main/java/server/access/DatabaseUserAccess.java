@@ -131,9 +131,9 @@ public final class DatabaseUserAccess implements UserAccess {
     }
 
     @Override
-    public void incrementFailedLogins(String username) throws SQLException {
+    public void incrementFailedLogins(int userID) throws SQLException {
         try (Connection conn = DbUtil.getConnection(false);
-             PreparedStatement preparedStmt = Statements.incrementFailedLogins(conn, username)
+             PreparedStatement preparedStmt = Statements.incrementFailedLogins(conn, userID)
         ) {
             int rowCount = preparedStmt.executeUpdate();
             if (rowCount != 1) {
@@ -144,9 +144,9 @@ public final class DatabaseUserAccess implements UserAccess {
     }
 
     @Override
-    public void resetFailedLogins(String username) throws SQLException {
+    public void resetFailedLogins(int userID) throws SQLException {
         try (Connection conn = DbUtil.getConnection(false);
-             PreparedStatement preparedStmt = Statements.resetFailedLogins(conn, username)
+             PreparedStatement preparedStmt = Statements.resetFailedLogins(conn, userID)
         ) {
             int rowCount = preparedStmt.executeUpdate();
             if (rowCount != 1) {

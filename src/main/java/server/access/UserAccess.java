@@ -45,12 +45,12 @@ public interface UserAccess {
     void updateUserPass(int userID, byte[] salt, byte[] hashedPassword) throws SQLException;
 
     /**
-     * Increments the failed login attempts associated with the given username
+     * Increments the failed login attempts associated with the given userID
      */
-    void incrementFailedLogins(String username) throws SQLException;
+    void incrementFailedLogins(int userID) throws SQLException;
 
     /**
-     * Resets the failed login attempts associated with the given username to 0
+     * Resets the failed login attempts associated with the given userID to 0
      */
-    void resetFailedLogins(String username) throws SQLException;
+    void resetFailedLogins(int userID) throws SQLException;
 }

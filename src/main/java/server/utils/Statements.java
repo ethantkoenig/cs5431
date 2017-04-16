@@ -158,20 +158,20 @@ public final class Statements {
         );
     }
 
-    public static PreparedStatement incrementFailedLogins(Connection connection, String username) throws SQLException {
+    public static PreparedStatement incrementFailedLogins(Connection connection, int userID) throws SQLException {
         return prepareStatement(connection.prepareStatement(
-                "UPDATE users SET failedLogins = failedLogins + 1 WHERE username = ?"),
+                "UPDATE users SET failedLogins = failedLogins + 1 WHERE id = ?"),
                 statement -> {
-                    statement.setString(1, username);
+                    statement.setInt(1, userID);
                 }
         );
     }
 
-    public static PreparedStatement resetFailedLogins(Connection connection, String username) throws SQLException {
+    public static PreparedStatement resetFailedLogins(Connection connection, int userID) throws SQLException {
         return prepareStatement(connection.prepareStatement(
-                "UPDATE users SET failedLogins = 0 WHERE username = ?"),
+                "UPDATE users SET failedLogins = 0 WHERE id = ?"),
                 statement -> {
-                    statement.setString(1, username);
+                    statement.setInt(1, userID);
                 }
         );
     }

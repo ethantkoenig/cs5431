@@ -80,8 +80,8 @@ public class MockUserAccess implements UserAccess {
     }
 
     @Override
-    public void incrementFailedLogins(String username) throws SQLException {
-        users.stream().filter(u -> u.getUsername().equals(username)).findFirst().ifPresent(u -> {
+    public void incrementFailedLogins(int userID) throws SQLException {
+        users.stream().filter(u -> u.getId() == (userID)).findFirst().ifPresent(u -> {
             users.remove(u);
             users.add(new User(u.getId(), u.getUsername(), u.getEmail(),
                     u.getSalt(), u.getHashedPassword(), u.getFailedLogins() + 1));
@@ -89,8 +89,8 @@ public class MockUserAccess implements UserAccess {
     }
 
     @Override
-    public void resetFailedLogins(String username) throws SQLException {
-        users.stream().filter(u -> u.getUsername().equals(username)).findFirst().ifPresent(u -> {
+    public void resetFailedLogins(int userID) throws SQLException {
+        users.stream().filter(u -> u.getId() == (userID)).findFirst().ifPresent(u -> {
             users.remove(u);
             users.add(new User(u.getId(), u.getUsername(), u.getEmail(),
                     u.getSalt(), u.getHashedPassword(), 0));
