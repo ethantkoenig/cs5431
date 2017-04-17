@@ -43,19 +43,19 @@ public class UserController {
     public void init() {
         path("/register", () -> {
             get("", routeUtils.template("register.ftl"), new FreeMarkerEngine());
-            post("", wrapRoute(this::register));
+            post("", wrapTemplate(this::register), new FreeMarkerEngine());
         });
 
         path("/login", () -> {
             get("", routeUtils.template("login.ftl"), new FreeMarkerEngine());
-            post("", wrapRoute(this::login));
+            post("", wrapTemplate(this::login), new FreeMarkerEngine());
         });
 
         delete("/logout", wrapTemplate(this::logout), new FreeMarkerEngine());
 
         path("/user", () -> {
             get("/:name", wrapTemplate(this::viewUser), new FreeMarkerEngine());
-            post("/keys", wrapRoute(this::addUserKey));
+            post("/keys", wrapTemplate(this::addUserKey), new FreeMarkerEngine());
         });
     }
 
@@ -118,7 +118,8 @@ public class UserController {
         }
         userAccess.resetFailedLogins(user.getId());
         request.session(true).attribute("username", username);
-        return routeUtils.modelAndView(request, "transact.ftl")
+        return routeUtils.modelAndView(request, "user.ftl")
+                .add("username", user.getUsername())
                 .get();
     }
 
@@ -138,13 +139,8 @@ public class UserController {
             return null;
         }
         User user = optUser.get();
-        List<String> hashes = userAccess.getKeysByUserID(user.getId()).stream()
-                .map(Key::getPublicKey)
-                .map(ByteUtil::bytesToHexString)
-                .collect(Collectors.toList());
         return routeUtils.modelAndView(request, "user.ftl")
                 .add("username", user.getUsername())
-                .add("hashes", hashes)
                 .get();
     }
 

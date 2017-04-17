@@ -7,10 +7,6 @@
     <div class="row">
         <div class="col-lg-12 text-center">
             <h1>${username}</h1>
-            <p>Public keys:</p>
-            <#list hashes as hash>
-                <textarea style="resize: none;" readonly>${hash}</textarea><br>
-            </#list>
         </div>
     </div>
 

@@ -18,10 +18,6 @@ public class IndexController {
 
     // Basic route controller to serve homepage
     public void init() {
-        get("/", (request, response) ->
-                        routeUtils.modelAndView(request, "index.ftl")
-                                .add("message", "CS 5431 YACCoin Project")
-                                .get()
-                , new FreeMarkerEngine());
+        get("/", routeUtils.template("index.ftl"), new FreeMarkerEngine());
     }
 }
