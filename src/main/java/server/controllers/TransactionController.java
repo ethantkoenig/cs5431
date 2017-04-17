@@ -54,12 +54,14 @@ public class TransactionController {
     }
 
     ModelAndView getTransact(Request request, Response response) throws Exception {
-        List<String> friends = null;
+        List<String> friends;
         Optional<User> loggedInUser = routeUtils.loggedInUser(request);
         if (loggedInUser.isPresent()) {
             friends = userAccess.getPeopleWhoFriendMe(loggedInUser.get().getUsername());
+        }else{
+            return routeUtils.modelAndView(request, "index.ftl")
+                    .get();
         }
-        System.out.println(friends);
         return routeUtils.modelAndView(request, "transact.ftl")
                 .add("friends", friends)
                 .get();
@@ -131,6 +133,7 @@ public class TransactionController {
     }
 
     String sendTransaction(Request request, Response response) throws Exception {
+        System.out.println("Send transaction");
         byte[] payload = queryParamHex(request, "payload");
         String[] rHexs = queryParam(request, "r").split(",");
         String[] sHexs = queryParam(request, "s").split(",");

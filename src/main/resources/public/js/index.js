@@ -18,10 +18,12 @@ $(document).ready(function () {
     });
 
     $('#transactform').submit(function () {
+        console.log("Sending Transaction")
         var action = $(this).attr("action");
         var data = $(this).serialize();
         var password = $('#transaction-password').val();
         $.post(action, data, function (resp) {
+            console.log(resp)
             // TODO this feels like a hack, eventually make it nice
             var rString = "";
             var sString = "";
@@ -50,6 +52,7 @@ $(document).ready(function () {
                 r: rString,
                 s: sString
             }, function() {
+                console.log("Successful transaction")
                 window.location.replace("/"); // TODO what to do on successful transaction?
             })
         });
