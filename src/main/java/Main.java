@@ -6,7 +6,8 @@ import crypto.ECDSAPublicKey;
 import network.Miner;
 import network.Node;
 import server.Application;
-import utils.*;
+import utils.DeserializationException;
+import utils.IOUtils;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -16,8 +17,8 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
-import java.util.Optional;
 import java.util.Arrays;
+import java.util.Optional;
 
 public class Main {
 

@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.*;
 import java.util.logging.Logger;
+import java.util.stream.Stream;
 
 /**
  * Main transaction class.
@@ -75,6 +76,13 @@ public final class Transaction extends HashCache implements CanBeSerialized {
         for (ECDSASignature signature : signatures) {
             signature.serialize(outputStream);
         }
+    }
+
+    public Stream<ECDSASignature> signatures() {
+        if (signatures == null) {
+            return Stream.empty();
+        }
+        return Arrays.stream(signatures);
     }
 
     /**

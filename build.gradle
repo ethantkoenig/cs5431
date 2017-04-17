@@ -9,6 +9,7 @@ repositories {
 }
 
 dependencies {
+    compile group: 'org.dbunit', name: 'dbunit', version: '2.5.3'
     compile group: 'com.google.inject', name: 'guice', version: '4.0'
     compile group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: '1.56'
     compile "com.sparkjava:spark-core:2.5.5"
@@ -20,6 +21,7 @@ dependencies {
     testCompile 'com.pholser:junit-quickcheck-core:0.7'
     testCompile 'com.pholser:junit-quickcheck-generators:0.7'
     testCompile 'junit:junit:4.12'
+    testCompile group: 'org.hsqldb', name: 'hsqldb', version: '2.3.4'
     testCompile group: 'org.mockito', name: 'mockito-core', version: '2.+'
 }
 
