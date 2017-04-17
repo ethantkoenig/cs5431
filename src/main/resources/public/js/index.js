@@ -60,21 +60,18 @@ $(document).ready(function () {
         selectableHeader: "<div class='custom-header text-center'>Cannot send me money</div>",
         selectionHeader: "<div class='custom-header text-center'>Can send me money</div>",
         afterSelect: function (values) {
-            console.log("after select")
-            $.ajax({
-                type: 'POST',
-                url: '/friend',
-                data: values,
-                success: function (data) {
-                    console.log(data)
-                }
+            console.log(values[0])
+            $.post("/friend", {
+                friend: values[0]
+            }, function(data) {
+                console.log(data)
             });
         },
         afterDeselect: function (values) {
+            console.log(values)
             $.ajax({
                 type: 'DELETE',
-                url: '/friend',
-                data: values,
+                url: '/friend' + '?' + $.param({"friend": values[0]}),
                 success: function (data) {
                     console.log(data)
                 }

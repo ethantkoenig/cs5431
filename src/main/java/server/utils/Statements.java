@@ -186,7 +186,7 @@ public final class Statements {
                 "SELECT * FROM friends WHERE username = ? AND friend = ?"),
                 statement -> {
                     statement.setString(1, username);
-                    statement.setString(1, friend);
+                    statement.setString(2, friend);
                 }
         );
     }
@@ -214,6 +214,15 @@ public final class Statements {
     public static PreparedStatement getFriends(Connection connection, String username) throws SQLException {
         return prepareStatement(connection.prepareStatement(
                 "SELECT friend FROM friends WHERE username = ?"),
+                statement -> {
+                    statement.setString(1, username);
+                }
+        );
+    }
+
+    public static PreparedStatement getPeopleWhoFriendMe(Connection connection, String username) throws SQLException {
+        return prepareStatement(connection.prepareStatement(
+                "SELECT username FROM friends WHERE friend = ?"),
                 statement -> {
                     statement.setString(1, username);
                 }

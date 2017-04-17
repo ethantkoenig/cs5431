@@ -220,5 +220,19 @@ public final class DatabaseUserAccess implements UserAccess {
         }
     }
 
+    @Override
+    public List<String> getPeopleWhoFriendMe(String username) throws SQLException{
+        try (Connection conn = DbUtil.getConnection(false);
+             PreparedStatement preparedStmt = Statements.getPeopleWhoFriendMe(conn, username);
+             ResultSet rs = preparedStmt.executeQuery()
+        ) {
+            List<String> usernames = new ArrayList<>();
+            while (rs.next()) {
+                usernames.add(rs.getString("username"));
+            }
+            return usernames;
+        }
+    }
+
 
 }

@@ -7,7 +7,8 @@
     <form action="/transact" method="post" id="transactform">
         <div class="form-group">
             <label>Recipient username</label>
-            <input type="text" class="form-control" name="recipient">
+            <select class="form-control" name="recipient" id="recipient-selector">
+            </select>
         </div>
         <div class="form-group">
             <label>Amount</label>
@@ -19,6 +20,18 @@
         </div>
         <input class="btn btn-primary" type="submit" value="Make transaction">
     </form>
+
+    <#if friends??>
+        <#list friends as friend>
+            <script>
+                $('#recipient-selector').append($('<option>', {value: "${friend}", text: "${friend}"}));
+            </script>
+        </#list>
+    <#else>
+        <script>
+            $('#recipient-selector').append('<option value="" disabled>No one has authorized you to send them money.</option>');
+        </script>
+    </#if>
 
 </div>
 <!-- /.container -->

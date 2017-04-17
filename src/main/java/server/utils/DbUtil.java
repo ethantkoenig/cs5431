@@ -22,7 +22,7 @@ public final class DbUtil {
             Class.forName(jdbcDriver);
             if (!initial) db = Statements.DB_NAME;
             //TODO: don't hard code this string in here
-            connection = DriverManager.getConnection("jdbc:mysql://50.159.66.236:1234/" + db + "?user=root&password=" + dbPassword);
+            connection = DriverManager.getConnection("jdbc:mysql://50.159.66.236:1234/" + db + "?user=cs5431&password=" + dbPassword);
         } catch (ClassNotFoundException | SQLException e) {
             LOGGER.severe("Unable to connect to DB, make sure you added MYSQL_PASS to env variables: " + e.getMessage());
         }

@@ -122,6 +122,11 @@ public class MockUserAccess implements UserAccess {
         return null;
     }
 
+    @Override
+    public List<String> getPeopleWhoFriendMe(String username) throws SQLException{
+        return null;
+    }
+
     public static final class Fixtures {
         public static final String USER_PASSWORD = "g00dP@ssw0rd!!";
         public final User user;

@@ -10,6 +10,7 @@ import server.models.Key;
 import server.models.User;
 import server.utils.Constants;
 import server.utils.RouteUtils;
+import spark.ModelAndView;
 import spark.Request;
 import spark.Response;
 import spark.template.freemarker.FreeMarkerEngine;
@@ -45,11 +46,23 @@ public class TransactionController {
 
     private void makeTransaction() {
         path("/transact", () -> {
-            get("", routeUtils.template("transact.ftl"), new FreeMarkerEngine());
+            get("", wrapTemplate(this::getTransact), new FreeMarkerEngine());
             post("", wrapRoute(this::transact));
         });
 
         post("/sendtransaction", wrapRoute(this::sendTransaction));
+    }
+
+    ModelAndView getTransact(Request request, Response response) throws Exception {
+        List<String> friends = null;
+        Optional<User> loggedInUser = routeUtils.loggedInUser(request);
+        if (loggedInUser.isPresent()) {
+            friends = userAccess.getPeopleWhoFriendMe(loggedInUser.get().getUsername());
+        }
+        System.out.println(friends);
+        return routeUtils.modelAndView(request, "transact.ftl")
+                .add("friends", friends)
+                .get();
     }
 
     String transact(Request request, Response response) throws Exception {

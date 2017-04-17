@@ -79,4 +79,9 @@ public interface UserAccess {
      * @returns a list of username strings to display on front end
      */
     List<String> getFriends(String username) throws SQLException;
+
+    /**
+     * @returns a list of username strings that have befriended username, thus, username can send funds to these people
+     */
+    List<String> getPeopleWhoFriendMe(String username) throws SQLException;
 }
