@@ -13,7 +13,7 @@
         </div>
     </div>
 
-    <#if loggedInUser?? && loggedInUser == username>
+<#if loggedInUser?? && loggedInUser == username>
     <div class="row">
         <div class="col-sm-6 padding-top">
 
@@ -43,24 +43,39 @@
 
         </div>
         <div class="col-sm-6 padding-top">
-            <select multiple="multiple" id="friend-selector" name="my-select[]">
-                <option value='elem_1'>elem 1</option>
-                <option value='elem_2'>elem 2</option>
-                <option value='elem_3'>elem 3</option>
-                <option value='elem_4'>elem 4</option>
-                <option value='elem_5'>elem 5</option>
+            <select id='friend-selector' multiple='multiple'>
             </select>
         </div>
     </#if>
 
-</div>
+        <#if users??>
+            <#list users as user>
+                <#if user != username>
+                    <script>
+                        $('#friend-selector').append($("<option/>", {
+                            value: "${user}",
+                            text: "${user}",
+                        }));
+                    </script>
+                </#if>
+            </#list>
+        </#if>
 
-    <script>
-        $('#friend-selector').multiSelect({
-            selectableHeader: "<div class='custom-header text-center'>Can send me money</div>",
-            selectionHeader: "<div class='custom-header text-center'>Cannot send me money</div>",
-        });
-    </script>
+        <#if friends??>
+            <#list friends as friend>
+                <script>
+                    $('#friend-selector')
+                            .append($("<option></option>")
+                                    .attr("value", "${friend}")
+                                    .text("${friend}")
+                                    .attr('selected', 'selected'));
+
+                </script>
+            </#list>
+        </#if>
+
+
+    </div>
 
 </div>
 <!-- /.container -->

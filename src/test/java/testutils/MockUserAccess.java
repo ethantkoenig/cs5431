@@ -40,6 +40,11 @@ public class MockUserAccess implements UserAccess {
     }
 
     @Override
+    public List<String> getAllUsernames() throws SQLException{
+        return null;
+    }
+
+    @Override
     public Optional<User> getUserbyUsername(String username) throws SQLException {
         return users.stream().filter(u -> u.getUsername().equals(username)).findFirst();
     }
@@ -95,6 +100,26 @@ public class MockUserAccess implements UserAccess {
             users.add(new User(u.getId(), u.getUsername(), u.getEmail(),
                     u.getSalt(), u.getHashedPassword(), 0));
         });
+    }
+
+    @Override
+    public boolean isFriendsWith(String username, String friend) throws SQLException{
+        return true;
+    }
+
+    @Override
+    public void insertFriends(String username, String friend) throws SQLException{
+
+    }
+
+    @Override
+    public void deleteFriends(String username, String friend) throws SQLException{
+
+    }
+
+    @Override
+    public List<String> getFriends(String username) throws SQLException{
+        return null;
     }
 
     public static final class Fixtures {

@@ -58,6 +58,11 @@ public class UserController {
             get("/:name", wrapTemplate(this::viewUser), new FreeMarkerEngine());
             post("/keys", wrapTemplate(this::addUserKey), new FreeMarkerEngine());
         });
+
+        path("/friend", () -> {
+            post("", wrapRoute(this::addFriend));
+            delete("", wrapRoute(this::deleteFriend));
+        });
     }
 
     ModelAndView register(Request request, Response response)
@@ -112,14 +117,14 @@ public class UserController {
         }
         byte[] hash = Crypto.hashAndSalt(password, user.getSalt());
         if (!Arrays.equals(hash, user.getHashedPassword())) {
-            userAccess.incrementFailedLogins(user.getId()); // TODO use userID instead of username?
+            userAccess.incrementFailedLogins(user.getId());
             return routeUtils.modelAndView(request, "login.ftl")
                     .add("error", LOGIN_ERROR)
                     .get();
         }
-        userAccess.resetFailedLogins(user.getId()); // TODO use userID instead of username?
+        userAccess.resetFailedLogins(user.getId());
         request.session(true).attribute("username", username);
-        return routeUtils.modelAndView(request, "user.ftl")
+        return routeUtils.modelAndView(request, "transact.ftl")
                 .get();
     }
 
@@ -139,19 +144,32 @@ public class UserController {
             return null;
         }
         String loggedInUserName = null;
+        List<String> friends = null;
+        List<String> users = null;
+
         Optional<User> loggedInUser = routeUtils.loggedInUser(request);
-        if (loggedInUser.isPresent()){
-            loggedInUserName = loggedInUser.get().getUsername();
-        }
         User user = optUser.get();
+        if (loggedInUser.isPresent()) {
+            loggedInUserName = loggedInUser.get().getUsername();
+//        friends = userAccess.getFriends(user.getUsername());
+//        users = userAccess.getAllUsernames();
+//            users.removeAll(friends);
+        }
+        friends = userAccess.getFriends(user.getUsername());
+        users = userAccess.getAllUsernames();
+        users.removeAll(friends);
+        System.out.println(users);
         List<String> hashes = userAccess.getKeysByUserID(user.getId()).stream()
                 .map(Key::getPublicKey)
                 .map(ByteUtil::bytesToHexString)
                 .collect(Collectors.toList());
+
         return routeUtils.modelAndView(request, "user.ftl")
                 .add("username", user.getUsername())
                 .add("loggedInUser", loggedInUserName)
                 .add("hashes", hashes)
+                .add("friends", friends)
+                .add("users", users)
                 .get();
     }
 
@@ -169,5 +187,22 @@ public class UserController {
                 .add("hashes", hashes)
                 .add("success", "Public Key added.")
                 .get();
+    }
+
+    String addFriend(Request request, Response response) throws Exception {
+        User user = routeUtils.forceLoggedInUser(request);
+        String friend = request.body();
+        String username = user.getUsername();
+
+        userAccess.insertFriends(username, friend);
+        return "ok";
+    }
+
+    String deleteFriend(Request request, Response response) throws Exception {
+        User user = routeUtils.forceLoggedInUser(request);
+        String friend = request.body();
+
+        userAccess.deleteFriends(user.getUsername(), friend);
+        return "ok";
     }
 }

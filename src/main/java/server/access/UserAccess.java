@@ -10,6 +10,11 @@ import java.util.Optional;
 public interface UserAccess {
 
     /**
+     * @returns a list of all String usernames
+     */
+    List<String> getAllUsernames() throws SQLException;
+
+    /**
      * Given a username return the user object in the DB that is associated with this username
      * NOTE: we will need to not allow duplicate usernames.
      *
@@ -53,4 +58,25 @@ public interface UserAccess {
      * Resets the failed login attempts associated with the given userID to 0
      */
     void resetFailedLogins(int userID) throws SQLException;
+
+
+    /**
+     * @returns true if username is friends with friend. Thus, friend can send username money
+     */
+    boolean isFriendsWith(String username, String friend) throws SQLException;
+
+    /**
+     * Adds the username friend combo to friends database
+     */
+    void insertFriends(String username, String friend) throws SQLException;
+
+    /**
+     * Removes the username friend combo from friends database
+     */
+    void deleteFriends(String username, String friend) throws SQLException;
+
+    /**
+     * @returns a list of username strings to display on front end
+     */
+    List<String> getFriends(String username) throws SQLException;
 }

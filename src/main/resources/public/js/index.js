@@ -36,10 +36,37 @@ $(document).ready(function () {
                 payload: resp.payload,
                 r: sjcl.codec.hex.fromBits(r),
                 s: sjcl.codec.hex.fromBits(s)
-            }, function() {
+            }, function () {
                 window.location.replace("/"); // TODO what to do on successful transaction?
             })
         });
         return false; // don't submit form, since we already have
     });
+
+    $('#friend-selector').multiSelect({
+        selectableHeader: "<div class='custom-header text-center'>Cannot send me money</div>",
+        selectionHeader: "<div class='custom-header text-center'>Can send me money</div>",
+        afterSelect: function (values) {
+            console.log("after select")
+            $.ajax({
+                type: 'POST',
+                url: '/friend',
+                data: values,
+                success: function (data) {
+                    console.log(data)
+                }
+            });
+        },
+        afterDeselect: function (values) {
+            $.ajax({
+                type: 'DELETE',
+                url: '/friend',
+                data: values,
+                success: function (data) {
+                    console.log(data)
+                }
+            });
+        }
+    });
+
 });

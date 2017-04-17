@@ -43,7 +43,12 @@ public final class Statements {
             + "FOREIGN KEY (userid)"
             + "  REFERENCES users(id)"
             + ")";
+    public static final String CREATE_FRIENDS_TABLE = "CREATE TABLE friends ("
+            + "username varchar(32) NOT NULL,"
+            + "friend varchar(32) NOT NULL"
+            + ")";
     public static final String SHOW_DB_LIKE = String.format("SHOW DATABASES LIKE '%s'", DB_NAME);
+    public static final String GET_ALL_USERS = "SELECT * FROM users";
     private static final int RECOVERY_TIME = 60 * 60; // 1 hour for recovery link to remain active
 
 
@@ -172,6 +177,45 @@ public final class Statements {
                 "UPDATE users SET failedLogins = 0 WHERE id = ?"),
                 statement -> {
                     statement.setInt(1, userID);
+                }
+        );
+    }
+
+    public static PreparedStatement isFriendsWith(Connection connection, String username, String friend) throws SQLException {
+        return prepareStatement(connection.prepareStatement(
+                "SELECT * FROM friends WHERE username = ? AND friend = ?"),
+                statement -> {
+                    statement.setString(1, username);
+                    statement.setString(1, friend);
+                }
+        );
+    }
+
+    public static PreparedStatement insertFriends(Connection connection, String username, String friend) throws SQLException {
+        return prepareStatement(connection.prepareStatement(
+                "INSERT INTO friends (username, friend) VALUES (?, ?)"),
+                statement -> {
+                    statement.setString(1, username);
+                    statement.setString(2, friend);
+                }
+        );
+    }
+
+    public static PreparedStatement deleteFriends(Connection connection, String username, String friend) throws SQLException {
+        return prepareStatement(connection.prepareStatement(
+                "DELETE FROM friends WHERE username = ? AND friend = ?"),
+                statement -> {
+                    statement.setString(1, username);
+                    statement.setString(2, friend);
+                }
+        );
+    }
+
+    public static PreparedStatement getFriends(Connection connection, String username) throws SQLException {
+        return prepareStatement(connection.prepareStatement(
+                "SELECT friend FROM friends WHERE username = ?"),
+                statement -> {
+                    statement.setString(1, username);
                 }
         );
     }
