@@ -1,6 +1,5 @@
 package testutils;
 
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -8,37 +7,53 @@ import spark.Request;
 import spark.Session;
 import utils.ByteUtil;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 
 public class MockRequest {
-    private Request mock = Mockito.mock(Request.class);
-    private Session session = Mockito.mock(Session.class);
+    private final Request mock = Mockito.mock(Request.class);
+    private final MockSession mockSession = new MockSession();
+
+    private final Map<String, String> params = new HashMap<>();
+    private final Map<String, String> queryParams = new HashMap<>();
 
     public MockRequest() {
-        when(mock.session()).thenReturn(session);
-        when(mock.session(anyBoolean())).thenReturn(session);
-
-        ArgumentCaptor<String> nameArg = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<Object> valueArg = ArgumentCaptor.forClass(Object.class);
-
-        doAnswer(new Answer<Void>() {
+        when(mock.params(any())).then(new Answer<String>() {
             @Override
-            public Void answer(InvocationOnMock invocationOnMock) throws Throwable {
-                when(session.attribute(nameArg.getValue())).thenReturn(valueArg.getValue());
-                return null;
+            public String answer(InvocationOnMock invocationOnMock) throws Throwable {
+                String param = invocationOnMock.getArgument(0);
+                return params.get(param);
             }
-        }).when(session).attribute(nameArg.capture(), valueArg.capture());
+        });
+
+        when(mock.queryParams(any())).then(new Answer<String>() {
+            @Override
+            public String answer(InvocationOnMock invocationOnMock) throws Throwable {
+                String param = invocationOnMock.getArgument(0);
+                return queryParams.get(param);
+            }
+        });
+
+        when(mock.queryParams()).then(new Answer<Set<String>>() {
+            @Override
+            public Set<String> answer(InvocationOnMock invocationOnMock) throws Throwable {
+                return queryParams.keySet();
+            }
+        });
     }
 
     public MockRequest addParam(String param, String value) {
-        when(mock.params(param)).thenReturn(value);
+        params.put(param, value);
         return this;
     }
 
     public MockRequest addQueryParam(String param, String value) {
-        when(mock.queryParams(param)).thenReturn(value);
+        queryParams.put(param, value);
         return this;
     }
 
@@ -47,11 +62,14 @@ public class MockRequest {
     }
 
     public MockRequest addSessionAttribute(String name, Object value) {
-        when(session.attribute(name)).thenReturn(value);
+        mockSession.addAttribute(name, value);
         return this;
     }
 
     public Request get() {
+        Session session = mockSession.get();
+        when(mock.session()).thenReturn(session);
+        when(mock.session(anyBoolean())).thenReturn(session);
         return mock;
     }
 }
