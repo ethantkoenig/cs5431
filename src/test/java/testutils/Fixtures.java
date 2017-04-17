@@ -1,17 +1,31 @@
 package testutils;
 
 import crypto.Crypto;
+import crypto.ECDSAPublicKey;
 import server.models.User;
+import utils.DeserializationException;
 
+import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.util.Base64;
 
 public final class Fixtures {
     public static final String USER_PASSWORD = "g00dP@ssw0rd!!";
     public final User user;
 
-    public Fixtures() throws Exception {
-        byte[] salt = Base64.getDecoder().decode("m/g+zPZtEQIsWPLvjMoQCg==");
-        byte[] passwordHash = Crypto.pbkdf2(USER_PASSWORD, salt);
-        user = new User(1, "username", "example@example.com", salt, passwordHash, 0);
+    public final ECDSAPublicKey key;
+
+    public Fixtures() {
+        try {
+            byte[] salt = Base64.getDecoder().decode("m/g+zPZtEQIsWPLvjMoQCg==");
+            byte[] passwordHash = Crypto.pbkdf2(USER_PASSWORD, salt);
+            user = new User(1, "username", "example@example.com", salt, passwordHash, 0);
+
+            byte[] keyBytes = Base64.getDecoder()
+                    .decode("AAAAIENlqaN84z/cKZRKV3Uy3Hl3lb49R0x2R3UGw+H4NU7YAAAAID2A9htFFHElzgAvQOS3ZtadBUhgQJQIkRvzSU2EM8pK");
+            key = ECDSAPublicKey.DESERIALIZER.deserialize(keyBytes);
+        } catch (DeserializationException | GeneralSecurityException | IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

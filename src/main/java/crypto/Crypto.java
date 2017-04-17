@@ -101,7 +101,7 @@ public final class Crypto {
         }
     }
 
-    public static byte[] pbkdf2(String content, byte[] salt) throws Exception {
+    public static byte[] pbkdf2(String content, byte[] salt) throws GeneralSecurityException {
         KeySpec spec = new PBEKeySpec(content.toCharArray(), salt, Config.pbkdf2Cost(), 2048);
         SecretKeyFactory f = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
         return f.generateSecret(spec).getEncoded();
