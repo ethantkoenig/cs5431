@@ -124,7 +124,7 @@ public class UserController {
         }
         userAccess.resetFailedLogins(user.getId());
         request.session(true).attribute("username", username);
-        return routeUtils.modelAndView(request, "user.ftl")
+        return routeUtils.modelAndView(request, "transact.ftl")
                 .add("username", user.getUsername())
                 .get();
     }

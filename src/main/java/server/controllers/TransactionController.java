@@ -57,6 +57,10 @@ public class TransactionController {
 
         User loggedInUser = routeUtils.forceLoggedInUser(request);
         String recipientUsername = queryParam(request, "recipient");
+        if (!userAccess.isFriendsWith(recipientUsername, loggedInUser.getUsername())){
+            return "This person has not authorized you to send them money.";
+        }
+
         Optional<User> recipient = userAccess.getUserbyUsername(recipientUsername);
         if (!recipient.isPresent()) {
             return "invalid recipient"; // TODO handle properly
