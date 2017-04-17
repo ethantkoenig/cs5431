@@ -6,8 +6,7 @@
 
     <div class="row">
         <div class="col-lg-12 text-center">
-            <h1>${message}</h1>
-            <p>In progress...</p>
+            <h1>CS 5431 YACCoin Project</h1>
         </div>
     </div>
     <!-- /.row -->

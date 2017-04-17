@@ -22,21 +22,34 @@ $(document).ready(function () {
         var data = $(this).serialize();
         var password = $('#transaction-password').val();
         $.post(action, data, function (resp) {
-            var decrypted = sjcl.decrypt(password, JSON.stringify(resp.encryptedKey));
-            var key = new sjcl.ecc.ecdsa.secretKey(sjcl.ecc.curves.c256, new sjcl.bn(decrypted));
+            // TODO this feels like a hack, eventually make it nice
+            var rString = "";
+            var sString = "";
+            console.log("resp: " + JSON.stringify(resp));
+            for (var i = 0; i < resp.encryptedKeys.length; i++) {
+                var decrypted = sjcl.decrypt(password, JSON.stringify(resp.encryptedKeys[i]));
+                var key = new sjcl.ecc.ecdsa.secretKey(sjcl.ecc.curves.c256, new sjcl.bn(decrypted));
 
-            var payload = sjcl.codec.hex.toBits(resp.payload);
-            var hash = sjcl.hash.sha256.hash(payload);
-            var signature = key.sign(hash, 2);
+                var payload = sjcl.codec.hex.toBits(resp.payload);
+                var hash = sjcl.hash.sha256.hash(payload);
+                var signature = key.sign(hash, 10); // TODO higher paranoid parameter
 
-            var r = sjcl.bitArray.bitSlice(signature, 0, 256);
-            var s = sjcl.bitArray.bitSlice(signature, 256, 512);
+                var r = sjcl.bitArray.bitSlice(signature, 0, 256);
+                var s = sjcl.bitArray.bitSlice(signature, 256, 512);
+
+                if (i > 0) {
+                    rString += ",";
+                    sString += ",";
+                }
+                rString += sjcl.codec.hex.fromBits(r);
+                sString += sjcl.codec.hex.fromBits(s);
+            }
 
             $.post("/sendtransaction", {
                 payload: resp.payload,
-                r: sjcl.codec.hex.fromBits(r),
-                s: sjcl.codec.hex.fromBits(s)
-            }, function () {
+                r: rString,
+                s: sString
+            }, function() {
                 window.location.replace("/"); // TODO what to do on successful transaction?
             })
         });

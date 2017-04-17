@@ -48,7 +48,6 @@ public class UserController {
 
         path("/login", () -> {
             get("", routeUtils.template("login.ftl"), new FreeMarkerEngine());
-            //TODO: ethan
             post("", wrapTemplate(this::login), new FreeMarkerEngine());
         });
 
@@ -57,6 +56,7 @@ public class UserController {
         path("/user", () -> {
             get("/:name", wrapTemplate(this::viewUser), new FreeMarkerEngine());
             post("/keys", wrapTemplate(this::addUserKey), new FreeMarkerEngine());
+
         });
 
         path("/friend", () -> {
@@ -124,7 +124,8 @@ public class UserController {
         }
         userAccess.resetFailedLogins(user.getId());
         request.session(true).attribute("username", username);
-        return routeUtils.modelAndView(request, "transact.ftl")
+        return routeUtils.modelAndView(request, "user.ftl")
+                .add("username", user.getUsername())
                 .get();
     }
 
@@ -149,16 +150,14 @@ public class UserController {
 
         Optional<User> loggedInUser = routeUtils.loggedInUser(request);
         User user = optUser.get();
+
         if (loggedInUser.isPresent()) {
             loggedInUserName = loggedInUser.get().getUsername();
-//        friends = userAccess.getFriends(user.getUsername());
-//        users = userAccess.getAllUsernames();
-//            users.removeAll(friends);
-        }
         friends = userAccess.getFriends(user.getUsername());
         users = userAccess.getAllUsernames();
-        users.removeAll(friends);
-        System.out.println(users);
+            users.removeAll(friends);
+        }
+
         List<String> hashes = userAccess.getKeysByUserID(user.getId()).stream()
                 .map(Key::getPublicKey)
                 .map(ByteUtil::bytesToHexString)

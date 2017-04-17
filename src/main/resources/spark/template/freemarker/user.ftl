@@ -10,6 +10,7 @@
             <#list hashes as hash>
                 <textarea class="form-control" style="resize: none;" readonly>${hash}</textarea><br>
             </#list>
+
         </div>
     </div>
 
