@@ -133,7 +133,6 @@ public class TransactionController {
     }
 
     String sendTransaction(Request request, Response response) throws Exception {
-        System.out.println("Send transaction");
         byte[] payload = queryParamHex(request, "payload");
         String[] rHexs = queryParam(request, "r").split(",");
         String[] sHexs = queryParam(request, "s").split(",");
