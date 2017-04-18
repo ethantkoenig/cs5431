@@ -1,0 +1,59 @@
+\documentclass[a4paper,12pt]{article}
+
+%% Language and font encodings
+\usepackage[english]{babel}
+\usepackage[utf8x]{inputenc}
+\usepackage[T1]{fontenc}
+
+%% Sets page size and margins
+\usepackage[a4paper,top=3cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+
+%% Useful packages
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage[colorinlistoftodos]{todonotes}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+
+\newcommand{\iam}[2]{#1 \\ (#2, #2@cornell.edu)}
+
+\title{CS 5431 Milestone 3: Assurance}
+\author{
+\iam{James Cassell}{jcc384}
+\and
+\iam{Evan King}{esk79}
+\and
+\iam{Ethan Koenig}{etk39}
+\and
+\iam{Eric Perdew}{ecp84}
+\and
+\iam{Will Ronchetti}{wrr33}
+}
+
+\begin{document}
+\maketitle
+
+\section{Workflow}
+We hosted our code on a private Github repository. As a group of five, we made extensive use of branching, pull requests and code reviews. Our workflow was for each us to develop on a personal branch until our changes constituted a cohesive, self-contained, and tested unit of work. We would then submit a pull request to merge our changes into master. We established a guideline of not merging a pull request that had not been reviewed and approved by another group member. We decided not to enforce this guideline rigidly, so that blocking or inconsequential changes could be added to the master branch quickly when necessary.
+
+Continuous integration (CI) was a large part of our workflow. We used Travis CI to run a continuous integration build for every commit and pull request to our repository. Our CI build compiles, tests, and checks (via FindBugs, see below) the codebase. The CI build also generates a test coverage report, which can be viewed using Codecov.
+
+\section{Unit Testing}
+
+We used the JUnit testing framework to write unit tests for our code. These tests, as noted above, would run in every CI build. As a general rule, the person who wrote unit tests for a component was the same person who wrote that component; this ensured that the testing burden was (for the most part) shared equally among the group.
+
+Right now, our unit tests have 66.66\% line coverage and 60.83\% complexity coverage (another metric computed by Codecov). This sprint, we improved coverage of network functionality. However, we are still trying to figure out the best way to unit test of web application, which will likely require mocking out our relational database. Next sprint, we hope to improve test coverage of our web application code.
+
+\section{Integration tests}
+
+In the previus sprint, we mostly relied on manually testing to test the system in its entirety. This sprint, we added automated integration tests for the cryptocurrency network. These automated tests are part of our CI build.
+
+\section{Code Review}
+
+We used pull requests for code reviews. We found the pull requests provided a convenient interface for reviewing other members' proposed changes. As noted above, we strove to not merge pull requests into master that had not been reviewed by another group member.
+
+\section{FindBugs}
+
+We used Gradle's FindBugs plugin for our CI builds, so that any FindBugs errors would cause a commit's build to fail. We found this very helpful, as it allowed us to immediately and automatically check changes for bugs. We configured the CI to report all bugs, and to use ``maximum'' effort, so that the check would be as thorough as possible. Thanks to this practice, our codebase has no FindBugs errors.
+
+
+\end{document}

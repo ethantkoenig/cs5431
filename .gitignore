@@ -27,3 +27,9 @@ blockchain*
 
 # test database files
 mem.*
+
+# docs files
+docs/*.aux
+docs/*.log
+docs/*.out
+docs/*.pdf
