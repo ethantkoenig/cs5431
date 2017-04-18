@@ -28,7 +28,7 @@ public final class DatabaseUserAccess implements UserAccess {
 
     @Override
     public List<String> getAllUsernames() throws SQLException{
-        try (Connection conn = DbUtil.getConnection(false);
+        try (Connection conn = connectionProvider.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(Statements.GET_ALL_USERS);
         ) {
@@ -173,7 +173,7 @@ public final class DatabaseUserAccess implements UserAccess {
 
     @Override
     public boolean isFriendsWith(String username, String friend) throws SQLException{
-        try (Connection conn = DbUtil.getConnection(false);
+        try (Connection conn = connectionProvider.getConnection();
              PreparedStatement preparedStmt = Statements.isFriendsWith(conn, username, friend);
              ResultSet rs = preparedStmt.executeQuery()
         ) {
@@ -186,7 +186,7 @@ public final class DatabaseUserAccess implements UserAccess {
 
     @Override
     public void insertFriends(String username, String friend) throws SQLException{
-        try (Connection conn = DbUtil.getConnection(false);
+        try (Connection conn = connectionProvider.getConnection();
              PreparedStatement preparedStmt = Statements.insertFriends(conn, username, friend)
         ) {
             int rowCount = preparedStmt.executeUpdate();
@@ -199,7 +199,7 @@ public final class DatabaseUserAccess implements UserAccess {
 
     @Override
     public void deleteFriends(String username, String friend) throws SQLException{
-        try (Connection conn = DbUtil.getConnection(false);
+        try (Connection conn = connectionProvider.getConnection();
              PreparedStatement preparedStmt = Statements.deleteFriends(conn, username, friend)
         ) {
             int rowCount = preparedStmt.executeUpdate();
@@ -212,7 +212,7 @@ public final class DatabaseUserAccess implements UserAccess {
 
     @Override
     public List<String> getFriends(String username) throws SQLException{
-        try (Connection conn = DbUtil.getConnection(false);
+        try (Connection conn = connectionProvider.getConnection();
              PreparedStatement preparedStmt = Statements.getFriends(conn, username);
              ResultSet rs = preparedStmt.executeQuery()
         ) {
@@ -226,7 +226,7 @@ public final class DatabaseUserAccess implements UserAccess {
 
     @Override
     public List<String> getPeopleWhoFriendMe(String username) throws SQLException{
-        try (Connection conn = DbUtil.getConnection(false);
+        try (Connection conn = connectionProvider.getConnection();
              PreparedStatement preparedStmt = Statements.getPeopleWhoFriendMe(conn, username);
              ResultSet rs = preparedStmt.executeQuery()
         ) {

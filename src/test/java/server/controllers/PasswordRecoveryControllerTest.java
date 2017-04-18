@@ -5,7 +5,6 @@ import com.google.inject.Injector;
 import org.junit.Assert;
 import org.mockito.Mockito;
 import server.access.PasswordRecoveryAccess;
-import server.utils.MailService;
 import spark.ModelAndView;
 import spark.Request;
 import spark.Response;
@@ -91,6 +90,11 @@ public class PasswordRecoveryControllerTest extends ControllerTest {
                 .addQueryParam("password", newPassword)
                 .get();
         userController.login(request, response);
+        System.out.println(request.body());
+        System.out.println(response.body());
+        System.out.println(fixtures.user.getUsername());
+        System.out.println(request.session().attribute("username").toString());
+
         Assert.assertEquals(fixtures.user.getUsername(), request.session().attribute("username"));
     }
 }
