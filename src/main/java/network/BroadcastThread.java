@@ -32,9 +32,8 @@ public class BroadcastThread extends Thread {
     @Override
     public void run() {
         try {
-            OutgoingMessage message;
-            while ((message = broadcastQueue.take()) != null) {
-                broadcast.accept(message);
+            while (true) {
+                broadcast.accept(broadcastQueue.take());
             }
         } catch (InterruptedException e) {
             LOGGER.severe(e.getMessage());

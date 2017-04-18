@@ -1,6 +1,7 @@
 package server.config;
 
-import server.utils.DbUtil;
+import com.google.inject.Inject;
+import server.utils.ConnectionProvider;
 import server.utils.Statements;
 
 import java.sql.Connection;
@@ -15,22 +16,23 @@ import java.util.logging.Logger;
  * @version 1.0, March 11 2017
  */
 public final class DatabaseConfig {
+    private final ConnectionProvider connectionProvider;
 
-    // Disallow instances of this class
-    private DatabaseConfig() {
+    @Inject
+    public DatabaseConfig(ConnectionProvider connectionProvider) {
+        this.connectionProvider = connectionProvider;
     }
 
     private static final Logger LOGGER = Logger.getLogger(DatabaseConfig.class.getName());
 
-    public static void dbInit() {
+    public void dbInit() {
         LOGGER.info("[!] Initializing database");
         try (
-                Connection connection = DbUtil.getConnection(true);
+                Connection connection = connectionProvider.getConnection();
                 Statement statement = connection.createStatement()
         ) {
             int result = statement.executeUpdate(Statements.SHOW_DB_LIKE);
-            // The user does not already have this db.
-            if (result == 0) {
+            if (result == 0) { // database does not exist
                 LOGGER.info("[+] Creating database " + Statements.DB_NAME);
                 createDB(statement);
                 createTables(statement);

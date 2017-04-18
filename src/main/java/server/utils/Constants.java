@@ -20,9 +20,6 @@ public final class Constants {
     }
 
     public static void setNodeAddress(InetSocketAddress address) {
-        if (nodeAddress != null) {
-            throw new IllegalStateException("Cannot re-set populated field");
-        }
         nodeAddress = address;
     }
 }

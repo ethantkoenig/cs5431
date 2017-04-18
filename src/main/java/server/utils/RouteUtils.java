@@ -76,6 +76,10 @@ public final class RouteUtils {
         return loggedInUser(request).orElseThrow(NotLoggedInException::new);
     }
 
+    public static boolean queryParamExists(Request request, String paramName) {
+        return request.queryParams().contains(paramName);
+    }
+
     public static String queryParam(Request request, String paramName)
             throws InvalidParamException {
         String value = request.queryParams(paramName);

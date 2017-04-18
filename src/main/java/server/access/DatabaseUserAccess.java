@@ -1,8 +1,9 @@
 package server.access;
 
+import com.google.inject.Inject;
 import server.models.Key;
 import server.models.User;
-import server.utils.DbUtil;
+import server.utils.ConnectionProvider;
 import server.utils.Statements;
 
 import java.sql.*;
@@ -16,8 +17,11 @@ import java.util.logging.Logger;
  * Utilities for reading and modifying database.
  */
 public final class DatabaseUserAccess implements UserAccess {
+    private final ConnectionProvider connectionProvider;
 
-    public DatabaseUserAccess() {
+    @Inject
+    public DatabaseUserAccess(ConnectionProvider connectionProvider) {
+        this.connectionProvider = connectionProvider;
     }
 
     private static final Logger LOGGER = Logger.getLogger(DatabaseUserAccess.class.getName());
@@ -39,7 +43,7 @@ public final class DatabaseUserAccess implements UserAccess {
     @Override
     public Optional<User> getUserbyUsername(String username) throws SQLException {
         try (
-                Connection conn = DbUtil.getConnection(false);
+                Connection conn = connectionProvider.getConnection();
                 PreparedStatement preparedStmt = Statements.selectUserByUsername(conn, username);
                 ResultSet rs = preparedStmt.executeQuery()
         ) {
@@ -57,7 +61,7 @@ public final class DatabaseUserAccess implements UserAccess {
     @Override
     public Optional<User> getUserbyEmail(String email) throws SQLException {
         try (
-                Connection conn = DbUtil.getConnection(false);
+                Connection conn = connectionProvider.getConnection();
                 PreparedStatement preparedStmt = Statements.selectUserByEmail(conn, email);
                 ResultSet rs = preparedStmt.executeQuery()
         ) {
@@ -75,7 +79,7 @@ public final class DatabaseUserAccess implements UserAccess {
 
     @Override
     public List<Key> getKeysByUserID(int userID) throws SQLException {
-        try (Connection conn = DbUtil.getConnection(false);
+        try (Connection conn = connectionProvider.getConnection();
              PreparedStatement preparedStmt = Statements.getKeysByUserID(conn, userID);
              ResultSet rs = preparedStmt.executeQuery()
         ) {
@@ -90,7 +94,7 @@ public final class DatabaseUserAccess implements UserAccess {
     }
 
     public Optional<Key> getKey(int userID, byte[] publicKey) throws SQLException {
-        try (Connection conn = DbUtil.getConnection(false);
+        try (Connection conn = connectionProvider.getConnection();
              PreparedStatement preparedStmt = Statements.getKey(conn, userID, publicKey);
              ResultSet rs = preparedStmt.executeQuery()
         ) {
@@ -104,7 +108,7 @@ public final class DatabaseUserAccess implements UserAccess {
 
     @Override
     public void insertKey(int userID, byte[] publicKey, String privateKey) throws SQLException {
-        try (Connection conn = DbUtil.getConnection(false);
+        try (Connection conn = connectionProvider.getConnection();
              PreparedStatement preparedStmt = Statements.insertKey(conn, userID, publicKey, privateKey)
         ) {
             int rowCount = preparedStmt.executeUpdate();
@@ -117,7 +121,7 @@ public final class DatabaseUserAccess implements UserAccess {
 
     @Override
     public void insertUser(String username, String email, byte[] salt, byte[] hashedPassword) throws SQLException {
-        try (Connection conn = DbUtil.getConnection(false);
+        try (Connection conn = connectionProvider.getConnection();
              PreparedStatement preparedStmt = Statements.insertUser(conn, username, email, salt, hashedPassword)
         ) {
             int rowCount = preparedStmt.executeUpdate();
@@ -130,7 +134,7 @@ public final class DatabaseUserAccess implements UserAccess {
 
     @Override
     public void updateUserPass(int userID, byte[] salt, byte[] hashedPassword) throws SQLException {
-        try (Connection conn = DbUtil.getConnection(false);
+        try (Connection conn = connectionProvider.getConnection();
              PreparedStatement preparedStmt = Statements.updateUserPassword(conn, userID, salt, hashedPassword)
         ) {
             int rowCount = preparedStmt.executeUpdate();
@@ -143,7 +147,7 @@ public final class DatabaseUserAccess implements UserAccess {
 
     @Override
     public void incrementFailedLogins(int userID) throws SQLException {
-        try (Connection conn = DbUtil.getConnection(false);
+        try (Connection conn = connectionProvider.getConnection();
              PreparedStatement preparedStmt = Statements.incrementFailedLogins(conn, userID)
         ) {
             int rowCount = preparedStmt.executeUpdate();
@@ -156,7 +160,7 @@ public final class DatabaseUserAccess implements UserAccess {
 
     @Override
     public void resetFailedLogins(int userID) throws SQLException {
-        try (Connection conn = DbUtil.getConnection(false);
+        try (Connection conn = connectionProvider.getConnection();
              PreparedStatement preparedStmt = Statements.resetFailedLogins(conn, userID)
         ) {
             int rowCount = preparedStmt.executeUpdate();

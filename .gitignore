@@ -24,3 +24,6 @@ build/
 
 # blockchain directories
 blockchain*
+
+# test database files
+mem.*

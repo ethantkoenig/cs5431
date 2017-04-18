@@ -1,45 +1,52 @@
 package server.access;
 
-import server.utils.DbUtil;
+import com.google.inject.Inject;
+import server.utils.ConnectionProvider;
 import server.utils.Statements;
 
 import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.OptionalInt;
 import java.util.logging.Logger;
 
 import static utils.ShaTwoFiftySix.hashOf;
 
 public class PasswordRecoveryAccess {
-
     private static final Logger LOGGER = Logger.getLogger(PasswordRecoveryAccess.class.getName());
 
-    // Disallow instances of this class
-    private PasswordRecoveryAccess() {
+    private final ConnectionProvider connectionProvider;
+
+    @Inject
+    public PasswordRecoveryAccess(ConnectionProvider connectionProvider) {
+        this.connectionProvider = connectionProvider;
     }
 
     /**
-     * Check if guid exists in a record in the passrecover table and return the associate userid or -1
+     * Check if guid exists in a record in the recovery table and return the associated userID
      */
-    public static int getPasswordRecoveryUserID(String GUID) throws SQLException, GeneralSecurityException {
+    public OptionalInt getPasswordRecoveryUserID(String GUID) throws SQLException, GeneralSecurityException {
         String GUIDHash = hashOf(GUID.getBytes(Charset.forName("UTF-8"))).toString();
-        try (Connection conn = DbUtil.getConnection(false);
+        try (Connection conn = connectionProvider.getConnection();
              PreparedStatement preparedStmt = Statements.getPasswordRecoveryUserID(conn,GUIDHash);
              ResultSet rs = preparedStmt.executeQuery()
         ) {
             if (rs.next()) {
-                return rs.getInt("userid");
+                return OptionalInt.of(rs.getInt("userid"));
             }
-            return -1;
+            return OptionalInt.empty();
         }
     }
 
     /**
-     * Add ta row to password recovery table with userid, current time, and hashed guid
+     * Add a row to the recovery table with userid, current time, and hashed guid
      */
-    public static void insertPasswordRecovery(int userID, String GUID) throws SQLException, GeneralSecurityException {
+    public void insertPasswordRecovery(int userID, String GUID) throws SQLException, GeneralSecurityException {
         String GUIDHash = hashOf(GUID.getBytes(Charset.forName("UTF-8"))).toString();
-        try (Connection conn = DbUtil.getConnection(false);
+        try (Connection conn = connectionProvider.getConnection();
              PreparedStatement preparedStmt = Statements.insertPasswordRecovery(conn, userID, GUIDHash)
         ) {
             int rowCount = preparedStmt.executeUpdate();
@@ -49,5 +56,4 @@ public class PasswordRecoveryAccess {
             }
         }
     }
-
 }

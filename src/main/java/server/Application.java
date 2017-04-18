@@ -10,7 +10,7 @@ import server.controllers.IndexController;
 import server.controllers.PasswordRecoveryController;
 import server.controllers.TransactionController;
 import server.controllers.UserController;
-import server.utils.Constants;
+import server.utils.*;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -33,9 +33,8 @@ public class Application {
         // Caching of static files lifetime
         staticFiles.expireTime(600L);
 
-        DatabaseConfig.dbInit();
-
         Injector injector = Guice.createInjector(new Module());
+        injector.getInstance(DatabaseConfig.class).dbInit();
 
         injector.getInstance(IndexController.class).init();
         injector.getInstance(UserController.class).init();
@@ -76,6 +75,8 @@ public class Application {
         @Override
         protected void configure() {
             bind(UserAccess.class).to(DatabaseUserAccess.class);
+            bind(ConnectionProvider.class).to(ProductionConnectionProvider.class);
+            bind(MailService.class).to(GmailService.class);
         }
     }
 }

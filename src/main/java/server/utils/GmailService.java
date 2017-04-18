@@ -8,31 +8,18 @@ import javax.mail.internet.MimeMessage;
 import java.util.Properties;
 import java.util.logging.Logger;
 
-/**
- * Created by EvanKing on 4/11/17.
- */
-public class Mail {
+public class GmailService implements MailService {
 
     private static final String SUBJECT = "Yaccoin Password Recovery";
     private static final String BODY = "Please click on the provided link in order to create a new account password.";
-    private static final Logger LOGGER = Logger.getLogger(Mail.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(GmailService.class.getName());
 
-
-    public Mail() {
-    }
-
-    public static void sendEmail(String to, String link) {
+    @Override
+    public void sendEmail(String to, String link) {
         Properties props = setGmailProp();
-
-        Session session = Session.getInstance(props,
-                new javax.mail.Authenticator() {
-                    protected PasswordAuthentication getPasswordAuthentication() {
-                        return new PasswordAuthentication(Config.getMailFrom(), Config.getMailPassword());
-                    }
-                });
+        Session session = Session.getInstance(props, new GmailAuthenticator());
 
         try {
-
             Message message = new MimeMessage(session);
             message.setFrom(new InternetAddress(Config.getMailFrom()));
             message.setRecipients(Message.RecipientType.TO,
@@ -41,7 +28,6 @@ public class Mail {
             message.setText(BODY + "\n" + link);
 
             Transport.send(message);
-
         } catch (MessagingException e) {
             LOGGER.severe(e.getMessage());
         }
@@ -54,5 +40,12 @@ public class Mail {
         properties.put("mail.smtp.host", "smtp.gmail.com");
         properties.put("mail.smtp.port", "587"); //465 for SSL
         return properties;
+    }
+
+    private static final class GmailAuthenticator extends Authenticator {
+        @Override
+        protected PasswordAuthentication getPasswordAuthentication() {
+            return new PasswordAuthentication(Config.getMailFrom(), Config.getMailPassword());
+        }
     }
 }
