@@ -125,10 +125,6 @@ public class UserController {
         userAccess.resetFailedLogins(user.getId());
         request.session(true).attribute("username", username);
 
-        List<String> hashes = userAccess.getKeysByUserID(user.getId()).stream()
-                .map(Key::getPublicKey)
-                .map(ByteUtil::bytesToHexString)
-                .collect(Collectors.toList());
 
         List<String> friends = userAccess.getFriends(user.getUsername());
         List<String> users = userAccess.getAllUsernames();
@@ -137,7 +133,6 @@ public class UserController {
         return routeUtils.modelAndView(request, "user.ftl")
                 .add("username", user.getUsername())
                 .add("loggedInUser", username)
-                .add("hashes", hashes)
                 .add("friends", friends)
                 .add("users", users)
                 .get();
@@ -172,15 +167,9 @@ public class UserController {
             users.removeAll(friends);
         }
 
-        List<String> hashes = userAccess.getKeysByUserID(user.getId()).stream()
-                .map(Key::getPublicKey)
-                .map(ByteUtil::bytesToHexString)
-                .collect(Collectors.toList());
-
         return routeUtils.modelAndView(request, "user.ftl")
                 .add("username", user.getUsername())
                 .add("loggedInUser", loggedInUserName)
-                .add("hashes", hashes)
                 .add("friends", friends)
                 .add("users", users)
                 .get();
@@ -203,20 +192,18 @@ public class UserController {
     }
 
     String addFriend(Request request, Response response) throws Exception {
-        routeUtils.forceLoggedInUser(request);
-        Optional<User> loggedInUser = routeUtils.loggedInUser(request);
+        User loggedInUser = routeUtils.forceLoggedInUser(request);
         String friend = RouteUtils.queryParam(request, "friend");
-        String username = loggedInUser.get().getUsername();
+        String username = loggedInUser.getUsername();
 
         userAccess.insertFriends(username, friend);
         return "ok";
     }
 
     String deleteFriend(Request request, Response response) throws Exception {
-        routeUtils.forceLoggedInUser(request);
-        Optional<User> loggedInUser = routeUtils.loggedInUser(request);
+        User loggedInUser = routeUtils.forceLoggedInUser(request);
         String friend = RouteUtils.queryParam(request, "friend");
-        String username = loggedInUser.get().getUsername();
+        String username = loggedInUser.getUsername();
 
         userAccess.deleteFriends(username, friend);
         return "ok";
