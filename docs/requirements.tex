@@ -53,7 +53,7 @@ As with Bitcoin, a private key will represent each ‘coin’ in our system and 
 
 \subsection*{Web app}
 
-As described above, the web app will allow registered users to request, send and recieve funds to/from other users. In order to sign transactions that will be sent to the underlying cryptocurrency, the application will need access to users' private keys. We do not want to store these keys centrally, since all users' funds could be stolen if the central server storing these keys is compromised.
+As described above, the web app will allow registered users to request, send and receive funds to/from other users. In order to sign transactions that will be sent to the underlying cryptocurrency, the application will need access to users' private keys. We do not want to store these keys centrally, since all users' funds could be stolen if the central server storing these keys is compromised.
 
 To protect a user's private keys, the web app will store the user's private keys encrypted under a password. The decryption of these encrypted private keys, and the signing of transactions using the unecrypted private keys, will take place client-side. This protects users' private keys from attacks against the servers hosting the web app, while still allowing users to easily perform transactions.
 
@@ -187,14 +187,16 @@ The integrity and availability goals are feasible, and will hold due to the inhe
 % TODO: goals for protecting keys
 
 \begin{itemize}
-\item The wallet software must prevent unautorized spending of a user's funds. This goal concerns integrity, since only the owner of funds should be authorized to spend (i.e. update) those funds.
-\item The wallet software must prevent unauthorized disclosure of a user's balance, transaction history, or other personal information. This goal concerns confidentiality, as our wallet software must not expose private user information.
+\item The wallet software must prevent unauthorized disclosure of a user's balance or transaction history. This goal concerns confidentiality, as our wallet software must not expose private user information.
+\item The wallet software must prevent unauthorized spending of a user's funds. This goal concerns integrity, since only the owner of funds should be authorized to spend (i.e. update) those funds.
+\item The wallet software must prevent unauthorized disclosure of a user's keys. This goal concerns confidentiality, since it involves unauthorized access of an asset.
+\item The wallet software must prevent unauthorized modification/deletion of a user's keys. This goal concerns integrity, since keys are a system asset.
 \item The wallet software must prevent unauthorized access to a user's credentials. This goals concerns confidentiality, since it involves unauthorized access of an asset.
 \item The wallet software must prevent unauthorized modification of a user's credentials. This goal concerns integrity, since users' credentials are a system asset.
 \item The wallet software must prevent users from constructing invalid transactions. This goal concerns integrity. If we allowed users to construct malformed transactions, it could lead them to believe they have performed transactions that will never be accepted by the blockchain, leading to inconsistencies between the wallet software and the blockchain.
 \end{itemize}
 
-Authentication password could be disclosed to an attacker, since attackers may have acceses to the memory contents of the server. In this, preventing unauthorized access to a user's balance and transaction history will not be possible. Preventing unauthorized modification of a user's keys will still be possible, through use of two-factor authorization for such operations.
+Authentication passwords could be disclosed to an attacker, since attackers may have access to the memory contents of the server. In this scenario, preventing unauthorized access to a user's balance, transaction history, and keys will not be possible. Preventing unauthorized modification of a user's keys will still be possible, through use of two-factor authorization for such operations.
 
 All other goals are completely feasible, and do not need to be relaxed.
 
@@ -202,43 +204,33 @@ All other goals are completely feasible, and do not need to be relaxed.
 
 \subsection{Authentication}
 
-For the cryptocurrency itself, in order to verify a transaction, it must be signed by the owner of the currency using their private key(s).
-Otherwise, it would be impossible to commit a secure transaction.
+For the cryptocurrency itself, there is no authentication. All parties in the cryptocurrency network remain pseudonymous, so there are no places where authentication comes into play.
 
-For our Venmo-style web app, it will potentially contain information that our users will want to keep secure.
-E.g., it might tie someone's public keys to their real life identity, which is not normally available.
-Therefore, there will be a user account system in place in order to log in to and access our service.
-
+Our Venmo-style web app will authenticate users via a password-based login. Access to all of the app's service will be mediated through logging in.
 
 \subsection{Authorization}
 
-In the blockchain, the cryptographic signing of transactions using the private key acts as both a form of authentication of the owner of that private key, as well as the authorization of that particular transaction.
-Clearly, for a currency to function, all transactions made with that currency must be authorized.
+In the blockchain, the cryptographic signing of a transaction using a private key authorizes that particular transaction. Clearly, for a currency to function, all transactions made with that currency must be authorized.
 
-For the Venmo-style app, ideally it would behave like the real Venmo, wherein a user can authorize which places payments may go, and which places payments may come from at any given time.
-Additionally, in order to avoid spam, it could be nice for users to only be able to request funds from accounts that have authorized them to (e.g., in a friends list).
-While this is not essential to security, it could remove risks of, for example, homograph attacks on users of our system.
-We also plan to support admin accounts, which unlike normal accounts will be authorized to delete fraudulent accounts.
-Public users will not be authorized to create admin accounts; only a pre-defined set of accounts have admin-level authorization.
-
+For the Venmo-style app, ideally it would behave like the real Venmo, where users can authorize where payments can go and come from.
+Additionally, in order to avoid spam, users will only be able to request or send funds to accounts that have authorized them to (e.g., added a friends list).
+While this is not essential to security, it is a countermeasure against homograph attacks.
 
 \subsection{Audit}
 
-Audit naturally comes up in the blockchain as every user will have access to every transaction that has occurred using our currency.
+In the cryptocurrency, audit naturally comes up in the blockchain. Every user will have access to every transaction that has occurred using our currency. This will allow members of the network to detect double-spending attacks, and other misconduct.
 
 For our Venmo-style app, we will want to maintain a transaction log as well, but with the additional information available from the user accounts we have.
-This will be useful in verifying that the correct users were paid when they may have more than one public key.
+This will be useful in verifying that the correct users were paid when they may have more than one public key. It will also be useful in detecting and diagnosing any attacks or misconduct.
 
 \subsection{Confidentiality}
 
 For many users of a cryptocurrency, one of the strongest appeals is the pseudonymity.
 Users may create more public/private keys at will and protect their identity as they make transactions.
 For those using our blockchain alone, we will store no personal information about our users and thus their identities remain safe.
-However, the pseudonymity that private keys provide is not perfect anonymity. It is possible to infer the owners of public keys by behavioral patterns. We do not plan to protect against such attacks.
+However, the pseudonymity that private keys provide is not perfect anonymity. It is possible to infer the owners of public keys by analyzing behavioral patterns. We do not plan to protect against such attacks.
 
-
-For those using our Venmo-style app, since they will be making accounts, we will need to securely store passwords, as well as public keys if we wish to attempt to keep them anonymous.
-We will also want to prevent users' transaction histories from being viewed or inferred by others.
+In our Venmo-style app, users will be creating accounts, so we will need to securely store passwords. We will also want to prevent users' balances, transaction histories, and keys from being viewed by other users.
 
 \subsection{Integrity}
 
@@ -248,8 +240,8 @@ It becomes harder to alter old transactions as it would require finding a new no
 However, this argument is probabilistic, not absolute; even if an adversary does not obtain a majority of the network's computing power, he/she can still attempt a double-spending attack, and will succeed with non-zero probability.
 
 Integrity is equally important in our Venmo-style app.
-Specifically, the user account information must remain unaltered in order for users to know that they are paying the correct person.
-E.g., if an attacker changes someone's account information to include a different public key for payment, then anyone paying that person will pay the public key of the attacker's choosing.
-
+It is important, for obvious reasons, that users cannot execute requests or transactions for other users, or spend other users' funds.
+Additionally, a user's keys must remain unaltered in order for users to know that they are paying the correct person.
+If an attacker alter the public keys that are stored under a particular user, then anyone paying that user may pay to the attacker's public key.
 
 \end{document}

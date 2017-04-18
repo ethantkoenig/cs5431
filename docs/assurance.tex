@@ -16,7 +16,7 @@
 
 \newcommand{\iam}[2]{#1 \\ (#2, #2@cornell.edu)}
 
-\title{CS 5431 Milestone 3: Assurance}
+\title{CS 5431 Milestone 4: Assurance}
 \author{
 \iam{James Cassell}{jcc384}
 \and
@@ -41,11 +41,11 @@ Continuous integration (CI) was a large part of our workflow. We used Travis CI 
 
 We used the JUnit testing framework to write unit tests for our code. These tests, as noted above, would run in every CI build. As a general rule, the person who wrote unit tests for a component was the same person who wrote that component; this ensured that the testing burden was (for the most part) shared equally among the group.
 
-Right now, our unit tests have 66.66\% line coverage and 60.83\% complexity coverage (another metric computed by Codecov). This sprint, we improved coverage of network functionality. However, we are still trying to figure out the best way to unit test of web application, which will likely require mocking out our relational database. Next sprint, we hope to improve test coverage of our web application code.
+Right now, our unit tests have 73.2\% line coverage and 61.8\% complexity coverage (another metric computed by Codecov). This sprint, we improved test coverage of the web application. We used the DbUnit testing framework, along with an in-memory HyperSQL database, for a test database. We also use the Guice dependency injection framework and the Mockito library to mock out components of the web application for testing.
 
 \section{Integration tests}
 
-In the previus sprint, we mostly relied on manually testing to test the system in its entirety. This sprint, we added automated integration tests for the cryptocurrency network. These automated tests are part of our CI build.
+In addition to unit tests, we also have automated integration tests for the cryptocurrency network. These automated tests are part of our CI build.
 
 \section{Code Review}
 
@@ -54,6 +54,5 @@ We used pull requests for code reviews. We found the pull requests provided a co
 \section{FindBugs}
 
 We used Gradle's FindBugs plugin for our CI builds, so that any FindBugs errors would cause a commit's build to fail. We found this very helpful, as it allowed us to immediately and automatically check changes for bugs. We configured the CI to report all bugs, and to use ``maximum'' effort, so that the check would be as thorough as possible. Thanks to this practice, our codebase has no FindBugs errors.
-
 
 \end{document}
