@@ -1,0 +1,255 @@
+\documentclass[12pt]{article}
+
+%% Language and font encodings
+\usepackage[english]{babel}
+\usepackage[utf8x]{inputenc}
+\usepackage[T1]{fontenc}
+
+%% Sets page size and margins
+\usepackage[a4paper,top=3cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+
+%% Useful packages
+\usepackage{amsmath}
+\usepackage{comment}
+\usepackage{graphicx}
+\usepackage[colorinlistoftodos]{todonotes}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+\usepackage{tabularx}
+\usepackage{tabulary}
+
+\newcommand{\iam}[2]{#1 \\ (#2, #2@cornell.edu)}
+
+\title{CS 5431: Milestone 4 - Beta}
+\author{
+\iam{James Cassell}{jcc384}
+\and
+\iam{Evan King}{esk79}
+\and
+\iam{Ethan Koenig}{etk39}
+\and
+\iam{Eric Perdew}{ecp84}
+\and
+\iam{Will Ronchetti}{wrr33}
+}
+
+\begin{document}
+\maketitle
+
+\section{System Purpose}
+
+We plan to implement a Venmo-style wallet application in which users can send and receive funds through a web app. Users will also be able to view their transaction history, check their available balance, and reset their password. The system's underlying currency will be a decentralized digital cryptocurrency modeled after Bitcoin.
+
+\subsection*{Cryptocurrency}
+
+Our currency will allow peer-to-peer transactions without the need for a centralized organization to verify the legitimacy and/or consistency of the exchanges.  This is accomplished through the use of a public distributed ledger, referred to as the blockchain.
+
+Our system resists double-spending attacks through the use of the blockchain. The blockchain will be maintained by all of the nodes in the network. Each transaction will be broadcast to each node where it will be independently verified and then added to that node's copy of the ledger. Once a node has recorded a predetermined fixed number of transactions (we call this a block), then that node will propose the addition of this block to the blockchain. However, to avoid race conditions and inconsistent views of the ledger, we must ensure that everyone in the network agrees on the next block in the chain. This is accomplished through the completion of a computationally difficult task. The first node to identify a nonce such that the SHA-256 hash of the block and the nonce is beneath a threshold will ``win'' and get their proposed block added to the chain. The threshold will be dynamic to ensure that the time between block additions remains consistent -- regardless of the number of the nodes in the network.  To incentivize nodes to engage in this computationally difficult task, they will be rewarded with a predetermined amount of the currency upon successful completion of the task.
+
+Transactions are backed by other transactions. This means that in order to for Alice pay Bob $n$ units of currency, Alice must provide a previous transaction in which she received $n$ unit. This previous transaction ``backs'' the new transaction, and will then be marked as ``spent'' on the ledger to ensure that it cannot be used again. Owners of currency can transfer funds by signing a hash of the previous transaction and the public key of the person they are paying. The payee can then verify the signature in order to verify the chain of ownership. Again, it is then the job of the other nodes in the network to ensure that the transaction is legitimate and not a result of double spending. This is accomplished by broadcasting every transaction to every node.
+
+Our network will be simplified in that each node will be connected to every other node. We hope to eventually implement a more sophisticated node discovery system but do not consider it an immediate priority. Additionally, we do not intend to concern ourselves with the reclaiming of disk space. We plan to store the blockchain in memory and only concern ourselves with space management should we find ourselves ahead of schedule.
+
+As with Bitcoin, a private key will represent each ‘coin’ in our system and each user will need a public key in order to receive transactions. If we chose to store users' private keys in a central database for our wallet app, we would be introducing a single point of failure. Should our database get compromised, users could permanently lose all of their finances. This will be solved by storing encrypted private keys, and performing the decryption of private keys and signing of transactions client-side. This way, the central service never knows its users' private keys.
+
+\subsection*{Web app}
+
+As described above, the web app will allow registered users to request, send and recieve funds to/from other users. In order to sign transactions that will be sent to the underlying cryptocurrency, the application will need access to users' private keys. We do not want to store these keys centrally, since all users' funds could be stolen if the central server storing these keys is compromised.
+
+To protect a user's private keys, the web app will store the user's private keys encrypted under a password. The decryption of these encrypted private keys, and the signing of transactions using the unecrypted private keys, will take place client-side. This protects users' private keys from attacks against the servers hosting the web app, while still allowing users to easily perform transactions.
+
+\section{System Backlog}
+
+\subsubsection*{Cryptocurrency}
+
+\begin{tabularx}{\linewidth}{|l|l|l|l|X|}
+\hline
+\textbf{Done?} & \textbf{User type} & \textbf{Assets} & \textbf{Importance} & \textbf{User story} \\
+\hline
+Yes & User & Funds & Must & As a user, I can send funds that I own (i.e. are held under my public keys) to other users (i.e. to other public keys). \\
+\hline
+Yes & User & Keys & Must & As a user, I can generate a new private/public key to use in transactions. \\
+\hline
+Yes & Miner & Ledger & Must & As a miner, I can record previous transactions and log new transactions as they occur. \\
+\hline
+Yes & Miner & Funds & Must & As a miner, I can collect a reward for successfully mining a block. \\
+\hline
+Yes & Miner & Ledger & Should & As a miner, I am free to leave and rejoin the network. \\
+\hline
+Yes & Miner & Ledger & Should & As a miner, I can persist the blockchain if I need to power down. \\
+\hline
+\end{tabularx}
+
+\subsubsection*{Wallet Application}
+
+\begin{tabularx}{\linewidth}{|l|l|l|l|X|}
+\hline
+\textbf{Done?} & \textbf{User type} & \textbf{Assets} & \textbf{Importance} & \textbf{User story} \\
+\hline
+Yes & User & Funds & Must & As a user, I can send funds that I own to another user. \\
+\hline
+Yes & User & Funds & Must & As a user, I can check my balance. \\
+\hline
+Yes & User & Keys & Must & As a user, I can add keys to my account. \\
+\hline
+No & User & Funds & Should & As a user, I can request funds from another user. \\
+\hline
+%No & User & Funds & Should & As a user, I can accept or decline a request from another user. \\
+%\hline
+No & User & User Accounts & Should & As a user, I can search for other users by name, so that I don't have to remember other users' usernames. \\
+\hline
+No & User & Transactions & Should & As a user, I can view my transaction history. \\
+\hline
+Yes & User & Credentials & Could & As a user, I can reset my password if I forget it. \\
+\hline
+No & User & Funds & Could & As a user, I can send funds to a group of multiple users, so that I can easily make several related payments. \\
+\hline
+No & User & Funds & Could & As a user, I can request funds from a group of multiple users, so that I can easily make several related requests. \\
+\hline
+Yes & User & Transactions & Could & As a user, I can create a friends list, to block spam requests from users I do not know. \\
+\hline
+No & User & User Accounts & Would & As a user, I can associate a profile picture with my account. \\
+\hline
+\end{tabularx}
+
+\section{Threat Models}
+
+\subsection{Cryptocurrency}
+
+\subsubsection*{Threats}
+
+\begin{tabulary}{\linewidth}{|L|L|L|L|}
+\hline
+\textbf{Threat} & \textbf{Motivations} & \textbf{Resources} & \textbf{Capabilities} \\
+\hline
+Individuals and criminal organizations seeking financial gain & Illicitly acquire money & Multiple devices that can connect to our network, make transaction request, and serve as nodes. & Can broadcast fraudulent transactions to other nodes, or attempt to mine fraudulent blocks. Fraudulence could involve spending nonexistent money, spending already-spent money, or spending other users' money. \\
+\hline
+Supporters of other cryptocurrencies & Destabilize our cryptocurrency, so that their supported currency becomes relatively stronger. & Multiple devices that can connect to our network, make transaction request, and serve as nodes. & Can broadcast fraudulent transactions to other nodes, or attempt to mine fraudulent blocks. \\
+\hline
+Careless users & None & A connection to the network, and the ability to issue transactions. & Can accidentally request to send money that they do not own. \\
+\hline
+\end{tabulary}
+
+\subsubsection*{Non-threats}
+
+\begin{tabulary}{\linewidth}{|L|L|L|L|}
+\hline
+\textbf{Non-threat} & \textbf{Explanation}\\
+\hline
+Users who lose or disclose their private keys. & It would be an immense challenge to securely associate private keys with their owners. This would require us to introduce another form of authentication, which could itself be lost or disclosed. \\
+\hline
+Organization in control of a majority of the network's computing power & We assume that after the early stages, that this would be a very difficult feat to accomplish. During the early stages, we assume that no entity would be motivated to maliciously use this computing power. By misusing their power in the network, they will add destabilize and thus devalue the cryptocurrency, acting against their best interests. This devaluing of the currency would render double-spending attacks futile. \\
+\hline
+\end{tabulary}
+
+\subsection{Wallet App}
+
+\subsubsection*{Threats}
+
+\begin{tabulary}{\linewidth}{|L|L|L|L|}
+\hline
+\textbf{Threat} & \textbf{Motivations} & \textbf{Resources} & \textbf{Capabilities} \\
+\hline
+Users seeking to learn other user's information (e..g public keys, transaction history, balance) & Users can identify the holders of public keys, and track the spending patterns of others. & Access to the network, an account with the service, access to other users' accounts and public keys. Access to disk and memory contents of central server. & Can make transactions to targets. Can attempt to hijack other users' sessions. \\
+\hline
+Users seeking to perform unauthorized transactions & Users can direct funds towards their accounts, or enact vengeance on another user by spending their funds. & Access to the network, an account with the service, access to other users' accounts and public keys. Access to disk and memory contents of central server. & Can attempt to make transactions on behalf of another user. \\
+\hline
+Spoofers pretending to be another person & Can trick other users into sending them money & Access to the network. & Can create fake accounts and make phishing-like requests to other users. Can access social media sites to determine who to impersonate (e.g. a target user's social media friends). \\
+\hline
+\end{tabulary}
+
+\subsubsection*{Non-threats}
+
+\begin{tabulary}{\linewidth}{|L|L|L|L|}
+\hline
+\textbf{Non-threat} & \textbf{Explanation} \\
+\hline
+Individuals with unauthorized access to users' email accounts & We will assume that users protect their email accounts.
+\\ \hline
+Users with unauthorized physical access to servers & We will assume that the server hosting our service will be in a physically-secured room with no avenues for unauthorized access.
+\\ \hline
+\end{tabulary}
+
+
+\section{Security Goals}
+
+\subsubsection*{Cryptocurrency}
+\begin{itemize}
+\item The system must prevent the holders of public keys from easily being identified. This goal concerns confidentiality.
+\item The system must prevent double spending of money. This goal concerns integrity; if users could spend coins they don't have, the integrity of the blockchain and in turn other people's transactions could be compromised.
+\item The system must prevent users from spending money they don't have. Likewise, this goal concerns integrity.
+\item The system must prevent users from stealing other users' coins. This goal concerns availability. If users have their coins stolen, then they've been denied access to coins they should have access to.
+\end{itemize}
+
+The integrity and availability goals are feasible, and will hold due to the inherent design of the blockchain. The confidentiality goal must be weakened to only prevent ``easy'' identification of key holders, since analyses of spending patterns can tie individuals to public keys.
+
+\subsubsection*{Wallet App}
+
+% TODO: goals for protecting keys
+
+\begin{itemize}
+\item The wallet software must prevent unautorized spending of a user's funds. This goal concerns integrity, since only the owner of funds should be authorized to spend (i.e. update) those funds.
+\item The wallet software must prevent unauthorized disclosure of a user's balance, transaction history, or other personal information. This goal concerns confidentiality, as our wallet software must not expose private user information.
+\item The wallet software must prevent unauthorized access to a user's credentials. This goals concerns confidentiality, since it involves unauthorized access of an asset.
+\item The wallet software must prevent unauthorized modification of a user's credentials. This goal concerns integrity, since users' credentials are a system asset.
+\item The wallet software must prevent users from constructing invalid transactions. This goal concerns integrity. If we allowed users to construct malformed transactions, it could lead them to believe they have performed transactions that will never be accepted by the blockchain, leading to inconsistencies between the wallet software and the blockchain.
+\end{itemize}
+
+Authentication password could be disclosed to an attacker, since attackers may have acceses to the memory contents of the server. In this, preventing unauthorized access to a user's balance and transaction history will not be possible. Preventing unauthorized modification of a user's keys will still be possible, through use of two-factor authorization for such operations.
+
+All other goals are completely feasible, and do not need to be relaxed.
+
+\section{Essential Security Elements}
+
+\subsection{Authentication}
+
+For the cryptocurrency itself, in order to verify a transaction, it must be signed by the owner of the currency using their private key(s).
+Otherwise, it would be impossible to commit a secure transaction.
+
+For our Venmo-style web app, it will potentially contain information that our users will want to keep secure.
+E.g., it might tie someone's public keys to their real life identity, which is not normally available.
+Therefore, there will be a user account system in place in order to log in to and access our service.
+
+
+\subsection{Authorization}
+
+In the blockchain, the cryptographic signing of transactions using the private key acts as both a form of authentication of the owner of that private key, as well as the authorization of that particular transaction.
+Clearly, for a currency to function, all transactions made with that currency must be authorized.
+
+For the Venmo-style app, ideally it would behave like the real Venmo, wherein a user can authorize which places payments may go, and which places payments may come from at any given time.
+Additionally, in order to avoid spam, it could be nice for users to only be able to request funds from accounts that have authorized them to (e.g., in a friends list).
+While this is not essential to security, it could remove risks of, for example, homograph attacks on users of our system.
+We also plan to support admin accounts, which unlike normal accounts will be authorized to delete fraudulent accounts.
+Public users will not be authorized to create admin accounts; only a pre-defined set of accounts have admin-level authorization.
+
+
+\subsection{Audit}
+
+Audit naturally comes up in the blockchain as every user will have access to every transaction that has occurred using our currency.
+
+For our Venmo-style app, we will want to maintain a transaction log as well, but with the additional information available from the user accounts we have.
+This will be useful in verifying that the correct users were paid when they may have more than one public key.
+
+\subsection{Confidentiality}
+
+For many users of a cryptocurrency, one of the strongest appeals is the pseudonymity.
+Users may create more public/private keys at will and protect their identity as they make transactions.
+For those using our blockchain alone, we will store no personal information about our users and thus their identities remain safe.
+However, the pseudonymity that private keys provide is not perfect anonymity. It is possible to infer the owners of public keys by behavioral patterns. We do not plan to protect against such attacks.
+
+
+For those using our Venmo-style app, since they will be making accounts, we will need to securely store passwords, as well as public keys if we wish to attempt to keep them anonymous.
+We will also want to prevent users' transaction histories from being viewed or inferred by others.
+
+\subsection{Integrity}
+
+It is essential to our cryptocurrency that the history of transactions is untampered, as it determines each user's balance.
+The integrity of the transactions is maintained by both the cryptographic signing of individual transactions as well as the infeasibility of altering the blockchain as it grows.
+It becomes harder to alter old transactions as it would require finding a new nonce for every block thereafter.
+However, this argument is probabilistic, not absolute; even if an adversary does not obtain a majority of the network's computing power, he/she can still attempt a double-spending attack, and will succeed with non-zero probability.
+
+Integrity is equally important in our Venmo-style app.
+Specifically, the user account information must remain unaltered in order for users to know that they are paying the correct person.
+E.g., if an attacker changes someone's account information to include a different public key for payment, then anyone paying that person will pay the public key of the attacker's choosing.
+
+
+\end{document}

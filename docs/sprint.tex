@@ -1,0 +1,55 @@
+\documentclass[a4paper,12pt]{article}
+
+%% Language and font encodings
+\usepackage[english]{babel}
+\usepackage[utf8x]{inputenc}
+\usepackage[T1]{fontenc}
+
+%% Sets page size and margins
+\usepackage[a4paper,top=3cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+
+%% Useful packages
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage[colorinlistoftodos]{todonotes}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+\usepackage{tabularx}
+
+\title{CS 5431: Milestone 3 Alpha - Sprint Report}
+\author{
+James Cassell (jcc384)
+\and
+Evan King (esk79)
+\and
+Ethan Koenig (etk39)
+\and
+Eric Perdew (ecp84)
+\and
+Will Ronchetti (wrr33)
+}
+
+\begin{document}
+\maketitle
+
+\section{Sprint Report}
+
+\subsection{Activity Breakdown}
+
+\begin{enumerate}
+\item Ethan implemented key storage, the ability log in/out, and transactions for the web application. He also fixed outstanding bugs from the previous milestone, including crashes and uncaught exceptions. Finally, he worked to make existing cryptocurrency tests more rigorous. He contributed 45 hours to this sprint.
+\item Will implemented and tested user password encryption and persistent blockchain storage. Password encryption includes salting and hashing using PBKDF2. This includes the logic needed to store all the blocks in the entire chain, and load them back in properly so that we can continue constructing transactions based on the imported information. For now, this information is serialized into files - but we will upgrade to a database in the future. Will was only able to contribute about 15 hours to this sprint due to extenuating circumstances.
+\item Evan setup and configured the web app by defining the MVC using Java Spark. This included configuring a local instance of the database, configuring resources in order to achieve proper templating and web dependencies, and defining several objects, their data access classes, and accompanying routes. Evan contributed roughly 10 hours to this sprint. % But many hours to Africa.
+\item James worked on nodes being able to enter and leave the network by allowing them to be able to synch up their blockchains with the other nodes.
+He contributed approximately 25 hours to this sprint.
+\item  Eric set up QuickCheck in order to generate randomized unit tests, and in general, tried to clean up and test the code base. He also used a profiler to optimize our code, and, among other things, significantly sped up the mining algorithm. He contributed approximately 20 hours to this sprint.
+\end{enumerate}
+
+\subsection{Productivity Analysis}
+\begin{itemize}
+\item For this sprint, our goal was to add additional functionality to the core components of our cryptocurrency. This includes a new web based interface for users to sign up, login, lookup public keys, and perform transactions. We also now support stronger fault tolerance, node exit/entry, and persistent blockchain storage. Nodes can now enter the network, and query other nodes for missing blocks to 'catch up.' This way, nodes can drop in and out of the network at will.
+\item Our last milestone only included a basic text interface. We've improved upon this dramatically by implementing a new web client using Java Spark. While the UI is not pretty at the moment, it is a vast improvement over the command line interface we provided previously.
+\item We achieved all of our big goals for the alpha release.
+\end{itemize}
+
+
+\end{document}

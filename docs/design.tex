@@ -1,0 +1,141 @@
+\documentclass[a4paper,12pt]{article}
+
+%% Language and font encodings
+\usepackage[english]{babel}
+\usepackage[utf8x]{inputenc}
+\usepackage[T1]{fontenc}
+
+%% Sets page size and margins
+\usepackage[a4paper,top=3cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+
+%% Useful packages
+\usepackage{amsmath}
+\usepackage{comment}
+\usepackage{graphicx}
+\usepackage[colorinlistoftodos]{todonotes}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+
+\newcommand{\iam}[2]{#1 \\ (#2, #2@cornell.edu)}
+
+\title{CS 5431 Milestone 4: Design}
+\author{
+\iam{James Cassell}{jcc384}
+\and
+\iam{Evan King}{esk79}
+\and
+\iam{Ethan Koenig}{etk39}
+\and
+\iam{Eric Perdew}{ecp84}
+\and
+\iam{Will Ronchetti}{wrr33}
+}
+
+\begin{document}
+\maketitle
+
+\section{Confidentiality}
+
+\subsection{Cryptocurrency}
+
+\begin{itemize}
+\item  We use public keys as identifiers for our users. So long as users are careful about who they share their public key with, their transactions on the blockchain will maintain some confidentiality, in that transactions can only be attributed to public keys, and not to the individuals holding those keys.
+\item We do not protect the confidentiality of messages sent between nodes. 
+Network messages are sent to all nodes of the network, some of whom are untrusted, so there is no benefit in protecting the confidentiality of messages as all information is meant to be public.
+\end{itemize}
+
+\subsection{Wallet app}
+
+\begin{itemize}
+\item In order to protect the confidentiality of user passwords stored on disk, we salt and hash the passwords before storing them in the database. See the Authentication section for details.
+\item Private keys are encrypted client-side, and unencrypted keys never reach the web server. This protects attackers who have compromised the web server from gleaning private keys.
+\item If an attacker manages to hijack a user's session, most of our confidentiality goals will not be upheld. The attacker will be able to view that user's transaction history, public keys, and other profile information. Importantly, however, the attacker cannot view the user's private keys.
+\end{itemize}
+
+\section{Integrity}
+
+\subsection{Cryptocurrency}
+
+\begin{itemize}
+\item We employ a proof-of-work scheme for mining blocks; only blocks with a SHA-256 hash beneath a threshold are considered valid, and only valid blocks will be added to the blockchain.
+This requires miners to find a nonce that caused their proposed blocks to have a sufficiently low SHA-256 hash.
+This proof-of-work protocol forces an attacker to control at least 51\% of the computing power of the network in order to disrupt the blockchain\cite{bitcoin}. 
+% \item Once a miner finds a nonce that satisfies the difficulty, he broadcasts his block to the network, where other miners will pause their mining operations (if they have enough transactions to be mining) to verify the block. 
+% \item If a new block that has been verified contains transactions that the miner has, those transactions are removed from the block he is mining, and he must wait for more transactions to come in before resuming mining operation.
+\item We do protect the integrity of transactions through use of digital signatures. If a transaction message is modified (perhaps through a man-in-the-middle attack), the message's signature will not verify, and the transaction will be rejected as invalid.
+\end{itemize}
+
+\subsection{Wallet app}
+
+\begin{itemize}
+\item The integrity of communications between the web server and client is maintained through the use of HTTPS. We use TLS 1.2, and default to the TLS\_ECDHE\_RSA\_WITH\_AES\_256\_GCM\_SHA384 cipher suite. We disallow cipher suites using RC4, SHA1, MD5, DH (with key size $< 768$), RSA (with key size $< 2048$), and 3DES. We are using a self-signed certificate, but our server-client communication is properly encrypted as a result. 
+\item If an attacker manages to hijack a user's session, some of our integrity goals will not be upheld. The attacker will be able to make requests on behalf of the  user, and delete the user's keys. Importantly, however, the attacker cannot upload keys or make transactions on behalf of the user, provided the attacker does not know the user's password.
+\end{itemize}
+
+\section{Authentication}
+
+\subsection{Cryptocurrency}
+
+\begin{itemize}
+\item Users issuing a transaction must sign their transaction with the private keys associated with the public keys of the outputs they are spending.
+This can be considered a form of ``something-you-have'' or ``something-you-know'' authentication, since users must demonstrate possession/knowledge of private keys in order to spend funds.
+% \item As stated previously, at this time users will need to 'acquire' other user's public keys somehow. Without any form of authentication, communication over the network will be susceptible to man in the middle attacks, among other things, leading towards sending money to the wrong address. This will be addressed in our wallet app.
+\end{itemize}
+
+\subsection{Wallet app}
+
+\begin{itemize}
+\item Users register with a username and password that are of appropriate difficulty as defined by our ValidateUtils class.
+\item The user password is salted, using a 16-byte, randomly generated salt, and then hashed with PBKDF2 using SHA256 and 4096 iterations. The hashed password is stored along with the salt in the database.
+\item Upon login, the user salt is retrieved from the database and hashed with the provided password. This result is compared with the hash stored in the database. 
+\end{itemize}
+
+
+\section{Authorization}
+\subsection{Cryptocurrency}
+\begin{itemize}
+\item For transactions, authorization is implemented through use of digital signatures. A transaction output can only be spent if the spending transaction has an ECDSA signature matching the output's public key.
+We use the P-256 curve.
+Each node will only consider a transaction valid if it contains valid signatures for each of the transaction's inputs.
+This prevents users who do not own the private key corresponding to the public key on unspent outputs from spending those outputs in a new transaction.
+\item For blocks, authorization is implemented by the proof-of-work protocol.
+Nodes will reject blocks that have an invalid SHA-256 hash or invalid transactions, since the nodes that propose such blocks are not authorized to add new blocks to the blockchain; only nodes that have found a block with a valid hash and transactions are authorized to do so.
+\end{itemize}
+
+\subsection{Wallet app}
+
+\begin{itemize}
+\item Authorization with the webapp is handled through the use of session cookies to identify users. Currently, we only have two groups, logged in user and not logged in user. If a user is logged in, he/she can see his/her public key as well as the public keys of other users and make transactions. 
+\end{itemize}
+
+\section{Audit}
+
+\subsection{Cryptocurrency}
+
+\begin{itemize}
+\item Each node maintains a blockchain, which contains all (valid) blocks that have ever been proposed. Preserving all blocks, including those that are not part of the current chain, allows nodes to review the progression of the blockchain and detect double-spending attacks.
+\begin{comment}
+\item Miners heavily audit the work of other miners in order to maintain the integrity of the blockchain.
+\item For each block a miner receives (or broadcasts), its hash will be checked to see if it satisfies a set difficulty. 
+\item Every transaction inside of the block is verified by checking that each input has a corresponding unspent output (UTXO), that the signature for each input was signed with the private key corresponding to the public key on the previous UTXO, and that the sum of the input amounts (from the UTXO's) is equal to the sum of the outputs.
+\item If either of these checks fail, the potential new block will be rejected.
+\item So long as an adversary does not control a majority of nodes in the network, blocks will not be added to the blockchain that are not correct.
+\end{comment}
+\item We have implemented the persistence of the blockchain so that it is no longer solely stored in memory. Each completed block is written to a file (to be updated to the DB for the next sprint) which makes the audit and reconstruction of the blockchain possible should a new node enter the network.
+\end{itemize}
+
+\subsection{Wallet app}
+
+\begin{itemize}
+  \item We plan to log all requests and transactions made via the web application. This log will enable us to detect if a user's funds are illicitly spent. Unfornuately, the decentralized nature of the underlying cryptocurrency will prevent us from undoing fraudulent transactions.
+  \item We are also considering recording failed login attempts, so that we can alert users whose accounts are subject to online guessing attacks.
+\end{itemize}
+
+
+\begin{thebibliography}{9}
+\bibitem{bitcoin}
+  Satoshi Nakamoto,
+  \emph{Bitcoin: A Peer-to-Peer Electronic Cash System},
+  2008.
+\end{thebibliography}
+
+\end{document}
