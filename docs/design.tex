@@ -39,6 +39,7 @@
 
 \begin{itemize}
 \item  We use public keys as identifiers for our users. So long as users are careful about who they share their public key with, their transactions on the blockchain will maintain some confidentiality, in that transactions can only be attributed to public keys, and not to the individuals holding those keys.
+\textit{This does not extend to the wallet app.}
 \item We do not protect the confidentiality of messages sent between nodes.
 Network messages are sent to all nodes of the network, some of whom are untrusted, so there is no benefit in protecting the confidentiality of messages as all information is meant to be public.
 \end{itemize}
@@ -67,8 +68,14 @@ This proof-of-work protocol forces an attacker to control at least 51\% of the c
 \subsection{Wallet app}
 
 \begin{itemize}
-\item The integrity of communications between the web server and client is maintained through the use of HTTPS. We use TLS 1.2, and default to the TLS\_ECDHE\_RSA\_WITH\_AES\_256\_GCM\_SHA384 cipher suite. We disallow cipher suites using RC4, SHA1, MD5, DH (with key size $< 768$), RSA (with key size $< 2048$), and 3DES. We are using a self-signed certificate, but our server-client communication is properly encrypted as a result.
-\item If an attacker manages to hijack a user's session, or glean a user's login credentials, some of our integrity goals will not be upheld. The attacker will be able to make requests on behalf of the user. However, the attacker will not be able to upload or delete the user's keys. We plan to use an email-based two factor authorization for operations that add or remove an account's keys; we hope to implement this next sprint. Furthermore, the attacker cannot upload keys or make transactions on behalf of the user, provided the attacker does not know the user's encryption password.
+\item The integrity of communications between the web server and client is maintained through the use of HTTPS. We use TLS 1.2, and default to the TLS \_ECDHE\_RSA\_WITH\_AES\_256\_GCM\_SHA384 cipher suite.
+We disallow cipher suites using RC4, SHA1, MD5, DH (with key size $< 768$), RSA (with key size $< 2048$), and 3DES. We are using a self-signed certificate (which would need to be dealt with before deployment), but our server-client communication is properly encrypted as a result.
+\item If an attacker manages to hijack a user's session, or glean a user's login credentials, some of our integrity goals will not be upheld.
+The attacker will be able to make requests on behalf of the user.
+/% from here to the end of the section needs revision, we should make it clear what is implemented and what will be implemented
+However, the attacker will not be able to upload or delete the user's keys.
+We plan to use an email-based two factor authorization for operations that add or remove an account's keys; we hope to implement this next sprint.
+Furthermore, the attacker cannot upload keys or make transactions on behalf of the user, provided the attacker does not know the user's encryption password.
 \end{itemize}
 
 \section{Authentication}
@@ -82,18 +89,25 @@ This proof-of-work protocol forces an attacker to control at least 51\% of the c
 \subsection{Wallet app}
 
 \begin{itemize}
-\item Users register with a username and password. The username must be alphanumeric, and between 6 and 24 characters in length. The password must contain a number, lowercase letter, and uppercase letter, and be between 12 and 24 characters in length.
-\item The user password is salted, using a 16-byte, randomly generated salt, and then hashed with PBKDF2 using SHA-256 and 4096 iterations. The hashed password is stored along with the salt in the database.
-\item Upon login, the user salt is retrieved from the database and hashed with the provided password. This result is compared with the hash stored in the database.
-\item After logging in, the user is identified via a session cookie. Spark, the web framework we are using, handles the details of cookie management.
-\item To protect against online guessing attacks, a user's account is ``locked'' after 5 failed login attempts. If a user's account is locked, the user is notified via email, and must unlock their password using a one-time link.
+\item Users register with a username and password. The username must be alphanumeric, and between 6 and 24 characters in length.
+The password must contain a number, lowercase letter, and uppercase letter, and be between 12 and 24 characters in length.
+\item The user password is salted, using a 16-byte, randomly generated salt, and then hashed with PBKDF2 using SHA-256 and 4096 iterations.
+The hashed password is stored along with the salt in the database.
+\item Upon login, the user salt is retrieved from the database and hashed with the provided password.
+This result is compared with the hash stored in the database.
+\item After logging in, the user is identified via a session cookie.
+Spark, the web framework we are using, handles the details of cookie management.
+\item To protect against online guessing attacks, a user's account is ``locked'' after 5 failed login attempts.
+/% I believe the following it changeed from one time link, to visit the password reset page to get a one time link (?)
+If a user's account is locked, the user is notified via email, and must unlock their password using a one-time link.
 \end{itemize}
 
 
 \section{Authorization}
 \subsection{Cryptocurrency}
 \begin{itemize}
-\item For transactions, authorization is implemented through use of digital signatures. A transaction output can only be spent if the spending transaction has an ECDSA signature matching the output's public key.
+\item For transactions, authorization is implemented through use of digital signatures.
+A transaction output can only be spent if the spending transaction has an ECDSA signature matching the output's public key.
 We use the P-256 curve.
 A node will only consider a transaction valid if the transaction contains valid signatures for each of its inputs.
 This prevents users who do not own the private key corresponding to the public key on unspent outputs from spending those outputs in a new transaction.
@@ -113,7 +127,7 @@ Nodes will reject blocks that have an invalid SHA-256 hash or invalid transactio
 \subsection{Cryptocurrency}
 
 \begin{itemize}
-\item Each node maintains a blockchain, which contains all (valid) blocks that have ever been proposed. Preserving all blocks, including those that are not part of the current chain, allows nodes to review the progression of the blockchain and detect double-spending attacks.
+\item Each node maintains a blockchain, which contains all (valid) blocks that have ever been proposed. Preserving all blocks, including those that are not part of the current chain, allows nodes to review the progression of the blockchain and detect double-spending attacks, though we do not attempt to do this at this time.
 \begin{comment}
 \item Miners heavily audit the work of other miners in order to maintain the integrity of the blockchain.
 \item For each block a miner receives (or broadcasts), its hash will be checked to see if it satisfies a set difficulty.
@@ -121,7 +135,8 @@ Nodes will reject blocks that have an invalid SHA-256 hash or invalid transactio
 \item If either of these checks fail, the potential new block will be rejected.
 \item So long as an adversary does not control a majority of nodes in the network, blocks will not be added to the blockchain that are not correct.
 \end{comment}
-\item We have implemented the persistence of the blockchain so that it is no longer solely stored in memory. Each completed block is written to a file (to be updated to the DB for the next sprint) which makes the audit and reconstruction of the blockchain possible should a new node enter the network.
+\item We have implemented the persistence of the blockchain so that it is no longer solely stored in memory. 
+Each completed block is written to a file (to be updated to the DB for the next sprint) which makes the audit and reconstruction of the blockchain possible should a new node enter the network.
 \item We also have a logging system that logs important events, allowing the miner to review previous activity, such as the receiving and verification of transactions and blocks.
 \end{itemize}
 
