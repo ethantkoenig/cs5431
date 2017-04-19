@@ -56,6 +56,12 @@ public class UserController {
         path("/user", () -> {
             get("/:name", wrapTemplate(this::viewUser), new FreeMarkerEngine());
             post("/keys", wrapTemplate(this::addUserKey), new FreeMarkerEngine());
+
+        });
+
+        path("/friend", () -> {
+            post("", wrapRoute(this::addFriend));
+            delete("", wrapRoute(this::deleteFriend));
         });
     }
 
@@ -118,8 +124,17 @@ public class UserController {
         }
         userAccess.resetFailedLogins(user.getId());
         request.session(true).attribute("username", username);
+
+
+        List<String> friends = userAccess.getFriends(user.getUsername());
+        List<String> users = userAccess.getAllUsernames();
+        users.removeAll(friends);
+
         return routeUtils.modelAndView(request, "user.ftl")
                 .add("username", user.getUsername())
+                .add("loggedInUser", username)
+                .add("friends", friends)
+                .add("users", users)
                 .get();
     }
 
@@ -138,9 +153,25 @@ public class UserController {
             response.redirect("/");
             return null;
         }
+        String loggedInUserName = null;
+        List<String> friends = null;
+        List<String> users = null;
+
+        Optional<User> loggedInUser = routeUtils.loggedInUser(request);
         User user = optUser.get();
+
+        if (loggedInUser.isPresent()) {
+            loggedInUserName = loggedInUser.get().getUsername();
+            friends = userAccess.getFriends(user.getUsername());
+            users = userAccess.getAllUsernames();
+            users.removeAll(friends);
+        }
+
         return routeUtils.modelAndView(request, "user.ftl")
                 .add("username", user.getUsername())
+                .add("loggedInUser", loggedInUserName)
+                .add("friends", friends)
+                .add("users", users)
                 .get();
     }
 
@@ -158,5 +189,23 @@ public class UserController {
                 .add("hashes", hashes)
                 .add("success", "Public Key added.")
                 .get();
+    }
+
+    String addFriend(Request request, Response response) throws Exception {
+        User loggedInUser = routeUtils.forceLoggedInUser(request);
+        String friend = RouteUtils.queryParam(request, "friend");
+        String username = loggedInUser.getUsername();
+
+        userAccess.insertFriends(username, friend);
+        return "ok";
+    }
+
+    String deleteFriend(Request request, Response response) throws Exception {
+        User loggedInUser = routeUtils.forceLoggedInUser(request);
+        String friend = RouteUtils.queryParam(request, "friend");
+        String username = loggedInUser.getUsername();
+
+        userAccess.deleteFriends(username, friend);
+        return "ok";
     }
 }

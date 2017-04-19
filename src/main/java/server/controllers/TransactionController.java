@@ -10,6 +10,7 @@ import server.models.Key;
 import server.models.User;
 import server.utils.Constants;
 import server.utils.RouteUtils;
+import spark.ModelAndView;
 import spark.Request;
 import spark.Response;
 import spark.template.freemarker.FreeMarkerEngine;
@@ -45,11 +46,25 @@ public class TransactionController {
 
     private void makeTransaction() {
         path("/transact", () -> {
-            get("", routeUtils.template("transact.ftl"), new FreeMarkerEngine());
+            get("", wrapTemplate(this::getTransact), new FreeMarkerEngine());
             post("", wrapRoute(this::transact));
         });
 
         post("/sendtransaction", wrapRoute(this::sendTransaction));
+    }
+
+    ModelAndView getTransact(Request request, Response response) throws Exception {
+        List<String> friends;
+        Optional<User> loggedInUser = routeUtils.loggedInUser(request);
+        if (loggedInUser.isPresent()) {
+            friends = userAccess.getPeopleWhoFriendMe(loggedInUser.get().getUsername());
+        }else{
+            return routeUtils.modelAndView(request, "index.ftl")
+                    .get();
+        }
+        return routeUtils.modelAndView(request, "transact.ftl")
+                .add("friends", friends)
+                .get();
     }
 
     String transact(Request request, Response response) throws Exception {
@@ -57,6 +72,10 @@ public class TransactionController {
 
         User loggedInUser = routeUtils.forceLoggedInUser(request);
         String recipientUsername = queryParam(request, "recipient");
+        if (!userAccess.isFriendsWith(recipientUsername, loggedInUser.getUsername())){
+            return "This person has not authorized you to send them money.";
+        }
+
         Optional<User> recipient = userAccess.getUserbyUsername(recipientUsername);
         if (!recipient.isPresent()) {
             return "invalid recipient"; // TODO handle properly

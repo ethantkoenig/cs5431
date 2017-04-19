@@ -18,10 +18,12 @@ $(document).ready(function () {
     });
 
     $('#transactform').submit(function () {
+        console.log("Sending Transaction")
         var action = $(this).attr("action");
         var data = $(this).serialize();
         var password = $('#transaction-password').val();
         $.post(action, data, function (resp) {
+            console.log(resp)
             // TODO this feels like a hack, eventually make it nice
             var rString = "";
             var sString = "";
@@ -50,9 +52,34 @@ $(document).ready(function () {
                 r: rString,
                 s: sString
             }, function() {
+                console.log("Successful transaction")
                 window.location.replace("/"); // TODO what to do on successful transaction?
             })
         });
         return false; // don't submit form, since we already have
     });
+
+    $('#friend-selector').multiSelect({
+        selectableHeader: "<div class='custom-header text-center'>Cannot send me money</div>",
+        selectionHeader: "<div class='custom-header text-center'>Can send me money</div>",
+        afterSelect: function (values) {
+            console.log(values[0])
+            $.post("/friend", {
+                friend: values[0]
+            }, function(data) {
+                console.log(data)
+            });
+        },
+        afterDeselect: function (values) {
+            console.log(values)
+            $.ajax({
+                type: 'DELETE',
+                url: '/friend' + '?' + $.param({"friend": values[0]}),
+                success: function (data) {
+                    console.log(data)
+                }
+            });
+        }
+    });
+
 });

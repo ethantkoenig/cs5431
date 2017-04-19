@@ -6,10 +6,7 @@ import server.models.User;
 import server.utils.ConnectionProvider;
 import server.utils.Statements;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -28,6 +25,20 @@ public final class DatabaseUserAccess implements UserAccess {
     }
 
     private static final Logger LOGGER = Logger.getLogger(DatabaseUserAccess.class.getName());
+
+    @Override
+    public List<String> getAllUsernames() throws SQLException{
+        try (Connection conn = connectionProvider.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(Statements.GET_ALL_USERS);
+        ) {
+            List<String> users = new ArrayList<>();
+            while (rs.next()) {
+                users.add(rs.getString("username"));
+            }
+            return users;
+        }
+    }
 
     @Override
     public Optional<User> getUserbyUsername(String username) throws SQLException {
@@ -159,4 +170,73 @@ public final class DatabaseUserAccess implements UserAccess {
             }
         }
     }
+
+    @Override
+    public boolean isFriendsWith(String username, String friend) throws SQLException{
+        try (Connection conn = connectionProvider.getConnection();
+             PreparedStatement preparedStmt = Statements.isFriendsWith(conn, username, friend);
+             ResultSet rs = preparedStmt.executeQuery()
+        ) {
+            if(rs.next()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public void insertFriends(String username, String friend) throws SQLException{
+        try (Connection conn = connectionProvider.getConnection();
+             PreparedStatement preparedStmt = Statements.insertFriends(conn, username, friend)
+        ) {
+            int rowCount = preparedStmt.executeUpdate();
+            if (rowCount != 1) {
+                String msg = String.format("Update affected %d rows, expected 1", rowCount);
+                LOGGER.severe(msg);
+            }
+        }
+    }
+
+    @Override
+    public void deleteFriends(String username, String friend) throws SQLException{
+        try (Connection conn = connectionProvider.getConnection();
+             PreparedStatement preparedStmt = Statements.deleteFriends(conn, username, friend)
+        ) {
+            int rowCount = preparedStmt.executeUpdate();
+            if (rowCount != 1) {
+                String msg = String.format("Update affected %d rows, expected 1", rowCount);
+                LOGGER.severe(msg);
+            }
+        }
+    }
+
+    @Override
+    public List<String> getFriends(String username) throws SQLException{
+        try (Connection conn = connectionProvider.getConnection();
+             PreparedStatement preparedStmt = Statements.getFriends(conn, username);
+             ResultSet rs = preparedStmt.executeQuery()
+        ) {
+            List<String> friends = new ArrayList<>();
+            while (rs.next()) {
+                friends.add(rs.getString("friend"));
+            }
+            return friends;
+        }
+    }
+
+    @Override
+    public List<String> getPeopleWhoFriendMe(String username) throws SQLException{
+        try (Connection conn = connectionProvider.getConnection();
+             PreparedStatement preparedStmt = Statements.getPeopleWhoFriendMe(conn, username);
+             ResultSet rs = preparedStmt.executeQuery()
+        ) {
+            List<String> usernames = new ArrayList<>();
+            while (rs.next()) {
+                usernames.add(rs.getString("username"));
+            }
+            return usernames;
+        }
+    }
+
+
 }

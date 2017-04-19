@@ -97,6 +97,7 @@ public class UserControllerTest extends ControllerTest {
         Response response = Mockito.mock(Response.class);
         ModelAndView modelAndView = controller.login(request, response);
         Assert.assertEquals(modelAndView.getViewName(), "user.ftl");
+
         Assert.assertEquals(fixtures.user.getUsername(), request.session().attribute("username"));
     }
 

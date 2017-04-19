@@ -57,6 +57,11 @@ public final class TestConnectionProvider implements ConnectionProvider {
                     + "FOREIGN KEY (userid)"
                     + "  REFERENCES users(id)"
                     + ")");
+
+            statement.executeUpdate("CREATE TABLE IF NOT EXISTS friends ("
+                    + "username varchar(32) NOT NULL,"
+                    + "friend varchar(32) NOT NULL"
+                    + ")");
         }
     }
 }

@@ -17,7 +17,7 @@ public final class ProductionConnectionProvider implements ConnectionProvider {
         try {
             Class.forName(jdbcDriver);
             //TODO: don't hard code this string in here
-            connection = DriverManager.getConnection("jdbc:mysql://localhost/" + Statements.DB_NAME + "?user=root&password=" + dbPassword);
+            connection = DriverManager.getConnection("jdbc:mysql://50.159.66.236:1234/" + Statements.DB_NAME + "?user=cs5431&password=" + dbPassword);
         } catch (ClassNotFoundException | SQLException e) {
             LOGGER.severe("Unable to connect to DB, make sure you added MYSQL_PASS to env variables: " + e.getMessage());
         }

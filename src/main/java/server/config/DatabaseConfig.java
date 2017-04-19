@@ -53,5 +53,6 @@ public final class DatabaseConfig {
         statement.executeUpdate(Statements.CREATE_USERS_TABLE);
         statement.executeUpdate(Statements.CREATE_KEYS_TABLE);
         statement.executeUpdate(Statements.CREATE_PASSWORD_RECOVERY_TABLE);
+        statement.executeUpdate(Statements.CREATE_FRIENDS_TABLE);
     }
 }
