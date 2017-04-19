@@ -9,14 +9,20 @@ import java.util.Arrays;
 import java.util.Optional;
 
 public class Key {
+    private final int id;
     private final int userId;
     private final byte[] publicKey;
     public final String encryptedPrivateKey;
 
-    public Key(int userId, byte[] publicKey, String encryptedPrivateKey) {
+    public Key(int id, int userId, byte[] publicKey, String encryptedPrivateKey) {
+        this.id = id;
         this.userId = userId;
         this.publicKey = Arrays.copyOf(publicKey, publicKey.length);
         this.encryptedPrivateKey = encryptedPrivateKey;
+    }
+
+    public int getId() {
+        return id;
     }
 
     public int getUserId() {

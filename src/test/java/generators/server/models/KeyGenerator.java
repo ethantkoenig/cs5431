@@ -25,6 +25,7 @@ public class KeyGenerator extends Generator<Key> {
         ECDSAKeyPair pair = gen().type(ECDSAKeyPair.class).generate(random, status);
         return new Key(
                 random.nextInt(1024),
+                random.nextInt(1024),
                 ByteUtil.forceByteArray(pair.publicKey::serialize),
                 ByteUtil.bytesToHexString(
                         ByteUtil.forceByteArray(pair.privateKey::serialize)

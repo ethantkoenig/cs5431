@@ -43,6 +43,11 @@ public interface UserAccess {
     void insertKey(int userID, byte[] publicKey, String privateKey) throws SQLException;
 
     /**
+     * Remove the given key from the database
+     */
+    void deleteKey(int keyID) throws SQLException;
+
+    /**
      * Inserts a user into the users table in the yaccoin database
      */
     void insertUser(String username, String email, byte[] salt, byte[] hashedPassword) throws SQLException;

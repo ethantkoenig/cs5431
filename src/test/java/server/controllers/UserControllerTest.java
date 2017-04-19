@@ -168,7 +168,19 @@ public class UserControllerTest extends ControllerTest {
 
         Response response = Mockito.mock(Response.class);
         controller.addUserKey(request, response);
-        TestUtils.assertPresent(userAccess.getKey(1, publicBytes));
+        TestUtils.assertPresent(userAccess.getKey(fixtures.user.getId(), publicBytes));
+    }
+
+    public void testRemoveUserKey() throws Exception {
+        byte[] publicBytes = ByteUtil.asByteArray(fixtures.key::serialize);
+        Request request = new MockRequest()
+                .addQueryParamHex("publickey", publicBytes)
+                .addSessionAttribute("username", fixtures.user.getUsername())
+                .get();
+
+        Response response = Mockito.mock(Response.class);
+        controller.deleteKey(request, response);
+        Assert.assertFalse(userAccess.getKey(fixtures.user.getId(), publicBytes).isPresent());
     }
 
     public void testAddFriend() throws Exception {
