@@ -15,17 +15,15 @@ public class GetFundsResponse implements CanBeSerialized {
     public final static Deserializer<GetFundsResponse> DESERIALIZER =
         new GetFundsResponseDeserializer();
 
-    public final int numKeys;
     public final Map<ECDSAPublicKey, Long> keyFunds;
 
-    public GetFundsResponse(int numKeys, Map<ECDSAPublicKey, Long> keyFunds) {
-        this.numKeys = numKeys;
+    public GetFundsResponse(Map<ECDSAPublicKey, Long> keyFunds) {
         this.keyFunds = keyFunds;
     }
 
     @Override
     public void serialize(DataOutputStream outputStream) throws IOException {
-        outputStream.writeInt(numKeys);
+        outputStream.writeInt(keyFunds.size());
         for (Map.Entry<ECDSAPublicKey, Long> entry : keyFunds.entrySet()) {
             entry.getKey().serialize(outputStream);
             outputStream.writeLong(entry.getValue());
@@ -48,7 +46,7 @@ public class GetFundsResponse implements CanBeSerialized {
                 long money = inputStream.readLong();
                 keyFunds.put(key, money);
             }
-            return new GetFundsResponse(numKeys, keyFunds);
+            return new GetFundsResponse(keyFunds);
         }
     }
 }

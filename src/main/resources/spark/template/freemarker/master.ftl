@@ -64,6 +64,9 @@
                         <a href="/user/${loggedInUsername}">${loggedInUsername}</a>
                     </li>
                     <li>
+                        <a href="/balance">Balance</a>
+                    </li>
+                    <li>
                         <a href="/transact">Transact</a>
                     </li>
                     <li>

@@ -2,24 +2,37 @@ package server.controllers;
 
 import com.google.inject.Inject;
 import crypto.Crypto;
+import crypto.ECDSAPublicKey;
+import network.*;
 import server.access.UserAccess;
+import server.models.Key;
 import server.models.User;
+import server.utils.Constants;
 import server.utils.RouteUtils;
 import server.utils.ValidateUtils;
 import spark.ModelAndView;
 import spark.Request;
 import spark.Response;
 import spark.template.freemarker.FreeMarkerEngine;
+import utils.ByteUtil;
+import utils.Optionals;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.net.Socket;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import static server.utils.RouteUtils.*;
 import static spark.Spark.*;
 
 public class UserController {
+    private static final Logger LOGGER = Logger.getLogger(UserController.class.getName());
 
     private static final String REGISTER_ERROR_ONE = "Password must be between 12 and 24 characters, contain a lowercase letter, capital letter, and a number. Username must be alphanumeric and between 6 and 24 characters.";
     private static final String REGISTER_ERROR_TWO = "Username and/or email already taken.";
@@ -55,6 +68,8 @@ public class UserController {
             post("/keys", wrapTemplate(this::addUserKey), new FreeMarkerEngine());
 
         });
+
+        get("/balance", wrapTemplate(this::balance), new FreeMarkerEngine());
 
         path("/friend", () -> {
             post("", wrapRoute(this::addFriend));
@@ -210,4 +225,40 @@ public class UserController {
         return "ok";
     }
 
+    ModelAndView balance(Request request, Response response) throws Exception {
+        User loggedInUser = routeUtils.forceLoggedInUser(request);
+        List<Key> keys = userAccess.getKeysByUserID(loggedInUser.getId());
+
+        List<ECDSAPublicKey> publicKeys = keys.stream()
+                .map(Key::asKey).flatMap(Optionals::stream).collect(Collectors.toList());
+
+        GetFundsResponse fundsResponse;
+        try (Socket socket = new Socket(
+                Constants.getNodeAddress().getAddress(),
+                Constants.getNodeAddress().getPort())) {
+
+            GetFundsRequest fundsRequest = new GetFundsRequest(publicKeys);
+            byte[] payload = ByteUtil.asByteArray(fundsRequest::serialize);
+            new OutgoingMessage(Message.GET_FUNDS, payload)
+                    .serialize(new DataOutputStream(socket.getOutputStream()));
+
+            IncomingMessage respMessage = IncomingMessage.responderlessDeserializer()
+                    .deserialize(new DataInputStream(socket.getInputStream()));
+            if (respMessage.type != Message.FUNDS) {
+                LOGGER.severe(String.format("Unexpected response type %d, expected %d",
+                        respMessage.type, Message.FUNDS));
+            }
+            fundsResponse = GetFundsResponse.DESERIALIZER.deserialize(respMessage.payload);
+        }
+        long totalBalance = fundsResponse.keyFunds.values().stream()
+                .mapToLong(Long::longValue).sum();
+        Map<String, Long> balancesByKey = fundsResponse.keyFunds.entrySet().stream()
+                .collect(Collectors.toMap(entry -> ByteUtil.bytesToHexString(
+                        ByteUtil.forceByteArray(entry.getKey()::serialize)
+                ), Map.Entry::getValue));
+        return routeUtils.modelAndView(request, "balance.ftl")
+                .add("balances", balancesByKey)
+                .add("total", totalBalance)
+                .get();
+    }
 }
