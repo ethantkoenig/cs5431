@@ -20,7 +20,7 @@ import java.util.ArrayList;
 public class BlockChainGenerator extends Generator<BlockChain> {
 
     private static final int MIN_BLOCKS = 3;
-    private static final int MAX_BLOCKS = 20;
+    private static final int MAX_BLOCKS = 10;
 
     public BlockChainGenerator() {
         super(BlockChain.class);
