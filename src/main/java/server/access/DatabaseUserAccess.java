@@ -85,9 +85,10 @@ public final class DatabaseUserAccess implements UserAccess {
         ) {
             List<Key> keys = new ArrayList<>();
             while (rs.next()) {
+                int id = rs.getInt("keypairid");
                 byte[] publicKeyBytes = rs.getBytes("publickey");
                 String encryptedPrivateKeyBytes = rs.getString("privatekey");
-                keys.add(new Key(userID, publicKeyBytes, encryptedPrivateKeyBytes));
+                keys.add(new Key(id, userID, publicKeyBytes, encryptedPrivateKeyBytes));
             }
             return keys;
         }
@@ -99,8 +100,9 @@ public final class DatabaseUserAccess implements UserAccess {
              ResultSet rs = preparedStmt.executeQuery()
         ) {
             if (rs.next()) {
+                int id = rs.getInt("keypairid");
                 String encryptedPrivateKeyBytes = rs.getString("privatekey");
-                return Optional.of(new Key(userID, publicKey, encryptedPrivateKeyBytes));
+                return Optional.of(new Key(id, userID, publicKey, encryptedPrivateKeyBytes));
             }
             return Optional.empty();
         }
@@ -110,6 +112,19 @@ public final class DatabaseUserAccess implements UserAccess {
     public void insertKey(int userID, byte[] publicKey, String privateKey) throws SQLException {
         try (Connection conn = connectionProvider.getConnection();
              PreparedStatement preparedStmt = Statements.insertKey(conn, userID, publicKey, privateKey)
+        ) {
+            int rowCount = preparedStmt.executeUpdate();
+            if (rowCount != 1) {
+                String msg = String.format("Insert affected %d rows, expected 1", rowCount);
+                LOGGER.severe(msg);
+            }
+        }
+    }
+
+    @Override
+    public void deleteKey(int keyID) throws SQLException {
+        try (Connection conn = connectionProvider.getConnection();
+             PreparedStatement preparedStmt = Statements.deleteKey(conn, keyID)
         ) {
             int rowCount = preparedStmt.executeUpdate();
             if (rowCount != 1) {

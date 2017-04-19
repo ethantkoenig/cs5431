@@ -133,6 +133,13 @@ public final class Statements {
         );
     }
 
+    public static PreparedStatement deleteKey(Connection connection,
+                                              int keyID) throws SQLException {
+        return prepareStatement(connection.prepareStatement(
+                "DELETE FROM keypairs WHERE keypairid = ?"),
+                statement -> statement.setInt(1, keyID)
+        );
+    }
 
     public static PreparedStatement getPasswordRecoveryUserID(Connection connection, String GUIDHash)
             throws SQLException {

@@ -17,6 +17,19 @@ $(document).ready(function () {
         return true; // submit form
     });
 
+    $('.delete-key').click(function (e) {
+        e.preventDefault();
+        $.ajax({
+            type: 'DELETE',
+            url: '/user/keys' + '?' + $.param({
+                publickey: this.dataset.publickey
+            }),
+            success: function () {
+                window.location.replace("/balance");
+            }
+        });
+    });
+
     $('#transactform').submit(function () {
         console.log("Sending Transaction")
         var action = $(this).attr("action");

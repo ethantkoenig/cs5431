@@ -66,7 +66,7 @@ public class UserController {
         path("/user", () -> {
             get("/:name", wrapTemplate(this::viewUser), new FreeMarkerEngine());
             post("/keys", wrapTemplate(this::addUserKey), new FreeMarkerEngine());
-
+            delete("/keys", wrapRoute(this::deleteKey));
         });
 
         get("/balance", wrapTemplate(this::balance), new FreeMarkerEngine());
@@ -205,6 +205,16 @@ public class UserController {
                 .add("friends", friends)
                 .add("users", users)
                 .get();
+    }
+
+    String deleteKey(Request request, Response response) throws Exception {
+        byte[] publicKey = RouteUtils.queryParamHex(request, "publickey");
+        User user = routeUtils.forceLoggedInUser(request);
+        Optional<Key> optKey = userAccess.getKey(user.getId(), publicKey);
+        if (optKey.isPresent()) {
+            userAccess.deleteKey(optKey.get().getId());
+        }
+        return "ok";
     }
 
     String addFriend(Request request, Response response) throws Exception {
