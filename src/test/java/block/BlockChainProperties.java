@@ -31,7 +31,7 @@ public class BlockChainProperties {
         Config.setHashGoal(0);
     }
 
-    @Property(trials = 5)
+    @Property(trials = 2)
     public void deserializeSerializeInverse(BlockChain blockchain) throws Exception {
         // Store blockchain, reload
         BlockChain bc = new BlockChain(blockchain.blockStorePath);

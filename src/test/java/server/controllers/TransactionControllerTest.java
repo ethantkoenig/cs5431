@@ -14,6 +14,7 @@ import server.utils.Constants;
 import spark.Request;
 import spark.Response;
 import testutils.ControllerTest;
+import testutils.Fixtures;
 import testutils.MockRequest;
 import transaction.Transaction;
 import utils.ByteUtil;
@@ -22,21 +23,24 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
+import java.security.GeneralSecurityException;
 import java.sql.SQLException;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.stream.Collectors;
 
 @RunWith(JUnitQuickcheck.class)
 public class TransactionControllerTest extends ControllerTest {
-    private TransactionController controller = null;
+    private TransactionController controller;
+    private Fixtures fixtures;
 
-    public TransactionControllerTest() throws SQLException {
+    public TransactionControllerTest() throws GeneralSecurityException, SQLException {
         super();
         Injector injector = Guice.createInjector(new Model());
         controller = injector.getInstance(TransactionController.class);
         controller.init();
+        fixtures = new Fixtures();
     }
 
     @BeforeClass
@@ -45,7 +49,7 @@ public class TransactionControllerTest extends ControllerTest {
     }
 
     @Property(trials = 1)
-    public void testTransactValid() throws Exception {
+    public void testTransactValid(Transaction transaction) throws Exception {
         ServerSocket socket = new ServerSocket(0);
         Constants.setNodeAddress(new InetSocketAddress(
                 InetAddress.getLocalHost(),
@@ -60,8 +64,8 @@ public class TransactionControllerTest extends ControllerTest {
                 IncomingMessage message = messageQueue.take();
                 Assert.assertEquals(Message.GET_UTX_WITH_KEYS, message.type);
                 GetUTXWithKeysResponse response = GetUTXWithKeysResponse.success(
-                        new ArrayList<>(),
-                        new Transaction.UnsignedBuilder().build()
+                        Collections.singletonList(fixtures.key),
+                        transaction
                 );
                 connectionThread.send(new OutgoingMessage(Message.UTX_WITH_KEYS,
                         ByteUtil.asByteArray(response::serialize))
@@ -72,10 +76,10 @@ public class TransactionControllerTest extends ControllerTest {
         }).start();
 
         Request request = new MockRequest()
-                .addQueryParam("recipient", "username")
+                .addQueryParam("recipient", fixtures.user.getUsername())
                 .addQueryParam("amount", "100")
                 .get();
-        request.session().attribute("username", "username");
+        request.session().attribute("username", fixtures.user.getUsername());
 
         Response response = Mockito.mock(Response.class);
         controller.transact(request, response); // TODO check return value
@@ -107,10 +111,10 @@ public class TransactionControllerTest extends ControllerTest {
         }).start();
 
         Request request = new MockRequest()
-                .addQueryParam("recipient", "username")
+                .addQueryParam("recipient", fixtures.user.getUsername())
                 .addQueryParam("amount", "100")
                 .get();
-        request.session().attribute("username", "username");
+        request.session().attribute("username", fixtures.user.getUsername());
 
         Response response = Mockito.mock(Response.class);
         controller.transact(request, response); // TODO check return value

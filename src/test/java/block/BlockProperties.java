@@ -2,14 +2,14 @@ package block;
 
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
+import crypto.Crypto;
+import crypto.ECDSAKeyPair;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import testutils.RandomizedTest;
 import transaction.Transaction;
 import utils.Config;
-import crypto.Crypto;
-import crypto.ECDSAKeyPair;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -27,7 +27,7 @@ public class BlockProperties extends RandomizedTest {
         Config.setHashGoal(1);
     }
 
-    @Property
+    @Property(trials = 5)
     public void findValidNonceFindsValidNonce(ECDSAKeyPair reward, Transaction txA, Transaction txB) throws Exception {
         Block b = Block.empty(randomShaTwoFiftySix());
         b.addReward(reward.publicKey);

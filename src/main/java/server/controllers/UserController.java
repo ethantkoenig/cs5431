@@ -127,6 +127,8 @@ public class UserController {
         List<String> users = userAccess.getAllUsernames();
         users.removeAll(friends);
 
+        // TODO since this isn't a redirect, URL in browser will still say /login,
+        // even though the user page will be rendered
         return routeUtils.modelAndView(request, "user.ftl")
                 .add("username", user.getUsername())
                 .add("loggedInUser", username)
