@@ -129,7 +129,7 @@ public class MessageHandler {
             funds.putIfAbsent(key, 0L);
         }
         // Generate a Funds message and return it to sender
-        GetFundsResponse toReturn = new GetFundsResponse(request.numKeys, funds);
+        GetFundsResponse toReturn = new GetFundsResponse(funds);
         byte[] payload = ByteUtil.asByteArray(toReturn::serialize);
         message.respond(new OutgoingMessage(Message.FUNDS, payload));
     }

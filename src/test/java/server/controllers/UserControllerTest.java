@@ -4,10 +4,13 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import crypto.Crypto;
 import crypto.ECDSAKeyPair;
+import crypto.ECDSAPublicKey;
+import network.*;
 import org.junit.Assert;
 import org.mockito.Mockito;
 import server.access.DatabaseUserAccess;
 import server.access.UserAccess;
+import server.utils.Constants;
 import spark.ModelAndView;
 import spark.Request;
 import spark.Response;
@@ -16,6 +19,14 @@ import testutils.Fixtures;
 import testutils.MockRequest;
 import testutils.TestUtils;
 import utils.ByteUtil;
+
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
 public class UserControllerTest extends ControllerTest {
     private UserAccess userAccess;
@@ -176,5 +187,41 @@ public class UserControllerTest extends ControllerTest {
                 .get();
         Response response = Mockito.mock(Response.class);
         controller.deleteFriend(request, response);
+    }
+
+    public void testBalance() throws Exception {
+        ServerSocket socket = new ServerSocket(0);
+        Constants.setNodeAddress(new InetSocketAddress(
+                InetAddress.getLocalHost(),
+                socket.getLocalPort()
+        ));
+
+        new Thread(() -> {
+            try {
+                BlockingQueue<IncomingMessage> messageQueue = new ArrayBlockingQueue<>(10);
+                ConnectionThread connectionThread = new ConnectionThread(socket.accept(), messageQueue);
+                connectionThread.start();
+                IncomingMessage message = messageQueue.take();
+                Assert.assertEquals(Message.GET_FUNDS, message.type);
+                GetFundsRequest request = GetFundsRequest.DESERIALIZER.deserialize(message.payload);
+                Map<ECDSAPublicKey, Long> balances = new HashMap<>();
+                for (ECDSAPublicKey key : request.requestedKeys) {
+                    balances.put(key, 100L);
+                }
+                GetFundsResponse response = new GetFundsResponse(balances);
+                connectionThread.send(new OutgoingMessage(Message.FUNDS,
+                        ByteUtil.asByteArray(response::serialize))
+                );
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }).start();
+
+        Request request = new MockRequest()
+                .addSessionAttribute("username", fixtures.user.getUsername())
+                .get();
+        Response response = Mockito.mock(Response.class);
+        ModelAndView modelAndView = controller.balance(request, response);
+        Assert.assertEquals("balance.ftl", modelAndView.getViewName());
     }
 }
