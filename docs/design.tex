@@ -72,10 +72,10 @@ This proof-of-work protocol forces an attacker to control at least 51\% of the c
 We disallow cipher suites using RC4, SHA1, MD5, DH (with key size $< 768$), RSA (with key size $< 2048$), and 3DES. We are using a self-signed certificate (which would need to be dealt with before deployment), but our server-client communication is properly encrypted as a result.
 \item If an attacker manages to hijack a user's session, or glean a user's login credentials, some of our integrity goals will not be upheld.
 The attacker will be able to make requests on behalf of the user.
-/% from here to the end of the section needs revision, we should make it clear what is implemented and what will be implemented
-However, the attacker will not be able to upload or delete the user's keys.
+In the final version of our app, the attacker will not be able to upload or delete the user's keys.
 We plan to use an email-based two factor authorization for operations that add or remove an account's keys; we hope to implement this next sprint.
-Furthermore, the attacker cannot upload keys or make transactions on behalf of the user, provided the attacker does not know the user's encryption password.
+This countermeasure is not yet implemented, so currently an attacker is able to upload and delete the user's keys.
+The attacker cannot make transactions on behalf of the user, provided the attacker does not know the user's encryption password.
 \end{itemize}
 
 \section{Authentication}
@@ -98,8 +98,7 @@ This result is compared with the hash stored in the database.
 \item After logging in, the user is identified via a session cookie.
 Spark, the web framework we are using, handles the details of cookie management.
 \item To protect against online guessing attacks, a user's account is ``locked'' after 5 failed login attempts.
-/% I believe the following it changeed from one time link, to visit the password reset page to get a one time link (?)
-If a user's account is locked, the user is notified via email, and must unlock their password using a one-time link.
+If a user's account is locked, the user is notified via email, and must unlock their account using the password reset workflow.
 \end{itemize}
 
 
@@ -135,7 +134,7 @@ Nodes will reject blocks that have an invalid SHA-256 hash or invalid transactio
 \item If either of these checks fail, the potential new block will be rejected.
 \item So long as an adversary does not control a majority of nodes in the network, blocks will not be added to the blockchain that are not correct.
 \end{comment}
-\item We have implemented the persistence of the blockchain so that it is no longer solely stored in memory. 
+\item We have implemented the persistence of the blockchain so that it is no longer solely stored in memory.
 Each completed block is written to a file (to be updated to the DB for the next sprint) which makes the audit and reconstruction of the blockchain possible should a new node enter the network.
 \item We also have a logging system that logs important events, allowing the miner to review previous activity, such as the receiving and verification of transactions and blocks.
 \end{itemize}
