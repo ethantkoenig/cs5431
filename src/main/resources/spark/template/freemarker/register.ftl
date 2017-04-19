@@ -20,6 +20,10 @@
                         <input type="password" class="form-control" id="passwordInput" name="password"
                                placeholder="Password">
                     </div>
+                    <div class="form-group">
+                        <input type="password" class="form-control" id="passwordConfirm" name="confirm"
+                               placeholder="Password">
+                    </div>
                     <div class="text-center">
                         <input class="btn btn-primary submit-button" type="submit" value="Register">
                     </div>

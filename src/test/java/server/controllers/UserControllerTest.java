@@ -47,6 +47,7 @@ public class UserControllerTest extends ControllerTest {
                 .addQueryParam("email", "newuser@example.com")
                 .addQueryParam("username", "newUsername")
                 .addQueryParam("password", Fixtures.USER_PASSWORD)
+                .addQueryParam("confirm", Fixtures.USER_PASSWORD)
                 .get();
         Response response = Mockito.mock(Response.class);
         ModelAndView modelAndView = controller.register(request, response);
@@ -61,6 +62,7 @@ public class UserControllerTest extends ControllerTest {
                 .addQueryParam("email", "newuser@example.com")
                 .addQueryParam("username", ":(")
                 .addQueryParam("password", Fixtures.USER_PASSWORD)
+                .addQueryParam("confirm", Fixtures.USER_PASSWORD)
                 .get();
 
         Response response = Mockito.mock(Response.class);
@@ -76,6 +78,7 @@ public class UserControllerTest extends ControllerTest {
                 .addQueryParam("email", "newuser@example.com")
                 .addQueryParam("username", "newUsername")
                 .addQueryParam("password", "nogood")
+                .addQueryParam("confirm", "nogood")
                 .get();
 
         Response response = Mockito.mock(Response.class);
@@ -90,6 +93,7 @@ public class UserControllerTest extends ControllerTest {
                 .addQueryParam("email", "newuser@example.com")
                 .addQueryParam("username", fixtures.user.getUsername())
                 .addQueryParam("password", Fixtures.USER_PASSWORD)
+                .addQueryParam("confirm", Fixtures.USER_PASSWORD)
                 .get();
 
         Response response = Mockito.mock(Response.class);

@@ -37,8 +37,11 @@ import static spark.Spark.*;
 public class UserController {
     private static final Logger LOGGER = Logger.getLogger(UserController.class.getName());
 
-    private static final String REGISTER_ERROR_ONE = "Password must be between 12 and 24 characters, contain a lowercase letter, capital letter, and a number. Username must be alphanumeric and between 6 and 24 characters.";
-    private static final String REGISTER_ERROR_TWO = "Username and/or email already taken.";
+    private static final String REGISTER_MISMATCHED_PASSWORDS = "Password does not match confirmation.";
+    private static final String REGISTER_INVALID_PASSWORD = "Password must be between 12 and 24 characters, contain a lowercase letter, capital letter, and a number.";
+    private static final String REGISTER_INVALID_USERNAME = "Username must be alphanumeric and between 6 and 24 characters.";
+    private static final String REGISTER_INVALID_EMAIL = "Hmm, that doesn't look like an email address.";
+    private static final String REGISTER_TAKEN_USERNAME_OR_EMAIL = "Username and/or email already taken.";
     private static final String LOGIN_ERROR = "Invalid username or password.";
     private static final String LOCKOUT_ALERT = "For your safety, your account has been locked due to too many failed login attempts. Please reset your password below.";
     private static final int FAILED_LOGIN_LIMIT = 5;
@@ -82,28 +85,34 @@ public class UserController {
 
     ModelAndView register(Request request, Response response)
             throws Exception {
-        String username = request.queryParams("username");
-        String password = request.queryParams("password");
-        String email = request.queryParams("email");
+        String username = queryParam(request, "username");
+        String password = queryParam(request, "password");
+        String confirm = queryParam(request, "confirm");
+        String email = queryParam(request, "email");
+        if (!password.equals(confirm)) {
+            return routeUtils.modelAndView(request, "register.ftl")
+                    .add("error", REGISTER_MISMATCHED_PASSWORDS)
+                    .get();
+        }
         if (!ValidateUtils.validUsername(username)) {
             return routeUtils.modelAndView(request, "register.ftl")
-                    .add("error", REGISTER_ERROR_ONE)
+                    .add("error", REGISTER_INVALID_USERNAME)
                     .get();
         } else if (!ValidateUtils.validPassword(password)) {
             return routeUtils.modelAndView(request, "register.ftl")
-                    .add("error", REGISTER_ERROR_ONE)
+                    .add("error", REGISTER_INVALID_PASSWORD)
                     .get();
         } else if (!ValidateUtils.validEmail(email)) {
             return routeUtils.modelAndView(request, "register.ftl")
-                    .add("error", REGISTER_ERROR_ONE)
+                    .add("error", REGISTER_INVALID_EMAIL)
                     .get();
         } else if (userAccess.getUserbyUsername(username).isPresent()) {
             return routeUtils.modelAndView(request, "register.ftl")
-                    .add("error", REGISTER_ERROR_TWO)
+                    .add("error", REGISTER_TAKEN_USERNAME_OR_EMAIL)
                     .get();
         } else if (userAccess.getUserbyEmail(email).isPresent()) {
             return routeUtils.modelAndView(request, "register.ftl")
-                    .add("error", REGISTER_ERROR_TWO)
+                    .add("error", REGISTER_TAKEN_USERNAME_OR_EMAIL)
                     .get();
         }
         byte[] salt = Crypto.generateSalt();
