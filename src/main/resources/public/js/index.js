@@ -31,12 +31,12 @@ $(document).ready(function () {
     });
 
     $('#transactform').submit(function () {
-        console.log("Sending Transaction")
+        console.log("Sending Transaction");
         var action = $(this).attr("action");
         var data = $(this).serialize();
         var password = $('#transaction-password').val();
         $.post(action, data, function (resp) {
-            console.log(resp)
+            console.log(resp);
             // TODO this feels like a hack, eventually make it nice
             var rString = "";
             var sString = "";
@@ -64,16 +64,16 @@ $(document).ready(function () {
                 payload: resp.payload,
                 r: rString,
                 s: sString
-            }, function() {
+            }, function () {
                 $('#status').remove();
-                $( "#status-message" ).append('<div class="row" id="status" style="padding-top: 10px;"> <div class="alert alert-success"> <strong>Sucess!</strong> Transaction sent.  </div> </div>');
+                $("#status-message").append('<div class="row" id="status" style="padding-top: 10px;"> <div class="alert alert-success"> <strong>Sucess!</strong> Transaction sent.  </div> </div>');
                 window.location.replace("/");
             })
-        }).fail(function(jqXHR, textStatus, errorThrown) {
+        }).fail(function (jqXHR, textStatus, errorThrown) {
             var error = jqXHR.responseText || "Something went wrong. Please try again.";
             $('#status').remove();
-            $( "#status-message" ).append('<div class="row" id="status" style="padding-top: 10px;"> <div class="alert alert-danger"> <strong>Error!</strong> ' + error + ' </div> </div>');
-        });;
+            $("#status-message").append('<div class="row" id="status" style="padding-top: 10px;"> <div class="alert alert-danger"> <strong>Error!</strong> ' + error + ' </div> </div>');
+        });
         return false; // don't submit form, since we already have
     });
 
@@ -81,15 +81,15 @@ $(document).ready(function () {
         selectableHeader: "<div class='custom-header text-center'>Cannot send me money</div>",
         selectionHeader: "<div class='custom-header text-center'>Can send me money</div>",
         afterSelect: function (values) {
-            console.log(values[0])
+            console.log(values[0]);
             $.post("/friend", {
                 friend: values[0]
-            }, function(data) {
+            }, function (data) {
                 console.log(data)
             });
         },
         afterDeselect: function (values) {
-            console.log(values)
+            console.log(values);
             $.ajax({
                 type: 'DELETE',
                 url: '/friend' + '?' + $.param({"friend": values[0]}),
