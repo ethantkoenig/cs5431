@@ -22,7 +22,7 @@ public final class Fixtures {
             user = new User(1, "username", "example@example.com", salt, passwordHash, 0);
 
             byte[] keyBytes = Base64.getDecoder()
-                    .decode("AAAAIENlqaN84z/cKZRKV3Uy3Hl3lb49R0x2R3UGw+H4NU7YAAAAID2A9htFFHElzgAvQOS3ZtadBUhgQJQIkRvzSU2EM8pK");
+                    .decode("Q2Wpo3zjP9wplEpXdTLceXeVvj1HTHZHdQbD4fg1Ttg9gPYbRRRxJc4AL0Dkt2bWnQVIYECUCJEb80lNhDPKSg==");
             key = ECDSAPublicKey.DESERIALIZER.deserialize(keyBytes);
         } catch (DeserializationException | GeneralSecurityException | IOException e) {
             throw new RuntimeException(e);
