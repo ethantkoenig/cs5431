@@ -40,9 +40,10 @@ public final class RouteUtils {
             try {
                 return route.handle(request, response);
             } catch (NotLoggedInException e) {
-                response.status(403);
+                response.redirect("/login");
                 return null;
             } catch (InvalidParamException e) {
+                // TODO find better way to handle
                 response.status(400);
                 response.body("Invalid Parameters.");
                 return null;

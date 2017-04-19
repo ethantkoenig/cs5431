@@ -12,7 +12,7 @@
 
 
     <div class="row">
-        <#if loggedInUser?? && loggedInUser == username>
+        <#if loggedIn && loggedInUsername == username>
             <div class="col-sm-6 padding-top">
 
                 <form method="post" action="/user/keys" id="keyform" style="padding-top: 20px;">
@@ -37,7 +37,15 @@
                         </div>
                     </div>
                 </#if>
-
+                <#if error??>
+                    <div class="row" style="padding-top: 10px;">
+                        <div class="col-md-4 col-md-offset-4">
+                            <div class="alert alert-danger">
+                                <strong>Error!</strong> ${error}
+                            </div>
+                        </div>
+                    </div>
+                </#if>
             </div>
             <div class="col-sm-6 padding-top">
                 <select id='friend-selector' multiple='multiple'>

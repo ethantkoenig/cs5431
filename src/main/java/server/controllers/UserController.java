@@ -8,6 +8,7 @@ import server.access.UserAccess;
 import server.models.Key;
 import server.models.User;
 import server.utils.Constants;
+import server.utils.MapModelAndView;
 import server.utils.RouteUtils;
 import server.utils.ValidateUtils;
 import spark.ModelAndView;
@@ -15,10 +16,12 @@ import spark.Request;
 import spark.Response;
 import spark.template.freemarker.FreeMarkerEngine;
 import utils.ByteUtil;
+import utils.DeserializationException;
 import utils.Optionals;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.IOException;
 import java.net.Socket;
 import java.sql.SQLException;
 import java.util.Arrays;
@@ -193,15 +196,27 @@ public class UserController {
         byte[] publicKey = RouteUtils.queryParamHex(request, "publickey");
         String privateKey = RouteUtils.queryParam(request, "privatekey");
         User user = routeUtils.forceLoggedInUser(request);
-        userAccess.insertKey(user.getId(), publicKey, privateKey);
 
+        boolean validKey = true;
+        try {
+            ECDSAPublicKey.DESERIALIZER.deserialize(publicKey);
+        } catch (DeserializationException | IOException e) {
+            validKey = false;
+        }
+
+        MapModelAndView modelAndView = routeUtils.modelAndView(request, "user.ftl");
+        if (validKey) {
+            userAccess.insertKey(user.getId(), publicKey, privateKey);
+            modelAndView.add("success", "Keys added.");
+        } else {
+            modelAndView.add("error", "Invalid public key.");
+        }
+
+        // TODO duplicated code with viewUser(..)
         List<String> friends = userAccess.getFriends(user.getUsername());
         List<String> users = userAccess.getAllUsernames();
-
-        return routeUtils.modelAndView(request, "user.ftl")
-                .add("username", user.getUsername())
-                .add("success", "Keys added.")
-                .add("loggedInUser", user.getUsername())
+        users.removeAll(friends);
+        return modelAndView.add("username", user.getUsername())
                 .add("friends", friends)
                 .add("users", users)
                 .get();
