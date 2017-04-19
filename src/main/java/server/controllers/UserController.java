@@ -208,4 +208,5 @@ public class UserController {
         userAccess.deleteFriends(username, friend);
         return "ok";
     }
+
 }

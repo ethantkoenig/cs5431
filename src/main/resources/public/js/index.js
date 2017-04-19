@@ -52,10 +52,13 @@ $(document).ready(function () {
                 r: rString,
                 s: sString
             }, function() {
-                console.log("Successful transaction")
-                window.location.replace("/"); // TODO what to do on successful transaction?
+                $( "#add-error" ).append('<div class="row" style="padding-top: 30px;"> <div class="col-md-4 col-md-offset-4"> <div class="alert alert-success"> <strong>Sucess!</strong> Transaction sent. </div> </div> </div>');
+                window.location.replace("/");
             })
-        });
+        }).fail(function(error) {
+            console.log("error!!!");
+            $( "#add-error" ).append('<div class="row" style="padding-top: 30px;"> <div class="col-md-4 col-md-offset-4"> <div class="alert alert-danger"> <strong>Error!</strong> Something went wrong, please try again. </div> </div> </div>');
+        });;
         return false; // don't submit form, since we already have
     });
 

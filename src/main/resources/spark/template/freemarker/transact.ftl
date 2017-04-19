@@ -2,7 +2,7 @@
 
 <@layout.master>
 <!-- Page Content -->
-<div class="container">
+<div class="container" id="add-error">
     <div class="col-md-4 col-md-offset-4 padding-top">
 
         <form action="/transact" method="post" id="transactform">
