@@ -52,12 +52,14 @@ $(document).ready(function () {
                 r: rString,
                 s: sString
             }, function() {
-                $( "#add-error" ).append('<div class="row" style="padding-top: 30px;"> <div class="col-md-4 col-md-offset-4"> <div class="alert alert-success"> <strong>Sucess!</strong> Transaction sent. </div> </div> </div>');
+                $('#status').remove();
+                $( "#status-message" ).append('<div class="row" id="status" style="padding-top: 10px;"> <div class="alert alert-success"> <strong>Sucess!</strong> Transaction sent.  </div> </div>');
                 window.location.replace("/");
             })
-        }).fail(function(error) {
-            console.log("error!!!");
-            $( "#add-error" ).append('<div class="row" style="padding-top: 30px;"> <div class="col-md-4 col-md-offset-4"> <div class="alert alert-danger"> <strong>Error!</strong> Something went wrong, please try again. </div> </div> </div>');
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            var error = jqXHR.responseText || "Something went wrong. Please try again.";
+            $('#status').remove();
+            $( "#status-message" ).append('<div class="row" id="status" style="padding-top: 10px;"> <div class="alert alert-danger"> <strong>Error!</strong> ' + error + ' </div> </div>');
         });;
         return false; // don't submit form, since we already have
     });

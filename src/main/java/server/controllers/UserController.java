@@ -3,7 +3,6 @@ package server.controllers;
 import com.google.inject.Inject;
 import crypto.Crypto;
 import server.access.UserAccess;
-import server.models.Key;
 import server.models.User;
 import server.utils.RouteUtils;
 import server.utils.ValidateUtils;
@@ -11,13 +10,11 @@ import spark.ModelAndView;
 import spark.Request;
 import spark.Response;
 import spark.template.freemarker.FreeMarkerEngine;
-import utils.ByteUtil;
 
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static server.utils.RouteUtils.*;
 import static spark.Spark.*;
@@ -180,14 +177,16 @@ public class UserController {
         String privateKey = RouteUtils.queryParam(request, "privatekey");
         User user = routeUtils.forceLoggedInUser(request);
         userAccess.insertKey(user.getId(), publicKey, privateKey);
-        List<String> hashes = userAccess.getKeysByUserID(user.getId()).stream()
-                .map(Key::getPublicKey)
-                .map(ByteUtil::bytesToHexString)
-                .collect(Collectors.toList());
+
+        List<String> friends = userAccess.getFriends(user.getUsername());
+        List<String> users = userAccess.getAllUsernames();
+
         return routeUtils.modelAndView(request, "user.ftl")
                 .add("username", user.getUsername())
-                .add("hashes", hashes)
-                .add("success", "Public Key added.")
+                .add("success", "Keys added.")
+                .add("loggedInUser", user.getUsername())
+                .add("friends", friends)
+                .add("users", users)
                 .get();
     }
 

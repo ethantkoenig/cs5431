@@ -10,7 +10,7 @@
         </div>
     </div>
 
-<#if loggedInUser?? && loggedInUser == username>
+    <#if loggedInUser?? && loggedInUser == username>
     <div class="row">
         <div class="col-sm-6 padding-top">
 
@@ -30,10 +30,8 @@
 
             <#if success??>
                 <div class="row" style="padding-top: 10px;">
-                    <div class="col-md-4 col-md-offset-4">
-                        <div class="alert alert-success">
-                            <strong>Success!</strong> ${success}
-                        </div>
+                    <div class="alert alert-success">
+                        <strong>Success!</strong> ${success}
                     </div>
                 </div>
             </#if>
@@ -45,34 +43,34 @@
         </div>
     </#if>
 
-        <#if users??>
-            <#list users as user>
-                <#if user != username>
-                    <script>
-                        $('#friend-selector').append($("<option/>", {
-                            value: "${user}",
-                            text: "${user}",
-                        }));
-                    </script>
-                </#if>
-            </#list>
-        </#if>
-
-        <#if friends??>
-            <#list friends as friend>
+    <#if users??>
+        <#list users as user>
+            <#if user != username>
                 <script>
-                    $('#friend-selector')
-                            .append($("<option></option>")
-                                    .attr("value", "${friend}")
-                                    .text("${friend}")
-                                    .attr('selected', 'selected'));
-
+                    $('#friend-selector').append($("<option/>", {
+                        value: "${user}",
+                        text: "${user}",
+                    }));
                 </script>
-            </#list>
-        </#if>
+            </#if>
+        </#list>
+    </#if>
+
+    <#if friends??>
+        <#list friends as friend>
+            <script>
+                $('#friend-selector')
+                        .append($("<option></option>")
+                                .attr("value", "${friend}")
+                                .text("${friend}")
+                                .attr('selected', 'selected'));
+
+            </script>
+        </#list>
+    </#if>
 
 
-    </div>
+</div>
 
 </div>
 <!-- /.container -->
