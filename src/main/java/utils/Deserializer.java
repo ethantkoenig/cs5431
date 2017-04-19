@@ -18,7 +18,12 @@ public interface Deserializer<T> {
 
     default T deserialize(byte[] inputBytes)
             throws DeserializationException, IOException {
-        return deserialize(new DataInputStream(new ByteArrayInputStream(inputBytes)));
+        InputStream inputStream = new ByteArrayInputStream(inputBytes);
+        T value = deserialize(new DataInputStream(inputStream));
+        if (inputStream.read() != -1) {
+            throw new DeserializationException("Did not reach EOF");
+        }
+        return value;
     }
 
     static <U> List<U> deserializeList(byte[] inputBytes,
