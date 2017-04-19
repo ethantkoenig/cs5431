@@ -11,7 +11,6 @@ import java.math.BigInteger;
 
 public class ECDSAPrivateKey implements CanBeSerialized {
     public static final Deserializer<ECDSAPrivateKey> DESERIALIZER = new ECDSAPrivateKeyDeserializer();
-    private static final int MAX_COORD_LENGTH_IN_BYTES = 66;
     public final BigInteger d;
 
     public ECDSAPrivateKey(BigInteger d) {
@@ -19,14 +18,29 @@ public class ECDSAPrivateKey implements CanBeSerialized {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof ECDSAPrivateKey)) {
+            return false;
+        }
+        ECDSAPrivateKey other = (ECDSAPrivateKey) o;
+        return d.equals(other.d);
+    }
+
+    @Override
+    public int hashCode() {
+        return d.hashCode();
+    }
+
+    @Override
     public void serialize(DataOutputStream outputStream) throws IOException {
-        CanBeSerialized.serializeBigInteger(outputStream, d);
+        CanBeSerialized.serializeUnsignedBigInteger(outputStream, d, Crypto.ECDSA_ORDER_IN_BYTES);
     }
 
     private static class ECDSAPrivateKeyDeserializer implements Deserializer<ECDSAPrivateKey> {
         @Override
         public ECDSAPrivateKey deserialize(DataInputStream inputStream) throws DeserializationException, IOException {
-            return new ECDSAPrivateKey(Deserializer.deserializeBigInteger(inputStream, MAX_COORD_LENGTH_IN_BYTES));
+            BigInteger d = Deserializer.deserializeUnsignedBigInteger(inputStream, Crypto.ECDSA_ORDER_IN_BYTES);
+            return new ECDSAPrivateKey(d);
         }
     }
 }

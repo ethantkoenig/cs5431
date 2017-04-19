@@ -1,5 +1,6 @@
 generators.model.BlockChainGenerator
 generators.model.BlockGenerator
+generators.model.ECDSASignatureGenerator
 generators.model.ShaTwoFiftySixGenerator
 generators.model.SigningKeyPairGenerator
 generators.model.TransactionGenerator
@@ -8,4 +9,3 @@ generators.model.TxOutGenerator
 generators.model.UnspentTransactionsGenerator
 generators.server.models.KeyGenerator
 testutils.PairGenerator
-

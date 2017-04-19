@@ -8,11 +8,10 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.Objects;
 
 public final class ECDSASignature implements CanBeSerialized {
     public static final Deserializer<ECDSASignature> DESERIALIZER = new ECDSASignatureDeserializer();
-
-    private static final int MAX_COORD_LENGTH_IN_BYTES = 34;
 
     public final BigInteger r;
     public final BigInteger s;
@@ -23,16 +22,30 @@ public final class ECDSASignature implements CanBeSerialized {
     }
 
     @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof ECDSASignature)) {
+            return false;
+        }
+        ECDSASignature other = (ECDSASignature) o;
+        return r.equals(other.r) && s.equals(other.s);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(r, s);
+    }
+
+    @Override
     public void serialize(DataOutputStream outputStream) throws IOException {
-        CanBeSerialized.serializeBigInteger(outputStream, r);
-        CanBeSerialized.serializeBigInteger(outputStream, s);
+        CanBeSerialized.serializeUnsignedBigInteger(outputStream, r, Crypto.ECDSA_ORDER_IN_BYTES);
+        CanBeSerialized.serializeUnsignedBigInteger(outputStream, s, Crypto.ECDSA_ORDER_IN_BYTES);
     }
 
     private static class ECDSASignatureDeserializer implements Deserializer<ECDSASignature> {
         @Override
         public ECDSASignature deserialize(DataInputStream inputStream) throws DeserializationException, IOException {
-            BigInteger r = Deserializer.deserializeBigInteger(inputStream, MAX_COORD_LENGTH_IN_BYTES);
-            BigInteger s = Deserializer.deserializeBigInteger(inputStream, MAX_COORD_LENGTH_IN_BYTES);
+            BigInteger r = Deserializer.deserializeUnsignedBigInteger(inputStream, Crypto.ECDSA_ORDER_IN_BYTES);
+            BigInteger s = Deserializer.deserializeUnsignedBigInteger(inputStream, Crypto.ECDSA_ORDER_IN_BYTES);
             return new ECDSASignature(r, s);
         }
     }

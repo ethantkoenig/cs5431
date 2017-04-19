@@ -32,6 +32,7 @@ public final class Crypto {
             SPEC.getG(),
             SPEC.getN()
     );
+    public static final int ECDSA_ORDER_IN_BYTES = 32;
 
     private static boolean initialized = false;
 

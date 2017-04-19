@@ -13,7 +13,6 @@ import java.math.BigInteger;
 
 public final class ECDSAPublicKey implements CanBeSerialized {
     public static final Deserializer<ECDSAPublicKey> DESERIALIZER = new ECDSAPublicKeyDeserializer();
-    private static final int MAX_COORD_LENGTH_IN_BYTES = 34;
 
     public final ECPoint point;
 
@@ -42,16 +41,18 @@ public final class ECDSAPublicKey implements CanBeSerialized {
 
     @Override
     public void serialize(DataOutputStream outputStream) throws IOException {
-        CanBeSerialized.serializeBigInteger(outputStream, point.getXCoord().toBigInteger());
-        CanBeSerialized.serializeBigInteger(outputStream, point.getYCoord().toBigInteger());
+        BigInteger x = point.getXCoord().toBigInteger();
+        CanBeSerialized.serializeUnsignedBigInteger(outputStream, x, Crypto.ECDSA_ORDER_IN_BYTES);
+        BigInteger y = point.getYCoord().toBigInteger();
+        CanBeSerialized.serializeUnsignedBigInteger(outputStream, y, Crypto.ECDSA_ORDER_IN_BYTES);
     }
 
     private static class ECDSAPublicKeyDeserializer implements Deserializer<ECDSAPublicKey> {
         @Override
         public ECDSAPublicKey deserialize(DataInputStream inputStream)
                 throws DeserializationException, IOException {
-            BigInteger x = Deserializer.deserializeBigInteger(inputStream, MAX_COORD_LENGTH_IN_BYTES);
-            BigInteger y = Deserializer.deserializeBigInteger(inputStream, MAX_COORD_LENGTH_IN_BYTES);
+            BigInteger x = Deserializer.deserializeUnsignedBigInteger(inputStream, Crypto.ECDSA_ORDER_IN_BYTES);
+            BigInteger y = Deserializer.deserializeUnsignedBigInteger(inputStream, Crypto.ECDSA_ORDER_IN_BYTES);
             return new ECDSAPublicKey(x, y);
         }
     }

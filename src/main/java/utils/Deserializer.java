@@ -1,5 +1,7 @@
 package utils;
 
+import org.bouncycastle.util.BigIntegers;
+
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -69,8 +71,10 @@ public interface Deserializer<T> {
         return bytes;
     }
 
-    static BigInteger deserializeBigInteger(DataInputStream inputStream, int maxLength)
+    static BigInteger deserializeUnsignedBigInteger(DataInputStream inputStream, int numBytes)
             throws DeserializationException, IOException {
-        return new BigInteger(deserializeBytes(inputStream, maxLength));
+        byte[] bytes = new byte[numBytes];
+        IOUtils.fill(inputStream, bytes);
+        return BigIntegers.fromUnsignedByteArray(bytes);
     }
 }

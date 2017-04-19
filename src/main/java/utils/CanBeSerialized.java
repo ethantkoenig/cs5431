@@ -1,5 +1,7 @@
 package utils;
 
+import org.bouncycastle.util.BigIntegers;
+
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -53,10 +55,9 @@ public interface CanBeSerialized {
         serializeList(outputStream, Collections.singletonList(value));
     }
 
-    static void serializeBigInteger(DataOutputStream outputStream, BigInteger value)
+    static void serializeUnsignedBigInteger(DataOutputStream outputStream, BigInteger value, int numBytes)
             throws IOException {
-        byte[] bytes = value.toByteArray();
-        outputStream.writeInt(bytes.length);
+        byte[] bytes = BigIntegers.asUnsignedByteArray(numBytes, value);
         outputStream.write(bytes);
     }
 }

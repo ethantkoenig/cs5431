@@ -2,10 +2,10 @@ package transaction;
 
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
+import crypto.Crypto;
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import utils.ByteUtil;
-import crypto.Crypto;
 
 import static testutils.TestUtils.assertEqualsWithHashCode;
 

@@ -21,21 +21,12 @@ public final class TxOut implements CanBeSerialized {
     public final long value;
     public final ECDSAPublicKey ownerPubKey;
 
-//     private transient Optional<byte[]> encodedPubKeyCache = Optional.empty();
-
     public TxOut(long value, ECDSAPublicKey ownerPubKey) {
         this.value = value;
         this.ownerPubKey = ownerPubKey;
     }
 
     public void serialize(DataOutputStream outputStream) throws IOException {
-//        byte[] encodedPubKey;
-//        if (encodedPubKeyCache.isPresent()) {
-//            encodedPubKey = encodedPubKeyCache.get();
-//        } else {
-//            encodedPubKey = ;
-//            encodedPubKeyCache = Optional.of(encodedPubKey);
-//        }
         outputStream.write(ByteUtil.asByteArray(ownerPubKey::serialize));
         outputStream.writeLong(value);
     }
