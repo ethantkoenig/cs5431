@@ -16,11 +16,10 @@ import java.util.stream.Collectors;
 /**
  * A map from (SHA-256, index) pairs to unspent transaction outputs.
  */
-public class UnspentTransactions
-        implements Iterable<Map.Entry<Pair<ShaTwoFiftySix, Integer>, TxOut>> {
-    private final Map<Pair<ShaTwoFiftySix, Integer>, TxOut> map;
+public class UnspentTransactions implements Iterable<Map.Entry<TxIn, TxOut>> {
+    private final Map<TxIn, TxOut> map;
 
-    private UnspentTransactions(Map<Pair<ShaTwoFiftySix, Integer>, TxOut> map) {
+    private UnspentTransactions(Map<TxIn, TxOut> map) {
         this.map = map;
     }
 
@@ -39,19 +38,19 @@ public class UnspentTransactions
     }
 
     public boolean contains(ShaTwoFiftySix hash, int index) {
-        return map.containsKey(new Pair<>(hash, index));
+        return map.containsKey(new TxIn(hash, index));
     }
 
     public TxOut put(ShaTwoFiftySix hash, int index, TxOut out) {
-        return map.put(new Pair<>(hash, index), out);
+        return map.put(new TxIn(hash, index), out);
     }
 
     public TxOut get(ShaTwoFiftySix hash, int index) {
-        return map.get(new Pair<>(hash, index));
+        return map.get(new TxIn(hash, index));
     }
 
     public TxOut remove(ShaTwoFiftySix hash, int index) {
-        return map.remove(new Pair<>(hash, index));
+        return map.remove(new TxIn(hash, index));
     }
 
     public int size() { return map.size(); }
@@ -73,7 +72,7 @@ public class UnspentTransactions
     }
 
     @Override
-    public Iterator<Map.Entry<Pair<ShaTwoFiftySix, Integer>, TxOut>> iterator() {
+    public Iterator<Map.Entry<TxIn, TxOut>> iterator() {
         return map.entrySet().iterator();
     }
 
@@ -102,8 +101,8 @@ public class UnspentTransactions
                         .anyMatch(entry.getValue().ownerPubKey::equals))
                 .map(entry -> new UnspentOutput(
                         entry.getValue().ownerPubKey,
-                        entry.getKey().getLeft(),
-                        entry.getKey().getRight(),
+                        entry.getKey().previousTxn,
+                        entry.getKey().txIdx,
                         entry.getValue().value))
                 .collect(Collectors.toList());
     }
@@ -145,8 +144,8 @@ public class UnspentTransactions
         if (toBeSpent < amount) return Optional.empty();
 
         Transaction.UnsignedBuilder txb = new Transaction.UnsignedBuilder();
-        for (TxIn in: txIns) {
-            txb.addInput(in);
+        for (TxIn input: txIns) {
+            txb.addInput(input);
         }
 
         // construct two outputs - one to the destination

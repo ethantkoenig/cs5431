@@ -31,7 +31,7 @@ public class UnspentTransactionsProperties {
     public void builtTransactionHasCorrectAmountAndChange(
             @Size(min=10, max=20) UnspentTransactions utx, @InRange(min="0",max="1") float proportionToSpend) throws Exception {
         List<ECDSAPublicKey> keys = new ArrayList<>();
-        for (Map.Entry<Pair<ShaTwoFiftySix,Integer>, TxOut> entry: utx) {
+        for (Map.Entry<TxIn, TxOut> entry: utx) {
             keys.add(entry.getValue().ownerPubKey);
         }
         ECDSAPublicKey[] keyArr = keys.toArray(new ECDSAPublicKey[keys.size()]);

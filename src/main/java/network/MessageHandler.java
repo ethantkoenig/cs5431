@@ -4,6 +4,7 @@ import block.Block;
 import block.UnspentTransactions;
 import crypto.ECDSAPublicKey;
 import transaction.Transaction;
+import transaction.TxIn;
 import transaction.TxOut;
 import utils.ByteUtil;
 import utils.CanBeSerialized;
@@ -118,7 +119,7 @@ public class MessageHandler {
         // For each key, get the available funds from unspend Txs
         List<ECDSAPublicKey> keys = request.requestedKeys;
         HashMap<ECDSAPublicKey, Long> funds = new HashMap<>();
-        for (Map.Entry<Pair<ShaTwoFiftySix, Integer>, TxOut> entry : bundle.getUnspentTransactions()) {
+        for (Map.Entry<TxIn, TxOut> entry : bundle.getUnspentTransactions()) {
             for (ECDSAPublicKey key : keys) {
                 if (key.equals(entry.getValue().ownerPubKey)) {
                     funds.compute(key, (k,v) -> ((v == null) ? 0L : v) + entry.getValue().value);
