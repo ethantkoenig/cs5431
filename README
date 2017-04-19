@@ -34,7 +34,7 @@ This executable will run our project.
 To launch a node (i.e. a ledger-keeping, block-mining component of the
 cryptocurrency network), run
 
-$ bin/cs5431 node <port no> <public> <private> <privileged> <address list>
+$ bin/cs5431 miner <port no> <public> <private> <privileged> <address list>
 
 Arguments:
 * port_no : port number to bind to
@@ -54,10 +54,12 @@ For example, to launch three nodes locally, run
 $ bin/cs5431 node 8000 public1 private1 public3
 
 (then, in another terminal)
-$ bin/cs5431 node 8001 public2 private2 public3 localhost:8000
+$ echo "localhost:8000" > nodes1.txt
+$ bin/cs5431 node 8001 public2 private2 public3 nodes1.txt
 
 (finally, in yet another terminal)
-$ bin/cs5431 node 8002 public3 private3 public3 localhost:8000 localhost:8001
+$ echo -e "localhost:8000\nlocalhost:8001" > nodes2.txt
+$ bin/cs5431 node 8002 public3 private3 public3 node2.txt
 
 where publicX/privateX are filepaths to public/private keys.
 
@@ -90,8 +92,8 @@ This will open an interactive shell, which supports the following commands:
 
 To run the webserver,
 
-1. Run a MySQL instance (on the default port, 3306)
-2. Store the password for MySQL in $MYSQL_PASS
+1. Store the MySql password ("pbM,L3j]") in $MYSQL_PASS
+2. Store our email password ("HAfCt/9^") in $EMAIL_PASS
 3. Create a keystore
 
    You can download one from https://www.dropbox.com/s/pcxxzcgfbr5ilko/KeyStore.jks?dl=0
@@ -101,11 +103,20 @@ To run the webserver,
    keystore is "password")
 5. Run
 
-  $ bin/cs5431 webserver path/to/keystore <address-of-node>
+  $ bin/cs5431 webserver path/to/keystore <port-num> <public> <private> <privileged> <address list>
 
 Arguments:
-* address-of-node : address (of the form <ip-address>:<port-num>) that the
-                    webserver will connect to perform transactions
+* port-num : port number on which webserver will run a cryptocurrency node
+* public  : filepath to this node's public key (generated via a client, see below)
+* private  : filepath to this node's private key (generated via a client, see below)
+* privileged  : filepath to the "privileged" public key (generated via client)
+                the "privileged" public key is a public key belonging to a
+                particular node, which allows that node to mine the genesis block.
+* address : filepath to list of addresses of other nodes to connect to; these are
+            nodes that have already been started. This means that the first node to
+            start up should not have any address arguments in the file, the second
+            node should should the first node's address, etc. Each address should be
+            on a separate line of the form "(ip address):(port no)"
 
 ## Testing and FindBugs
 
@@ -117,74 +128,61 @@ $ ./gradlew check
 
 Run
 
-$ echo "localhost:4444" > nodes.txt
 $ bin/cs5431 client
   > generate key1.pub key1.priv
   > generate key2.pub key2.priv
-  > setNodeList nodes.txt
-  > ... more commands to run later, look for the angle brackets
+  > generate key3.pub key3.priv
+  > quit
 
-$ bin/cs5431 node 4444 key1.pub key1.priv key2.pub some/empty/file # in another terminal
+$ # run the setup steps described in the "Running the Webserver" section above
+$ bin/cs5431 webserver path/to/keystore.jks 4443 key1.pub key1.priv key1.pub /dev/null
 
-$ bin/cs5341 node 4445 key2.pub key2.priv key2.pub nodes.txt # in another terminal
+(in another terminal)
+$ echo "localhost:4443" > nodes4444.txt
+$ bin/cs5431 miner 4444 key2.pub key2.priv key3.pub nodes4444.txt
 
-You should see some output from the two nodes. In particular, you
+(in yet another terminal)
+$ echo -e "localhost:4443\nlocalhost:4444" > nodes4445.txt
+$ bin/cs5341 miner 4445 key3.pub key3.priv key3.pub nodes4445.txt
+
+You should see some output from each two nodes. In particular, you
 should see a print hexidecimal string starting with (at least) four zeros.
 This is the SHA-256 hash of the genesis block, which contains a reward
 transaction for key2 (of value 50000).
 
-Back to the client, run
-  > transact
-  1 input
-    (for the hash, enter the hash of the genesis block, as a hex string)
-    index: 0 (indices are 0-based, and the reward only has 1 output)
-    key: key2.priv (key2 owns the reward, so key2 must sign a transaction
-                    spending those funds)
-  2 outputs
-    (at index 0)
-    recipient key: key1.pub
-    amount: 30000
-    (at index 1)
-    recipient key: key2.pub
-    amount: 20000
-  <SHA-256 hash for this transaction printed here>
+Open the website in a browser (https://localhost:5000) and create an account
+with username "username1" by clicking on the "Register" link.
+Make sure your password
 
-Both nodes should accept this transaction as valid.
+- is between 12 and 24 characters in length
+- contains a lowercase letter, uppercase letter, and number
 
-You can construct another transaction, spending the outputs of the transaction
-you made above. Make sure you sign each input of this transaction with the
-private key corresponding to the public key of the corresponding output from the
-previous transaction. (This demo will work better if you only spend key1's
-output in this second transaction.)
-
-Once you've issued a second transaction, both nodes should start mining, and one
-node should successfully mine a block, and share it with the other node. (There is
-a small chance both nodes mine a different block at the same time; in this case,
-each node should still share their block with the other).
-
-Now let's make a transaction via the webapp. Launch the webapp
-
-$ cs5431/bin webserver keystore.jks localhost:4444 # in another terminal
-
-Open the website in a browser (https://localhost:5000) and create an account.
-Go to your user page (/user/<your-username>), and upload the public/private key
-for key2 using the form on the left of the page. The keys should be entered as
+Go to your user page (/user/username1), and upload the public/private key
+for key3 using the form on the left of the page. The keys should be entered as
 hex-strings, which you can get by running
 
-$ echo $(xxd -p key2.pub | tr -d "\n") # similarly for key2.priv
+$ echo $(xxd -p key3.pub | tr -d "\n") # similarly for key3.priv
 
-Submit the form, and navigate to /transact. Here you can send key2's output from
-the first transaction in the text-based client you created to key1.
+Then logout by clicking the "Logout" link, and create another user account
+with username "username2". Upload the public/private key2 for username2. Then,
+from the user page, click on the "username1" icon, which authorizes username1
+to send you money.
 
-Enter the sender key (key2) and recipient key (key1) as hexstrings. You can get the
-input transaction hash from the first transaction you made via the text-based client.
-Enter 1 as the input index, and 20000 as the amount. Submit the transaction, and the
-two nodes should accept the transaction.
+Logout and log back in as username1. Click on the "Balance" link. You should
+have a balance of 50000 (recall that key3 is the privileged key).
 
-Note: right now, the webapp only supports single-input, single-output transactions.
-Our current system for issuing transaction from the webserver is temporary, since
-we ultimately want to sign transactions client-side, but currently store private
-keys and sign transactions on the server. We didn't want to invest too much time
-or effort into a temporary solution that will eventually need to be discarded (or
-at least heavily refactored), so our webapp's transaction functionality is very
-simple.
+Click on the "Transact" link, and try sending money to username2. You will need
+to enter the same password that you entered when you submitted key3.
+
+After submitting the form, you should see that the transaction was accepted by
+the cryptocurrency network (unless you tried to send more than 50000 coins!).
+If you sent less than 50000 coins, the transaction should contain a second
+output with your change.
+
+Now try sending money to a user other than username1 or username2 (we will
+prepopulate the remote database with some users, just pick any of them).
+You can't, because they haven't authorized you! (Of course, we also check
+on the server side, not just on the client).
+
+Keep sending money to your heart's delight! As you continue, you should see
+blocks being mined in the nodes' outputs.
