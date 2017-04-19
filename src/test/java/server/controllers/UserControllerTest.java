@@ -90,7 +90,7 @@ public class UserControllerTest extends ControllerTest {
 
     public void testLoginValid() throws Exception {
         Request request = new MockRequest()
-                .addQueryParam("username", "username")
+                .addQueryParam("username", fixtures.user.getUsername())
                 .addQueryParam("password", Fixtures.USER_PASSWORD)
                 .get();
 
@@ -158,5 +158,23 @@ public class UserControllerTest extends ControllerTest {
         Response response = Mockito.mock(Response.class);
         controller.addUserKey(request, response);
         TestUtils.assertPresent(userAccess.getKey(1, publicBytes));
+    }
+
+    public void testAddFriend() throws Exception {
+        Request request = new MockRequest()
+                .addSessionAttribute("username", fixtures.user.getUsername())
+                .addQueryParam("friend", fixtures.user.getUsername())
+                .get();
+        Response response = Mockito.mock(Response.class);
+        controller.addFriend(request, response);
+    }
+
+    public void testDeleteFriend() throws Exception {
+        Request request = new MockRequest()
+                .addSessionAttribute("username", fixtures.user.getUsername())
+                .addQueryParam("friend", fixtures.user.getUsername())
+                .get();
+        Response response = Mockito.mock(Response.class);
+        controller.deleteFriend(request, response);
     }
 }
