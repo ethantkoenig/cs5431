@@ -34,7 +34,7 @@ $(document).ready(function () {
 
                 var payload = sjcl.codec.hex.toBits(resp.payload);
                 var hash = sjcl.hash.sha256.hash(payload);
-                var signature = key.sign(hash, 10); // TODO higher paranoid parameter
+                var signature = key.sign(hash, 10);
 
                 var r = sjcl.bitArray.bitSlice(signature, 0, 256);
                 var s = sjcl.bitArray.bitSlice(signature, 256, 512);
