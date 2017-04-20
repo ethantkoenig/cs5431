@@ -187,13 +187,14 @@ The integrity and availability goals are feasible, and will hold due to the inhe
 % TODO: goals for protecting keys
 
 \begin{itemize}
-\item The wallet software must prevent unauthorized disclosure of a user's balance or transaction history. This goal concerns confidentiality, as our wallet software must not expose private user information.
+\item The wallet software must prevent unauthorized disclosure of a user's balance or transaction history. This goal concerns confidentiality, as our wallet software must not expose private user information. Note that the transaction history can still be mapped by the public key on the blockchain, but the wallet software must not allow an easy way for users to do this.
 \item The wallet software must prevent unauthorized spending of a user's funds. This goal concerns integrity, since only the owner of funds should be authorized to spend (i.e. update) those funds.
 \item The wallet software must prevent unauthorized disclosure of a user's keys. This goal concerns confidentiality, since it involves unauthorized access of an asset.
 \item The wallet software must prevent unauthorized modification/deletion of a user's keys. This goal concerns integrity, since keys are a system asset.
 \item The wallet software must prevent unauthorized access to a user's credentials. This goals concerns confidentiality, since it involves unauthorized access of an asset.
 \item The wallet software must prevent unauthorized modification of a user's credentials. This goal concerns integrity, since users' credentials are a system asset.
 \item The wallet software must prevent users from constructing invalid transactions. This goal concerns integrity. If we allowed users to construct malformed transactions, it could lead them to believe they have performed transactions that will never be accepted by the blockchain, leading to inconsistencies between the wallet software and the blockchain.
+\item The wallet software must not store plaintext private keys. This goal concerns confidentiality, as a users private key allows them to spend their coins, and if a malicious user compromises the server they should not have access to everyone's private keys.
 \end{itemize}
 
 Authentication passwords could be disclosed to an attacker, since attackers may have access to the memory contents of the server. In this scenario, preventing unauthorized access to a user's balance, transaction history, and keys will not be possible. Preventing unauthorized modification of a user's keys will still be possible, through use of two-factor authorization for such operations.
@@ -228,7 +229,7 @@ This will be useful in verifying that the correct users were paid when they may 
 For many users of a cryptocurrency, one of the strongest appeals is the pseudonymity.
 Users may create more public/private keys at will and protect their identity as they make transactions.
 For those using our blockchain alone, we will store no personal information about our users and thus their identities remain safe.
-However, the pseudonymity that private keys provide is not perfect anonymity. It is possible to infer the owners of public keys by analyzing behavioral patterns. We do not plan to protect against such attacks.
+However, the pseudonymity that public keys provide is not perfect anonymity. It is possible to infer the owners of public keys by analyzing behavioral patterns, such as network timing attacks. We do not plan to protect against such attacks.
 
 In our Venmo-style app, users will be creating accounts, so we will need to securely store passwords. We will also want to prevent users' balances, transaction histories, and keys from being viewed by other users.
 
