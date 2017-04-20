@@ -1,14 +1,14 @@
 package transaction;
 
 import block.UnspentTransactions;
+import crypto.Crypto;
+import crypto.ECDSAKeyPair;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import testutils.RandomizedTest;
 import testutils.TestUtils;
 import utils.ByteUtil;
-import crypto.Crypto;
-import crypto.ECDSAKeyPair;
 import utils.ShaTwoFiftySix;
 
 import java.util.HashMap;

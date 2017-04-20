@@ -17,9 +17,13 @@ public class GetUTXWithKeysResponse implements CanBeSerialized {
     private static final int MAX_PAYLOAD_LEN = 1048576;
 
     public final boolean wasSuccessful;
-    /** Will be null if unsuccessful */
+    /**
+     * Will be null if unsuccessful
+     */
     public final List<ECDSAPublicKey> keysUsed;
-    /** Will be `null` if unsuccessful */
+    /**
+     * Will be `null` if unsuccessful
+     */
     public final byte[] unsignedTransaction;
 
     public final static Deserializer<GetUTXWithKeysResponse> DESERIALIZER =
@@ -59,7 +63,7 @@ public class GetUTXWithKeysResponse implements CanBeSerialized {
     }
 
     private static final class GetUTXWithKeysResponseDeserializer
-        implements Deserializer<GetUTXWithKeysResponse> {
+            implements Deserializer<GetUTXWithKeysResponse> {
 
         @Override
         public GetUTXWithKeysResponse deserialize(DataInputStream inputStream) throws DeserializationException, IOException {

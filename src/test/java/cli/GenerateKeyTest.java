@@ -1,12 +1,12 @@
 package cli;
 
-import org.junit.Assert;
-import org.junit.Test;
-import testutils.RandomizedTest;
 import crypto.Crypto;
 import crypto.ECDSAPrivateKey;
 import crypto.ECDSAPublicKey;
 import crypto.ECDSASignature;
+import org.junit.Assert;
+import org.junit.Test;
+import testutils.RandomizedTest;
 
 import java.io.File;
 

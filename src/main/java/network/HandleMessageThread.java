@@ -98,11 +98,11 @@ public class HandleMessageThread extends Thread {
                 break;
             case Message.GET_FUNDS:
                 GetFundsRequest request
-                    = GetFundsRequest.DESERIALIZER.deserialize(message.payload);
+                        = GetFundsRequest.DESERIALIZER.deserialize(message.payload);
                 handler.getFundsMsgHandler(message, request);
                 break;
             case Message.GET_UTX_WITH_KEYS:
-                GetUTXWithKeysRequest utxRequest=
+                GetUTXWithKeysRequest utxRequest =
                         GetUTXWithKeysRequest.DESERIALIZER.deserialize(message.payload);
                 handler.getUTXWithKeysMsgHandler(message, utxRequest);
                 break;

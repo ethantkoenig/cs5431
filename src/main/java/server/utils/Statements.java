@@ -159,7 +159,7 @@ public final class Statements {
         );
     }
 
-    public static PreparedStatement updateUserPassword(Connection connection, int userID,  byte[] salt, byte[] hashedPassword) throws SQLException {
+    public static PreparedStatement updateUserPassword(Connection connection, int userID, byte[] salt, byte[] hashedPassword) throws SQLException {
         return prepareStatement(connection.prepareStatement(
                 "UPDATE users SET pass = ?, salt = ? WHERE id = ?"),
                 statement -> {

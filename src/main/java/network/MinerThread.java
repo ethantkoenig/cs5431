@@ -4,7 +4,6 @@ import block.Block;
 import utils.ByteUtil;
 
 import java.io.IOException;
-import java.util.Random;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;

@@ -6,9 +6,9 @@ import crypto.ECDSAKeyPair;
 import crypto.ECDSAPublicKey;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.InetSocketAddress;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;

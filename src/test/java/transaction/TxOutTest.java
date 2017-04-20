@@ -1,12 +1,12 @@
 package transaction;
 
+import crypto.Crypto;
+import crypto.ECDSAKeyPair;
 import org.junit.Assert;
 import org.junit.Test;
 import testutils.RandomizedTest;
 import testutils.TestUtils;
 import utils.ByteUtil;
-import crypto.Crypto;
-import crypto.ECDSAKeyPair;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;

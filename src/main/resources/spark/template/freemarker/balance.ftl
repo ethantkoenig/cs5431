@@ -13,7 +13,7 @@
     <div class="row">
         <!-- TODO eventually put in a table and make it look nice -->
         <#list balances?keys as key>
-          ${key}: ${balances[key]} <a class="delete-key" data-publickey="${key}">remove key</a> <br>
+        ${key}: ${balances[key]} <a class="delete-key" data-publickey="${key}">remove key</a> <br>
         </#list>
         Total: ${total}
     </div>

@@ -4,9 +4,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-/**
- * Created by EvanKing on 2/22/17.
- */
 public class HandleMessageThreadTest {
 
     @Before

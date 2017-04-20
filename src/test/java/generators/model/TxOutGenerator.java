@@ -3,8 +3,8 @@ package generators.model;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
-import transaction.TxOut;
 import crypto.ECDSAKeyPair;
+import transaction.TxOut;
 
 public class TxOutGenerator extends Generator<TxOut> {
 

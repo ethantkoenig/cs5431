@@ -13,7 +13,7 @@ import org.junit.runner.RunWith;
 import transaction.Transaction;
 import transaction.TxIn;
 import transaction.TxOut;
-import utils.*;
+import utils.Config;
 
 import java.util.ArrayList;
 import java.util.Map;

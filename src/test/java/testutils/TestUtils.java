@@ -36,7 +36,8 @@ public class TestUtils {
      * and that they have the same {@code .hashCode()}
      */
     public static void assertEqualsWithHashCode(Object expected, Object actual) {
-        assertEqualsWithHashCode("(no message)", expected, actual);}
+        assertEqualsWithHashCode("(no message)", expected, actual);
+    }
 
     /**
      * Assert that {@code expected} and {@code actual} are {@code .equals()},

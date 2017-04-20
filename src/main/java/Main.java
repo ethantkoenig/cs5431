@@ -45,7 +45,7 @@ public class Main {
                 if (!Application.run(args)) {
                     System.exit(1);
                 }
-                String[] nodeArgs = Arrays.copyOfRange(args, 1,7);
+                String[] nodeArgs = Arrays.copyOfRange(args, 1, 7);
                 if (!runNode(nodeArgs)) {
                     System.exit(1);
                 }
@@ -98,7 +98,7 @@ public class Main {
         if (isMining) {
             miner = new Miner(new ServerSocket(port), new ECDSAKeyPair(myPrivate, myPublic), privilegedKey);
         } else {
-        node = new Node(new ServerSocket(port), new ECDSAKeyPair(myPrivate, myPublic), privilegedKey);
+            node = new Node(new ServerSocket(port), new ECDSAKeyPair(myPrivate, myPublic), privilegedKey);
         }
 
         BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(args[5]), StandardCharsets.UTF_8));

@@ -10,7 +10,8 @@ import crypto.ECDSAPublicKey;
 import transaction.Transaction;
 import transaction.TxIn;
 import transaction.TxOut;
-import utils.*;
+import utils.Pair;
+import utils.ShaTwoFiftySix;
 
 import java.io.IOException;
 import java.util.Map;

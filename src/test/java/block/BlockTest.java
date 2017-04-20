@@ -10,7 +10,10 @@ import testutils.RandomizedTest;
 import testutils.TestUtils;
 import transaction.Transaction;
 import transaction.TxOut;
-import utils.*;
+import utils.ByteUtil;
+import utils.Config;
+import utils.Pair;
+import utils.ShaTwoFiftySix;
 
 import java.util.Collections;
 

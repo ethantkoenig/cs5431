@@ -13,7 +13,7 @@ import java.util.Map;
 
 public class GetFundsResponse implements CanBeSerialized {
     public final static Deserializer<GetFundsResponse> DESERIALIZER =
-        new GetFundsResponseDeserializer();
+            new GetFundsResponseDeserializer();
 
     public final Map<ECDSAPublicKey, Long> keyFunds;
 
@@ -31,11 +31,11 @@ public class GetFundsResponse implements CanBeSerialized {
     }
 
     private static final class GetFundsResponseDeserializer
-        implements Deserializer<GetFundsResponse> {
+            implements Deserializer<GetFundsResponse> {
 
         @Override
         public GetFundsResponse deserialize(DataInputStream inputStream)
-            throws DeserializationException, IOException {
+                throws DeserializationException, IOException {
             int numKeys = inputStream.readInt();
             if (numKeys < 0 || numKeys > Deserializer.DEFAULT_MAX_LIST_LENGTH) {
                 throw new DeserializationException("Invalid number of keys");

@@ -1,6 +1,5 @@
 package network;
 
-import block.Block;
 import org.junit.Assert;
 import org.junit.Test;
 import testutils.RandomizedTest;

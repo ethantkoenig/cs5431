@@ -20,9 +20,7 @@ import java.security.SecureRandom;
 import java.util.Optional;
 import java.util.OptionalInt;
 
-import static server.utils.RouteUtils.queryParam;
-import static server.utils.RouteUtils.queryParamExists;
-import static server.utils.RouteUtils.wrapTemplate;
+import static server.utils.RouteUtils.*;
 import static spark.Spark.*;
 
 

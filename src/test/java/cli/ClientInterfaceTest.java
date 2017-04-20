@@ -1,5 +1,6 @@
 package cli;
 
+import crypto.Crypto;
 import network.ConnectionThread;
 import network.IncomingMessage;
 import network.Message;
@@ -8,7 +9,6 @@ import org.junit.Test;
 import testutils.RandomizedTest;
 import testutils.TestUtils;
 import transaction.Transaction;
-import crypto.Crypto;
 
 import java.io.*;
 import java.net.ServerSocket;

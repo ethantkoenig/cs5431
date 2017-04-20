@@ -3,9 +3,6 @@ package network;
 import org.junit.Assert;
 import org.junit.Test;
 
-/**
- * Created by EvanKing on 3/5/17.
- */
 public class FixedSizeSetTest {
 
     @Test

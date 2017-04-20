@@ -9,7 +9,6 @@ import transaction.TxOut;
 import utils.ByteUtil;
 import utils.CanBeSerialized;
 import utils.Pair;
-import utils.ShaTwoFiftySix;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -115,18 +114,18 @@ public class MessageHandler {
      * @throws IOException
      */
     public void getFundsMsgHandler(IncomingMessage message, GetFundsRequest request)
-        throws IOException {
+            throws IOException {
         // For each key, get the available funds from unspend Txs
         List<ECDSAPublicKey> keys = request.requestedKeys;
         HashMap<ECDSAPublicKey, Long> funds = new HashMap<>();
         for (Map.Entry<TxIn, TxOut> entry : bundle.getUnspentTransactions()) {
             for (ECDSAPublicKey key : keys) {
                 if (key.equals(entry.getValue().ownerPubKey)) {
-                    funds.compute(key, (k,v) -> ((v == null) ? 0L : v) + entry.getValue().value);
+                    funds.compute(key, (k, v) -> ((v == null) ? 0L : v) + entry.getValue().value);
                 }
             }
         }
-        for (ECDSAPublicKey key: keys) {
+        for (ECDSAPublicKey key : keys) {
             funds.putIfAbsent(key, 0L);
         }
         // Generate a Funds message and return it to sender
@@ -144,15 +143,15 @@ public class MessageHandler {
      * @throws IOException
      */
     public void getUTXWithKeysMsgHandler(IncomingMessage message, GetUTXWithKeysRequest request)
-        throws IOException {
-        Optional<Pair<List<ECDSAPublicKey>,Transaction>> result =
+            throws IOException {
+        Optional<Pair<List<ECDSAPublicKey>, Transaction>> result =
                 bundle.getUnspentTransactions()
                         .buildUnsignedTransaction(
                                 request.keys, request.changeKey,
                                 request.destination, request.amount);
 
         GetUTXWithKeysResponse toReturn = result
-                .map(p -> GetUTXWithKeysResponse.success(p.getLeft(),p.getRight()))
+                .map(p -> GetUTXWithKeysResponse.success(p.getLeft(), p.getRight()))
                 .orElseGet(GetUTXWithKeysResponse::failure);
         byte[] payload = ByteUtil.asByteArray(toReturn::serialize);
         message.respond(new OutgoingMessage(Message.UTX_WITH_KEYS, payload));

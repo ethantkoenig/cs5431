@@ -24,7 +24,7 @@ public class GmailService implements MailService {
             message.setFrom(new InternetAddress(Config.getMailFrom()));
             message.setRecipients(Message.RecipientType.TO,
                     InternetAddress.parse(to));
-            message.setSubject(SUBJECT );
+            message.setSubject(SUBJECT);
             message.setText(BODY + "\n" + link);
 
             Transport.send(message);
@@ -33,7 +33,7 @@ public class GmailService implements MailService {
         }
     }
 
-    private static Properties setGmailProp(){
+    private static Properties setGmailProp() {
         Properties properties = new Properties();
         properties.put("mail.smtp.auth", "true");
         properties.put("mail.smtp.starttls.enable", "true");

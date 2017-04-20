@@ -58,7 +58,7 @@ public class TransactionController {
         Optional<User> loggedInUser = routeUtils.loggedInUser(request);
         if (loggedInUser.isPresent()) {
             friends = userAccess.getPeopleWhoFriendMe(loggedInUser.get().getUsername());
-        }else{
+        } else {
             return routeUtils.modelAndView(request, "index.ftl")
                     .get();
         }
@@ -72,7 +72,7 @@ public class TransactionController {
 
         User loggedInUser = routeUtils.forceLoggedInUser(request);
         String recipientUsername = queryParam(request, "recipient");
-        if (!userAccess.isFriendsWith(recipientUsername, loggedInUser.getUsername())){
+        if (!userAccess.isFriendsWith(recipientUsername, loggedInUser.getUsername())) {
             return "This person has not authorized you to send them money.";
         }
 

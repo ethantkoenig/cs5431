@@ -6,10 +6,10 @@ import block.UnspentTransactions;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
+import crypto.ECDSAKeyPair;
 import transaction.Transaction;
 import transaction.TxIn;
 import transaction.TxOut;
-import crypto.ECDSAKeyPair;
 import utils.ShaTwoFiftySix;
 
 import java.io.IOException;

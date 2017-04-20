@@ -1,13 +1,13 @@
 package cli;
 
 
+import crypto.Crypto;
 import network.Message;
 import network.OutgoingMessage;
 import transaction.Transaction;
 import transaction.TxIn;
 import transaction.TxOut;
 import utils.ByteUtil;
-import crypto.Crypto;
 import utils.DeserializationException;
 import utils.ShaTwoFiftySix;
 

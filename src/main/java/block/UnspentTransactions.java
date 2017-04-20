@@ -53,7 +53,9 @@ public class UnspentTransactions implements Iterable<Map.Entry<TxIn, TxOut>> {
         return map.remove(new TxIn(hash, index));
     }
 
-    public int size() { return map.size(); }
+    public int size() {
+        return map.size();
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -77,7 +79,6 @@ public class UnspentTransactions implements Iterable<Map.Entry<TxIn, TxOut>> {
     }
 
     /**
-     *
      * @param keys is a list of public keys tied to a user who wants to know how many coins
      *             they own.
      * @return the number of coins tied to these public keys.
@@ -91,7 +92,6 @@ public class UnspentTransactions implements Iterable<Map.Entry<TxIn, TxOut>> {
     }
 
     /**
-     *
      * @param keys is a list of public keys associated with a user
      * @return a list of `UnspentOutputs` owned by these `keys` that can be used to build a `Transaction`
      */
@@ -108,18 +108,15 @@ public class UnspentTransactions implements Iterable<Map.Entry<TxIn, TxOut>> {
     }
 
     /**
-     *
-     * @param publicKeys is an array of public keys associated with the user wishing
-     *                   to construct a transaction.
-     * @param masterKey is the key change is to be sent to.
+     * @param publicKeys  is an array of public keys associated with the user wishing
+     *                    to construct a transaction.
+     * @param masterKey   is the key change is to be sent to.
      * @param destination is the receiver public key.
-     * @param amount is the amount to be sent.
-     *
+     * @param amount      is the amount to be sent.
      * @return a transaction from the user's public keys to the destination
-     *         public key. `Optional.empty()` if invalid amount given.
-     *
+     * public key. `Optional.empty()` if invalid amount given.
      */
-    public Optional<Pair<List<ECDSAPublicKey>,Transaction>>
+    public Optional<Pair<List<ECDSAPublicKey>, Transaction>>
     buildUnsignedTransaction(List<ECDSAPublicKey> publicKeys, ECDSAPublicKey masterKey,
                              ECDSAPublicKey destination, long amount) throws IOException {
 
@@ -132,7 +129,7 @@ public class UnspentTransactions implements Iterable<Map.Entry<TxIn, TxOut>> {
         long toBeSpent = 0;
         List<TxIn> txIns = new ArrayList<>();
         List<ECDSAPublicKey> keysUsed = new ArrayList<>();
-        for (UnspentOutput utx: hashes) {
+        for (UnspentOutput utx : hashes) {
             txIns.add(new TxIn(utx.txHash, utx.index));
             if (Longs.sumWillOverflow(toBeSpent, utx.value)) return Optional.empty();
             toBeSpent += utx.value;
@@ -144,7 +141,7 @@ public class UnspentTransactions implements Iterable<Map.Entry<TxIn, TxOut>> {
         if (toBeSpent < amount) return Optional.empty();
 
         Transaction.UnsignedBuilder txb = new Transaction.UnsignedBuilder();
-        for (TxIn input: txIns) {
+        for (TxIn input : txIns) {
             txb.addInput(input);
         }
 
@@ -155,7 +152,7 @@ public class UnspentTransactions implements Iterable<Map.Entry<TxIn, TxOut>> {
             txb.addOutput(new TxOut(toBeSpent - amount, masterKey));
         }
 
-        return Optional.of(new Pair<>(keysUsed,txb.build()));
+        return Optional.of(new Pair<>(keysUsed, txb.build()));
     }
 
     private static class UnspentOutput {

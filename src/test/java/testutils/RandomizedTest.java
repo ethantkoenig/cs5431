@@ -9,7 +9,9 @@ import org.junit.BeforeClass;
 import transaction.Transaction;
 import transaction.TxIn;
 import transaction.TxOut;
-import utils.*;
+import utils.Config;
+import utils.Pair;
+import utils.ShaTwoFiftySix;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;

@@ -31,7 +31,7 @@ public class PasswordRecoveryAccess {
     public OptionalInt getPasswordRecoveryUserID(String GUID) throws SQLException, GeneralSecurityException {
         String GUIDHash = hashOf(GUID.getBytes(Charset.forName("UTF-8"))).toString();
         try (Connection conn = connectionProvider.getConnection();
-             PreparedStatement preparedStmt = Statements.getPasswordRecoveryUserID(conn,GUIDHash);
+             PreparedStatement preparedStmt = Statements.getPasswordRecoveryUserID(conn, GUIDHash);
              ResultSet rs = preparedStmt.executeQuery()
         ) {
             if (rs.next()) {

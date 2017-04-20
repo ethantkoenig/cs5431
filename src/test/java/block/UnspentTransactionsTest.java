@@ -8,10 +8,10 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import testutils.RandomizedTest;
 import testutils.TestUtils;
+import transaction.Transaction;
 import transaction.TxIn;
 import transaction.TxOut;
 import utils.ShaTwoFiftySix;
-import transaction.Transaction;
 
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
@@ -220,7 +220,7 @@ public class UnspentTransactionsTest extends RandomizedTest {
                 .build();
         Transaction result = ut.buildUnsignedTransaction(keys2, pair2.publicKey, pair1.publicKey, 1048).get().getRight();
 
-        assert(txb.equalsUnordered(result));
+        assert (txb.equalsUnordered(result));
 
         List<ECDSAPublicKey> keys3 = new ArrayList<>();
         keys3.add(pair1.publicKey);
@@ -236,7 +236,7 @@ public class UnspentTransactionsTest extends RandomizedTest {
                 .build();
         Transaction result2 = ut.buildUnsignedTransaction(keys3, pair2.publicKey, pair1.publicKey, 3070).get().getRight();
 
-        assert(txb2.equalsUnordered(result2));
+        assert (txb2.equalsUnordered(result2));
 
         List<ECDSAPublicKey> keys4 = new ArrayList<>();
         keys4.add(pair1.publicKey);
@@ -254,6 +254,6 @@ public class UnspentTransactionsTest extends RandomizedTest {
                 .build();
         Transaction result3 = ut.buildUnsignedTransaction(keys4, pair2.publicKey, pair1.publicKey, 4090).get().getRight();
 
-        assert(txb3.equalsUnordered(result3));
+        assert (txb3.equalsUnordered(result3));
     }
 }

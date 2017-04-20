@@ -2,9 +2,6 @@ package utils;
 
 import java.util.Optional;
 
-/**
- * Created by eperdew on 3/26/17.
- */
 public abstract class HashCache {
 
     private Optional<ShaTwoFiftySix> val = Optional.empty();

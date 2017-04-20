@@ -1,13 +1,11 @@
 package network;
 
 import block.Block;
-import block.BlockChain;
 import crypto.ECDSAKeyPair;
 import crypto.ECDSAPublicKey;
 
 import java.io.IOException;
 import java.net.ServerSocket;
-import java.util.ArrayList;
 import java.util.logging.Logger;
 
 

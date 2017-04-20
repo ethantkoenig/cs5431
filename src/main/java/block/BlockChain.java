@@ -17,8 +17,6 @@ import java.util.logging.Logger;
 
 /**
  * A {@code BlockChain} represents a forest of related {@code Blocks} which together represent a secure public ledger.
- * <p>
- * Created by eperdew on 2/25/17.
  */
 public class BlockChain {
     private final static Logger LOGGER = Logger.getLogger(BlockChain.class.getName());
