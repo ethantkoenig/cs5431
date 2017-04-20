@@ -122,6 +122,7 @@ Nodes will reject blocks that have an invalid SHA-256 hash or invalid transactio
 \item So long as an adversary does not control a majority of nodes in the network, blocks will not be added to the blockchain that are not correct.
 \end{comment}
 \item We have implemented the persistence of the blockchain so that it is no longer solely stored in memory. Each completed block is written to a file (to be updated to the DB for the next sprint) which makes the audit and reconstruction of the blockchain possible should a new node enter the network.
+\item We also have a logging system that logs important events, allowing the miner to review previous activity, such as the receiving and verification of transactions and blocks.
 \end{itemize}
 
 \subsection{Wallet app}
