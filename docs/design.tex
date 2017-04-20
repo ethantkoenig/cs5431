@@ -71,12 +71,8 @@ This proof-of-work protocol forces an attacker to control at least 51\% of the c
 \item The integrity of communications between the web server and client is maintained through the use of HTTPS. We use TLS 1.2, and default to the TLS \_ECDHE\_RSA\_WITH\_AES\_256\_GCM\_SHA384 cipher suite.
 We disallow cipher suites using RC4, SHA1, MD5, DH (with key size $< 768$), RSA (with key size $< 2048$), and 3DES. We are using a self-signed certificate (which would need to be dealt with before deployment), but our server-client communication is properly encrypted as a result.
 \item If an attacker manages to hijack a user's session, or glean a user's login credentials, some of our integrity goals will not be upheld.
-<<<<<<< d9270f8c99e4dffdbdb7a33b51b2006c4d39b623
-The attacker will be able to make requests on behalf of the user.
-=======
 \begin{itemize}
 \item The attacker will be able to make requests to other users on behalf of the user.
->>>>>>> Update webapp integrity section of design.tex
 In the final version of our app, the attacker will not be able to upload or delete the user's keys.
 We plan to use an email-based two factor authorization for operations that add or remove an account's keys; we hope to implement this next sprint.
 This countermeasure is not yet implemented, so currently an attacker is able to upload and delete the user's keys.
@@ -144,12 +140,8 @@ Nodes will reject blocks that have an invalid SHA-256 hash or invalid transactio
 \item So long as an adversary does not control a majority of nodes in the network, blocks will not be added to the blockchain that are not correct.
 \end{comment}
 \item We have implemented the persistence of the blockchain so that it is no longer solely stored in memory.
-<<<<<<< 9280f6f56f1fd93e81eec27639b2142b6657273f
-Each completed block is written to a file (to be updated to the DB for the next sprint) which makes the audit and reconstruction of the blockchain possible should a new node enter the network.
-\item We also have a logging system that logs important events, allowing the miner to review previous activity, such as the receiving and verification of transactions and blocks.
-=======
 Each completed block is written to a file which makes the audit and reconstruction of the blockchain possible should a new node enter the network. We are considering using a database for storing the blockchain next sprint.
->>>>>>> Comment about using database for persisting blockchain
+\item We also have a logging system that logs important events, allowing the miner to review previous activity, such as the receiving and verification of transactions and blocks.
 \end{itemize}
 
 \subsection{Wallet app}
