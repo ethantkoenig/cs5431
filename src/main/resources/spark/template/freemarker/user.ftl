@@ -20,11 +20,14 @@
                         <input type="text" class="form-control" name="publickey" placeholder="Public Key">
                     </div>
                     <div class="form-group">
-                        <input type="text" class="form-control" name="privatekey" id="keyformprivatekey"
+                        <input type="text" class="form-control" name="privatekey" id="keyform-privatekey"
                                placeholder="Private Key">
                     </div>
-                    <div class="form-group">
-                        <input type="password" class="form-control" id="keyformpassword" placeholder="Password">
+                    <div class="form-group" id="keyform-password-group">
+                        <input type="password" class="form-control" placeholder="Password">
+                    </div>
+                    <div class="form-group" id="keyform-confirm-group">
+                        <input type="password" class="form-control" placeholder="Confirm">
                     </div>
                     <input class="btn btn-primary" type="submit" value="Update">
                 </form>

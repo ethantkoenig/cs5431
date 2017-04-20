@@ -10,8 +10,22 @@ $(document).ready(function () {
     });
 
     $('#keyform').submit(function () {
-        var password = $('#keyformpassword').val();
-        var privateKey = $('#keyformprivatekey');
+        var passwordGroup = $('#keyform-password-group');
+        var passwordInput = passwordGroup.find('input');
+        var password = passwordInput.val();
+        var confirmGroup = $('#keyform-confirm-group');
+        var confirmInput = confirmGroup.find('input');
+        console.log("password: " + password);
+        console.log("confirm: " + confirmInput.val());
+        if (confirmInput.val() != password || password.length == 0) {
+            passwordInput.val('');
+            confirmInput.val('');
+            passwordGroup.addClass('has-error');
+            confirmGroup.addClass('has-error');
+            // TODO eventually display an actual error message
+            return false; // do not submit
+        }
+        var privateKey = $('#keyform-privatekey');
         var encrypted = sjcl.encrypt(password, privateKey.val());
         privateKey.val(encrypted);
         return true; // submit form
