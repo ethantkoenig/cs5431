@@ -36,8 +36,8 @@ Will Ronchetti (wrr33)
 \subsection{Activity Breakdown}
 
 \begin{enumerate}
-\item Ethan implemented the client-side encrypting of private keys and signing of transactions. He also worked on improve test coverage of the web application. He contributed 30 hours to this sprint.
-\item Will implemented and tested the server backend required to display amounts by processing the UTXO set. He also worked on testing the web app. He contributed 20 hours to this sprint. 
+\item Ethan implemented the client-side encrypting of private keys and signing of transactions. He also worked on improving test coverage of the web application, and the front-ends for balances and the improved transaction workflow. He contributed 30 hours to this sprint.
+\item Will implemented and tested the server backend required to display amounts by processing the UTXO set. He also worked on testing the web app. He contributed 20 hours to this sprint.
 \item Evan implemented the password recovery feature, the friends feature, the account lockout feature, relocated the database to a remote location, and assisted with UI and error handling. The friend feature allows users to only receive money from those who they have previously identified as a "friend." Evan contributed roughly 30 hours to this sprint.
 \item James worked on giving non-mining nodes the ability to maintain a blockchain, making the webserver a node, and the requests and response from nodes for determining funds for a given key.
   He also worked on manually testing the system.
@@ -47,12 +47,20 @@ He also worked on some of the functionality needed by the server to create trans
 Eric contributed approximately 12 hours to this sprint.
 \end{enumerate}
 
-\subsection{Productivity Analysis} % TODO update for this sprint
+\subsection{Productivity Analysis}
+
+Our goals for this sprint were the following:
 \begin{itemize}
-\item For this sprint, our goal was to add additional functionality to the core components of our cryptocurrency. This includes a new web based interface for users to sign up, login, lookup public keys, and perform transactions. We also now support stronger fault tolerance, node exit/entry, and persistent blockchain storage. Nodes can now enter the network, and query other nodes for missing blocks to 'catch up.' This way, nodes can drop in and out of the network at will.
-\item Our last milestone only included a basic text interface. We've improved upon this dramatically by implementing a new web client using Java Spark. While the UI is not pretty at the moment, it is a vast improvement over the command line interface we provided previously.
-\item We achieved all of our big goals for the alpha release.
+\item Update the web app to perform private key encryption and transaction signing on the client side. We had previously stored unencrypted private keys in the server's database, and performed all signing on the server side.
+\item Introduce a password recovery mechanism (for authentication passwords).
+\item Improve the interface for performing transactions, so that user do not have to manually enter transaction hashes or hexadecimal-encoded keys.
+\item Improve test coverage of web app functionality.
+\item Allow users to view their balance.
+\item Allow users to remove keys
+\item Make improvement to the web app's UI.
+\item Introduce a ``friends'' system allowing users to determine who can and cannot transact with them.
 \end{itemize}
 
+\bigskip\noindent We were able to accomplish all of our goals for this sprint.
 
 \end{document}
