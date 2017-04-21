@@ -203,7 +203,7 @@ public class MessageHandler {
         if (bundle.getBlockChain().getCurrentHead() == null) {
             LOGGER.warning("Received transaction before genesis block received");
             return;
-        } else if (unminedTransactions.size() == Block.NUM_TRANSACTIONS_PER_BLOCK) {
+        } else if (unminedTransactions.size() == Block.NUM_TRANSACTIONS_PER_BLOCK && isMining) {
             LOGGER.warning("Dropping incoming transaction, resend when a new block has been mined");
             return;
         }
@@ -218,8 +218,10 @@ public class MessageHandler {
         bundle.setUnspentTransactions(copy);
         LOGGER.info("[!] Transaction verified.");
         LOGGER.info(transaction.toString());
-        unminedTransactions.add(transaction);
-        if (unminedTransactions.size() == Block.NUM_TRANSACTIONS_PER_BLOCK) {
+        if (isMining) {
+            unminedTransactions.add(transaction);
+        }
+        if (isMining && unminedTransactions.size() == Block.NUM_TRANSACTIONS_PER_BLOCK) {
             // currentAddToBlock is full, so start mining it
             LOGGER.info("[+] Starting mining thread");
 
