@@ -30,6 +30,7 @@ mem.*
 
 # docs files
 docs/*.aux
+docs/*.dvi
 docs/*.log
 docs/*.out
 docs/*.pdf
