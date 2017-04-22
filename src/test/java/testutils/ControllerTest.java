@@ -21,8 +21,6 @@ public abstract class ControllerTest extends DBTestCase {
         super();
         Crypto.init();
 
-        new TestConnectionProvider().initTables();
-
         System.setProperty(PropertiesBasedJdbcDatabaseTester.DBUNIT_DRIVER_CLASS,
                 TestConnectionProvider.DRIVER_CLASS_NAME);
         System.setProperty(PropertiesBasedJdbcDatabaseTester.DBUNIT_CONNECTION_URL,

@@ -1,30 +1,31 @@
 package testutils;
 
-import org.junit.Assert;
-import server.utils.ConnectionProvider;
+import com.google.inject.Singleton;
+import org.apache.commons.dbcp.BasicDataSource;
+import server.utils.PooledConnectionProvider;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-public final class TestConnectionProvider implements ConnectionProvider {
-    public static final String DRIVER_CLASS_NAME = "org.hsqldb.jdbcDriver";
-    public static final String CONNECTION_URL = "jdbc:hsqldb:mem";
+@Singleton
+public final class TestConnectionProvider extends PooledConnectionProvider {
+    static final String DRIVER_CLASS_NAME = "org.hsqldb.jdbcDriver";
+    static final String CONNECTION_URL = "jdbc:hsqldb:mem";
 
-    @Override
-    public Connection getConnection() {
-        try {
-            Class.forName(DRIVER_CLASS_NAME);
-            return DriverManager.getConnection(CONNECTION_URL);
-        } catch (ClassNotFoundException | SQLException e) {
-            e.printStackTrace();
-            Assert.fail();
-            return null;
-        }
+    public TestConnectionProvider() throws SQLException {
+        super();
+        initTables();
     }
 
-    public void initTables() throws SQLException {
+    @Override
+    protected void configure(BasicDataSource dataSource) {
+        dataSource.setDriverClassName(DRIVER_CLASS_NAME);
+        dataSource.setUrl(CONNECTION_URL);
+        dataSource.setMinIdle(5);
+    }
+
+    private void initTables() throws SQLException {
         try (Connection connection = getConnection();
              Statement statement = connection.createStatement()) {
             statement.executeUpdate("CREATE TABLE IF NOT EXISTS users ("
