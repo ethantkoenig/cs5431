@@ -12,6 +12,7 @@ dependencies {
     compile group: 'com.google.inject', name: 'guice', version: '4.0'
     compile group: 'com.sparkjava', name: 'spark-core', version: '2.5.5'
     compile group: 'com.sparkjava', name: 'spark-template-freemarker', version: '2.5.5'
+    compile group: 'commons-dbcp', name: 'commons-dbcp', version: '1.4'
     compile group: 'javax.mail', name: 'mail', version: '1.4.1'
     compile group: 'mysql', name: 'mysql-connector-java', version: '5.1.13'
     compile group: 'org.bouncycastle', name: 'bcprov-jdk15on', version: '1.56'

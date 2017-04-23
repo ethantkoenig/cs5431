@@ -78,8 +78,8 @@ public class TransactionControllerTest extends ControllerTest {
         Request request = new MockRequest()
                 .addQueryParam("recipient", fixtures.user.getUsername())
                 .addQueryParam("amount", "100")
+                .addSessionAttribute("username", fixtures.user.getUsername())
                 .get();
-        request.session().attribute("username", fixtures.user.getUsername());
 
         Response response = Mockito.mock(Response.class);
         controller.transact(request, response); // TODO check return value
@@ -113,8 +113,8 @@ public class TransactionControllerTest extends ControllerTest {
         Request request = new MockRequest()
                 .addQueryParam("recipient", fixtures.user.getUsername())
                 .addQueryParam("amount", "100")
+                .addSessionAttribute("username", fixtures.user.getUsername())
                 .get();
-        request.session().attribute("username", fixtures.user.getUsername());
 
         Response response = Mockito.mock(Response.class);
         controller.transact(request, response); // TODO check return value
