@@ -8,8 +8,10 @@ import crypto.Crypto;
 import network.*;
 import org.junit.Assert;
 import org.junit.BeforeClass;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
+import server.utils.ConnectionProvider;
 import server.utils.Constants;
 import spark.Request;
 import spark.Response;
@@ -23,8 +25,6 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
-import java.security.GeneralSecurityException;
-import java.sql.SQLException;
 import java.util.Collections;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -35,11 +35,11 @@ public class TransactionControllerTest extends ControllerTest {
     private TransactionController controller;
     private Fixtures fixtures;
 
-    public TransactionControllerTest() throws GeneralSecurityException, SQLException {
-        super();
+    public TransactionControllerTest() {
         Injector injector = Guice.createInjector(new Model());
         controller = injector.getInstance(TransactionController.class);
         controller.init();
+        setConnectionProvider(injector.getInstance(ConnectionProvider.class));
         fixtures = new Fixtures();
     }
 
@@ -85,9 +85,8 @@ public class TransactionControllerTest extends ControllerTest {
         controller.transact(request, response); // TODO check return value
     }
 
-    @Property(trials = 1)
+    @Test
     public void testTransactInvalid() throws Exception {
-        // TODO figure out how to test (since this talks with the crypto-currency node)
         ServerSocket socket = new ServerSocket(0);
         Constants.setNodeAddress(new InetSocketAddress(
                 InetAddress.getLocalHost(),

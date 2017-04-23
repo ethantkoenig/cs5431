@@ -3,8 +3,10 @@ package server.controllers;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import org.junit.Assert;
+import org.junit.Test;
 import org.mockito.Mockito;
 import server.access.PasswordRecoveryAccess;
+import server.utils.ConnectionProvider;
 import spark.ModelAndView;
 import spark.Request;
 import spark.Response;
@@ -20,15 +22,16 @@ public class PasswordRecoveryControllerTest extends ControllerTest {
     private Fixtures fixtures;
 
     public PasswordRecoveryControllerTest() throws Exception {
-        super();
         Injector injector = Guice.createInjector(new Model());
         controller = injector.getInstance(PasswordRecoveryController.class);
         controller.init();
         userController = injector.getInstance(UserController.class);
         access = injector.getInstance(PasswordRecoveryAccess.class);
+        setConnectionProvider(injector.getInstance(ConnectionProvider.class));
         fixtures = new Fixtures();
     }
 
+    @Test
     public void testGetRecoverNoGUID() throws Exception {
         Request request = new MockRequest().get();
         Response response = Mockito.mock(Response.class);
@@ -36,6 +39,7 @@ public class PasswordRecoveryControllerTest extends ControllerTest {
         Assert.assertEquals("recover.ftl", modelAndView.getViewName());
     }
 
+    @Test
     public void testGetRecoverGUID() throws Exception {
         final String guid = "guid1";
         access.insertPasswordRecovery(fixtures.user.getId(), guid);
@@ -49,6 +53,7 @@ public class PasswordRecoveryControllerTest extends ControllerTest {
         Assert.assertEquals("resetpass.ftl", modelAndView.getViewName());
     }
 
+    @Test
     public void testPostRecover() throws Exception {
         Request request = new MockRequest()
                 .addQueryParam("email", "example@example.com")
@@ -59,6 +64,7 @@ public class PasswordRecoveryControllerTest extends ControllerTest {
         Assert.assertEquals("recover.ftl", modelAndView.getViewName());
     }
 
+    @Test
     public void testPostRecoverBadAddress() throws Exception {
         Request request = new MockRequest()
                 .addQueryParam("email", "nonexistent@example.com")
@@ -69,6 +75,7 @@ public class PasswordRecoveryControllerTest extends ControllerTest {
         Assert.assertEquals("recover.ftl", modelAndView.getViewName());
     }
 
+    @Test
     public void testReset() throws Exception {
         final String guid = "guid1";
         access.insertPasswordRecovery(fixtures.user.getId(), guid);

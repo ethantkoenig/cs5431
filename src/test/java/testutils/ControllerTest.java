@@ -1,11 +1,12 @@
 package testutils;
 
 import com.google.inject.AbstractModule;
-import crypto.Crypto;
-import org.dbunit.DBTestCase;
-import org.dbunit.PropertiesBasedJdbcDatabaseTester;
+import org.dbunit.database.DatabaseConnection;
+import org.dbunit.database.IDatabaseConnection;
 import org.dbunit.dataset.IDataSet;
 import org.dbunit.dataset.xml.FlatXmlDataSetBuilder;
+import org.dbunit.operation.DatabaseOperation;
+import org.junit.Before;
 import server.access.DatabaseUserAccess;
 import server.access.UserAccess;
 import server.utils.ConnectionProvider;
@@ -13,25 +14,32 @@ import server.utils.MailService;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.sql.SQLException;
+import java.sql.Connection;
 
-public abstract class ControllerTest extends DBTestCase {
+public abstract class ControllerTest {
+    private ConnectionProvider connectionProvider;
 
-    public ControllerTest() throws SQLException {
-        super();
-        Crypto.init();
-
-        System.setProperty(PropertiesBasedJdbcDatabaseTester.DBUNIT_DRIVER_CLASS,
-                TestConnectionProvider.DRIVER_CLASS_NAME);
-        System.setProperty(PropertiesBasedJdbcDatabaseTester.DBUNIT_CONNECTION_URL,
-                TestConnectionProvider.CONNECTION_URL);
+    protected void setConnectionProvider(ConnectionProvider connectionProvider) {
+        if (connectionProvider == null) {
+            throw new IllegalArgumentException();
+        } else if (this.connectionProvider != null) {
+            throw new IllegalStateException();
+        }
+        this.connectionProvider = connectionProvider;
     }
 
-    @Override
-    protected IDataSet getDataSet() throws Exception {
-        try (InputStream inputStream = new FileInputStream("fixtures.xml")) {
-            return new FlatXmlDataSetBuilder().build(inputStream);
+    @Before
+    public final void initTestDatabase() throws Exception {
+        if (connectionProvider == null) {
+            throw new IllegalStateException();
         }
+        Connection connection = connectionProvider.getConnection();
+        IDatabaseConnection databaseConnection = new DatabaseConnection(connection);
+        IDataSet dataSet;
+        try (InputStream inputStream = new FileInputStream("fixtures.xml")) {
+            dataSet = new FlatXmlDataSetBuilder().build(inputStream);
+        }
+        DatabaseOperation.CLEAN_INSERT.execute(databaseConnection, dataSet);
     }
 
     public static final class Model extends AbstractModule {

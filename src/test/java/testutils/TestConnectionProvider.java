@@ -10,8 +10,8 @@ import java.sql.Statement;
 
 @Singleton
 public final class TestConnectionProvider extends PooledConnectionProvider {
-    static final String DRIVER_CLASS_NAME = "org.hsqldb.jdbcDriver";
-    static final String CONNECTION_URL = "jdbc:hsqldb:mem";
+    private static final String DRIVER_CLASS_NAME = "org.hsqldb.jdbcDriver";
+    private static final String CONNECTION_URL = "jdbc:hsqldb:mem";
 
     public TestConnectionProvider() throws SQLException {
         super();

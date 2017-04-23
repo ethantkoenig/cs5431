@@ -7,9 +7,11 @@ import crypto.ECDSAKeyPair;
 import crypto.ECDSAPublicKey;
 import network.*;
 import org.junit.Assert;
+import org.junit.Test;
 import org.mockito.Mockito;
 import server.access.DatabaseUserAccess;
 import server.access.UserAccess;
+import server.utils.ConnectionProvider;
 import server.utils.Constants;
 import spark.ModelAndView;
 import spark.Request;
@@ -34,14 +36,15 @@ public class UserControllerTest extends ControllerTest {
     private final Fixtures fixtures;
 
     public UserControllerTest() throws Exception {
-        super();
         Injector injector = Guice.createInjector(new Model());
         controller = injector.getInstance(UserController.class);
         controller.init();
         userAccess = injector.getInstance(DatabaseUserAccess.class);
+        setConnectionProvider(injector.getInstance(ConnectionProvider.class));
         fixtures = new Fixtures();
     }
 
+    @Test
     public void testRegisterValid() throws Exception {
         Request request = new MockRequest()
                 .addQueryParam("email", "newuser@example.com")
@@ -57,6 +60,7 @@ public class UserControllerTest extends ControllerTest {
         TestUtils.assertPresent(userAccess.getUserByEmail("newuser@example.com"));
     }
 
+    @Test
     public void testRegisterInvalidUsername() throws Exception {
         Request request = new MockRequest()
                 .addQueryParam("email", "newuser@example.com")
@@ -72,6 +76,7 @@ public class UserControllerTest extends ControllerTest {
         Assert.assertFalse(userAccess.getUserByEmail("newuser@example.com").isPresent());
     }
 
+    @Test
     public void testRegisterInvalidPassword() throws Exception {
         Assert.assertNotNull(controller);
         Request request = new MockRequest()
@@ -88,6 +93,7 @@ public class UserControllerTest extends ControllerTest {
         Assert.assertFalse(userAccess.getUserByEmail("newuser@example.com").isPresent());
     }
 
+    @Test
     public void testRegisterTakenUsername() throws Exception {
         Request request = new MockRequest()
                 .addQueryParam("email", "newuser@example.com")
@@ -103,6 +109,7 @@ public class UserControllerTest extends ControllerTest {
         Assert.assertFalse(userAccess.getUserByEmail("newuser@example.com").isPresent());
     }
 
+    @Test
     public void testLoginValid() throws Exception {
         Request request = new MockRequest()
                 .addQueryParam("username", fixtures.user.getUsername())
@@ -116,6 +123,7 @@ public class UserControllerTest extends ControllerTest {
         Assert.assertEquals(fixtures.user.getUsername(), request.session().attribute("username"));
     }
 
+    @Test
     public void testLoginInvalidPassword() throws Exception {
         Request request = new MockRequest()
                 .addQueryParam("username", fixtures.user.getUsername())
@@ -128,6 +136,7 @@ public class UserControllerTest extends ControllerTest {
         Assert.assertNull(request.attribute("username"));
     }
 
+    @Test
     public void testLoginInvalidUsername() throws Exception {
         Request request = new MockRequest()
                 .addQueryParam("username", "invalidUsername")
@@ -140,6 +149,7 @@ public class UserControllerTest extends ControllerTest {
         Assert.assertNull(request.attribute("username"));
     }
 
+    @Test
     public void testLogout() throws Exception {
         Request request = new MockRequest()
                 .addSessionAttribute("username", fixtures.user.getUsername())
@@ -150,6 +160,7 @@ public class UserControllerTest extends ControllerTest {
         Assert.assertNull(request.attribute("username"));
     }
 
+    @Test
     public void testViewUser() throws Exception {
         Request request = new MockRequest()
                 .addParam(":name", fixtures.user.getUsername())
@@ -159,6 +170,7 @@ public class UserControllerTest extends ControllerTest {
         controller.viewUser(request, response);
     }
 
+    @Test
     public void testAddUserKey() throws Exception {
         ECDSAKeyPair pair = Crypto.signatureKeyPair();
         byte[] publicBytes = ByteUtil.asByteArray(pair.publicKey::serialize);
@@ -175,6 +187,7 @@ public class UserControllerTest extends ControllerTest {
         TestUtils.assertPresent(userAccess.getKey(fixtures.user.getId(), publicBytes));
     }
 
+    @Test
     public void testRemoveUserKey() throws Exception {
         byte[] publicBytes = ByteUtil.asByteArray(fixtures.key::serialize);
         Request request = new MockRequest()
@@ -187,6 +200,7 @@ public class UserControllerTest extends ControllerTest {
         Assert.assertFalse(userAccess.getKey(fixtures.user.getId(), publicBytes).isPresent());
     }
 
+    @Test
     public void testAddFriend() throws Exception {
         Request request = new MockRequest()
                 .addSessionAttribute("username", fixtures.user.getUsername())
@@ -196,6 +210,7 @@ public class UserControllerTest extends ControllerTest {
         controller.addFriend(request, response);
     }
 
+    @Test
     public void testDeleteFriend() throws Exception {
         Request request = new MockRequest()
                 .addSessionAttribute("username", fixtures.user.getUsername())
@@ -205,6 +220,7 @@ public class UserControllerTest extends ControllerTest {
         controller.deleteFriend(request, response);
     }
 
+    @Test
     public void testBalance() throws Exception {
         ServerSocket socket = new ServerSocket(0);
         Constants.setNodeAddress(new InetSocketAddress(
