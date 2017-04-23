@@ -60,9 +60,9 @@ run {
     standardInput = System.in
 }
 
-if (project.hasProperty("verbose")) {
-    def startTimestamp = 0
-    test {
+test {
+    if (project.hasProperty("verbose")) {
+        def startTimestamp = 0
         beforeTest { desc ->
             startTimestamp = new Date().getTime()
             println "${desc.name} [${desc.className}]"
@@ -71,5 +71,10 @@ if (project.hasProperty("verbose")) {
             def diff = new Date().getTime() - startTimestamp
             println "  ${result.resultType} (time = ${diff} ms)"
         }
+    }
+    testLogging {
+        events "failed"
+        exceptionFormat "full"
+        showStackTraces true
     }
 }
