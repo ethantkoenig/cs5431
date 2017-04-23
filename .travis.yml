@@ -1,16 +1,25 @@
 sudo: required # use a full-fledged VM
 dist: trusty
 language: java
-jdk:
-  oraclejdk8
+jdk: oraclejdk8
 before_cache:
-  - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
-  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+- rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+- rm -fr $HOME/.gradle/caches/*/plugin-resolution/
 cache:
   directories:
-    - $HOME/.gradle/caches/
-    - $HOME/.gradle/wrapper/
+  - "$HOME/.gradle/caches/"
+  - "$HOME/.gradle/wrapper/"
 script:
-    - ./gradlew -Pverbose check jacocoTestReport --stacktrace
+- "./gradlew -Pverbose check jacocoTestReport --stacktrace"
 after_success:
-  - bash <(curl -s https://codecov.io/bash) -t 394b876c-08f1-480a-adcb-38e751f76700
+- bash <(curl -s https://codecov.io/bash) -t 394b876c-08f1-480a-adcb-38e751f76700
+after_failure:
+- sudo apt-get install awscli
+- tar -zcf test-report.tar build/reports/*
+- aws s3 cp test-report.tar s3://cs5431-travis-reports/report-${TRAVIS_BUILD_NUMBER}.tar
+env:
+  global:
+  # AWS credentials
+  - secure: veHn5T53hPdTF3iI4cHVHqNBoTZaWAKzAU4a+JGgm77Eo1IF1w9YA0lE8ED/LioqQUMQev0JdbGkL3h0CBcMwusE7A6yiF0njZz7wjR37lgwSX/EL6qvcUOBCPTBufdJzsj15iy9Gw7wSv+D554+RrfBU13Wz2H3osnFrf4yTvGmzEk7oQJqdO5Ix1c61/IK9WMTXpgREkxwPpxiVop8bXXhhLzTrRVgWKh3pGLAkSqaZj9PgEIs3dALd8XxUyGu8htBmT0bLn8eoS+6GEAPlnRssxK7EkeN4eS0TblrcCNckzLtyk2wSf4mj/WiUFpXdnxlLmkRqmhiVPcL3BhA4rYeC3+gcoRf5HmQiUv3cXC7VuS9cNwjvxgEJVMEf1BlG0z9hM1OEWV5TvyeQRzqQSNTL82RczqtyuQ6u8nJkfIwXH456Xahj9vIGxFK8bgJHA9OeR8yKUW8YzNIUSCiYwLpfZrX+XbgzchB/QbaWUP5HC4+UJvLbjCWYcl8aBNPg6IeFpGzQty3Z9ASUFK9xONKKQRZHn+ZPi2Afk05o5hse9+ZbjNAzfQGzT1bniSjP9zBaTm4Axs9aOj1u8jFpa2/QUgGQRZ2vhcZfA/DUNzPzJIE7WrfHcVb+5ctbDflZMOoBCi1nnFJSNgS330sds/q9vJhO2I/dj7bydJRoCI=
+  - secure: bXdrHZBXahMD0vnGbiHAcLJ0I/wbZqSDvBGe2H+velpAPd4pZm6ZhzdKCjRZm6zestLxzQ5M8SBY3QIkTcuYC9YAwPse4XUd4qGvdgzYZeIGB48/F+lHfBQ6Zla/V5GvG7tC91kzVylToKil6IhqRvi+vPFa4B7HrY9Tiq3fqXVxXUB1+ccrtK/+zjXCEqID3IiO88u5FG3dxrjjo1B767/eCOiD27sgy+Fhwf7Mww8TKnWmXTxOxqHhKq5xi4nFL3/Gr6J1JMphisULLP+JRH6Gds9JGXPNcnYACW5s9qyNKqK578UDcao/nAEhXSKGaIMxwy1P+hV3/AspLTqaaX1U/4QFtw8jRyPtGMesNG6egWErNkBXkOJeTgFcFXnx4JIgeJwdVPRGc0CpgpFtyEm3rAgEEPFI7zHnA20A5iFlXQpNCV19kaTdlKWUywU6uYufFWbl0ZTDpaKE9DJWFQAIWmPLkcYZUFRObmneLAAd4f8YG1ttVh1XJeYnEYvLZbGPRf3P9aNmRs++FeysABG3iYT9JlOk678Hu2IZAb4l1nyrAWiVFeybsbDzVqm/403Sgbcx8/aMUORq6tu5JNKFP9DXMev2VM2iGtbf21bMHMXR9KUNoDPXzQcTb15BuTCoHYTCZLnr8T1+FoqXE6ytLho+czxqVKXEfR7/nuk=
+  - secure: pQDGbpcEQV0JxlD2IkRZL+IsFMg/FbRLGJvzegGB/yj7YHXTHt356jxa8B/iur1n/rtI+v4XfqcpY3lf+dIO+YCHgWeZaDDSy7I1iAcRFadR42EGyKI1mZyQyJzAKbX4LkTm+tM3SPuynDav1cFbr1uzZdKJakXAIth0ZwN1kLry92QHzc/Brd41ceQS5qDBq2TAGSwShbvplU/s2WVUBLW1aAIMnOI2JWsIDPde19F0vxA/hlun8UuZp9AoHWraUHk8/3TS7jsJuVB+juImV5dv9hlys+5o6dDAs7j53apqmgc4lBQWXr+8Njt+0UZIJDevbcYYrxnZb68yzI/7kiPvnQrNbv7R1lV1FWSwNCK5XdmK/beg30SCvMCZSkcSnYhLTMSb9h6Fj/4p3pYbYdeEaP0Ut2QSaKVTMG+TiWHLpmIqpWvaEmtaoqiN7UG37iF8zEyv3iQEShAtIK7+GhFmmwwk59YD1CtKRR8EOVpXuCeO9yxD9GJ2DYx5aB5aJxPHJ7OklZ/8Dho0nmL7hZIi3Sd8mE2S5F7suvlJ1E06uZhW6nNiQiCD7XqONw46qsOL31RqxbEfLvLeM4/hwxW1ZBHanMLRwFCc+T74he6f2WkuCGJ64YHmCvXM3Q+6PahqpfIu+1p/n1v900MJX2M6dqFY04tSCocPhEfDyto=
