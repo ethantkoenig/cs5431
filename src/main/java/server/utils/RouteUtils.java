@@ -71,7 +71,7 @@ public final class RouteUtils {
         if (username == null) {
             return Optional.empty();
         }
-        return userAccess.getUserbyUsername(username);
+        return userAccess.getUserByUsername(username);
     }
 
     public User forceLoggedInUser(Request request)

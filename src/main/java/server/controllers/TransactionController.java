@@ -76,7 +76,7 @@ public class TransactionController {
             return "This person has not authorized you to send them money.";
         }
 
-        Optional<User> recipient = userAccess.getUserbyUsername(recipientUsername);
+        Optional<User> recipient = userAccess.getUserByUsername(recipientUsername);
         if (!recipient.isPresent()) {
             return "invalid recipient"; // TODO handle properly
         }

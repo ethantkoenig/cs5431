@@ -72,7 +72,7 @@ public class PasswordRecoveryController {
         String guid = nextGUID();
         String link = request.url() + "?guid=" + guid;
 
-        Optional<User> user = userAccess.getUserbyEmail(email);
+        Optional<User> user = userAccess.getUserByEmail(email);
         if (user.isPresent()) {
             passwordRecoveryAccess.insertPasswordRecovery(user.get().getId(), guid);
             mailService.sendEmail(email, link);

@@ -106,11 +106,11 @@ public class UserController {
             return routeUtils.modelAndView(request, "register.ftl")
                     .add("error", REGISTER_INVALID_EMAIL)
                     .get();
-        } else if (userAccess.getUserbyUsername(username).isPresent()) {
+        } else if (userAccess.getUserByUsername(username).isPresent()) {
             return routeUtils.modelAndView(request, "register.ftl")
                     .add("error", REGISTER_TAKEN_USERNAME_OR_EMAIL)
                     .get();
-        } else if (userAccess.getUserbyEmail(email).isPresent()) {
+        } else if (userAccess.getUserByEmail(email).isPresent()) {
             return routeUtils.modelAndView(request, "register.ftl")
                     .add("error", REGISTER_TAKEN_USERNAME_OR_EMAIL)
                     .get();
@@ -127,7 +127,7 @@ public class UserController {
     ModelAndView login(Request request, Response response) throws Exception {
         String username = queryParam(request, "username");
         String password = queryParam(request, "password");
-        Optional<User> optUser = userAccess.getUserbyUsername(username);
+        Optional<User> optUser = userAccess.getUserByUsername(username);
         if (!optUser.isPresent()) {
             return routeUtils.modelAndView(request, "login.ftl")
                     .add("error", LOGIN_ERROR)
@@ -173,7 +173,7 @@ public class UserController {
 
     ModelAndView viewUser(Request request, Response response) throws Exception {
         String name = request.params(":name");
-        Optional<User> optUser = userAccess.getUserbyUsername(name);
+        Optional<User> optUser = userAccess.getUserByUsername(name);
         if (!optUser.isPresent()) {
             // TODO 404 handling
             response.redirect("/");

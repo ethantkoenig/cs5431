@@ -53,8 +53,8 @@ public class UserControllerTest extends ControllerTest {
         ModelAndView modelAndView = controller.register(request, response);
         Assert.assertEquals(modelAndView.getViewName(), "register.ftl");
         Assert.assertEquals(request.session().attribute("username"), "newUsername");
-        TestUtils.assertPresent(userAccess.getUserbyUsername("newUsername"));
-        TestUtils.assertPresent(userAccess.getUserbyEmail("newuser@example.com"));
+        TestUtils.assertPresent(userAccess.getUserByUsername("newUsername"));
+        TestUtils.assertPresent(userAccess.getUserByEmail("newuser@example.com"));
     }
 
     public void testRegisterInvalidUsername() throws Exception {
@@ -69,7 +69,7 @@ public class UserControllerTest extends ControllerTest {
         ModelAndView modelAndView = controller.register(request, response);
         Assert.assertEquals(modelAndView.getViewName(), "register.ftl");
         Assert.assertNull(request.session().attribute("username"));
-        Assert.assertFalse(userAccess.getUserbyEmail("newuser@example.com").isPresent());
+        Assert.assertFalse(userAccess.getUserByEmail("newuser@example.com").isPresent());
     }
 
     public void testRegisterInvalidPassword() throws Exception {
@@ -85,7 +85,7 @@ public class UserControllerTest extends ControllerTest {
         ModelAndView modelAndView = controller.register(request, response);
         Assert.assertEquals(modelAndView.getViewName(), "register.ftl");
         Assert.assertNull(request.session().attribute("username"));
-        Assert.assertFalse(userAccess.getUserbyEmail("newuser@example.com").isPresent());
+        Assert.assertFalse(userAccess.getUserByEmail("newuser@example.com").isPresent());
     }
 
     public void testRegisterTakenUsername() throws Exception {
@@ -100,7 +100,7 @@ public class UserControllerTest extends ControllerTest {
         ModelAndView modelAndView = controller.register(request, response);
         Assert.assertEquals(modelAndView.getViewName(), "register.ftl");
         Assert.assertNull(request.session().attribute("username"));
-        Assert.assertFalse(userAccess.getUserbyEmail("newuser@example.com").isPresent());
+        Assert.assertFalse(userAccess.getUserByEmail("newuser@example.com").isPresent());
     }
 
     public void testLoginValid() throws Exception {

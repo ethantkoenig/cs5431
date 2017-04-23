@@ -20,7 +20,7 @@ public interface UserAccess {
      *
      * @param username the username of the user being queried
      */
-    Optional<User> getUserbyUsername(String username) throws SQLException;
+    Optional<User> getUserByUsername(String username) throws SQLException;
 
     /**
      * Given an email return the user object in the DB that is associated with this username
@@ -28,7 +28,7 @@ public interface UserAccess {
      * @param email the email of the user being queried
      */
 
-    Optional<User> getUserbyEmail(String email) throws SQLException;
+    Optional<User> getUserByEmail(String email) throws SQLException;
 
     /**
      * @return The keys associated with a given userID

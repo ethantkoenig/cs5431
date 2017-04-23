@@ -41,7 +41,7 @@ public final class DatabaseUserAccess implements UserAccess {
     }
 
     @Override
-    public Optional<User> getUserbyUsername(String username) throws SQLException {
+    public Optional<User> getUserByUsername(String username) throws SQLException {
         try (
                 Connection conn = connectionProvider.getConnection();
                 PreparedStatement preparedStmt = Statements.selectUserByUsername(conn, username);
@@ -60,7 +60,7 @@ public final class DatabaseUserAccess implements UserAccess {
     }
 
     @Override
-    public Optional<User> getUserbyEmail(String email) throws SQLException {
+    public Optional<User> getUserByEmail(String email) throws SQLException {
         try (
                 Connection conn = connectionProvider.getConnection();
                 PreparedStatement preparedStmt = Statements.selectUserByEmail(conn, email);
