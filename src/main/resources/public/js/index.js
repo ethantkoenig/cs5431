@@ -25,6 +25,8 @@ $(document).ready(function () {
         }
         var privateKey = $('#keyform-privatekey');
         var encrypted = sjcl.encrypt(password, privateKey.val());
+        // TODO this causes the privatekey input of the form to briefly
+        // show the encrypted key
         privateKey.val(encrypted);
         return true; // submit form
     });
