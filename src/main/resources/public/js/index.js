@@ -15,8 +15,6 @@ $(document).ready(function () {
         var password = passwordInput.val();
         var confirmGroup = $('#keyform-confirm-group');
         var confirmInput = confirmGroup.find('input');
-        console.log("password: " + password);
-        console.log("confirm: " + confirmInput.val());
         if (confirmInput.val() != password || password.length == 0) {
             passwordInput.val('');
             confirmInput.val('');
