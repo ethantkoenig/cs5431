@@ -17,16 +17,22 @@
 
                 <form method="post" action="/user/keys" id="keyform" style="padding-top: 20px;">
                     <div class="form-group">
-                        <input type="text" class="form-control" name="publickey" placeholder="Public Key">
+                        <label>
+                            <input title="Generate new key" type="checkbox" id="keyform-generate">Generate new key
+                        </label>
                     </div>
-                    <div class="form-group">
-                        <input type="text" class="form-control" name="privatekey" id="keyform-privatekey"
-                               placeholder="Private Key">
+                    <div class="form-group publickey-form-group">
+                        <input type="text" class="form-control" placeholder="Public Key">
                     </div>
-                    <div class="form-group" id="keyform-password-group">
+                    <input type="hidden" name="publickey">
+                    <div class="form-group privatekey-form-group">
+                        <input type="text" class="form-control" placeholder="Private Key">
+                    </div>
+                    <input type="hidden" name="privatekey">
+                    <div class="form-group password-form-group">
                         <input type="password" class="form-control" placeholder="Password">
                     </div>
-                    <div class="form-group" id="keyform-confirm-group">
+                    <div class="form-group confirm-form-group">
                         <input type="password" class="form-control" placeholder="Confirm">
                     </div>
                     <input class="btn btn-primary" type="submit" value="Update">

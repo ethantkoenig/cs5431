@@ -188,7 +188,6 @@ public class UserController {
     }
 
     String addUserKey(Request request, Response response) throws Exception {
-        // TODO what if "publickey" param is not valid hex string?
         byte[] publicKey = RouteUtils.queryParamHex(request, "publickey");
         String privateKey = RouteUtils.queryParam(request, "privatekey");
         User user = routeUtils.forceLoggedInUser(request);

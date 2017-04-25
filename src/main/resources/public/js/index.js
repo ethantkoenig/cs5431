@@ -9,25 +9,59 @@ $(document).ready(function () {
         });
     });
 
+    $('#keyform-generate').change(function () {
+        var $form = $('#keyform');
+        $form.find('.publickey-form-group').find('input').prop('disabled', this.checked);
+        $form.find('.privatekey-form-group').find('input').prop('disabled', this.checked);
+    });
+
     $('#keyform').submit(function () {
-        var passwordGroup = $('#keyform-password-group');
-        var passwordInput = passwordGroup.find('input');
-        var password = passwordInput.val();
-        var confirmGroup = $('#keyform-confirm-group');
-        var confirmInput = confirmGroup.find('input');
-        if (confirmInput.val() != password || password.length == 0) {
-            passwordInput.val('');
-            confirmInput.val('');
-            passwordGroup.addClass('has-error');
-            confirmGroup.addClass('has-error');
+        var $form = $(this);
+        var $publicKeyGroup = $form.find('.publickey-form-group');
+        var $publicKeyInput = $publicKeyGroup.find('input');
+        var $privateKeyGroup = $form.find('.privatekey-form-group');
+        var $privateKeyInput = $privateKeyGroup.find('input');
+        var $passwordGroup = $form.find('.password-form-group');
+        var $passwordInput = $passwordGroup.find('input');
+        var $confirmGroup = $form.find('.confirm-form-group');
+        var $confirmInput = $confirmGroup.find('input');
+
+        var password = $passwordInput.val();
+        if ($confirmInput.val() != password || password.length == 0) {
+            $passwordGroup.addClass('has-error');
+            $confirmGroup.addClass('has-error');
             // TODO eventually display an actual error message
             return false; // do not submit
         }
-        var privateKey = $('#keyform-privatekey');
-        var encrypted = sjcl.encrypt(password, privateKey.val());
-        // TODO this causes the privatekey input of the form to briefly
-        // show the encrypted key
-        privateKey.val(encrypted);
+        if ($('#keyform-generate').is(':checked')) {
+            // generate a new key
+            var privateKeyD = sjcl.bn.fromBits(sjcl.random.randomWords(8, 10));
+            while (privateKeyD.greaterEquals(sjcl.ecc.curves.c256.r)) {
+                privateKeyD = sjcl.bn.fromBits(sjcl.random.randomWords(8, 10));
+            }
+            var publicKeyPoint = sjcl.ecc.curves.c256.G.mult(privateKeyD);
+            var privateKeyHex = sjcl.codec.hex.fromBits(privateKeyD.toBits());
+            var publicKeyHex = sjcl.codec.hex.fromBits(publicKeyPoint.x.toBits())
+                + sjcl.codec.hex.fromBits(publicKeyPoint.y.toBits());
+            console.log("privateKeyHex: " + privateKeyHex);
+            console.log("publicKeyHex: " + publicKeyHex);
+            $privateKeyInput.val(privateKeyHex);
+            $publicKeyInput.val(publicKeyHex);
+        }
+
+        if (!validHexString($publicKeyInput.val(), 128)) {
+            // TODO eventually display an actual error message
+            $publicKeyGroup.addClass('has-error');
+            return false; // don't submit form
+        } else if (!validHexString($privateKeyInput.val(), 64)) {
+            // TODO eventually display an actual error message
+            $privateKeyGroup.addClass('has-error');
+            return false; // don't submit form
+        }
+
+        var encrypted = sjcl.encrypt(password, $privateKeyInput.val());
+        $form.find('input[name="publickey"]').val($publicKeyInput.val());
+        $form.find('input[name="privatekey"]').val(encrypted);
         return true; // submit form
     });
 
@@ -115,3 +149,12 @@ $(document).ready(function () {
     });
 
 });
+
+
+function validHexString(s, length) {
+    if (s.length != length) {
+        return false;
+    }
+    var hexRegExp = /[0-9A-Fa-f]*/g;
+    return hexRegExp.test(s);
+}
