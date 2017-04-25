@@ -4,6 +4,7 @@ import spark.ModelAndView;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public final class MapModelAndView {
     private final String viewName;
@@ -16,6 +17,13 @@ public final class MapModelAndView {
     public MapModelAndView add(String key, Object value) {
         map.put(key, value);
         return this;
+    }
+
+    public MapModelAndView addIfNonNull(String key, Object value) {
+        if (value == null) {
+            return this;
+        }
+        return add(key, value);
     }
 
     public final ModelAndView get() {

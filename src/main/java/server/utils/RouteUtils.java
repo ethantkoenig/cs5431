@@ -3,12 +3,11 @@ package server.utils;
 import com.google.inject.Inject;
 import server.access.UserAccess;
 import server.models.User;
-import spark.Request;
-import spark.Route;
-import spark.TemplateViewRoute;
+import spark.*;
 import utils.ByteUtil;
 
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.Optional;
 
 public final class RouteUtils {
@@ -40,8 +39,7 @@ public final class RouteUtils {
             try {
                 return route.handle(request, response);
             } catch (NotLoggedInException e) {
-                response.redirect("/login");
-                return null;
+                return RouteUtils.redirectTo(response, "/login");
             } catch (InvalidParamException e) {
                 // TODO find better way to handle
                 response.status(400);
@@ -60,9 +58,17 @@ public final class RouteUtils {
         Optional<User> optUser = loggedInUser(request);
         boolean loggedIn = optUser.isPresent();
         String username = optUser.map(User::getUsername).orElse("");
-        return new MapModelAndView(viewName)
+        Session session = request.session();
+        MapModelAndView mapModelAndView = new MapModelAndView(viewName)
                 .add("loggedIn", loggedIn)
-                .add("loggedInUsername", username);
+                .add("loggedInUsername", username)
+                .addIfNonNull("error", session.attribute("error"))
+                .addIfNonNull("alert", session.attribute("alert"))
+                .addIfNonNull("success", session.attribute("success"));
+        session.removeAttribute("error");
+        session.removeAttribute("alert");
+        session.removeAttribute("success");
+        return mapModelAndView;
     }
 
     public Optional<User> loggedInUser(Request request)
@@ -77,6 +83,24 @@ public final class RouteUtils {
     public User forceLoggedInUser(Request request)
             throws NotLoggedInException, SQLException {
         return loggedInUser(request).orElseThrow(NotLoggedInException::new);
+    }
+
+    public static void successMessage(Request request, String message) {
+        request.session().attribute("success", message);
+    }
+
+    public static void alertMessage(Request request, String message) {
+        request.session().attribute("alert", message);
+    }
+
+    public static void errorMessage(Request request, String message) {
+        request.session().attribute("error", message);
+    }
+
+    public static ModelAndView redirectTo(Response response, String path) {
+        response.redirect(path);
+        // return whatever, will be overridden by the redirect
+        return new ModelAndView(new HashMap<String, Object>(), "");
     }
 
     public static boolean queryParamExists(Request request, String paramName) {

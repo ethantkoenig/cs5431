@@ -18,6 +18,7 @@ import spark.Response;
 import testutils.ControllerTest;
 import testutils.Fixtures;
 import testutils.MockRequest;
+import testutils.MockResponse;
 import transaction.Transaction;
 import utils.ByteUtil;
 
@@ -81,7 +82,7 @@ public class TransactionControllerTest extends ControllerTest {
                 .addSessionAttribute("username", fixtures.user.getUsername())
                 .get();
 
-        Response response = Mockito.mock(Response.class);
+        Response response = new MockResponse().get();
         controller.transact(request, response); // TODO check return value
     }
 
@@ -115,7 +116,7 @@ public class TransactionControllerTest extends ControllerTest {
                 .addSessionAttribute("username", fixtures.user.getUsername())
                 .get();
 
-        Response response = Mockito.mock(Response.class);
+        Response response = new MockResponse().get();
         controller.transact(request, response); // TODO check return value
     }
 
@@ -156,7 +157,7 @@ public class TransactionControllerTest extends ControllerTest {
                 .get();
         request.session().attribute("username", "username");
 
-        Response response = Mockito.mock(Response.class);
+        Response response = new MockResponse().get();
         String resp = controller.sendTransaction(request, response); // TODO check return value
         Assert.assertEquals("ok", resp); // TODO this is temporary
     }

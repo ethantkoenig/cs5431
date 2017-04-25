@@ -4,7 +4,6 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import org.junit.Assert;
 import org.junit.Test;
-import org.mockito.Mockito;
 import server.access.PasswordRecoveryAccess;
 import server.utils.ConnectionProvider;
 import spark.ModelAndView;
@@ -13,6 +12,7 @@ import spark.Response;
 import testutils.ControllerTest;
 import testutils.Fixtures;
 import testutils.MockRequest;
+import testutils.MockResponse;
 
 public class PasswordRecoveryControllerTest extends ControllerTest {
 
@@ -34,7 +34,7 @@ public class PasswordRecoveryControllerTest extends ControllerTest {
     @Test
     public void testGetRecoverNoGUID() throws Exception {
         Request request = new MockRequest().get();
-        Response response = Mockito.mock(Response.class);
+        Response response = new MockResponse().get();
         ModelAndView modelAndView = controller.getRecover(request, response);
         Assert.assertEquals("recover.ftl", modelAndView.getViewName());
     }
@@ -48,7 +48,7 @@ public class PasswordRecoveryControllerTest extends ControllerTest {
                 .addSessionAttribute("username", fixtures.user.getUsername())
                 .addQueryParam("guid", guid)
                 .get();
-        Response response = Mockito.mock(Response.class);
+        Response response = new MockResponse().get();
         ModelAndView modelAndView = controller.getRecover(request, response);
         Assert.assertEquals("resetpass.ftl", modelAndView.getViewName());
     }
@@ -59,9 +59,9 @@ public class PasswordRecoveryControllerTest extends ControllerTest {
                 .addQueryParam("email", "example@example.com")
                 .get();
 
-        Response response = Mockito.mock(Response.class);
-        ModelAndView modelAndView = controller.postRecover(request, response);
-        Assert.assertEquals("recover.ftl", modelAndView.getViewName());
+        MockResponse mockResponse = new MockResponse();
+        controller.postRecover(request, mockResponse.get());
+        Assert.assertEquals("/recover", mockResponse.redirectedTo());
     }
 
     @Test
@@ -70,9 +70,9 @@ public class PasswordRecoveryControllerTest extends ControllerTest {
                 .addQueryParam("email", "nonexistent@example.com")
                 .get();
 
-        Response response = Mockito.mock(Response.class);
-        ModelAndView modelAndView = controller.postRecover(request, response);
-        Assert.assertEquals("recover.ftl", modelAndView.getViewName());
+        MockResponse mockResponse = new MockResponse();
+        controller.postRecover(request, mockResponse.get());
+        Assert.assertEquals("/recover", mockResponse.redirectedTo());
     }
 
     @Test
@@ -87,16 +87,18 @@ public class PasswordRecoveryControllerTest extends ControllerTest {
                 .addQueryParam("guid", guid)
                 .get();
 
-        Response response = Mockito.mock(Response.class);
-        ModelAndView modelAndView = controller.reset(request, response);
-        Assert.assertEquals("resetpass.ftl", modelAndView.getViewName());
+        MockResponse mockResponse = new MockResponse();
+        controller.reset(request, mockResponse.get());
+        Assert.assertEquals("/login", mockResponse.redirectedTo());
 
         // should be able to login with new password
         request = new MockRequest()
                 .addQueryParam("username", fixtures.user.getUsername())
                 .addQueryParam("password", newPassword)
                 .get();
-        userController.login(request, response);
+        mockResponse = new MockResponse();
+        userController.login(request, mockResponse.get());
+        Assert.assertEquals("/user/" + fixtures.user.getUsername(), mockResponse.redirectedTo());
 
         Assert.assertEquals(fixtures.user.getUsername(), request.session().attribute("username"));
     }

@@ -8,7 +8,6 @@ import crypto.ECDSAPublicKey;
 import network.*;
 import org.junit.Assert;
 import org.junit.Test;
-import org.mockito.Mockito;
 import server.access.DatabaseUserAccess;
 import server.access.UserAccess;
 import server.utils.ConnectionProvider;
@@ -16,10 +15,7 @@ import server.utils.Constants;
 import spark.ModelAndView;
 import spark.Request;
 import spark.Response;
-import testutils.ControllerTest;
-import testutils.Fixtures;
-import testutils.MockRequest;
-import testutils.TestUtils;
+import testutils.*;
 import utils.ByteUtil;
 
 import java.net.InetAddress;
@@ -52,9 +48,10 @@ public class UserControllerTest extends ControllerTest {
                 .addQueryParam("password", Fixtures.USER_PASSWORD)
                 .addQueryParam("confirm", Fixtures.USER_PASSWORD)
                 .get();
-        Response response = Mockito.mock(Response.class);
-        ModelAndView modelAndView = controller.register(request, response);
-        Assert.assertEquals(modelAndView.getViewName(), "register.ftl");
+        MockResponse mockResponse = new MockResponse();
+        controller.register(request, mockResponse.get());
+        Assert.assertTrue(mockResponse.redirected());
+        Assert.assertEquals("/user/newUsername", mockResponse.redirectedTo());
         Assert.assertEquals(request.session().attribute("username"), "newUsername");
         TestUtils.assertPresent(userAccess.getUserByUsername("newUsername"));
         TestUtils.assertPresent(userAccess.getUserByEmail("newuser@example.com"));
@@ -69,9 +66,9 @@ public class UserControllerTest extends ControllerTest {
                 .addQueryParam("confirm", Fixtures.USER_PASSWORD)
                 .get();
 
-        Response response = Mockito.mock(Response.class);
-        ModelAndView modelAndView = controller.register(request, response);
-        Assert.assertEquals(modelAndView.getViewName(), "register.ftl");
+        MockResponse mockResponse = new MockResponse();
+        controller.register(request, mockResponse.get());
+        Assert.assertEquals("/register", mockResponse.redirectedTo());
         Assert.assertNull(request.session().attribute("username"));
         Assert.assertFalse(userAccess.getUserByEmail("newuser@example.com").isPresent());
     }
@@ -86,9 +83,9 @@ public class UserControllerTest extends ControllerTest {
                 .addQueryParam("confirm", "nogood")
                 .get();
 
-        Response response = Mockito.mock(Response.class);
-        ModelAndView modelAndView = controller.register(request, response);
-        Assert.assertEquals(modelAndView.getViewName(), "register.ftl");
+        MockResponse mockResponse = new MockResponse();
+        controller.register(request, mockResponse.get());
+        Assert.assertEquals("/register", mockResponse.redirectedTo());
         Assert.assertNull(request.session().attribute("username"));
         Assert.assertFalse(userAccess.getUserByEmail("newuser@example.com").isPresent());
     }
@@ -102,9 +99,9 @@ public class UserControllerTest extends ControllerTest {
                 .addQueryParam("confirm", Fixtures.USER_PASSWORD)
                 .get();
 
-        Response response = Mockito.mock(Response.class);
-        ModelAndView modelAndView = controller.register(request, response);
-        Assert.assertEquals(modelAndView.getViewName(), "register.ftl");
+        MockResponse mockResponse = new MockResponse();
+        controller.register(request, mockResponse.get());
+        Assert.assertEquals("/register", mockResponse.redirectedTo());
         Assert.assertNull(request.session().attribute("username"));
         Assert.assertFalse(userAccess.getUserByEmail("newuser@example.com").isPresent());
     }
@@ -116,10 +113,9 @@ public class UserControllerTest extends ControllerTest {
                 .addQueryParam("password", Fixtures.USER_PASSWORD)
                 .get();
 
-        Response response = Mockito.mock(Response.class);
-        ModelAndView modelAndView = controller.login(request, response);
-        Assert.assertEquals(modelAndView.getViewName(), "user.ftl");
-
+        MockResponse mockResponse = new MockResponse();
+        controller.login(request, mockResponse.get());
+        Assert.assertEquals("/user/" + fixtures.user.getUsername(), mockResponse.redirectedTo());
         Assert.assertEquals(fixtures.user.getUsername(), request.session().attribute("username"));
     }
 
@@ -130,9 +126,9 @@ public class UserControllerTest extends ControllerTest {
                 .addQueryParam("password", "wr0ngP@ssword!!")
                 .get();
 
-        Response response = Mockito.mock(Response.class);
-        ModelAndView modelAndView = controller.login(request, response);
-        Assert.assertEquals(modelAndView.getViewName(), "login.ftl");
+        MockResponse mockResponse = new MockResponse();
+        controller.login(request, mockResponse.get());
+        Assert.assertEquals("/login", mockResponse.redirectedTo());
         Assert.assertNull(request.attribute("username"));
     }
 
@@ -143,9 +139,9 @@ public class UserControllerTest extends ControllerTest {
                 .addQueryParam("password", "wr0ngP@ssword!!")
                 .get();
 
-        Response response = Mockito.mock(Response.class);
-        ModelAndView modelAndView = controller.login(request, response);
-        Assert.assertEquals(modelAndView.getViewName(), "login.ftl");
+        MockResponse mockResponse = new MockResponse();
+        controller.login(request, mockResponse.get());
+        Assert.assertEquals("/login", mockResponse.redirectedTo());
         Assert.assertNull(request.attribute("username"));
     }
 
@@ -155,7 +151,7 @@ public class UserControllerTest extends ControllerTest {
                 .addSessionAttribute("username", fixtures.user.getUsername())
                 .get();
 
-        Response response = Mockito.mock(Response.class);
+        Response response = new MockResponse().get();
         controller.logout(request, response);
         Assert.assertNull(request.attribute("username"));
     }
@@ -166,8 +162,17 @@ public class UserControllerTest extends ControllerTest {
                 .addParam(":name", fixtures.user.getUsername())
                 .get();
 
-        Response response = Mockito.mock(Response.class);
+        Response response = new MockResponse().get();
         controller.viewUser(request, response);
+    }
+
+    @Test
+    public void testViewUserNotLoggedIn() throws Exception {
+        Request request = new MockRequest().get();
+        MockResponse mockResponse = new MockResponse();
+        controller.viewUser(request, mockResponse.get());
+        Assert.assertTrue(mockResponse.redirected());
+        Assert.assertEquals("/login", mockResponse.redirectedTo());
     }
 
     @Test
@@ -182,7 +187,7 @@ public class UserControllerTest extends ControllerTest {
                 .addSessionAttribute("username", fixtures.user.getUsername())
                 .get();
 
-        Response response = Mockito.mock(Response.class);
+        Response response = new MockResponse().get();
         controller.addUserKey(request, response);
         TestUtils.assertPresent(userAccess.getKey(fixtures.user.getId(), publicBytes));
     }
@@ -195,7 +200,7 @@ public class UserControllerTest extends ControllerTest {
                 .addSessionAttribute("username", fixtures.user.getUsername())
                 .get();
 
-        Response response = Mockito.mock(Response.class);
+        Response response = new MockResponse().get();
         controller.deleteKey(request, response);
         Assert.assertFalse(userAccess.getKey(fixtures.user.getId(), publicBytes).isPresent());
     }
@@ -206,7 +211,7 @@ public class UserControllerTest extends ControllerTest {
                 .addSessionAttribute("username", fixtures.user.getUsername())
                 .addQueryParam("friend", fixtures.user.getUsername())
                 .get();
-        Response response = Mockito.mock(Response.class);
+        Response response = new MockResponse().get();
         controller.addFriend(request, response);
     }
 
@@ -216,7 +221,7 @@ public class UserControllerTest extends ControllerTest {
                 .addSessionAttribute("username", fixtures.user.getUsername())
                 .addQueryParam("friend", fixtures.user.getUsername())
                 .get();
-        Response response = Mockito.mock(Response.class);
+        Response response = new MockResponse().get();
         controller.deleteFriend(request, response);
     }
 
@@ -252,7 +257,7 @@ public class UserControllerTest extends ControllerTest {
         Request request = new MockRequest()
                 .addSessionAttribute("username", fixtures.user.getUsername())
                 .get();
-        Response response = Mockito.mock(Response.class);
+        Response response = new MockResponse().get();
         ModelAndView modelAndView = controller.balance(request, response);
         Assert.assertEquals("balance.ftl", modelAndView.getViewName());
     }

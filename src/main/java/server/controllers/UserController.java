@@ -8,7 +8,6 @@ import server.access.UserAccess;
 import server.models.Key;
 import server.models.User;
 import server.utils.Constants;
-import server.utils.MapModelAndView;
 import server.utils.RouteUtils;
 import server.utils.ValidateUtils;
 import spark.ModelAndView;
@@ -59,19 +58,19 @@ public class UserController {
     public void init() {
         path("/register", () -> {
             get("", routeUtils.template("register.ftl"), new FreeMarkerEngine());
-            post("", wrapTemplate(this::register), new FreeMarkerEngine());
+            post("", wrapRoute(this::register));
         });
 
         path("/login", () -> {
             get("", routeUtils.template("login.ftl"), new FreeMarkerEngine());
-            post("", wrapTemplate(this::login), new FreeMarkerEngine());
+            post("", wrapRoute(this::login));
         });
 
-        delete("/logout", wrapTemplate(this::logout), new FreeMarkerEngine());
+        delete("/logout", wrapRoute(this::logout));
 
         path("/user", () -> {
             get("/:name", wrapTemplate(this::viewUser), new FreeMarkerEngine());
-            post("/keys", wrapTemplate(this::addUserKey), new FreeMarkerEngine());
+            post("/keys", wrapRoute(this::addUserKey));
             delete("/keys", wrapRoute(this::deleteKey));
         });
 
@@ -83,92 +82,80 @@ public class UserController {
         });
     }
 
-    ModelAndView register(Request request, Response response)
+    String register(Request request, Response response)
             throws Exception {
         String username = queryParam(request, "username");
         String password = queryParam(request, "password");
         String confirm = queryParam(request, "confirm");
         String email = queryParam(request, "email");
         if (!password.equals(confirm)) {
-            return routeUtils.modelAndView(request, "register.ftl")
-                    .add("error", REGISTER_MISMATCHED_PASSWORDS)
-                    .get();
+            RouteUtils.errorMessage(request, REGISTER_MISMATCHED_PASSWORDS);
+            response.redirect("/register");
+            return "redirected";
         }
         if (!ValidateUtils.validUsername(username)) {
-            return routeUtils.modelAndView(request, "register.ftl")
-                    .add("error", REGISTER_INVALID_USERNAME)
-                    .get();
+            RouteUtils.errorMessage(request, REGISTER_INVALID_USERNAME);
+            response.redirect("/register");
+            return "redirected";
         } else if (!ValidateUtils.validPassword(password)) {
-            return routeUtils.modelAndView(request, "register.ftl")
-                    .add("error", REGISTER_INVALID_PASSWORD)
-                    .get();
+            RouteUtils.errorMessage(request, REGISTER_INVALID_PASSWORD);
+            response.redirect("/register");
+            return "redirected";
         } else if (!ValidateUtils.validEmail(email)) {
-            return routeUtils.modelAndView(request, "register.ftl")
-                    .add("error", REGISTER_INVALID_EMAIL)
-                    .get();
+            RouteUtils.errorMessage(request, REGISTER_INVALID_EMAIL);
+            response.redirect("/register");
+            return "redirected";
         } else if (userAccess.getUserByUsername(username).isPresent()) {
-            return routeUtils.modelAndView(request, "register.ftl")
-                    .add("error", REGISTER_TAKEN_USERNAME_OR_EMAIL)
-                    .get();
+            RouteUtils.errorMessage(request, REGISTER_TAKEN_USERNAME_OR_EMAIL);
+            response.redirect("/register");
+            return "redirected";
         } else if (userAccess.getUserByEmail(email).isPresent()) {
-            return routeUtils.modelAndView(request, "register.ftl")
-                    .add("error", REGISTER_TAKEN_USERNAME_OR_EMAIL)
-                    .get();
+            RouteUtils.errorMessage(request, REGISTER_TAKEN_USERNAME_OR_EMAIL);
+            response.redirect("/register");
+            return "redirected";
         }
         byte[] salt = Crypto.generateSalt();
         byte[] hash = Crypto.hashAndSalt(password, salt);
         userAccess.insertUser(username, email, salt, hash);
         request.session(true).attribute("username", username);
-        return routeUtils.modelAndView(request, "register.ftl")
-                .add("success", "User registered and logged in.")
-                .get();
+        RouteUtils.successMessage(request, "Registration complete. Welcome!");
+        response.redirect("/user/" + username);
+        return "ok";
     }
 
-    ModelAndView login(Request request, Response response) throws Exception {
+    String login(Request request, Response response) throws Exception {
         String username = queryParam(request, "username");
         String password = queryParam(request, "password");
         Optional<User> optUser = userAccess.getUserByUsername(username);
         if (!optUser.isPresent()) {
-            return routeUtils.modelAndView(request, "login.ftl")
-                    .add("error", LOGIN_ERROR)
-                    .get();
+            RouteUtils.errorMessage(request, LOGIN_ERROR);
+            response.redirect("/login");
+            return "redirected";
         }
         User user = optUser.get();
         if (user.getFailedLogins() >= FAILED_LOGIN_LIMIT) {
-            return routeUtils.modelAndView(request, "recover.ftl")
-                    .add("alert", LOCKOUT_ALERT)
-                    .get();
+            RouteUtils.alertMessage(request, LOCKOUT_ALERT);
+            response.redirect("/recover");
+            return "redirected";
         }
         byte[] hash = Crypto.hashAndSalt(password, user.getSalt());
         if (!Arrays.equals(hash, user.getHashedPassword())) {
             userAccess.incrementFailedLogins(user.getId());
-            return routeUtils.modelAndView(request, "login.ftl")
-                    .add("error", LOGIN_ERROR)
-                    .get();
+            RouteUtils.errorMessage(request, LOGIN_ERROR);
+            response.redirect("/login");
+            return "redirected";
         }
         userAccess.resetFailedLogins(user.getId());
         request.session(true).attribute("username", username);
 
-
-        List<String> friends = userAccess.getFriends(user.getUsername());
-        List<String> users = userAccess.getAllUsernames();
-        users.removeAll(friends);
-
-        // TODO since this isn't a redirect, URL in browser will still say /login,
-        // even though the user page will be rendered
-        return routeUtils.modelAndView(request, "user.ftl")
-                .add("username", user.getUsername())
-                .add("loggedInUser", username)
-                .add("friends", friends)
-                .add("users", users)
-                .get();
+        response.redirect("/user/" + username);
+        return "redirected";
     }
 
-    ModelAndView logout(Request request, Response response) throws SQLException {
+    String logout(Request request, Response response) throws SQLException {
         request.session().removeAttribute("username");
-        return routeUtils.modelAndView(request, "index.ftl")
-                .add("message", "Successfully logged out.")
-                .get();
+        RouteUtils.successMessage(request, "Successfully logged out");
+        return "ok"; // will be redirected to homepage via index.js
     }
 
     ModelAndView viewUser(Request request, Response response) throws Exception {
@@ -176,8 +163,7 @@ public class UserController {
         Optional<User> optUser = userAccess.getUserByUsername(name);
         if (!optUser.isPresent()) {
             // TODO 404 handling
-            response.redirect("/");
-            return null;
+            return RouteUtils.redirectTo(response, "/login");
         }
         String loggedInUserName = null;
         List<String> friends = null;
@@ -201,7 +187,7 @@ public class UserController {
                 .get();
     }
 
-    ModelAndView addUserKey(Request request, Response response) throws Exception {
+    String addUserKey(Request request, Response response) throws Exception {
         byte[] publicKey = RouteUtils.queryParamHex(request, "publickey");
         String privateKey = RouteUtils.queryParam(request, "privatekey");
         User user = routeUtils.forceLoggedInUser(request);
@@ -213,22 +199,15 @@ public class UserController {
             validKey = false;
         }
 
-        MapModelAndView modelAndView = routeUtils.modelAndView(request, "user.ftl");
         if (validKey) {
             userAccess.insertKey(user.getId(), publicKey, privateKey);
-            modelAndView.add("success", "Keys added.");
+            RouteUtils.successMessage(request, "Keys added.");
         } else {
-            modelAndView.add("error", "Invalid public key.");
+            RouteUtils.errorMessage(request, "Invalid public key.");
         }
 
-        // TODO duplicated code with viewUser(..)
-        List<String> friends = userAccess.getFriends(user.getUsername());
-        List<String> users = userAccess.getAllUsernames();
-        users.removeAll(friends);
-        return modelAndView.add("username", user.getUsername())
-                .add("friends", friends)
-                .add("users", users)
-                .get();
+        response.redirect("/user/" + user.getUsername());
+        return "redirected";
     }
 
     String deleteKey(Request request, Response response) throws Exception {
@@ -281,6 +260,8 @@ public class UserController {
             if (respMessage.type != Message.FUNDS) {
                 LOGGER.severe(String.format("Unexpected response type %d, expected %d",
                         respMessage.type, Message.FUNDS));
+                RouteUtils.errorMessage(request, "An internal error has occurred.");
+                return RouteUtils.redirectTo(response, "/");
             }
             fundsResponse = GetFundsResponse.DESERIALIZER.deserialize(respMessage.payload);
         }

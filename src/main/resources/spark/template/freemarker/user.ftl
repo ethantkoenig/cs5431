@@ -31,24 +31,6 @@
                     </div>
                     <input class="btn btn-primary" type="submit" value="Update">
                 </form>
-
-
-                <#if success??>
-                    <div class="row" style="padding-top: 10px;">
-                        <div class="alert alert-success">
-                            <strong>Success!</strong> ${success}
-                        </div>
-                    </div>
-                </#if>
-                <#if error??>
-                    <div class="row" style="padding-top: 10px;">
-                        <div class="col-md-4 col-md-offset-4">
-                            <div class="alert alert-danger">
-                                <strong>Error!</strong> ${error}
-                            </div>
-                        </div>
-                    </div>
-                </#if>
             </div>
             <div class="col-sm-6 padding-top">
                 <select id='friend-selector' multiple='multiple'>

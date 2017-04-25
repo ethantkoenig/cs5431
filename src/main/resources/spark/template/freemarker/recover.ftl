@@ -22,15 +22,6 @@
             </div>
         </div>
     </#if>
-    <#if alert??>
-        <div class="row" style="padding-top: 10px;">
-            <div class="col-md-4 col-md-offset-4">
-                <div class="alert alert-warning">
-                    <strong>Alert!</strong> ${alert}
-                </div>
-            </div>
-        </div>
-    </#if>
 </div>
 <!-- /.container -->
 </@layout.master>

@@ -25,7 +25,7 @@ import static spark.Spark.*;
 
 
 public class PasswordRecoveryController {
-
+    // TODO error message duplicated in UserController
     private static final String PASSWORD_ERROR = "Password must be between 12 and 24 characters, contain a lowercase letter, capital letter, and a number.";
 
     private static SecureRandom random = Config.secureRandom();
@@ -49,8 +49,8 @@ public class PasswordRecoveryController {
     public void init() {
         path("/recover", () -> {
             get("", wrapTemplate(this::getRecover), new FreeMarkerEngine());
-            post("", wrapTemplate(this::postRecover), new FreeMarkerEngine());
-            post("/reset", wrapTemplate(this::reset), new FreeMarkerEngine());
+            post("", wrapRoute(this::postRecover));
+            post("/reset", wrapRoute(this::reset));
         });
     }
 
@@ -67,7 +67,7 @@ public class PasswordRecoveryController {
                 .get();
     }
 
-    ModelAndView postRecover(Request request, Response response) throws Exception {
+    String postRecover(Request request, Response response) throws Exception {
         String email = queryParam(request, "email");
         String guid = nextGUID();
         String link = request.url() + "?guid=" + guid;
@@ -76,24 +76,21 @@ public class PasswordRecoveryController {
         if (user.isPresent()) {
             passwordRecoveryAccess.insertPasswordRecovery(user.get().getId(), guid);
             mailService.sendEmail(email, link);
-            return routeUtils.modelAndView(request, "recover.ftl")
-                    .add("success", "Check your inbox.")
-                    .get();
+            RouteUtils.successMessage(request, "Check your inbox.");
         }
-        // Failed but do not want to give hacker any reason to know anything happened.
-        return routeUtils.modelAndView(request, "recover.ftl").get();
+        response.redirect("/recover");
+        return "redirected";
     }
 
-    ModelAndView reset(Request request, Response response) throws Exception {
+    String reset(Request request, Response response) throws Exception {
         String password = queryParam(request, "password");
         String passwordConfirm = queryParam(request, "passwordConfirm");
         String guid = queryParam(request, "guid");
         if (!(password.equals(passwordConfirm) && ValidateUtils.validPassword(password))) {
             //error handling
-            return routeUtils.modelAndView(request, "resetpass.ftl")
-                    .add("guid", guid)
-                    .add("error", PASSWORD_ERROR)
-                    .get();
+            RouteUtils.errorMessage(request, PASSWORD_ERROR);
+            response.redirect("/recover?guid=" + guid);
+            return "redirected";
         }
         OptionalInt optUserID = passwordRecoveryAccess.getPasswordRecoveryUserID(guid);
         if (optUserID.isPresent()) {
@@ -101,14 +98,13 @@ public class PasswordRecoveryController {
             byte[] salt = Crypto.generateSalt();
             byte[] hash = Crypto.hashAndSalt(password, salt);
             userAccess.updateUserPass(optUserID.getAsInt(), salt, hash);
-            return routeUtils.modelAndView(request, "resetpass.ftl")
-                    .add("guid", guid)
-                    .add("success", "Password updated. You may go login.")
-                    .get();
+            RouteUtils.successMessage(request, "Password updated.");
+            response.redirect("/login");
+            return "redirected";
         }
-        return routeUtils.modelAndView(request, "resetpass.ftl")
-                .add("guid", guid)
-                .get();
+        RouteUtils.errorMessage(request, "This link has expired. Please retry.");
+        response.redirect("/recover");
+        return "redirected";
     }
 
     private static String nextGUID() {

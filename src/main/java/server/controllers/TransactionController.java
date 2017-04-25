@@ -41,10 +41,6 @@ public class TransactionController {
     }
 
     public void init() {
-        makeTransaction();
-    }
-
-    private void makeTransaction() {
         path("/transact", () -> {
             get("", wrapTemplate(this::getTransact), new FreeMarkerEngine());
             post("", wrapRoute(this::transact));
