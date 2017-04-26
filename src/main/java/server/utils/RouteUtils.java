@@ -9,8 +9,10 @@ import utils.ByteUtil;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Optional;
+import java.util.logging.Logger;
 
 public final class RouteUtils {
+    private final static Logger LOGGER = Logger.getLogger(RouteUtils.class.getName());
 
     private final UserAccess userAccess;
 
@@ -27,6 +29,7 @@ public final class RouteUtils {
                 response.status(403);
                 return "";
             } catch (InvalidParamException e) {
+                LOGGER.warning(e.getMessage());
                 response.status(400);
                 response.body("Invalid Parameters.");
                 return "";
@@ -42,6 +45,7 @@ public final class RouteUtils {
                 return RouteUtils.redirectTo(response, "/login");
             } catch (InvalidParamException e) {
                 // TODO find better way to handle
+                LOGGER.warning(e.getMessage());
                 response.status(400);
                 response.body("Invalid Parameters.");
                 return null;
@@ -111,32 +115,47 @@ public final class RouteUtils {
             throws InvalidParamException {
         String value = request.queryParams(paramName);
         if (value == null) {
-            throw new InvalidParamException();
+            String msg = String.format("Parameter %s expected, but not found", paramName);
+            throw new InvalidParamException(msg);
         }
         return value;
     }
 
     public static byte[] queryParamHex(Request request, String paramName)
             throws InvalidParamException {
-        return ByteUtil.hexStringToByteArray(queryParam(request, paramName))
-                .orElseThrow(InvalidParamException::new);
+        String param = queryParam(request, paramName);
+        return ByteUtil.hexStringToByteArray(param).orElseThrow(() -> {
+            String msg = String.format("Expected hexadecimal value for parameter %s, found %s",
+                    paramName, param);
+            return new InvalidParamException(msg);
+        });
     }
 
     public static int queryParamInt(Request request, String paramName)
             throws InvalidParamException {
+        String param = queryParam(request, paramName);
         try {
-            return Integer.parseInt(queryParam(request, paramName));
+            return Integer.parseInt(param);
         } catch (NumberFormatException e) {
-            throw new InvalidParamException();
+            String msg = String.format(
+                    "Expected long value for parameter %s, found %s",
+                    paramName, param
+            );
+            throw new InvalidParamException(msg);
         }
     }
 
     public static long queryParamLong(Request request, String paramName)
             throws InvalidParamException {
+        String param = queryParam(request, paramName);
         try {
-            return Long.parseLong(queryParam(request, paramName));
+            return Long.parseLong(param);
         } catch (NumberFormatException e) {
-            throw new InvalidParamException();
+            String msg = String.format(
+                    "Expected long value for parameter %s, found %s",
+                    paramName, param
+            );
+            throw new InvalidParamException(msg);
         }
     }
 
@@ -144,5 +163,8 @@ public final class RouteUtils {
     }
 
     public static class InvalidParamException extends Exception {
+        public InvalidParamException(String message) {
+            super(message);
+        }
     }
 }
