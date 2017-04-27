@@ -42,6 +42,7 @@ public final class Statements {
             + "guidhash varchar(2048) NOT NULL,"
             + "FOREIGN KEY (userid)"
             + "  REFERENCES users(id)"
+            + "  ON DELETE CASCADE"
             + ")";
     public static final String CREATE_FRIENDS_TABLE = "CREATE TABLE friends ("
             + "username varchar(32) NOT NULL,"
@@ -138,6 +139,14 @@ public final class Statements {
         return prepareStatement(connection.prepareStatement(
                 "DELETE FROM keypairs WHERE keypairid = ?"),
                 statement -> statement.setInt(1, keyID)
+        );
+    }
+
+    public static PreparedStatement deleteAllKeys(Connection connection,
+                                                  int userID) throws SQLException {
+        return prepareStatement(connection.prepareStatement(
+                "DELETE FROM keypairs WHERE userid = ?"),
+                statement -> statement.setInt(1, userID)
         );
     }
 

@@ -26,12 +26,15 @@ import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
+import static server.utils.RouteUtils.wrapRoute;
+
 public class UserControllerTest extends ControllerTest {
     private UserAccess userAccess;
     private UserController controller;
     private final Fixtures fixtures;
 
     public UserControllerTest() throws Exception {
+        super();
         Injector injector = Guice.createInjector(new Model());
         controller = injector.getInstance(UserController.class);
         controller.init();
@@ -84,8 +87,8 @@ public class UserControllerTest extends ControllerTest {
                 .get();
 
         MockResponse mockResponse = new MockResponse();
-        controller.register(request, mockResponse.get());
-        Assert.assertEquals("/register", mockResponse.redirectedTo());
+        wrapRoute(controller::register).handle(request, mockResponse.get());
+        Assert.assertEquals(400, mockResponse.status());
         Assert.assertNull(request.session().attribute("username"));
         Assert.assertFalse(userAccess.getUserByEmail("newuser@example.com").isPresent());
     }
@@ -184,6 +187,7 @@ public class UserControllerTest extends ControllerTest {
         Request request = new MockRequest()
                 .addQueryParamHex("publickey", publicBytes)
                 .addQueryParam("privatekey", privateKey)
+                .addQueryParam("password", Fixtures.USER_PASSWORD)
                 .addSessionAttribute("username", fixtures.user.getUsername())
                 .get();
 

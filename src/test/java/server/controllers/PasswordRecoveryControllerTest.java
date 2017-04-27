@@ -22,6 +22,7 @@ public class PasswordRecoveryControllerTest extends ControllerTest {
     private Fixtures fixtures;
 
     public PasswordRecoveryControllerTest() throws Exception {
+        super();
         Injector injector = Guice.createInjector(new Model());
         controller = injector.getInstance(PasswordRecoveryController.class);
         controller.init();
@@ -80,7 +81,7 @@ public class PasswordRecoveryControllerTest extends ControllerTest {
         final String guid = "guid1";
         access.insertPasswordRecovery(fixtures.user.getId(), guid);
 
-        final String newPassword = "newP@ssw0rd!!";
+        final String newPassword = randomShaTwoFiftySix().toString();
         Request request = new MockRequest()
                 .addQueryParam("password", newPassword)
                 .addQueryParam("passwordConfirm", newPassword)

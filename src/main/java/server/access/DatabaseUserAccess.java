@@ -136,6 +136,14 @@ public final class DatabaseUserAccess implements UserAccess {
     }
 
     @Override
+    public void deleteAllKeys(int userID) throws SQLException {
+        try (Connection conn = connectionProvider.getConnection();
+             PreparedStatement preparedStmt = Statements.deleteAllKeys(conn, userID)) {
+            preparedStmt.executeUpdate();
+        }
+    }
+
+    @Override
     public void insertUser(String username, String email, byte[] salt, byte[] hashedPassword) throws SQLException {
         try (Connection conn = connectionProvider.getConnection();
              PreparedStatement preparedStmt = Statements.insertUser(conn, username, email, salt, hashedPassword)

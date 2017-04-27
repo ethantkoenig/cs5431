@@ -1,5 +1,7 @@
 package server.utils;
 
+import utils.ByteUtil;
+
 /**
  * Utilities for validating inputs
  */
@@ -11,9 +13,7 @@ public final class ValidateUtils {
 
     public static final int MIN_USERNAME_LENGTH = 6;
     public static final int MAX_USERNAME_LENGTH = 24;
-    public static final int MIN_PASSWORD_LENGTH = 12;
-    public static final int MAX_PASSWORD_LENGTH = 24;
-
+    public static final int PASSWORD_LENGTH = 64;
 
     private static boolean validLength(String str, int minLen, int maxLen) {
         return str.length() >= minLen && str.length() <= maxLen;
@@ -21,18 +21,6 @@ public final class ValidateUtils {
 
     public static boolean isAlphanumeric(String str) {
         return str.matches("[A-Za-z0-9]*");
-    }
-
-    public static boolean containsNumber(String str) {
-        return str.matches(".*[0-9].*");
-    }
-
-    public static boolean containsLowercase(String str) {
-        return str.matches(".*[a-z].*$");
-    }
-
-    public static boolean containsUpperCase(String str) {
-        return str.matches(".*[A-Z].*$");
     }
 
     public static boolean containsEmail(String str) {
@@ -53,10 +41,8 @@ public final class ValidateUtils {
      * @return whether the given password is valid
      */
     public static boolean validPassword(String password) {
-        return validLength(password, MIN_PASSWORD_LENGTH, MAX_PASSWORD_LENGTH)
-                && containsNumber(password)
-                && containsLowercase(password)
-                && containsUpperCase(password);
+        return password.length() == PASSWORD_LENGTH
+                && ByteUtil.hexStringToByteArray(password).isPresent();
     }
 
     /**

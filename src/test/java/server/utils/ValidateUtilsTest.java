@@ -20,42 +20,6 @@ public class ValidateUtilsTest extends RandomizedTest {
     }
 
     @Test
-    public void testContainsNumber() {
-        Assert.assertFalse(ValidateUtils.containsNumber(""));
-        Assert.assertFalse(ValidateUtils.containsNumber("##"));
-
-        Assert.assertTrue(ValidateUtils.containsNumber("abc123$S"));
-        Assert.assertTrue(ValidateUtils.containsNumber("123"));
-        Assert.assertTrue(ValidateUtils.containsNumber("A123"));
-        Assert.assertTrue(ValidateUtils.containsNumber("abC123"));
-        Assert.assertTrue(ValidateUtils.containsNumber("A123bc"));
-    }
-
-    @Test
-    public void testContainsLowercase() {
-        Assert.assertFalse(ValidateUtils.containsLowercase(""));
-        Assert.assertFalse(ValidateUtils.containsLowercase("##"));
-        Assert.assertFalse(ValidateUtils.containsLowercase("123"));
-        Assert.assertFalse(ValidateUtils.containsLowercase("A123"));
-
-        Assert.assertTrue(ValidateUtils.containsLowercase("abc123$S"));
-        Assert.assertTrue(ValidateUtils.containsLowercase("abC123"));
-        Assert.assertTrue(ValidateUtils.containsLowercase("A123bc"));
-    }
-
-    @Test
-    public void testContainsUppercase() {
-        Assert.assertFalse(ValidateUtils.containsUpperCase(""));
-        Assert.assertFalse(ValidateUtils.containsUpperCase("##"));
-        Assert.assertFalse(ValidateUtils.containsUpperCase("123"));
-        Assert.assertFalse(ValidateUtils.containsUpperCase("abc123$"));
-
-        Assert.assertTrue(ValidateUtils.containsUpperCase("abC123"));
-        Assert.assertTrue(ValidateUtils.containsUpperCase("A123"));
-        Assert.assertTrue(ValidateUtils.containsUpperCase("A123bc"));
-    }
-
-    @Test
     public void testValidUsername() {
         Assert.assertFalse(ValidateUtils.validUsername(""));
         Assert.assertFalse(ValidateUtils.validUsername("not@l#panumer;("));
@@ -70,10 +34,11 @@ public class ValidateUtilsTest extends RandomizedTest {
     public void testValidPassword() {
         Assert.assertFalse(ValidateUtils.validPassword(""));
         Assert.assertFalse(ValidateUtils.validPassword("password"));
-        Assert.assertFalse(ValidateUtils.validPassword("ThisIsAVeryLongLongPassw0rd"));
         Assert.assertFalse(ValidateUtils.validPassword("thisisalll0wercase"));
+        Assert.assertFalse(ValidateUtils.validPassword("ThisIsAGoodPassw0rd"));
+        Assert.assertFalse(ValidateUtils.validPassword("ThisIsAVeryLongLongPassw0rd"));
 
-        Assert.assertTrue(ValidateUtils.validPassword("ThisIsAGoodPassw0rd"));
+        Assert.assertTrue(ValidateUtils.validPassword(randomShaTwoFiftySix().toString()));
     }
 
     @Test
