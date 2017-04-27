@@ -129,7 +129,7 @@ public final class DatabaseUserAccess implements UserAccess {
         ) {
             int rowCount = preparedStmt.executeUpdate();
             if (rowCount != 1) {
-                String msg = String.format("Insert affected %d rows, expected 1", rowCount);
+                String msg = String.format("Delete affected %d rows, expected 1", rowCount);
                 LOGGER.severe(msg);
             }
         }
