@@ -9,7 +9,12 @@ repositories {
 }
 
 dependencies {
+    compile group: 'com.google.api-client', name:'google-api-client', version: '1.22.0'
+    compile group: 'com.google.apis', name: 'google-api-services-gmail', version: 'v1-rev64-1.22.0'
     compile group: 'com.google.inject', name: 'guice', version: '4.0'
+    compile (group: 'com.google.oauth-client', name: 'google-oauth-client-jetty', version: '1.22.0') {
+        exclude module: 'servlet-api' // exclude old version of jetty
+    }
     compile group: 'com.sparkjava', name: 'spark-core', version: '2.5.5'
     compile group: 'com.sparkjava', name: 'spark-template-freemarker', version: '2.5.5'
     compile group: 'commons-dbcp', name: 'commons-dbcp', version: '1.4'

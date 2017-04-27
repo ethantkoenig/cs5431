@@ -25,10 +25,10 @@ import static spark.Spark.*;
 
 
 public class PasswordRecoveryController {
-    // TODO error message duplicated in UserController
     private static final String PASSWORD_ERROR = "Password must be between 12 and 24 characters, contain a lowercase letter, capital letter, and a number.";
+    private static final String SUBJECT = "Yaccoin Password Recovery";
+    private static SecureRandom random = Config.secureRandom(); // TODO use Guice
 
-    private static SecureRandom random = Config.secureRandom();
 
     private final UserAccess userAccess;
     private final PasswordRecoveryAccess passwordRecoveryAccess;
@@ -75,7 +75,7 @@ public class PasswordRecoveryController {
         Optional<User> user = userAccess.getUserByEmail(email);
         if (user.isPresent()) {
             passwordRecoveryAccess.insertPasswordRecovery(user.get().getId(), guid);
-            mailService.sendEmail(email, link);
+            mailService.sendEmail(email, SUBJECT, emailBody(link));
             RouteUtils.successMessage(request, "Check your inbox.");
         }
         response.redirect("/recover");
@@ -105,6 +105,13 @@ public class PasswordRecoveryController {
         RouteUtils.errorMessage(request, "This link has expired. Please retry.");
         response.redirect("/recover");
         return "redirected";
+    }
+
+    private static String emailBody(String link) {
+        return String.format(
+                "Click on the link below to create reset your account password.%n%n%s",
+                link
+        );
     }
 
     private static String nextGUID() {
