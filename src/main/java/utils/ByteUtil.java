@@ -40,23 +40,24 @@ public final class ByteUtil {
         return bia.compareTo(bib);
     }
 
-    public static byte[] forceByteArray(Serializer serializer) {
+    public static <T extends Exception> byte[] forceByteArray(Serializer<T> serializer) {
         try {
             return asByteArray(serializer);
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    public static byte[] asByteArray(Serializer serializer) throws IOException {
+    public static <T extends Exception> byte[] asByteArray(Serializer<T> serializer)
+            throws T {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         serializer.serialize(new DataOutputStream(outputStream));
         return outputStream.toByteArray();
     }
 
     @FunctionalInterface
-    public interface Serializer {
-        void serialize(DataOutputStream outputStream) throws IOException;
+    public interface Serializer<T extends Exception> {
+        void serialize(DataOutputStream outputStream) throws T;
     }
 
     /***********************************************************************************************************
