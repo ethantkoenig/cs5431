@@ -48,6 +48,11 @@ public interface UserAccess {
     void deleteKey(int keyID) throws SQLException;
 
     /**
+     * Remove all keys associated with the given user
+     */
+    void deleteAllKeys(int userID) throws SQLException;
+
+    /**
      * Inserts a user into the users table in the yaccoin database
      */
     void insertUser(String username, String email, byte[] salt, byte[] hashedPassword) throws SQLException;

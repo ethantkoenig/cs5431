@@ -36,7 +36,8 @@ public class TransactionControllerTest extends ControllerTest {
     private TransactionController controller;
     private Fixtures fixtures;
 
-    public TransactionControllerTest() {
+    public TransactionControllerTest() throws Exception {
+        super();
         Injector injector = Guice.createInjector(new Model());
         controller = injector.getInstance(TransactionController.class);
         controller.init();

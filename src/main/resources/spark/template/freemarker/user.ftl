@@ -32,9 +32,7 @@
                     <div class="form-group password-form-group">
                         <input type="password" class="form-control" placeholder="Password">
                     </div>
-                    <div class="form-group confirm-form-group">
-                        <input type="password" class="form-control" placeholder="Confirm">
-                    </div>
+                    <input type="hidden" class="hidden-password" name="password">
                     <input class="btn btn-primary" type="submit" value="Update">
                 </form>
             </div>

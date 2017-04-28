@@ -1,4 +1,48 @@
 $(document).ready(function () {
+
+    // for registration and password-reset
+    function authPasswordAndConfirm($form) {
+        var $passwordGroup = $form.find('.password-form-group');
+        var $passwordInput = $passwordGroup.find('input');
+        var $confirmGroup = $form.find('.confirm-form-group');
+        var $confirmInput = $confirmGroup.find('input');
+
+        var password = $passwordInput.val();
+        if (!validPassword(password)) {
+            $passwordGroup.addClass('has-error');
+            $confirmGroup.addClass('has-error');
+            // TODO actually a display message to the user
+            return false; // don't submit form
+        }
+        if ($confirmInput.val() != password) {
+            $passwordGroup.addClass('has-error');
+            $confirmGroup.addClass('has-error');
+            // TODO actually a display message to the user
+            return false; // don't submit form
+        }
+
+        $form.find('.hidden-password').val(authSecret(password));
+        return true; // submit form
+    }
+
+    $('#registerform').submit(function () {
+        var $form = $(this);
+        return authPasswordAndConfirm($form);
+    });
+
+    $('#loginform').submit(function() {
+        var $form = $(this);
+        var $passwordGroup = $form.find('.password-form-group');
+        var password = $passwordGroup.find('input').val();
+        if (password.length == 0) {
+            // TODO actually a display message to the user
+            $passwordGroup.addClass('has-error');
+            return false; // don't submit form
+        }
+        $form.find('.hidden-password').val(authSecret(password));
+        return true; // submit form
+    });
+
     $('#logout').click(function () {
         $.ajax({
             type: 'DELETE',
@@ -7,6 +51,11 @@ $(document).ready(function () {
                 window.location.replace("/");
             }
         });
+    });
+
+    $('#resetform').submit(function () {
+        var $form = $(this);
+        return authPasswordAndConfirm($form);
     });
 
     $('#keyform-generate').change(function () {
@@ -23,13 +72,10 @@ $(document).ready(function () {
         var $privateKeyInput = $privateKeyGroup.find('input');
         var $passwordGroup = $form.find('.password-form-group');
         var $passwordInput = $passwordGroup.find('input');
-        var $confirmGroup = $form.find('.confirm-form-group');
-        var $confirmInput = $confirmGroup.find('input');
 
         var password = $passwordInput.val();
-        if ($confirmInput.val() != password || password.length == 0) {
+        if (password.length == 0) {
             $passwordGroup.addClass('has-error');
-            $confirmGroup.addClass('has-error');
             // TODO eventually display an actual error message
             return false; // do not submit
         }
@@ -43,8 +89,6 @@ $(document).ready(function () {
             var privateKeyHex = sjcl.codec.hex.fromBits(privateKeyD.toBits());
             var publicKeyHex = sjcl.codec.hex.fromBits(publicKeyPoint.x.toBits())
                 + sjcl.codec.hex.fromBits(publicKeyPoint.y.toBits());
-            console.log("privateKeyHex: " + privateKeyHex);
-            console.log("publicKeyHex: " + publicKeyHex);
             $privateKeyInput.val(privateKeyHex);
             $publicKeyInput.val(publicKeyHex);
         }
@@ -59,9 +103,11 @@ $(document).ready(function () {
             return false; // don't submit form
         }
 
-        var encrypted = sjcl.encrypt(password, $privateKeyInput.val());
+        var secret = encryptSecret(password);
+        var encrypted = sjcl.encrypt(secret, $privateKeyInput.val());
         $form.find('input[name="publickey"]').val($publicKeyInput.val());
         $form.find('input[name="privatekey"]').val(encrypted);
+        $form.find('.hidden-password').val(authSecret(password));
         return true; // submit form
     });
 
@@ -83,6 +129,7 @@ $(document).ready(function () {
         var action = $(this).attr("action");
         var data = $(this).serialize();
         var password = $('#transaction-password').val();
+        var secret = encryptSecret(password);
         $.post(action, data, function (resp) {
             console.log(resp);
             // TODO this feels like a hack, eventually make it nice
@@ -90,7 +137,7 @@ $(document).ready(function () {
             var sString = "";
             console.log("resp: " + JSON.stringify(resp));
             for (var i = 0; i < resp.encryptedKeys.length; i++) {
-                var decrypted = sjcl.decrypt(password, JSON.stringify(resp.encryptedKeys[i]));
+                var decrypted = sjcl.decrypt(secret, JSON.stringify(resp.encryptedKeys[i]));
                 var key = new sjcl.ecc.ecdsa.secretKey(sjcl.ecc.curves.c256, new sjcl.bn(decrypted));
 
                 var payload = sjcl.codec.hex.toBits(resp.payload);
@@ -113,6 +160,7 @@ $(document).ready(function () {
                 r: rString,
                 s: sString
             }, function () {
+                // TODO better handling of successful transactions
                 $('#status').remove();
                 $("#status-message").append('<div class="row" id="status" style="padding-top: 10px;"> <div class="alert alert-success"> <strong>Sucess!</strong> Transaction sent.  </div> </div>');
                 window.location.replace("/");
@@ -152,9 +200,23 @@ $(document).ready(function () {
 
 
 function validHexString(s, length) {
-    if (s.length != length) {
+    if (length != null && s.length != length) {
         return false;
     }
     var hexRegExp = /[0-9A-Fa-f]*/g;
     return hexRegExp.test(s);
+}
+
+function validPassword(password) {
+    return password.length >= 16;
+}
+
+function authSecret(password) {
+    var shaBitArray = sjcl.hash.sha256.hash(password + "authSalt");
+    return sjcl.codec.hex.fromBits(shaBitArray);
+}
+
+function encryptSecret(password) {
+    var shaBitArray = sjcl.hash.sha256.hash(password + "encryptSalt");
+    return sjcl.codec.hex.fromBits(shaBitArray);
 }

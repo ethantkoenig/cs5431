@@ -25,10 +25,8 @@ import static spark.Spark.*;
 
 
 public class PasswordRecoveryController {
-    private static final String PASSWORD_ERROR = "Password must be between 12 and 24 characters, contain a lowercase letter, capital letter, and a number.";
     private static final String SUBJECT = "Yaccoin Password Recovery";
     private static SecureRandom random = Config.secureRandom(); // TODO use Guice
-
 
     private final UserAccess userAccess;
     private final PasswordRecoveryAccess passwordRecoveryAccess;
@@ -84,20 +82,20 @@ public class PasswordRecoveryController {
 
     String reset(Request request, Response response) throws Exception {
         String password = queryParam(request, "password");
-        String passwordConfirm = queryParam(request, "passwordConfirm");
         String guid = queryParam(request, "guid");
-        if (!(password.equals(passwordConfirm) && ValidateUtils.validPassword(password))) {
-            //error handling
-            RouteUtils.errorMessage(request, PASSWORD_ERROR);
-            response.redirect("/recover?guid=" + guid);
-            return "redirected";
+
+        if (!ValidateUtils.validPassword(password)) {
+            throw new InvalidParamException("Invalid password");
         }
         OptionalInt optUserID = passwordRecoveryAccess.getPasswordRecoveryUserID(guid);
         if (optUserID.isPresent()) {
-            //update password for userid with new password.
+            int userID = optUserID.getAsInt();
+            userAccess.deleteAllKeys(userID);
+
             byte[] salt = Crypto.generateSalt();
             byte[] hash = Crypto.hashAndSalt(password, salt);
-            userAccess.updateUserPass(optUserID.getAsInt(), salt, hash);
+            userAccess.updateUserPass(userID, salt, hash);
+
             RouteUtils.successMessage(request, "Password updated.");
             response.redirect("/login");
             return "redirected";

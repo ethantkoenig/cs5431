@@ -36,8 +36,6 @@ import static spark.Spark.*;
 public class UserController {
     private static final Logger LOGGER = Logger.getLogger(UserController.class.getName());
 
-    private static final String REGISTER_MISMATCHED_PASSWORDS = "Password does not match confirmation.";
-    private static final String REGISTER_INVALID_PASSWORD = "Password must be between 12 and 24 characters, contain a lowercase letter, capital letter, and a number.";
     private static final String REGISTER_INVALID_USERNAME = "Username must be alphanumeric and between 6 and 24 characters.";
     private static final String REGISTER_INVALID_EMAIL = "Hmm, that doesn't look like an email address.";
     private static final String REGISTER_TAKEN_USERNAME_OR_EMAIL = "Username and/or email already taken.";
@@ -86,21 +84,13 @@ public class UserController {
             throws Exception {
         String username = queryParam(request, "username");
         String password = queryParam(request, "password");
-        String confirm = queryParam(request, "confirm");
         String email = queryParam(request, "email");
-        if (!password.equals(confirm)) {
-            RouteUtils.errorMessage(request, REGISTER_MISMATCHED_PASSWORDS);
-            response.redirect("/register");
-            return "redirected";
-        }
         if (!ValidateUtils.validUsername(username)) {
             RouteUtils.errorMessage(request, REGISTER_INVALID_USERNAME);
             response.redirect("/register");
             return "redirected";
         } else if (!ValidateUtils.validPassword(password)) {
-            RouteUtils.errorMessage(request, REGISTER_INVALID_PASSWORD);
-            response.redirect("/register");
-            return "redirected";
+            throw new InvalidParamException("Invalid password");
         } else if (!ValidateUtils.validEmail(email)) {
             RouteUtils.errorMessage(request, REGISTER_INVALID_EMAIL);
             response.redirect("/register");
@@ -138,8 +128,7 @@ public class UserController {
             response.redirect("/recover");
             return "redirected";
         }
-        byte[] hash = Crypto.hashAndSalt(password, user.getSalt());
-        if (!Arrays.equals(hash, user.getHashedPassword())) {
+        if (!validPassword(user, password)) {
             userAccess.incrementFailedLogins(user.getId());
             RouteUtils.errorMessage(request, LOGIN_ERROR);
             response.redirect("/login");
@@ -190,8 +179,15 @@ public class UserController {
     String addUserKey(Request request, Response response) throws Exception {
         byte[] publicKey = RouteUtils.queryParamHex(request, "publickey");
         String privateKey = RouteUtils.queryParam(request, "privatekey");
+        String password = RouteUtils.queryParam(request, "password");
         User user = routeUtils.forceLoggedInUser(request);
 
+        if (!validPassword(user, password)) {
+            // user mistyped password
+            RouteUtils.errorMessage(request, "Incorrect password");
+            response.redirect("/user/" + user.getUsername());
+            return "redirected";
+        }
         boolean validKey = true;
         try {
             ECDSAPublicKey.DESERIALIZER.deserialize(publicKey);
@@ -275,5 +271,10 @@ public class UserController {
                 .add("balances", balancesByKey)
                 .add("total", totalBalance)
                 .get();
+    }
+
+    private boolean validPassword(User user, String password) throws Exception {
+        byte[] hash = Crypto.hashAndSalt(password, user.getSalt());
+        return Arrays.equals(hash, user.getHashedPassword());
     }
 }

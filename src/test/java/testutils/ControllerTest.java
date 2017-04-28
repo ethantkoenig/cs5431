@@ -13,11 +13,19 @@ import server.utils.ConnectionProvider;
 import server.utils.MailService;
 
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
 
-public abstract class ControllerTest {
+public abstract class ControllerTest extends RandomizedTest {
     private ConnectionProvider connectionProvider;
+    private IDataSet dataSet;
+
+    protected ControllerTest() throws Exception {
+        try (InputStream inputStream = new FileInputStream("fixtures.xml")) {
+            dataSet = new FlatXmlDataSetBuilder().build(inputStream);
+        }
+    }
 
     protected void setConnectionProvider(ConnectionProvider connectionProvider) {
         if (connectionProvider == null) {
@@ -35,10 +43,6 @@ public abstract class ControllerTest {
         }
         Connection connection = connectionProvider.getConnection();
         IDatabaseConnection databaseConnection = new DatabaseConnection(connection);
-        IDataSet dataSet;
-        try (InputStream inputStream = new FileInputStream("fixtures.xml")) {
-            dataSet = new FlatXmlDataSetBuilder().build(inputStream);
-        }
         DatabaseOperation.CLEAN_INSERT.execute(databaseConnection, dataSet);
     }
 

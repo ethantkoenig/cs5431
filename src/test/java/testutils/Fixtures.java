@@ -10,7 +10,7 @@ import java.security.GeneralSecurityException;
 import java.util.Base64;
 
 public final class Fixtures {
-    public static final String USER_PASSWORD = "g00dP@ssw0rd!!";
+    public static final String USER_PASSWORD = "34f3234917379d0ec59fbdaf897bd2aa58ae07f8339d41e3060000a5c4120013";
     public final User user;
 
     public final ECDSAPublicKey key;
