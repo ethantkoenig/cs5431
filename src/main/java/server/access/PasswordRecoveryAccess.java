@@ -5,7 +5,6 @@ import server.utils.ConnectionProvider;
 import server.utils.Statements;
 
 import java.nio.charset.Charset;
-import java.security.GeneralSecurityException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -28,7 +27,7 @@ public class PasswordRecoveryAccess {
     /**
      * Check if guid exists in a record in the recovery table and return the associated userID
      */
-    public OptionalInt getPasswordRecoveryUserID(String GUID) throws SQLException, GeneralSecurityException {
+    public OptionalInt getPasswordRecoveryUserID(String GUID) throws SQLException {
         String GUIDHash = hashOf(GUID.getBytes(Charset.forName("UTF-8"))).toString();
         try (Connection conn = connectionProvider.getConnection();
              PreparedStatement preparedStmt = Statements.getPasswordRecoveryUserID(conn, GUIDHash);
@@ -44,7 +43,7 @@ public class PasswordRecoveryAccess {
     /**
      * Add a row to the recovery table with userid, current time, and hashed guid
      */
-    public void insertPasswordRecovery(int userID, String GUID) throws SQLException, GeneralSecurityException {
+    public void insertPasswordRecovery(int userID, String GUID) throws SQLException {
         String GUIDHash = hashOf(GUID.getBytes(Charset.forName("UTF-8"))).toString();
         try (Connection conn = connectionProvider.getConnection();
              PreparedStatement preparedStmt = Statements.insertPasswordRecovery(conn, userID, GUIDHash)

@@ -10,7 +10,6 @@ import utils.*;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
@@ -113,7 +112,7 @@ public class Block extends HashCache implements Iterable<Transaction>, CanBeSeri
     protected ShaTwoFiftySix computeHash() {
         try {
             return ShaTwoFiftySix.hashOf(ByteUtil.asByteArray(this::serialize));
-        } catch (IOException | GeneralSecurityException e) {
+        } catch (IOException e) {
             LOGGER.severe(e.getMessage());
             throw new RuntimeException(e);
         }

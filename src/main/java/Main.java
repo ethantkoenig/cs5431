@@ -16,7 +16,6 @@ import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.nio.charset.StandardCharsets;
-import java.security.GeneralSecurityException;
 import java.util.Arrays;
 import java.util.Optional;
 
@@ -68,14 +67,14 @@ public class Main {
     private static boolean runNode(String[] args, boolean isMining) {
         try {
             return runNodeWithThrowing(args, isMining);
-        } catch (GeneralSecurityException | IOException e) {
+        } catch (IOException e) {
             System.err.println(String.format("Error: %s", e.getMessage()));
             return false;
         }
     }
 
     private static boolean runNodeWithThrowing(String[] args, boolean isMining)
-            throws GeneralSecurityException, IOException {
+            throws IOException {
         if (args.length < 6) {
             System.err.println("usage: node <port> <public-key> <private-key> <privileged-key> <File for list of nodes>");
             return false;

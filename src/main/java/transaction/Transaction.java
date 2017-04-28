@@ -11,7 +11,6 @@ import utils.*;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.util.*;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
@@ -220,7 +219,7 @@ public final class Transaction extends HashCache implements CanBeSerialized {
     protected ShaTwoFiftySix computeHash() {
         try {
             return ShaTwoFiftySix.hashOf(ByteUtil.asByteArray(this::serializeWithoutSignatures));
-        } catch (IOException | GeneralSecurityException e) {
+        } catch (IOException e) {
             LOGGER.severe(e.getMessage());
             throw new RuntimeException(e);
         }
