@@ -11,7 +11,6 @@ import utils.CanBeSerialized;
 import utils.Pair;
 
 import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
@@ -71,7 +70,7 @@ public class MessageHandler {
         }
         try {
             addBlockToChain(block);
-        } catch (GeneralSecurityException | IOException e) {
+        } catch (IOException e) {
             LOGGER.severe(e.getMessage());
             return false;
         }
@@ -157,7 +156,7 @@ public class MessageHandler {
         message.respond(new OutgoingMessage(Message.UTX_WITH_KEYS, payload));
     }
 
-    private void addBlockToChain(Block block) throws GeneralSecurityException, IOException {
+    private void addBlockToChain(Block block) throws IOException {
         if (bundle.getBlockChain().getCurrentHead() == null) {
             if (block.verifyGenesis(bundle.privilegedKey)) {
                 LOGGER.info("Received the genesis block");

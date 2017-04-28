@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.BufferUnderflowException;
-import java.security.GeneralSecurityException;
 import java.util.Arrays;
 import java.util.Optional;
 
@@ -57,11 +56,11 @@ public final class ShaTwoFiftySix implements Comparable<ShaTwoFiftySix> {
      * @param content sequence of bytes to hash
      * @return A {@code ShaTwoFiftySix} object corresponding to the hash of {@code content}
      */
-    public static ShaTwoFiftySix hashOf(byte[] content) throws GeneralSecurityException {
+    public static ShaTwoFiftySix hashOf(byte[] content) {
         byte[] hash = Crypto.sha256(content);
         if (hash.length != HASH_SIZE_IN_BYTES) {
             String msg = String.format("Unexpected length of SHA-256 hash: %d", hash.length);
-            throw new GeneralSecurityException(msg);
+            throw new IllegalArgumentException(msg);
         }
         return new ShaTwoFiftySix(hash);
     }
