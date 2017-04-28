@@ -6,6 +6,8 @@ import server.models.User;
 import spark.*;
 import utils.ByteUtil;
 
+import java.io.IOException;
+import java.net.URL;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Optional;
@@ -157,6 +159,11 @@ public final class RouteUtils {
             );
             throw new InvalidParamException(msg);
         }
+    }
+
+    public static String baseURL(Request request) throws IOException {
+        URL url = new URL(request.url());
+        return String.format("%s://%s", url.getProtocol(), url.getAuthority());
     }
 
     public static class NotLoggedInException extends Exception {

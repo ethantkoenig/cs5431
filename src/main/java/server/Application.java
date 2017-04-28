@@ -6,10 +6,7 @@ import com.google.inject.Injector;
 import server.access.DatabaseUserAccess;
 import server.access.UserAccess;
 import server.config.DatabaseConfig;
-import server.controllers.IndexController;
-import server.controllers.PasswordRecoveryController;
-import server.controllers.TransactionController;
-import server.controllers.UserController;
+import server.controllers.*;
 import server.utils.*;
 import utils.IOUtils;
 
@@ -48,7 +45,7 @@ public class Application {
         injector.getInstance(IndexController.class).init();
         injector.getInstance(UserController.class).init();
         injector.getInstance(TransactionController.class).init();
-        injector.getInstance(PasswordRecoveryController.class).init();
+        injector.getInstance(AccountRecoveryController.class).init();
 
         return true;
     }

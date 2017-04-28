@@ -14,6 +14,8 @@ public interface UserAccess {
      */
     List<String> getAllUsernames() throws SQLException;
 
+    Optional<User> getUserByID(int userID) throws SQLException;
+
     /**
      * Given a username return the user object in the DB that is associated with this username
      * NOTE: we will need to not allow duplicate usernames.

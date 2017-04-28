@@ -41,6 +41,27 @@ public final class DatabaseUserAccess implements UserAccess {
     }
 
     @Override
+    public Optional<User> getUserByID(int userID) throws SQLException {
+        try (
+                Connection conn = connectionProvider.getConnection();
+                PreparedStatement preparedStmt = Statements.selectUserByID(conn, userID);
+                ResultSet rs = preparedStmt.executeQuery()
+        ) {
+            if (rs.next()) {
+                // TODO repeated code
+                int id = rs.getInt("id");
+                String username = rs.getString("username");
+                byte[] salt = rs.getBytes("salt");
+                byte[] hashedPassword = rs.getBytes("pass");
+                String email = rs.getString("email");
+                int failedLogins = rs.getInt("failedLogins");
+                return Optional.of(new User(id, username, email, salt, hashedPassword, failedLogins));
+            }
+            return Optional.empty();
+        }
+    }
+
+    @Override
     public Optional<User> getUserByUsername(String username) throws SQLException {
         try (
                 Connection conn = connectionProvider.getConnection();

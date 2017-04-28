@@ -5,16 +5,13 @@
 <div class="container">
     <div class="row padding-top">
         <div class="col-md-4 col-md-offset-4">
-            <form action="/recover/reset" method="post" id="resetform">
+            <form action="/unlock" method="post" id="unlockform">
                 <div class="form-group password-form-group">
-                    <input type="password" class="form-control" placeholder="New password">
-                </div>
-                <div class="form-group confirm-form-group">
-                    <input type="password" class="form-control" placeholder="Confirm new password">
+                    <input type="password" class="form-control" placeholder="Password">
                 </div>
                 <input type="hidden" class="hidden-password" name="password">
                 <input type="hidden" name="guid" value="${guid}">
-                <input class="btn btn-primary submit-button" type="submit" value="Reset Password">
+                <input class="btn btn-primary submit-button" type="submit" value="Unlock Account">
             </form>
         </div>
     </div>

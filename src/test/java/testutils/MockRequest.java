@@ -1,15 +1,12 @@
 package testutils;
 
 import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 import spark.Request;
 import spark.Session;
 import utils.ByteUtil;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -23,28 +20,19 @@ public class MockRequest {
     private final Map<String, String> queryParams = new HashMap<>();
 
     public MockRequest() {
-        when(mock.params(any())).then(new Answer<String>() {
-            @Override
-            public String answer(InvocationOnMock invocationOnMock) throws Throwable {
-                String param = invocationOnMock.getArgument(0);
-                return params.get(param);
-            }
+        when(mock.params(any())).then(invocationOnMock -> {
+            String param = invocationOnMock.getArgument(0);
+            return params.get(param);
         });
 
-        when(mock.queryParams(any())).then(new Answer<String>() {
-            @Override
-            public String answer(InvocationOnMock invocationOnMock) throws Throwable {
-                String param = invocationOnMock.getArgument(0);
-                return queryParams.get(param);
-            }
+        when(mock.queryParams(any())).then(invocationOnMock -> {
+            String param = invocationOnMock.getArgument(0);
+            return queryParams.get(param);
         });
 
-        when(mock.queryParams()).then(new Answer<Set<String>>() {
-            @Override
-            public Set<String> answer(InvocationOnMock invocationOnMock) throws Throwable {
-                return queryParams.keySet();
-            }
-        });
+        when(mock.queryParams()).then(invocationOnMock -> queryParams.keySet());
+
+        when(mock.url()).thenReturn("https://localhost:5000/foo/bar");
     }
 
     public MockRequest addParam(String param, String value) {
