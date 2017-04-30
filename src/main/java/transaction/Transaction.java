@@ -255,10 +255,10 @@ public final class Transaction extends HashCache implements CanBeSerialized {
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        builder.append("Tx: " + ByteUtil.bytesToHexString(getShaTwoFiftySix().copyOfHash()) + "\n");
+        builder.append("Tx: " + getShaTwoFiftySix() + "\n");
         builder.append("----TxIn----\n");
         for (int i = 0; i < txIn.length; ++i) {
-            builder.append("prevId: " + ByteUtil.bytesToHexString(txIn[i].previousTxn.copyOfHash()));
+            builder.append("prevId: " + txIn[i].previousTxn);
             builder.append(", txIdx: " + txIn[i].txIdx + "\n");
         }
         builder.append("----TxOut----\n");

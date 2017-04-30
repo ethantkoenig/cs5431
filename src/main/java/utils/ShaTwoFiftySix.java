@@ -35,7 +35,6 @@ public final class ShaTwoFiftySix implements Comparable<ShaTwoFiftySix> {
      *
      * @param input input bytes containing SHA-256 hash
      * @return A {@code ShaTwoFiftySix} object corresponding to the read SHA-256 hash
-     * @throws BufferUnderflowException
      */
     public static ShaTwoFiftySix deserialize(InputStream input) throws IOException {
         byte[] hash = new byte[HASH_SIZE_IN_BYTES];

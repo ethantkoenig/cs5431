@@ -116,7 +116,7 @@ public final class Crypto {
     }
 
     public static byte[] hashAndSalt(String password, byte[] salt)
-            throws Exception {
+            throws GeneralSecurityException {
         return pbkdf2(password, salt);
     }
 
