@@ -1,6 +1,7 @@
-package network;
+package message.payloads;
 
 import crypto.ECDSAPublicKey;
+import message.Message;
 import transaction.Transaction;
 import utils.ByteUtil;
 import utils.CanBeSerialized;
@@ -12,7 +13,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.List;
 
-public class GetUTXWithKeysResponse implements CanBeSerialized {
+public class GetUTXWithKeysResponsePayload extends MessagePayload {
 
     private static final int MAX_PAYLOAD_LEN = 1048576;
 
@@ -26,18 +27,18 @@ public class GetUTXWithKeysResponse implements CanBeSerialized {
      */
     public final byte[] unsignedTransaction;
 
-    public final static Deserializer<GetUTXWithKeysResponse> DESERIALIZER =
+    public final static Deserializer<GetUTXWithKeysResponsePayload> DESERIALIZER =
             new GetUTXWithKeysResponseDeserializer();
 
-    private GetUTXWithKeysResponse(List<ECDSAPublicKey> keysUsed, byte[] unsignedTransaction, boolean wasSuccessful) {
+    private GetUTXWithKeysResponsePayload(List<ECDSAPublicKey> keysUsed, byte[] unsignedTransaction, boolean wasSuccessful) {
         this.keysUsed = keysUsed;
         this.unsignedTransaction = unsignedTransaction;
         this.wasSuccessful = wasSuccessful;
     }
 
-    public static GetUTXWithKeysResponse success(List<ECDSAPublicKey> keysUsed, Transaction unsignedTransaction) {
+    public static GetUTXWithKeysResponsePayload success(List<ECDSAPublicKey> keysUsed, Transaction unsignedTransaction) {
         try {
-            return new GetUTXWithKeysResponse(
+            return new GetUTXWithKeysResponsePayload(
                     keysUsed,
                     ByteUtil.asByteArray(unsignedTransaction::serializeWithoutSignatures),
                     true
@@ -48,8 +49,8 @@ public class GetUTXWithKeysResponse implements CanBeSerialized {
         }
     }
 
-    public static GetUTXWithKeysResponse failure() {
-        return new GetUTXWithKeysResponse(null, null, false);
+    public static GetUTXWithKeysResponsePayload failure() {
+        return new GetUTXWithKeysResponsePayload(null, null, false);
     }
 
 
@@ -62,18 +63,23 @@ public class GetUTXWithKeysResponse implements CanBeSerialized {
         }
     }
 
+    @Override
+    public byte messageType() {
+        return Message.UTX_WITH_KEYS;
+    }
+
     private static final class GetUTXWithKeysResponseDeserializer
-            implements Deserializer<GetUTXWithKeysResponse> {
+            implements Deserializer<GetUTXWithKeysResponsePayload> {
 
         @Override
-        public GetUTXWithKeysResponse deserialize(DataInputStream inputStream) throws DeserializationException, IOException {
+        public GetUTXWithKeysResponsePayload deserialize(DataInputStream inputStream) throws DeserializationException, IOException {
             boolean wasSuccessful = inputStream.readBoolean();
             if (wasSuccessful) {
                 List<ECDSAPublicKey> keysUsed = Deserializer
                         .deserializeList(inputStream, ECDSAPublicKey.DESERIALIZER);
                 byte[] unsignedTransaction = Deserializer.deserializeBytes(inputStream, MAX_PAYLOAD_LEN);
 
-                return new GetUTXWithKeysResponse(keysUsed, unsignedTransaction, true);
+                return new GetUTXWithKeysResponsePayload(keysUsed, unsignedTransaction, true);
             } else {
                 return failure();
             }

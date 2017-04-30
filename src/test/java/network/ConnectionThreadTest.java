@@ -1,5 +1,8 @@
 package network;
 
+import message.IncomingMessage;
+import message.Message;
+import message.OutgoingMessage;
 import org.junit.Assert;
 import org.junit.Test;
 import testutils.RandomizedTest;
@@ -24,8 +27,8 @@ public class ConnectionThreadTest extends RandomizedTest {
         ConnectionThread rightThread = new ConnectionThread(pair.getRight(), rightQueue);
         rightThread.start();
 
-        OutgoingMessage m1 = new OutgoingMessage(Message.BLOCK, randomBytes(random.nextInt(1024)));
-        OutgoingMessage m2 = new OutgoingMessage(Message.BLOCK, randomBytes(random.nextInt(1024)));
+        OutgoingMessage m1 = new OutgoingMessage(Message.BLOCKS, randomBytes(random.nextInt(1024)));
+        OutgoingMessage m2 = new OutgoingMessage(Message.BLOCKS, randomBytes(random.nextInt(1024)));
         OutgoingMessage m3 = new OutgoingMessage(Message.TRANSACTION, randomBytes(random.nextInt(1024)));
         leftThread.send(m1);
         rightThread.send(m2);
