@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import crypto.ECDSAPublicKey;
 import crypto.ECDSASignature;
 import network.*;
+import server.access.TransactionAccess;
 import server.access.UserAccess;
 import server.models.Key;
 import server.models.User;
@@ -32,11 +33,13 @@ import static spark.Spark.*;
 public class TransactionController {
 
     private final UserAccess userAccess;
+    private final TransactionAccess transactionAccess;
     private final RouteUtils routeUtils;
 
     @Inject
-    private TransactionController(UserAccess userAccess, RouteUtils routeUtils) {
+    private TransactionController(UserAccess userAccess, TransactionAccess transactionAccess, RouteUtils routeUtils) {
         this.userAccess = userAccess;
+        this.transactionAccess = transactionAccess;
         this.routeUtils = routeUtils;
     }
 
@@ -120,6 +123,7 @@ public class TransactionController {
                     .ifPresent(k -> encryptedPrivateKeys.add(k.encryptedPrivateKey));
         }
 
+        transactionAccess.insertTransaction(loggedInUser.getUsername(), recipientUsername, amount);
         // TODO find a better way to produce JSON
         response.status(200);
         return String.format("{\"payload\":\"%s\", \"encryptedKeys\":[%s]}",

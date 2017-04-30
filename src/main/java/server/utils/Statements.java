@@ -48,8 +48,14 @@ public final class Statements {
             + "username varchar(32) NOT NULL,"
             + "friend varchar(32) NOT NULL"
             + ")";
+    public static final String CREATE_TRANSACTIONS_TABLE = "CREATE TABLE transactions ("
+            + "fromuser varchar(32) NOT NULL,"
+            + "touser varchar(32) NOT NULL,"
+            + "amount bigint NOT NULL"
+            + ")";
     public static final String SHOW_DB_LIKE = String.format("SHOW DATABASES LIKE '%s'", DB_NAME);
     public static final String GET_ALL_USERS = "SELECT * FROM users";
+    public static final String GET_ALL_TRANSACTIONS = "SELECT * FROM transactions";
     private static final int RECOVERY_TIME = 60 * 60; // 1 hour for recovery link to remain active
 
 
@@ -244,5 +250,17 @@ public final class Statements {
                 }
         );
     }
+
+    public static PreparedStatement insertTransaction(Connection connection, String fromuser, String touser, long amount) throws SQLException {
+        return prepareStatement(connection.prepareStatement(
+                "INSERT INTO transactions (fromuser, touser, amount) VALUES (?, ?, ?)"),
+                statement -> {
+                    statement.setString(1, fromuser);
+                    statement.setString(2, touser);
+                    statement.setLong(3, amount);
+                }
+        );
+    }
+
 
 }

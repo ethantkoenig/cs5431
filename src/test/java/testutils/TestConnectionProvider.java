@@ -63,6 +63,12 @@ public final class TestConnectionProvider extends PooledConnectionProvider {
                     + "username varchar(32) NOT NULL,"
                     + "friend varchar(32) NOT NULL"
                     + ")");
+
+            statement.executeUpdate("CREATE TABLE IF NOT EXISTS transactions ("
+                    + "fromuser varchar(32) NOT NULL,"
+                    + "touser varchar(32) NOT NULL,"
+                    + "amount bigint NOT NULL"
+                    + ")");
         }
     }
 }
