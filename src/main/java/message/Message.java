@@ -7,7 +7,7 @@ import java.util.Arrays;
  */
 public abstract class Message {
     public static final int MAX_PAYLOAD_LEN = 33554432;
-    public static final int MAX_BLOCKS_TO_GET = 32;
+    public static final int MAX_BLOCKS_TO_GET = 2; // TODO make small for tests
 
     /* Message types */
     public static final byte TRANSACTION = 0;

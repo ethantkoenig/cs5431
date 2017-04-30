@@ -12,6 +12,7 @@ import utils.Deserializer;
 import utils.ShaTwoFiftySix;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
 
@@ -72,9 +73,13 @@ public class HandleMessageThread extends Thread {
                 handler.txMsgHandler(message, transaction);
                 break;
             case Message.BLOCKS:
-                Block[] blocks = Deserializer.deserializeList(message.payload, Block.DESERIALIZER)
-                        .toArray(new Block[0]);
+                List<Block> blocks = Deserializer.deserializeList(message.payload, Block.DESERIALIZER);
+                if (blocks.isEmpty()) {
+                    LOGGER.warning("Received empty blocks message");
+                    break;
+                }
                 boolean added = false;
+
                 // TODO check that blocks are in "correct" order (grandchild, child, parent ...)
                 for (Block block : blocks) {
                     if (handler.blockHandler(block)) {
@@ -90,8 +95,8 @@ public class HandleMessageThread extends Thread {
                     }
                 }
                 if (!added) {
-                    ShaTwoFiftySix hash = blocks[blocks.length - 1].getShaTwoFiftySix();
-                    message.respond(new GetBlocksRequestPayload(hash, 10).toMessage());
+                    ShaTwoFiftySix hash = blocks.get(blocks.size() - 1).getShaTwoFiftySix();
+                    message.respond(new GetBlocksRequestPayload(hash, Message.MAX_BLOCKS_TO_GET).toMessage());
                 }
                 break;
             case Message.GET_BLOCKS:
@@ -121,13 +126,16 @@ public class HandleMessageThread extends Thread {
         GetBlocksRequestPayload request = GetBlocksRequestPayload.DESERIALIZER.deserialize(message.payload);
         BlockChain chain = bundle.getBlockChain();
         if (request.numBlocksRequested <= 0 ||
-                request.numBlocksRequested >= Message.MAX_BLOCKS_TO_GET) {
+                request.numBlocksRequested > Message.MAX_BLOCKS_TO_GET) {
             String msg = String.format("GET_BLOCKS request, invalid number of requested blocks: %d",
                     request.numBlocksRequested);
             LOGGER.info(msg);
             return;
         } else if (!chain.containsBlockWithHash(request.hash)) {
-            LOGGER.info("GET_BLOCKS message received with unknown hash");
+            String msg = String.format("GET_BLOCKS message received with unknown hash: %s",
+                    request.hash
+            );
+            LOGGER.info(msg);
             return;
         }
         handler.getBlockMsgHandler(message, request);

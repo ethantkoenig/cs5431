@@ -250,6 +250,8 @@ public class Block extends HashCache implements Iterable<Transaction>, CanBeSeri
             return false;
         } else if (this.reward.value != REWARD_AMOUNT) {
             return false;
+        } else if (!this.checkHash()) {
+            return false;
         }
         return this.reward.ownerPubKey.equals(privilegedKey);
     }
