@@ -217,7 +217,7 @@ public class UserController {
         mailService.sendEmail(email, SUBJECT, emailBody(link));
         RouteUtils.successMessage(request, "Check your inbox.");
 
-        userAccess.insertPendingKey(user.getId(), publicKey, privateKey.getBytes("UTF-8"), guid);
+        userAccess.insertPendingKey(user.getId(), publicKey, privateKey, guid);
         response.redirect("/user/" + user.getUsername());
         return "redirected";
 

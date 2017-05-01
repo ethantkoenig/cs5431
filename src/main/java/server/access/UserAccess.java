@@ -98,7 +98,7 @@ public interface UserAccess {
     /**
      * Inserts a pending key.
      */
-    void insertPendingKey(int userid, byte[] publickey, byte[] privatekey, String guidhash) throws SQLException;
+    void insertPendingKey(int userid, byte[] publickey, String privatekey, String guidhash) throws SQLException;
 
     /**
      * @return Optional of Key, if it is successfully inserted.

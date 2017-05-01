@@ -57,11 +57,23 @@ public final class TestConnectionProvider extends PooledConnectionProvider {
                     + "guidhash varchar(2048) NOT NULL,"
                     + "FOREIGN KEY (userid)"
                     + "  REFERENCES users(id)"
+                    + "  ON DELETE CASCADE"
                     + ")");
 
             statement.executeUpdate("CREATE TABLE IF NOT EXISTS friends ("
                     + "username varchar(32) NOT NULL,"
                     + "friend varchar(32) NOT NULL"
+                    + ")");
+
+            statement.executeUpdate("CREATE TABLE IF NOT EXISTS pendingkeys ("
+                    + "userid int NOT NULL,"
+                    + "publickey varbinary(91) NOT NULL,"
+                    + "privatekey VARCHAR(65535) NOT NULL,"
+                    + "dt DATETIME DEFAULT CURRENT_TIMESTAMP,"
+                    + "guidhash varchar(2048) NOT NULL,"
+                    + "FOREIGN KEY (userid)"
+                    + "  REFERENCES users(id)"
+                    + "  ON DELETE CASCADE"
                     + ")");
         }
     }

@@ -257,13 +257,13 @@ public final class Statements {
     }
 
     public static PreparedStatement insertPendingKeyPair(Connection connection, int userid, byte[] publickey,
-                                                         byte[] privatekey, String guidhash) throws SQLException {
+                                                         String privatekey, String guidhash) throws SQLException {
         return prepareStatement(connection.prepareStatement(
                 "INSERT INTO pendingkeys (userid, publickey, privatekey, guidhash) VALUES (?, ?, ?, ?)"),
                 statement -> {
                     statement.setInt(1, userid);
                     statement.setBytes(2, publickey);
-                    statement.setBytes(3, privatekey);
+                    statement.setString(3, privatekey);
                     statement.setString(4, guidhash);
                 }
         );

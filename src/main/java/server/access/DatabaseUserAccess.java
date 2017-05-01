@@ -262,7 +262,8 @@ public final class DatabaseUserAccess implements UserAccess {
         }
     }
 
-    public void insertPendingKey(int userid, byte[] publickey, byte[] privatekey, String guidhash) throws SQLException {
+    @Override
+    public void insertPendingKey(int userid, byte[] publickey, String privatekey, String guidhash) throws SQLException {
         try (Connection conn = connectionProvider.getConnection();
              PreparedStatement preparedStmt = Statements.insertPendingKeyPair(conn, userid, publickey, privatekey, guidhash);
         ) {
@@ -274,6 +275,7 @@ public final class DatabaseUserAccess implements UserAccess {
         }
     }
 
+    @Override
     public Optional<Key> flushPendingKey(String guidhash) throws SQLException {
         try (Connection conn = connectionProvider.getConnection();
              PreparedStatement preparedStmt = Statements.getPendingKeyByGuid(conn, guidhash);
@@ -288,6 +290,7 @@ public final class DatabaseUserAccess implements UserAccess {
 
     }
 
+    @Override
     public void removePendingKey(String guidhash) throws SQLException {
         try (Connection conn = connectionProvider.getConnection();
              PreparedStatement preparedStmt = Statements.deletePendingKey(conn, guidhash);
