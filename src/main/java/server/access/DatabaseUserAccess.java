@@ -30,7 +30,7 @@ public final class DatabaseUserAccess implements UserAccess {
     public List<String> getAllUsernames() throws SQLException {
         try (Connection conn = connectionProvider.getConnection();
              Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(Statements.GET_ALL_USERS);
+             ResultSet rs = stmt.executeQuery(Statements.GET_ALL_USERS)
         ) {
             List<String> users = new ArrayList<>();
             while (rs.next()) {
