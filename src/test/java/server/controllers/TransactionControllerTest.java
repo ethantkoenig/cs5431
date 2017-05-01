@@ -10,7 +10,6 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mockito;
 import server.utils.ConnectionProvider;
 import server.utils.Constants;
 import spark.Request;
@@ -80,6 +79,7 @@ public class TransactionControllerTest extends ControllerTest {
         Request request = new MockRequest()
                 .addQueryParam("recipient", fixtures.user.getUsername())
                 .addQueryParam("amount", "100")
+                .addQueryParam("message", "test message")
                 .addSessionAttribute("username", fixtures.user.getUsername())
                 .get();
 
@@ -114,6 +114,7 @@ public class TransactionControllerTest extends ControllerTest {
         Request request = new MockRequest()
                 .addQueryParam("recipient", fixtures.user.getUsername())
                 .addQueryParam("amount", "100")
+                .addQueryParam("message", "this is a test message")
                 .addSessionAttribute("username", fixtures.user.getUsername())
                 .get();
 

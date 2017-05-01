@@ -212,8 +212,6 @@ $(document).ready(function () {
         }
     });
 
-    maxLength(document.getElementById("message"));
-
 });
 
 
@@ -239,12 +237,4 @@ function encryptSecret(password) {
     return sjcl.codec.hex.fromBits(shaBitArray);
 }
 
-function maxLength(element) {
-    if (!('maxLength' in element)) {
-        var max = element.attributes.maxLength.value;
-        element.onkeypress = function () {
-            if (this.value.length >= max) return false;
-        };
-    }
-}
 

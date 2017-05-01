@@ -62,7 +62,7 @@ public class TransactionController {
         User loggedInUser = routeUtils.forceLoggedInUser(request);
         String username = loggedInUser.getUsername();
         List<String> friends = userAccess.getPeopleWhoFriendMe(username);
-        List<Transaction> transactions = transactionAccess.getRequests(username);
+        List<Transaction> transactions = transactionAccess.getAllTransactions(username);
 
         return routeUtils.modelAndView(request, "transact.ftl")
                 .add("friends", friends)

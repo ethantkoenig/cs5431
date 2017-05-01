@@ -8,15 +8,15 @@ public class Transaction {
     private String touser;
     private long amount;
     private String message;
-    private boolean isrequest;
+    private boolean request;
 
-    public Transaction(int tranid, String fromuser, String touser, long amount, String message, boolean isrequest) {
+    public Transaction(int tranid, String fromuser, String touser, long amount, String message, boolean request) {
         this.tranid = tranid;
         this.fromuser = fromuser;
         this.touser = touser;
         this.amount = amount;
         this.message = message;
-        this.isrequest = isrequest;
+        this.request = request;
     }
 
     public int getTranid() {
@@ -40,18 +40,6 @@ public class Transaction {
     }
 
     public boolean isRequest() {
-        return isrequest;
-    }
-
-    @Override
-    public String toString() {
-        return "Transaction{" +
-                "tranid=" + tranid +
-                ", fromuser='" + fromuser + '\'' +
-                ", touser='" + touser + '\'' +
-                ", amount=" + amount +
-                ", message='" + message + '\'' +
-                ", isrequest=" + isrequest +
-                '}';
+        return request;
     }
 }

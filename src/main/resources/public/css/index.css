@@ -19,3 +19,9 @@ body {
     width: 75%;
     padding-top: 8px;
 }
+
+.scroll {
+    overflow-y: auto;
+    position: relative;
+    max-height: 400px;
+}

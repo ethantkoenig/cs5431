@@ -31,7 +31,7 @@
         <div class="row" id="status-message"></div>
     </div>
     <div class="col-sm-6 padding-top">
-        <div class="panel panel-default">
+        <div class="panel panel-default scroll">
             <div class="panel-heading">Transaction History</div>
 
             <table class="table">
@@ -42,21 +42,19 @@
                     <th>Message</th>
                     <th>Amount</th>
                 </tr>
-                <#if transactions??>
-                    <#list transactions as tran>
-                        <tr>
-                            <#if tran.isrequest>
-                                <td>Request</td>
-                            <#else>
-                                <td>Transaction</td>
-                            </#if>
-                            <td>${tran.fromuser}</td>
-                            <td>${tran.touser}</td>
-                            <td>${tran.message}</td>
-                            <td>$${tran.ammount}</td>
-                        </tr>
-                    </#list>
-                </#if>
+                <#list transactions as tran>
+                <tr>
+                        <#if tran.request>
+                            <td>Request</td>
+                        <#else>
+                            <td>Transaction</td>
+                        </#if>
+                        <td>${tran.fromuser}</td>
+                        <td>${tran.touser}</td>
+                        <td>${tran.message}</td>
+                        <td>$${tran.amount}</td>
+                    </tr>
+                </#list>
             </table>
         </div>
     </div>
