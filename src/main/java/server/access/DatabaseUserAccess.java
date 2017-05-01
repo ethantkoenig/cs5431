@@ -262,5 +262,41 @@ public final class DatabaseUserAccess implements UserAccess {
         }
     }
 
+    public void insertPendingKey(int userid, byte[] publickey, byte[] privatekey, String guidhash) throws SQLException {
+        try (Connection conn = connectionProvider.getConnection();
+             PreparedStatement preparedStmt = Statements.insertPendingKeyPair(conn, userid, publickey, privatekey, guidhash);
+        ) {
+            int rowCount = preparedStmt.executeUpdate();
+            if (rowCount != 1) {
+                String msg = String.format("Update affected %d rows, expected 1", rowCount);
+                LOGGER.severe(msg);
+            }
+        }
+    }
 
+    public Optional<Key> flushPendingKey(String guidhash) throws SQLException {
+        try (Connection conn = connectionProvider.getConnection();
+             PreparedStatement preparedStmt = Statements.getPendingKeyByGuid(conn, guidhash);
+             ResultSet rs = preparedStmt.executeQuery()
+        ) {
+            if (!rs.next()) return Optional.empty();
+            int id = rs.getInt("userid");
+            byte[] publicKeyBytes = rs.getBytes("publickey");
+            String encryptedPrivateKeyBytes = rs.getString("privatekey");
+            return Optional.of(new Key(-1, id, publicKeyBytes, encryptedPrivateKeyBytes));
+        }
+
+    }
+
+    public void removePendingKey(String guidhash) throws SQLException {
+        try (Connection conn = connectionProvider.getConnection();
+             PreparedStatement preparedStmt = Statements.deletePendingKey(conn, guidhash);
+        ) {
+            int rowCount = preparedStmt.executeUpdate();
+            if (rowCount != 1) {
+                String msg = String.format("Update affected %d rows, expected 1", rowCount);
+                LOGGER.severe(msg);
+            }
+        }
+    }
 }

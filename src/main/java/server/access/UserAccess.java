@@ -94,4 +94,19 @@ public interface UserAccess {
      * @returns a list of username strings that have befriended username, thus, username can send funds to these people
      */
     List<String> getPeopleWhoFriendMe(String username) throws SQLException;
+
+    /**
+     * Inserts a pending key.
+     */
+    void insertPendingKey(int userid, byte[] publickey, byte[] privatekey, String guidhash) throws SQLException;
+
+    /**
+     * @return Optional of Key, if it is successfully inserted.
+     */
+    Optional<Key> flushPendingKey(String guidhash) throws SQLException;
+
+    /**
+     * Removes pending key corresponding to the guid
+     */
+    void removePendingKey(String guidhash) throws SQLException;
 }
