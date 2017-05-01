@@ -49,13 +49,16 @@ public final class Statements {
             + "friend varchar(32) NOT NULL"
             + ")";
     public static final String CREATE_TRANSACTIONS_TABLE = "CREATE TABLE transactions ("
+            + "tranid int NOT NULL AUTO_INCREMENT,"
             + "fromuser varchar(32) NOT NULL,"
             + "touser varchar(32) NOT NULL,"
-            + "amount bigint NOT NULL"
+            + "amount bigint NOT NULL,"
+            + "message varchar(256),"
+            + "isrequest boolean not null default 0,"
+            + "PRIMARY KEY (tranid)"
             + ")";
     public static final String SHOW_DB_LIKE = String.format("SHOW DATABASES LIKE '%s'", DB_NAME);
     public static final String GET_ALL_USERS = "SELECT * FROM users";
-    public static final String GET_ALL_TRANSACTIONS = "SELECT * FROM transactions";
     private static final int RECOVERY_TIME = 60 * 60; // 1 hour for recovery link to remain active
 
 
@@ -251,16 +254,47 @@ public final class Statements {
         );
     }
 
-    public static PreparedStatement insertTransaction(Connection connection, String fromuser, String touser, long amount) throws SQLException {
+    public static PreparedStatement insertTransaction(Connection connection, String fromuser, String touser, long amount, String message, boolean isrequest) throws SQLException {
         return prepareStatement(connection.prepareStatement(
-                "INSERT INTO transactions (fromuser, touser, amount) VALUES (?, ?, ?)"),
+                "INSERT INTO transactions (fromuser, touser, amount, message, isrequest) VALUES (?, ?, ?, ?, ?)"),
                 statement -> {
                     statement.setString(1, fromuser);
                     statement.setString(2, touser);
                     statement.setLong(3, amount);
+                    statement.setString(4, message);
+                    statement.setBoolean(5, isrequest);
                 }
         );
     }
 
+    public static PreparedStatement updateTransactionRequestAsComplete(Connection connection, int tranid, String fromuser) throws SQLException {
+        return prepareStatement(connection.prepareStatement(
+                "UPDATE transactions SET isrequest = 0 WHERE tranid = ? AND fromuser = ?"),
+                statement -> {
+                    statement.setInt(1, tranid);
+                    statement.setString(2, fromuser);
+                }
+        );
+    }
+
+    public static PreparedStatement getTransactionRequests(Connection connection, String fromuser) throws SQLException {
+        return prepareStatement(connection.prepareStatement(
+                "SELECT * FROM transactions WHERE fromuser = ?"),
+                statement -> {
+                    statement.setString(1, fromuser);
+                }
+        );
+    }
+
+    public static PreparedStatement getAllTransactions(Connection connection, String user) throws SQLException {
+        return prepareStatement(connection.prepareStatement(
+                "SELECT * FROM transactions WHERE fromuser = ? OR touser = ?"),
+                statement -> {
+                    statement.setString(1, user);
+                    statement.setString(2, user);
+
+                }
+        );
+    }
 
 }

@@ -65,9 +65,13 @@ public final class TestConnectionProvider extends PooledConnectionProvider {
                     + ")");
 
             statement.executeUpdate("CREATE TABLE IF NOT EXISTS transactions ("
+                    + "tranid int NOT NULL AUTO_INCREMENT,"
                     + "fromuser varchar(32) NOT NULL,"
                     + "touser varchar(32) NOT NULL,"
-                    + "amount bigint NOT NULL"
+                    + "amount bigint NOT NULL,"
+                    + "message varchar(256),"
+                    + "isrequest boolean not null default 0,"
+                    + "PRIMARY KEY (tranid)"
                     + ")");
         }
     }
