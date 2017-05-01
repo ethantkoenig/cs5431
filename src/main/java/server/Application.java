@@ -11,23 +11,26 @@ import server.controllers.PasswordRecoveryController;
 import server.controllers.TransactionController;
 import server.controllers.UserController;
 import server.utils.*;
+import utils.IOUtils;
 
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.util.Properties;
 
 import static spark.Spark.*;
 
 
 public class Application {
 
-    public static boolean run(String[] args) {
-        if (!handleArgs(args)) {
+    public static boolean run(Properties serverProp, Properties nodeProp) {
+        if (!handleArgs(serverProp, nodeProp)) {
             return false;
         }
 
-        // Configure Spark on port 5000
-        port(5000);
+        int serverPort = Integer.parseInt(IOUtils.getPropertyChecked(serverProp, "serverPort"));
+        // Configure Spark on port `port`
+        port(serverPort);
         // Static files location
         staticFiles.location("/public");
         // Caching of static files lifetime
@@ -44,21 +47,16 @@ public class Application {
         return true;
     }
 
-    private static boolean handleArgs(String args[]) {
-        if (args.length != 7) {
-            System.err.println("usage: webserver <keystore> <port> <public-key> <private-key> <privileged-key> <File for list of nodes>");
-            return false;
-        }
-
-        String keystorePath = args[1];
+    private static boolean handleArgs(Properties serverProp, Properties nodeProp) {
+        String keystorePath = IOUtils.getPropertyChecked(serverProp, "keystore");
         try {
-            int port = Integer.parseInt(args[2]);
+            int port = Integer.parseInt(IOUtils.getPropertyChecked(nodeProp, "nodePort"));
             Constants.setNodeAddress(new InetSocketAddress(InetAddress.getLocalHost(), port));
         } catch (IOException e) {
             e.printStackTrace();
             return false;
         } catch (NumberFormatException e) {
-            System.err.println("Misformatted port number: " + args[2]);
+            System.err.println("Misformatted port number: " + IOUtils.getPropertyChecked(nodeProp, "nodePort"));
             return false;
         }
 
