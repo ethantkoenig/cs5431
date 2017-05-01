@@ -25,8 +25,7 @@
                 </form>
             </div>
         </#list>
-
-
+        <div class="row" id="status-message"></div>
     </div>
 
 </div>
