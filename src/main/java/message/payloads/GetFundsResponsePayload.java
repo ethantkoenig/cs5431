@@ -1,7 +1,7 @@
-package network;
+package message.payloads;
 
 import crypto.ECDSAPublicKey;
-import utils.CanBeSerialized;
+import message.Message;
 import utils.DeserializationException;
 import utils.Deserializer;
 
@@ -11,13 +11,13 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class GetFundsResponse implements CanBeSerialized {
-    public final static Deserializer<GetFundsResponse> DESERIALIZER =
+public class GetFundsResponsePayload extends MessagePayload {
+    public final static Deserializer<GetFundsResponsePayload> DESERIALIZER =
             new GetFundsResponseDeserializer();
 
     public final Map<ECDSAPublicKey, Long> keyFunds;
 
-    public GetFundsResponse(Map<ECDSAPublicKey, Long> keyFunds) {
+    public GetFundsResponsePayload(Map<ECDSAPublicKey, Long> keyFunds) {
         this.keyFunds = keyFunds;
     }
 
@@ -30,11 +30,16 @@ public class GetFundsResponse implements CanBeSerialized {
         }
     }
 
+    @Override
+    public byte messageType() {
+        return Message.FUNDS;
+    }
+
     private static final class GetFundsResponseDeserializer
-            implements Deserializer<GetFundsResponse> {
+            implements Deserializer<GetFundsResponsePayload> {
 
         @Override
-        public GetFundsResponse deserialize(DataInputStream inputStream)
+        public GetFundsResponsePayload deserialize(DataInputStream inputStream)
                 throws DeserializationException, IOException {
             int numKeys = inputStream.readInt();
             if (numKeys < 0 || numKeys > Deserializer.DEFAULT_MAX_LIST_LENGTH) {
@@ -46,7 +51,7 @@ public class GetFundsResponse implements CanBeSerialized {
                 long money = inputStream.readLong();
                 keyFunds.put(key, money);
             }
-            return new GetFundsResponse(keyFunds);
+            return new GetFundsResponsePayload(keyFunds);
         }
     }
 }

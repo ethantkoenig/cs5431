@@ -1,5 +1,7 @@
 package network;
 
+import message.IncomingMessage;
+import message.OutgoingMessage;
 import utils.DeserializationException;
 import utils.Deserializer;
 

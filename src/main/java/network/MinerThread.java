@@ -1,6 +1,8 @@
 package network;
 
 import block.Block;
+import message.Message;
+import message.OutgoingMessage;
 import utils.ByteUtil;
 
 import java.io.IOException;
@@ -69,7 +71,7 @@ public class MinerThread extends Thread {
         try {
             final Block minedBlock = finalBlock;
             byte[] payload = ByteUtil.asByteArray(out -> serializeSingleton(out, minedBlock));
-            broadcastQueue.put(new OutgoingMessage(Message.BLOCK, payload));
+            broadcastQueue.put(new OutgoingMessage(Message.BLOCKS, payload));
         } catch (InterruptedException | IOException e) {
             e.printStackTrace();
         }
