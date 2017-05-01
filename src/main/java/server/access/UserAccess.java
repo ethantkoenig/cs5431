@@ -103,7 +103,7 @@ public interface UserAccess {
     /**
      * @return Optional of Key, if it is successfully inserted.
      */
-    Optional<Key> flushPendingKey(String guidhash) throws SQLException;
+    Optional<Key> lookupPendingKey(String guidhash) throws SQLException;
 
     /**
      * Removes pending key corresponding to the guid

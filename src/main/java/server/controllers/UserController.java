@@ -18,9 +18,11 @@ import spark.template.freemarker.FreeMarkerEngine;
 import utils.ByteUtil;
 import utils.Config;
 import utils.Optionals;
+import utils.DeserializationException;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.net.Socket;
 import java.security.SecureRandom;
@@ -184,16 +186,14 @@ public class UserController {
                 .get();
     }
 
+    // TODO: Get request modifies state. Should fix this somehow.
     String finalizeInsertKey(Request request, Response response) throws Exception {
         String guid = RouteUtils.queryParam(request, "guid");
 
-        User user = routeUtils.forceLoggedInUser(request);
-
-        Optional<Key> key = userAccess.flushPendingKey(guid);
+        Optional<Key> key = userAccess.lookupPendingKey(guid);
         if (!key.isPresent()) return "Did not find GUID";
         userAccess.removePendingKey(guid);
         userAccess.insertKey(key.get().getUserId(), key.get().getPublicKey(), key.get().encryptedPrivateKey);
-        response.redirect("/user/" + user.getUsername());
         return "ok";
     }
 
@@ -213,11 +213,23 @@ public class UserController {
             return "redirected";
         }
 
-        String email = user.getEmail();
-        mailService.sendEmail(email, SUBJECT, emailBody(link));
-        RouteUtils.successMessage(request, "Check your inbox.");
+        boolean validKey = true;
+        try {
+            ECDSAPublicKey.DESERIALIZER.deserialize(publicKey);
+        } catch (DeserializationException | IOException e) {
+            validKey = false;
+        }
 
-        userAccess.insertPendingKey(user.getId(), publicKey, privateKey, guid);
+        if (validKey) {
+            String email = user.getEmail();
+            mailService.sendEmail(email, SUBJECT, emailBody(link));
+            RouteUtils.successMessage(request, "Check your inbox.");
+            userAccess.insertPendingKey(user.getId(), publicKey, privateKey, guid);
+        }
+
+        else {
+            RouteUtils.errorMessage(request, "Invalid public key");
+        }
         response.redirect("/user/" + user.getUsername());
         return "redirected";
 

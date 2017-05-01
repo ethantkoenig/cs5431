@@ -276,7 +276,7 @@ public final class DatabaseUserAccess implements UserAccess {
     }
 
     @Override
-    public Optional<Key> flushPendingKey(String guidhash) throws SQLException {
+    public Optional<Key> lookupPendingKey(String guidhash) throws SQLException {
         try (Connection conn = connectionProvider.getConnection();
              PreparedStatement preparedStmt = Statements.getPendingKeyByGuid(conn, guidhash);
              ResultSet rs = preparedStmt.executeQuery()
