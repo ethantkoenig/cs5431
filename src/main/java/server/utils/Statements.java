@@ -48,6 +48,17 @@ public final class Statements {
             + "username varchar(32) NOT NULL,"
             + "friend varchar(32) NOT NULL"
             + ")";
+    public static final String CREATE_PENDING_KEYS_TABLE = "CREATE TABLE pendingkeys ("
+            + "userid int NOT NULL,"
+            + "publickey varbinary(91) NOT NULL,"
+            + "privatekey text NOT NULL,"
+            + "dt DATETIME DEFAULT CURRENT_TIMESTAMP,"
+            + "guidhash varchar(2048) NOT NULL,"
+            + "INDEX userid_index (userid),"
+            + "FOREIGN KEY (userid)"
+            + "  REFERENCES users(id)"
+            + "  ON DELETE CASCADE"
+            + ")";
     public static final String SHOW_DB_LIKE = String.format("SHOW DATABASES LIKE '%s'", DB_NAME);
     public static final String GET_ALL_USERS = "SELECT * FROM users";
     private static final int RECOVERY_TIME = 60 * 60; // 1 hour for recovery link to remain active
@@ -241,6 +252,37 @@ public final class Statements {
                 "SELECT username FROM friends WHERE friend = ?"),
                 statement -> {
                     statement.setString(1, username);
+                }
+        );
+    }
+
+    public static PreparedStatement insertPendingKeyPair(Connection connection, int userid, byte[] publickey,
+                                                         String privatekey, String guidhash) throws SQLException {
+        return prepareStatement(connection.prepareStatement(
+                "INSERT INTO pendingkeys (userid, publickey, privatekey, guidhash) VALUES (?, ?, ?, ?)"),
+                statement -> {
+                    statement.setInt(1, userid);
+                    statement.setBytes(2, publickey);
+                    statement.setString(3, privatekey);
+                    statement.setString(4, guidhash);
+                }
+        );
+    }
+
+    public static PreparedStatement getPendingKeyByGuid(Connection connection, String guidhash) throws SQLException {
+        return prepareStatement(connection.prepareStatement(
+                "SELECT * FROM pendingkeys WHERE guidhash = ?"),
+                statement -> {
+                    statement.setString(1, guidhash);
+                }
+        );
+    }
+
+    public static PreparedStatement deletePendingKey(Connection connection, String guidhash) throws SQLException {
+        return prepareStatement(connection.prepareStatement(
+                "DELETE FROM pendingkeys WHERE guidhash = ?"),
+                statement -> {
+                    statement.setString(1, guidhash);
                 }
         );
     }
