@@ -50,11 +50,9 @@ public class Application {
     private static boolean handleArgs(Properties serverProp) {
         String keystorePath = IOUtils.getPropertyChecked(serverProp, "keystore");
         try {
+            String host = IOUtils.getPropertyChecked(serverProp, "nodeAddress");
             int port = Integer.parseInt(IOUtils.getPropertyChecked(serverProp, "nodePort"));
-            Constants.setNodeAddress(new InetSocketAddress(InetAddress.getLocalHost(), port));
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
+            Constants.setNodeAddress(new InetSocketAddress(host, port));
         } catch (NumberFormatException e) {
             System.err.println("Misformatted port number: " + IOUtils.getPropertyChecked(serverProp, "nodePort"));
             return false;

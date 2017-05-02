@@ -42,7 +42,13 @@ public class Main {
             System.exit(0);
         }
 
-        jc.parse(args);
+        try {
+            jc.parse(args);
+        } catch (RuntimeException e) {
+            jc.usage();
+            System.exit(0);
+        }
+
         Crypto.init();
 
         switch (jc.getParsedCommand()) {
