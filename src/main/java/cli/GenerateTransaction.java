@@ -2,8 +2,8 @@ package cli;
 
 
 import crypto.Crypto;
-import network.Message;
-import network.OutgoingMessage;
+import message.Message;
+import message.OutgoingMessage;
 import transaction.Transaction;
 import transaction.TxIn;
 import transaction.TxOut;

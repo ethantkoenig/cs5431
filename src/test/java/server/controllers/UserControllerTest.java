@@ -5,6 +5,11 @@ import com.google.inject.Injector;
 import crypto.Crypto;
 import crypto.ECDSAKeyPair;
 import crypto.ECDSAPublicKey;
+import message.IncomingMessage;
+import message.Message;
+import message.OutgoingMessage;
+import message.payloads.GetFundsRequestPayload;
+import message.payloads.GetFundsResponsePayload;
 import network.*;
 import org.junit.Assert;
 import org.junit.Test;
@@ -193,7 +198,7 @@ public class UserControllerTest extends ControllerTest {
 
         Response response = new MockResponse().get();
         controller.addUserKey(request, response);
-        TestUtils.assertPresent(userAccess.getKey(fixtures.user.getId(), publicBytes));
+        Assert.assertFalse(userAccess.getKey(fixtures.user.getId(), publicBytes).isPresent());
     }
 
     @Test
@@ -244,12 +249,12 @@ public class UserControllerTest extends ControllerTest {
                 connectionThread.start();
                 IncomingMessage message = messageQueue.take();
                 Assert.assertEquals(Message.GET_FUNDS, message.type);
-                GetFundsRequest request = GetFundsRequest.DESERIALIZER.deserialize(message.payload);
+                GetFundsRequestPayload request = GetFundsRequestPayload.DESERIALIZER.deserialize(message.payload);
                 Map<ECDSAPublicKey, Long> balances = new HashMap<>();
                 for (ECDSAPublicKey key : request.requestedKeys) {
                     balances.put(key, 100L);
                 }
-                GetFundsResponse response = new GetFundsResponse(balances);
+                GetFundsResponsePayload response = new GetFundsResponsePayload(balances);
                 connectionThread.send(new OutgoingMessage(Message.FUNDS,
                         ByteUtil.asByteArray(response::serialize))
                 );

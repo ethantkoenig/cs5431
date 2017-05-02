@@ -1,5 +1,7 @@
 package network;
 
+import message.OutgoingMessage;
+
 import java.util.concurrent.BlockingQueue;
 import java.util.function.Consumer;
 import java.util.logging.Logger;

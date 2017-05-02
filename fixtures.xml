@@ -3,5 +3,6 @@
   <users id="1" username="username" email="example@example.com" salt="m/g+zPZtEQIsWPLvjMoQCg==" pass="gpVU7luj4wanEhuIMAI46zG6Oi77ANh3MexnvVvU4IcDu1SQcyX6PRipv+Z7UolbDld0YFWAtrUy&#xA;DPMDVOeE0InotMIm95TV5ywCrQnK34+i7rBHaHQOFZsvHax7CuxgJKrLa51hyquR7wvwSuEf5e+f&#xA;Ej3R8GW+S5TLeZFEPSmA9ySEDsxQQv7M80KhQkfxWZ8swKdifCArGlTTBgpx5hdB82fGVfad7pm8&#xA;aXvtLMmtplTGNRoIDepLm3m4gud+mYsl9dN0vz5hAvgmjTNVY7DcSZhpVP//9DMnKPJd7awgQhIS&#xA;Fay/Pb29jjF0NnGbc4+JVbQ1QJv4qKsFLvIV8g==" failedLogins="0"/>
   <keypairs keypairid="1" userid="1" publickey="Q2Wpo3zjP9wplEpXdTLceXeVvj1HTHZHdQbD4fg1Ttg9gPYbRRRxJc4AL0Dkt2bWnQVIYECUCJEb&#xA;80lNhDPKSg==" privatekey="{&quot;iv&quot;:&quot;R4UiAm4BW8swLdkrkWRVFw==&quot;,&quot;v&quot;:1,&quot;iter&quot;:10000,&quot;ks&quot;:128,&quot;ts&quot;:64,&quot;mode&quot;:&quot;ccm&quot;,&quot;adata&quot;:&quot;&quot;,&quot;cipher&quot;:&quot;aes&quot;,&quot;salt&quot;:&quot;eqGfwuyceUQ=&quot;,&quot;ct&quot;:&quot;l64+biNo7JxX560iUzVu0i+1XRaAEZknHYbWCPqF4r1NUwiD0f09zVL+qz35GcyAKY2shRYMTwDsLZarAsF9u2Yty0Tp9lKC&quot;}"/>
   <passrecover/>
+  <pendingkeys/>
   <friends username="username" friend="username"/>
 </dataset>

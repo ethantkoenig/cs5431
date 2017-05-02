@@ -4,6 +4,8 @@ import block.BlockChain;
 import block.UnspentTransactions;
 import crypto.ECDSAKeyPair;
 import crypto.ECDSAPublicKey;
+import message.IncomingMessage;
+import message.OutgoingMessage;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;

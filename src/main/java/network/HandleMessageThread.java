@@ -2,8 +2,11 @@ package network;
 
 import block.Block;
 import block.BlockChain;
+import message.IncomingMessage;
+import message.Message;
+import message.OutgoingMessage;
+import message.payloads.*;
 import transaction.Transaction;
-import utils.ByteUtil;
 import utils.DeserializationException;
 import utils.Deserializer;
 import utils.ShaTwoFiftySix;
@@ -68,7 +71,7 @@ public class HandleMessageThread extends Thread {
                 Transaction transaction = Transaction.DESERIALIZER.deserialize(message.payload);
                 handler.txMsgHandler(message, transaction);
                 break;
-            case Message.BLOCK:
+            case Message.BLOCKS:
                 Block[] blocks = Deserializer.deserializeList(message.payload, Block.DESERIALIZER)
                         .toArray(new Block[0]);
                 boolean added = false;
@@ -88,23 +91,25 @@ public class HandleMessageThread extends Thread {
                 }
                 if (!added) {
                     ShaTwoFiftySix hash = blocks[blocks.length - 1].getShaTwoFiftySix();
-                    GetBlocksRequest request = new GetBlocksRequest(hash, 10);
-                    byte[] payload = ByteUtil.asByteArray(request::serialize);
-                    message.respond(new OutgoingMessage(Message.GET_BLOCK, payload));
+                    message.respond(new GetBlocksRequestPayload(hash, 10).toMessage());
                 }
                 break;
-            case Message.GET_BLOCK:
+            case Message.GET_BLOCKS:
                 handleGetBlockRequest(message);
                 break;
             case Message.GET_FUNDS:
-                GetFundsRequest request
-                        = GetFundsRequest.DESERIALIZER.deserialize(message.payload);
+                GetFundsRequestPayload request
+                        = GetFundsRequestPayload.DESERIALIZER.deserialize(message.payload);
                 handler.getFundsMsgHandler(message, request);
                 break;
             case Message.GET_UTX_WITH_KEYS:
-                GetUTXWithKeysRequest utxRequest =
-                        GetUTXWithKeysRequest.DESERIALIZER.deserialize(message.payload);
+                GetUTXWithKeysRequestPayload utxRequest =
+                        GetUTXWithKeysRequestPayload.DESERIALIZER.deserialize(message.payload);
                 handler.getUTXWithKeysMsgHandler(message, utxRequest);
+                break;
+            case Message.PING:
+                int pingNumber = PingPayload.DESERIALIZER.deserialize(message.payload).pingNumber;
+                message.respond(new PongPayload(pingNumber).toMessage());
                 break;
             default:
                 LOGGER.severe(String.format("Unexpected message type: %d", message.type));
@@ -113,16 +118,16 @@ public class HandleMessageThread extends Thread {
 
     private void handleGetBlockRequest(IncomingMessage message)
             throws DeserializationException, IOException {
-        GetBlocksRequest request = GetBlocksRequest.DESERIALIZER.deserialize(message.payload);
+        GetBlocksRequestPayload request = GetBlocksRequestPayload.DESERIALIZER.deserialize(message.payload);
         BlockChain chain = bundle.getBlockChain();
         if (request.numBlocksRequested <= 0 ||
                 request.numBlocksRequested >= Message.MAX_BLOCKS_TO_GET) {
-            String msg = String.format("GET_BLOCK request, invalid number of requested blocks: %d",
+            String msg = String.format("GET_BLOCKS request, invalid number of requested blocks: %d",
                     request.numBlocksRequested);
             LOGGER.info(msg);
             return;
         } else if (!chain.containsBlockWithHash(request.hash)) {
-            LOGGER.info("GET_BLOCK message received with unknown hash");
+            LOGGER.info("GET_BLOCKS message received with unknown hash");
             return;
         }
         handler.getBlockMsgHandler(message, request);

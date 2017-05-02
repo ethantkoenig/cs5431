@@ -3,11 +3,15 @@ package server.controllers;
 import com.google.inject.Inject;
 import crypto.Crypto;
 import crypto.ECDSAPublicKey;
-import network.*;
+import message.IncomingMessage;
+import message.Message;
+import message.payloads.GetFundsRequestPayload;
+import message.payloads.GetFundsResponsePayload;
 import server.access.UserAccess;
 import server.models.Key;
 import server.models.User;
 import server.utils.Constants;
+import server.utils.MailService;
 import server.utils.RouteUtils;
 import server.utils.ValidateUtils;
 import spark.ModelAndView;
@@ -15,13 +19,16 @@ import spark.Request;
 import spark.Response;
 import spark.template.freemarker.FreeMarkerEngine;
 import utils.ByteUtil;
-import utils.DeserializationException;
+import utils.Config;
 import utils.Optionals;
+import utils.DeserializationException;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.Socket;
+import java.security.SecureRandom;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
@@ -43,14 +50,18 @@ public class UserController {
     private static final String LOCKOUT_ALERT = "For your safety, your account has been locked due to too many failed login attempts. Please reset your password below.";
     private static final int FAILED_LOGIN_LIMIT = 5;
 
+    private static SecureRandom random = Config.secureRandom(); // TODO use Guice
+    private static final String SUBJECT = "Yaccoin New Key";
 
     private final UserAccess userAccess;
     private final RouteUtils routeUtils;
+    private final MailService mailService;
 
     @Inject
-    private UserController(UserAccess userAccess, RouteUtils routeUtils) {
+    private UserController(UserAccess userAccess, RouteUtils routeUtils, MailService mailService) {
         this.userAccess = userAccess;
         this.routeUtils = routeUtils;
+        this.mailService = mailService;
     }
 
     public void init() {
@@ -70,6 +81,8 @@ public class UserController {
             get("/:name", wrapTemplate(this::viewUser), new FreeMarkerEngine());
             post("/keys", wrapRoute(this::addUserKey));
             delete("/keys", wrapRoute(this::deleteKey));
+            get("/keys/addkey", wrapRoute(this::finalizeInsertKey));
+
         });
 
         get("/balance", wrapTemplate(this::balance), new FreeMarkerEngine());
@@ -176,10 +189,24 @@ public class UserController {
                 .get();
     }
 
+    // TODO: Get request modifies state. Should fix this somehow.
+    String finalizeInsertKey(Request request, Response response) throws Exception {
+        String guid = RouteUtils.queryParam(request, "guid");
+
+        Optional<Key> key = userAccess.lookupPendingKey(guid);
+        if (!key.isPresent()) return "Did not find GUID";
+        userAccess.removePendingKey(guid);
+        userAccess.insertKey(key.get().getUserId(), key.get().getPublicKey(), key.get().encryptedPrivateKey);
+        return "ok";
+    }
+
     String addUserKey(Request request, Response response) throws Exception {
         byte[] publicKey = RouteUtils.queryParamHex(request, "publickey");
         String privateKey = RouteUtils.queryParam(request, "privatekey");
         String password = RouteUtils.queryParam(request, "password");
+        String guid = nextGUID();
+        String link = request.url() + "/addkey" + "?guid=" + guid;
+
         User user = routeUtils.forceLoggedInUser(request);
 
         if (!validPassword(user, password)) {
@@ -188,6 +215,7 @@ public class UserController {
             response.redirect("/user/" + user.getUsername());
             return "redirected";
         }
+
         boolean validKey = true;
         try {
             ECDSAPublicKey.DESERIALIZER.deserialize(publicKey);
@@ -196,14 +224,18 @@ public class UserController {
         }
 
         if (validKey) {
-            userAccess.insertKey(user.getId(), publicKey, privateKey);
-            RouteUtils.successMessage(request, "Keys added.");
-        } else {
-            RouteUtils.errorMessage(request, "Invalid public key.");
+            String email = user.getEmail();
+            mailService.sendEmail(email, SUBJECT, emailBody(link));
+            RouteUtils.successMessage(request, "Check your inbox.");
+            userAccess.insertPendingKey(user.getId(), publicKey, privateKey, guid);
         }
 
+        else {
+            RouteUtils.errorMessage(request, "Invalid public key");
+        }
         response.redirect("/user/" + user.getUsername());
         return "redirected";
+
     }
 
     String deleteKey(Request request, Response response) throws Exception {
@@ -241,14 +273,12 @@ public class UserController {
         List<ECDSAPublicKey> publicKeys = keys.stream()
                 .map(Key::asKey).flatMap(Optionals::stream).collect(Collectors.toList());
 
-        GetFundsResponse fundsResponse;
+        GetFundsResponsePayload fundsResponse;
         try (Socket socket = new Socket(
                 Constants.getNodeAddress().getAddress(),
                 Constants.getNodeAddress().getPort())) {
 
-            GetFundsRequest fundsRequest = new GetFundsRequest(publicKeys);
-            byte[] payload = ByteUtil.asByteArray(fundsRequest::serialize);
-            new OutgoingMessage(Message.GET_FUNDS, payload)
+            new GetFundsRequestPayload(publicKeys).toMessage()
                     .serialize(new DataOutputStream(socket.getOutputStream()));
 
             IncomingMessage respMessage = IncomingMessage.responderlessDeserializer()
@@ -259,7 +289,7 @@ public class UserController {
                 RouteUtils.errorMessage(request, "An internal error has occurred.");
                 return RouteUtils.redirectTo(response, "/");
             }
-            fundsResponse = GetFundsResponse.DESERIALIZER.deserialize(respMessage.payload);
+            fundsResponse = GetFundsResponsePayload.DESERIALIZER.deserialize(respMessage.payload);
         }
         long totalBalance = fundsResponse.keyFunds.values().stream()
                 .mapToLong(Long::longValue).sum();
@@ -271,6 +301,18 @@ public class UserController {
                 .add("balances", balancesByKey)
                 .add("total", totalBalance)
                 .get();
+    }
+
+    // XXX: Don't duplicate these.
+    private static String emailBody(String link) {
+        return String.format(
+                "Click on the link below to verify new key.%n%n%s",
+                link
+        );
+    }
+
+    private static String nextGUID() {
+        return new BigInteger(130, random).toString(32);
     }
 
     private boolean validPassword(User user, String password) throws Exception {

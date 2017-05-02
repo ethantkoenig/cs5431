@@ -3,11 +3,14 @@ package network;
 import block.Block;
 import block.UnspentTransactions;
 import crypto.ECDSAPublicKey;
+import message.IncomingMessage;
+import message.Message;
+import message.OutgoingMessage;
+import message.payloads.*;
 import transaction.Transaction;
 import transaction.TxIn;
 import transaction.TxOut;
 import utils.ByteUtil;
-import utils.CanBeSerialized;
 import utils.Pair;
 
 import java.io.IOException;
@@ -78,18 +81,16 @@ public class MessageHandler {
     }
 
     /**
-     * Responds to a sender with a BLOCK message contain the {@code ancestToGet}
+     * Responds to a sender with a BLOCKS message contain the {@code ancestToGet}
      * ancestors of block with hash {@code lastHash}
      *
      * @param message IncomingMessage to respond to
      * @param request Request for blocks
      */
-    public void getBlockMsgHandler(IncomingMessage message, GetBlocksRequest request) throws IOException {
+    public void getBlockMsgHandler(IncomingMessage message, GetBlocksRequestPayload request) throws IOException {
         List<Block> ancestors = bundle.getBlockChain()
                 .getAncestorsStartingAt(request.hash, request.numBlocksRequested);
-        byte[] payload = ByteUtil.asByteArray(out -> CanBeSerialized.serializeList(out, ancestors));
-        OutgoingMessage returnMsg = new OutgoingMessage(Message.BLOCK, payload);
-        message.respond(returnMsg);
+        message.respond(new BlocksPayload(ancestors).toMessage());
     }
 
     private void startMiningThread() {
@@ -112,7 +113,7 @@ public class MessageHandler {
      * @param request The `GET_FUNDS` request to respond to
      * @throws IOException
      */
-    public void getFundsMsgHandler(IncomingMessage message, GetFundsRequest request)
+    public void getFundsMsgHandler(IncomingMessage message, GetFundsRequestPayload request)
             throws IOException {
         // For each key, get the available funds from unspend Txs
         List<ECDSAPublicKey> keys = request.requestedKeys;
@@ -127,10 +128,7 @@ public class MessageHandler {
         for (ECDSAPublicKey key : keys) {
             funds.putIfAbsent(key, 0L);
         }
-        // Generate a Funds message and return it to sender
-        GetFundsResponse toReturn = new GetFundsResponse(funds);
-        byte[] payload = ByteUtil.asByteArray(toReturn::serialize);
-        message.respond(new OutgoingMessage(Message.FUNDS, payload));
+        message.respond(new GetFundsResponsePayload(funds).toMessage());
     }
 
     /**
@@ -141,7 +139,7 @@ public class MessageHandler {
      * @param request The `GET_UTX_WITH_KEYS` request to respond to
      * @throws IOException
      */
-    public void getUTXWithKeysMsgHandler(IncomingMessage message, GetUTXWithKeysRequest request)
+    public void getUTXWithKeysMsgHandler(IncomingMessage message, GetUTXWithKeysRequestPayload request)
             throws IOException {
         Optional<Pair<List<ECDSAPublicKey>, Transaction>> result =
                 bundle.getUnspentTransactions()
@@ -149,9 +147,9 @@ public class MessageHandler {
                                 request.keys, request.changeKey,
                                 request.destination, request.amount);
 
-        GetUTXWithKeysResponse toReturn = result
-                .map(p -> GetUTXWithKeysResponse.success(p.getLeft(), p.getRight()))
-                .orElseGet(GetUTXWithKeysResponse::failure);
+        GetUTXWithKeysResponsePayload toReturn = result
+                .map(p -> GetUTXWithKeysResponsePayload.success(p.getLeft(), p.getRight()))
+                .orElseGet(GetUTXWithKeysResponsePayload::failure);
         byte[] payload = ByteUtil.asByteArray(toReturn::serialize);
         message.respond(new OutgoingMessage(Message.UTX_WITH_KEYS, payload));
     }

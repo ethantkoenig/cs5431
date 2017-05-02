@@ -1,6 +1,8 @@
 package network;
 
 import block.Block;
+import message.Message;
+import message.OutgoingMessage;
 import org.junit.Assert;
 import org.junit.Test;
 import testutils.RandomizedTest;
@@ -22,7 +24,7 @@ public class MinerThreadTest extends RandomizedTest {
 
         minerThread.start();
         Message msg = queue.take();
-        Assert.assertEquals(errorMessage, msg.type, Message.BLOCK);
+        Assert.assertEquals(errorMessage, msg.type, Message.BLOCKS);
 
         Assert.assertTrue(errorMessage, block.checkHash());
 

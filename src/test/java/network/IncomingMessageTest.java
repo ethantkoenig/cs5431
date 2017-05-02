@@ -1,5 +1,8 @@
 package network;
 
+import message.IncomingMessage;
+import message.Message;
+import message.OutgoingMessage;
 import org.junit.Assert;
 import org.junit.Test;
 import testutils.RandomizedTest;
@@ -47,9 +50,9 @@ public class IncomingMessageTest extends RandomizedTest {
         IncomingMessage m = new IncomingMessage(
                 Message.TRANSACTION, payload, responses::add);
 
-        OutgoingMessage m1 = new OutgoingMessage(Message.BLOCK, randomBytes(1024));
+        OutgoingMessage m1 = new OutgoingMessage(Message.BLOCKS, randomBytes(1024));
         m.respond(m1);
-        OutgoingMessage m2 = new OutgoingMessage(Message.GET_BLOCK, randomBytes(1024));
+        OutgoingMessage m2 = new OutgoingMessage(Message.GET_BLOCKS, randomBytes(1024));
         m.respond(m2);
         assertEquals(errorMessage, Arrays.asList(m1, m2), responses);
     }
