@@ -19,6 +19,7 @@ import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.Properties;
 
@@ -133,8 +134,7 @@ public class Main {
         ECDSAPublicKey myPublic;
         ECDSAPrivateKey myPrivate;
         ECDSAPublicKey privilegedKey;
-        Miner miner = null;
-        Node node = null;
+        Node node;
         try {
             myPublic = Crypto.loadPublicKey(IOUtils.getPropertyChecked(prop, "publicKey"));
             myPrivate = Crypto.loadPrivateKey(IOUtils.getPropertyChecked(prop, "privateKey"));
@@ -145,49 +145,31 @@ public class Main {
         }
 
         if (isMining) {
-            miner = new Miner(new ServerSocket(port), new ECDSAKeyPair(myPrivate, myPublic), privilegedKey);
+            node = new Miner(new ServerSocket(port), new ECDSAKeyPair(myPrivate, myPublic), privilegedKey);
         } else {
             node = new Node(new ServerSocket(port), new ECDSAKeyPair(myPrivate, myPublic), privilegedKey);
         }
 
-        String nodeListPath = IOUtils.getPropertyChecked(prop, "nodeList");
-        BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(nodeListPath), StandardCharsets.UTF_8));
-        String currentLine = "";
+        String[] nodes = IOUtils.getPropertyChecked(prop, "nodeList").split(",");
 
-        try {
-            currentLine = br.readLine();
-        } catch (IOException e) {
-            br.close();
-            System.err.println(String.format("Error: %s", e.getMessage()));
-        }
-
-        while (currentLine != null) {
-            Optional<InetSocketAddress> optAddr = IOUtils.parseAddress(currentLine);
+        for (String s: nodes) {
+            Optional<InetSocketAddress> optAddr = IOUtils.parseAddress(s);
             if (!optAddr.isPresent()) {
-                String msg = String.format("Invalid address %s", currentLine);
+                String msg = String.format("Invalid address %s", s);
                 System.err.println(msg);
+                return false;
             } else {
                 InetSocketAddress addr = optAddr.get();
-                if (isMining) {
-                    miner.connect(addr.getHostName(), addr.getPort());
-                } else {
-                    node.connect(addr.getHostName(), addr.getPort());
-                }
-            }
-            try {
-                currentLine = br.readLine();
-            } catch (IOException e) {
-                br.close();
-                System.err.println(String.format("Error: %s", e.getMessage()));
-                break;
+                node.connect(addr.getHostName(), addr.getPort());
             }
         }
-        br.close();
-        if (isMining) {
-            miner.startMiner();
+
+        if (node instanceof Miner) {
+            ((Miner) node).startMiner();
         } else {
             node.startNode();
         }
+
         return true;
     }
 }
