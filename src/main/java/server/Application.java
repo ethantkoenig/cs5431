@@ -23,8 +23,8 @@ import static spark.Spark.*;
 
 public class Application {
 
-    public static boolean run(Properties serverProp, Properties nodeProp) {
-        if (!handleArgs(serverProp, nodeProp)) {
+    public static boolean run(Properties serverProp) {
+        if (!handleArgs(serverProp)) {
             return false;
         }
 
@@ -47,16 +47,16 @@ public class Application {
         return true;
     }
 
-    private static boolean handleArgs(Properties serverProp, Properties nodeProp) {
+    private static boolean handleArgs(Properties serverProp) {
         String keystorePath = IOUtils.getPropertyChecked(serverProp, "keystore");
         try {
-            int port = Integer.parseInt(IOUtils.getPropertyChecked(nodeProp, "nodePort"));
+            int port = Integer.parseInt(IOUtils.getPropertyChecked(serverProp, "nodePort"));
             Constants.setNodeAddress(new InetSocketAddress(InetAddress.getLocalHost(), port));
         } catch (IOException e) {
             e.printStackTrace();
             return false;
         } catch (NumberFormatException e) {
-            System.err.println("Misformatted port number: " + IOUtils.getPropertyChecked(nodeProp, "nodePort"));
+            System.err.println("Misformatted port number: " + IOUtils.getPropertyChecked(serverProp, "nodePort"));
             return false;
         }
 
