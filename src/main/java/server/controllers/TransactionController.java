@@ -4,8 +4,13 @@ package server.controllers;
 import com.google.inject.Inject;
 import crypto.ECDSAPublicKey;
 import crypto.ECDSASignature;
-import network.*;
 import server.access.TransactionAccess;
+import message.IncomingMessage;
+import message.Message;
+import message.OutgoingMessage;
+import message.payloads.GetUTXWithKeysRequestPayload;
+import message.payloads.GetUTXWithKeysResponsePayload;
+
 import server.access.UserAccess;
 import server.models.Key;
 import server.models.Transaction;
@@ -95,25 +100,24 @@ public class TransactionController {
             return "oh no, no keys"; // TODO handle properly
         }
 
-        GetUTXWithKeysResponse unsigned;
+        GetUTXWithKeysResponsePayload unsigned;
         try (Socket socket = new Socket(
                 Constants.getNodeAddress().getAddress(),
                 Constants.getNodeAddress().getPort())) {
 
-            byte[] payload = ByteUtil.asByteArray(new GetUTXWithKeysRequest(
+            new GetUTXWithKeysRequestPayload(
                     keys,
                     keys.get(0),
                     recipientKeys.get(0),
-                    amount)::serialize);
-            new OutgoingMessage(Message.GET_UTX_WITH_KEYS, payload)
-                    .serialize(new DataOutputStream(socket.getOutputStream()));
+                    amount
+            ).toMessage().serialize(new DataOutputStream(socket.getOutputStream()));
 
             IncomingMessage respMessage = IncomingMessage.responderlessDeserializer()
                     .deserialize(new DataInputStream(socket.getInputStream()));
             if (respMessage.type != Message.UTX_WITH_KEYS) {
                 return "oh no, bad response from node"; // TODO handle properly
             }
-            unsigned = GetUTXWithKeysResponse.DESERIALIZER.deserialize(respMessage.payload);
+            unsigned = GetUTXWithKeysResponsePayload.DESERIALIZER.deserialize(respMessage.payload);
         }
 
         if (!unsigned.wasSuccessful) {

@@ -35,6 +35,9 @@ public class TransactionAccess {
         }
     }
 
+    /**
+     * Get all transactions which involve the given {@code user}
+     */
     public List<Transaction> getAllTransactions(String user) throws SQLException {
         try (Connection conn = connectionProvider.getConnection();
              PreparedStatement preparedStmt = Statements.getAllTransactions(conn, user);
@@ -54,6 +57,9 @@ public class TransactionAccess {
         }
     }
 
+    /**
+     * Update the transaction with {@code tranid} and {@code fromuser} to be a completed transaction (no longer a request)
+     */
     public void updateTransactionRequestAsComplete(int tranid, String fromuser) throws SQLException {
         try (Connection conn = connectionProvider.getConnection();
              PreparedStatement preparedStmt = Statements.updateTransactionRequestAsComplete(conn, tranid, fromuser)

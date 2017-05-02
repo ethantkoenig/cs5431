@@ -3,7 +3,10 @@ package server.controllers;
 import com.google.inject.Inject;
 import crypto.Crypto;
 import crypto.ECDSAPublicKey;
-import network.*;
+import message.IncomingMessage;
+import message.Message;
+import message.payloads.GetFundsRequestPayload;
+import message.payloads.GetFundsResponsePayload;
 import server.access.UserAccess;
 import server.models.Key;
 import server.models.User;
@@ -241,14 +244,12 @@ public class UserController {
         List<ECDSAPublicKey> publicKeys = keys.stream()
                 .map(Key::asKey).flatMap(Optionals::stream).collect(Collectors.toList());
 
-        GetFundsResponse fundsResponse;
+        GetFundsResponsePayload fundsResponse;
         try (Socket socket = new Socket(
                 Constants.getNodeAddress().getAddress(),
                 Constants.getNodeAddress().getPort())) {
 
-            GetFundsRequest fundsRequest = new GetFundsRequest(publicKeys);
-            byte[] payload = ByteUtil.asByteArray(fundsRequest::serialize);
-            new OutgoingMessage(Message.GET_FUNDS, payload)
+            new GetFundsRequestPayload(publicKeys).toMessage()
                     .serialize(new DataOutputStream(socket.getOutputStream()));
 
             IncomingMessage respMessage = IncomingMessage.responderlessDeserializer()
@@ -259,7 +260,7 @@ public class UserController {
                 RouteUtils.errorMessage(request, "An internal error has occurred.");
                 return RouteUtils.redirectTo(response, "/");
             }
-            fundsResponse = GetFundsResponse.DESERIALIZER.deserialize(respMessage.payload);
+            fundsResponse = GetFundsResponsePayload.DESERIALIZER.deserialize(respMessage.payload);
         }
         long totalBalance = fundsResponse.keyFunds.values().stream()
                 .mapToLong(Long::longValue).sum();

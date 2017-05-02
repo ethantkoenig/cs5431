@@ -5,6 +5,10 @@ import block.Block;
 import crypto.Crypto;
 import crypto.ECDSAKeyPair;
 import crypto.ECDSAPublicKey;
+import message.IncomingMessage;
+import message.Message;
+import message.OutgoingMessage;
+import message.payloads.GetBlocksRequestPayload;
 import org.junit.Assert;
 import org.junit.Test;
 import testutils.RandomizedTest;
@@ -244,7 +248,7 @@ public class MinerTest extends RandomizedTest {
     }
 
     private static Block[] assertBlockMessage(Message msg) throws Exception {
-        Assert.assertEquals(Message.BLOCK, msg.type);
+        Assert.assertEquals(Message.BLOCKS, msg.type);
         return Deserializer.deserializeList(msg.payload, Block.DESERIALIZER)
                 .toArray(new Block[0]);
     }
@@ -291,13 +295,11 @@ public class MinerTest extends RandomizedTest {
 
         private void sendBlock(Block block, int node) throws IOException {
             byte[] serialized = ByteUtil.asByteArray(block::serialize);
-            sendMessage(new OutgoingMessage(Message.BLOCK, serialized), node);
+            sendMessage(new OutgoingMessage(Message.BLOCKS, serialized), node);
         }
 
         private void sendGetBlocksRequest(ShaTwoFiftySix hash, int numRequested, int node) throws IOException {
-            GetBlocksRequest request = new GetBlocksRequest(hash, numRequested);
-            byte[] payload = ByteUtil.asByteArray(request::serialize);
-            sendMessage(new OutgoingMessage(Message.GET_BLOCK, payload), node);
+            sendMessage(new GetBlocksRequestPayload(hash, numRequested).toMessage(), node);
         }
 
         private void sendMessage(OutgoingMessage message, int node) throws IOException {

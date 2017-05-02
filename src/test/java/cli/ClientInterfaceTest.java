@@ -2,8 +2,8 @@ package cli;
 
 import crypto.Crypto;
 import network.ConnectionThread;
-import network.IncomingMessage;
-import network.Message;
+import message.IncomingMessage;
+import message.Message;
 import org.junit.Assert;
 import org.junit.Test;
 import testutils.RandomizedTest;

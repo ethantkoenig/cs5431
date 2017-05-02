@@ -1,6 +1,6 @@
-package network;
+package message.payloads;
 
-import utils.CanBeSerialized;
+import message.Message;
 import utils.DeserializationException;
 import utils.Deserializer;
 import utils.ShaTwoFiftySix;
@@ -9,14 +9,14 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 
-public class GetBlocksRequest implements CanBeSerialized {
-    public final static Deserializer<GetBlocksRequest> DESERIALIZER =
+public class GetBlocksRequestPayload extends MessagePayload {
+    public final static Deserializer<GetBlocksRequestPayload> DESERIALIZER =
             new GetBlocksRequestDeserializer();
 
     public final ShaTwoFiftySix hash;
     public final int numBlocksRequested;
 
-    public GetBlocksRequest(ShaTwoFiftySix hash, int numBlocksRequested) {
+    public GetBlocksRequestPayload(ShaTwoFiftySix hash, int numBlocksRequested) {
         this.hash = hash;
         this.numBlocksRequested = numBlocksRequested;
     }
@@ -27,14 +27,19 @@ public class GetBlocksRequest implements CanBeSerialized {
         outputStream.writeInt(numBlocksRequested);
     }
 
+    @Override
+    public byte messageType() {
+        return Message.GET_BLOCKS;
+    }
+
     private static final class GetBlocksRequestDeserializer
-            implements Deserializer<GetBlocksRequest> {
+            implements Deserializer<GetBlocksRequestPayload> {
 
         @Override
-        public GetBlocksRequest deserialize(DataInputStream inputStream) throws DeserializationException, IOException {
+        public GetBlocksRequestPayload deserialize(DataInputStream inputStream) throws DeserializationException, IOException {
             ShaTwoFiftySix hash = ShaTwoFiftySix.deserialize(inputStream);
             int numBlocksRequested = inputStream.readInt();
-            return new GetBlocksRequest(hash, numBlocksRequested);
+            return new GetBlocksRequestPayload(hash, numBlocksRequested);
         }
     }
 }

@@ -5,6 +5,10 @@ import com.google.inject.Injector;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import crypto.Crypto;
+import message.IncomingMessage;
+import message.Message;
+import message.OutgoingMessage;
+import message.payloads.GetUTXWithKeysResponsePayload;
 import network.*;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -64,13 +68,11 @@ public class TransactionControllerTest extends ControllerTest {
                 connectionThread.start();
                 IncomingMessage message = messageQueue.take();
                 Assert.assertEquals(Message.GET_UTX_WITH_KEYS, message.type);
-                GetUTXWithKeysResponse response = GetUTXWithKeysResponse.success(
+                GetUTXWithKeysResponsePayload response = GetUTXWithKeysResponsePayload.success(
                         Collections.singletonList(fixtures.key),
                         transaction
                 );
-                connectionThread.send(new OutgoingMessage(Message.UTX_WITH_KEYS,
-                        ByteUtil.asByteArray(response::serialize))
-                );
+                connectionThread.send(response.toMessage());
             } catch (InterruptedException | IOException e) {
                 e.printStackTrace();
             }
@@ -102,10 +104,8 @@ public class TransactionControllerTest extends ControllerTest {
                 connectionThread.start();
                 IncomingMessage message = messageQueue.take();
                 Assert.assertEquals(Message.GET_UTX_WITH_KEYS, message.type);
-                GetUTXWithKeysResponse response = GetUTXWithKeysResponse.failure();
-                connectionThread.send(new OutgoingMessage(Message.UTX_WITH_KEYS,
-                        ByteUtil.asByteArray(response::serialize))
-                );
+                GetUTXWithKeysResponsePayload response = GetUTXWithKeysResponsePayload.failure();
+                connectionThread.send(response.toMessage());
             } catch (InterruptedException | IOException e) {
                 e.printStackTrace();
             }
