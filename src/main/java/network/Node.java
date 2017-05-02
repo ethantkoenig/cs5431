@@ -21,7 +21,7 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.logging.Logger;
 
 /**
- * The network.CommandNode class represents an arbitrary node in the network that can communicate
+ * The network.Node class represents an arbitrary node in the network that can communicate
  * with all other nodes through the use of the broadcast function, maintains an up to date
  * blockchain, and responds to network messages.
  *
@@ -63,12 +63,12 @@ public class Node {
         try {
             accept();
         } catch (IOException e) {
-            LOGGER.severe("Error accepting incoming connections in CommandNode: " + e.getMessage());
+            LOGGER.severe("Error accepting incoming connections in Node: " + e.getMessage());
         }
     }
 
     /**
-     * Allows the CommandNode to accept incoming connections from other nodes.
+     * Allows the Node to accept incoming connections from other nodes.
      * Takes each incoming connection and creates a ConnectionTread object
      * and adds it to the connections list
      *
@@ -100,9 +100,9 @@ public class Node {
     }
 
     /**
-     * Allows this CommandNode to connect to any other node on the network upon establishment.
+     * Allows this Node to connect to any other node on the network upon establishment.
      *
-     * @param host is the ip address of the remote CommandNode you wish to connect to.
+     * @param host is the ip address of the remote Node you wish to connect to.
      */
     public void connect(String host, int port) {
         LOGGER.info(String.format("[+] Connecting to host: %s.%n", host));
