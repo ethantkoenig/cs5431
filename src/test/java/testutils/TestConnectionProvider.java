@@ -65,7 +65,6 @@ public final class TestConnectionProvider extends PooledConnectionProvider {
                     + "friend varchar(32) NOT NULL"
                     + ")");
 
-<<<<<<< HEAD
             statement.executeUpdate("CREATE TABLE IF NOT EXISTS transactions ("
                     + "tranid int NOT NULL IDENTITY,"
                     + "fromuser varchar(32) NOT NULL,"
@@ -74,7 +73,8 @@ public final class TestConnectionProvider extends PooledConnectionProvider {
                     + "message varchar(256),"
                     + "isrequest boolean not null,"
                     + "PRIMARY KEY (tranid)"
-=======
+                    + ")");
+
             statement.executeUpdate("CREATE TABLE IF NOT EXISTS pendingkeys ("
                     + "userid int NOT NULL,"
                     + "publickey varbinary(91) NOT NULL,"
@@ -84,7 +84,6 @@ public final class TestConnectionProvider extends PooledConnectionProvider {
                     + "FOREIGN KEY (userid)"
                     + "  REFERENCES users(id)"
                     + "  ON DELETE CASCADE"
->>>>>>> origin/master
                     + ")");
         }
     }
