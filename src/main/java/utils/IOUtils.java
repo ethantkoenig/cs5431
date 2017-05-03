@@ -8,6 +8,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Properties;
 
 /**
  * Various IO utilities
@@ -74,6 +75,22 @@ public final class IOUtils {
                         new IOException(String.format("Invalid address: %s", line))
                 ));
             }
+        }
+    }
+
+    /**
+     *  Attempts to get a named property. Throws an `IOException` if `key` is not present in `prop`.
+     *
+     * @param prop The `Properties` object to query
+     * @param key The key of the property to query
+     *
+     * @return The value of the property with key `key`, if present.
+     */
+    public static String getPropertyChecked(Properties prop, String key) throws IOException {
+        if (prop.containsKey(key)) {
+            return prop.getProperty(key);
+        } else {
+            throw new IOException("Property \'" + key + "\' is missing.");
         }
     }
 }

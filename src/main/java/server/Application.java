@@ -11,23 +11,32 @@ import server.controllers.PasswordRecoveryController;
 import server.controllers.TransactionController;
 import server.controllers.UserController;
 import server.utils.*;
+import utils.IOUtils;
 
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.util.Properties;
 
 import static spark.Spark.*;
 
 
 public class Application {
 
-    public static boolean run(String[] args) {
-        if (!handleArgs(args)) {
+    public static boolean run(Properties serverProp) {
+        if (!handleArgs(serverProp)) {
             return false;
         }
 
-        // Configure Spark on port 5000
-        port(5000);
+        int serverPort;
+        try {
+            serverPort = Integer.parseInt(IOUtils.getPropertyChecked(serverProp, "serverPort"));
+        } catch (IOException e) {
+            System.err.printf(String.format("Error: %s", e.getMessage()));
+            return false;
+        }
+        // Configure Spark on port `port`
+        port(serverPort);
         // Static files location
         staticFiles.location("/public");
         // Caching of static files lifetime
@@ -44,21 +53,24 @@ public class Application {
         return true;
     }
 
-    private static boolean handleArgs(String args[]) {
-        if (args.length != 7) {
-            System.err.println("usage: webserver <keystore> <port> <public-key> <private-key> <privileged-key> <File for list of nodes>");
+    private static boolean handleArgs(Properties serverProp) {
+        String keystorePath;
+        String host;
+        String portString;
+        try {
+            keystorePath = IOUtils.getPropertyChecked(serverProp, "keystore");
+            host = IOUtils.getPropertyChecked(serverProp, "nodeAddress");
+            portString = IOUtils.getPropertyChecked(serverProp, "nodePort");
+        } catch (IOException e) {
+            System.err.println(String.format("Error: %s", e.getMessage()));
             return false;
         }
 
-        String keystorePath = args[1];
         try {
-            int port = Integer.parseInt(args[2]);
-            Constants.setNodeAddress(new InetSocketAddress(InetAddress.getLocalHost(), port));
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
+            int port = Integer.parseInt(portString);
+            Constants.setNodeAddress(new InetSocketAddress(host, port));
         } catch (NumberFormatException e) {
-            System.err.println("Misformatted port number: " + args[2]);
+            System.err.println("Misformatted port number: " + portString);
             return false;
         }
 
