@@ -3,7 +3,7 @@ package jcommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 
-@Parameters(separators = "=", commandDescription = "Run the server for the web app")
+@Parameters(commandDescription = "Run the server for the web app")
 public class CommandWebserver {
 
     @Parameter(

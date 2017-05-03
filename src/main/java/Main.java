@@ -55,14 +55,14 @@ public class Main {
         switch (jc.getParsedCommand()) {
             case "node": {
                 Properties nodeProp = parseConfigFile(cn.configFilePath);
-                if (!runNode(nodeProp)) {
+                if (nodeProp == null || !runNode(nodeProp)) {
                     System.exit(1);
                 }
                 break;
             }
             case "miner": {
                 Properties nodeProp = parseConfigFile(cm.configFilePath);
-                if (!runMiner(nodeProp)) {
+                if (nodeProp == null || !runMiner(nodeProp)) {
                     System.exit(1);
                 }
             }
@@ -72,18 +72,19 @@ public class Main {
             }
             case "webserver": {
                 Properties serverProp = parseConfigFile(cw.serverConfigFile);
-                if (!Application.run(serverProp)) {
+                if (serverProp == null || !Application.run(serverProp)) {
                     System.exit(1);
                 }
                 if (cw.runNode) {
                     Properties nodeProp = parseConfigFile(cw.nodeConfigFile);
-                    if (!runNode(nodeProp)) {
+                    if (nodeProp == null || !runNode(nodeProp)) {
                         System.exit(1);
                     }
                 }
                 break;
             }
             default: {
+                // Theoretically unreachable as parsing should fail
                 String msg = String.format("Unrecognized command %s", args[0]);
                 System.err.println(msg);
                 jc.usage();
@@ -92,9 +93,6 @@ public class Main {
         }
     }
 
-    @SuppressWarnings(
-        value="DM_EXIT",
-        justification="There's no reason not to exit here rather than main")
     private static Properties parseConfigFile(String path) {
         try (InputStream input = new FileInputStream(path)) {
             Properties prop = new Properties();
@@ -102,11 +100,9 @@ public class Main {
             return prop;
         } catch (FileNotFoundException e) {
             System.err.println("File \'" + path + "\' not found. Aborting...");
-            System.exit(1);
             return null;
         } catch (IOException e) {
             System.err.println("Unexpected error while reading the node config file. Aborting...");
-            System.exit(1);
             return null;
         }
     }
