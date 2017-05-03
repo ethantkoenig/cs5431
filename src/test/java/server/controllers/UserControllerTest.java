@@ -198,7 +198,7 @@ public class UserControllerTest extends ControllerTest {
 
         Response response = new MockResponse().get();
         controller.addUserKey(request, response);
-        TestUtils.assertPresent(userAccess.getKey(fixtures.user.getId(), publicBytes));
+        Assert.assertFalse(userAccess.getKey(fixtures.user.getId(), publicBytes).isPresent());
     }
 
     @Test
