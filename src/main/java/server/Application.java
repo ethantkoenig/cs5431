@@ -28,7 +28,13 @@ public class Application {
             return false;
         }
 
-        int serverPort = Integer.parseInt(IOUtils.getPropertyChecked(serverProp, "serverPort"));
+        int serverPort;
+        try {
+            serverPort = Integer.parseInt(IOUtils.getPropertyChecked(serverProp, "serverPort"));
+        } catch (IOException e) {
+            System.err.printf(String.format("Error: %s", e.getMessage()));
+            return false;
+        }
         // Configure Spark on port `port`
         port(serverPort);
         // Static files location
@@ -48,13 +54,23 @@ public class Application {
     }
 
     private static boolean handleArgs(Properties serverProp) {
-        String keystorePath = IOUtils.getPropertyChecked(serverProp, "keystore");
+        String keystorePath;
+        String host;
+        String portString;
         try {
-            String host = IOUtils.getPropertyChecked(serverProp, "nodeAddress");
-            int port = Integer.parseInt(IOUtils.getPropertyChecked(serverProp, "nodePort"));
+            keystorePath = IOUtils.getPropertyChecked(serverProp, "keystore");
+            host = IOUtils.getPropertyChecked(serverProp, "nodeAddress");
+            portString = IOUtils.getPropertyChecked(serverProp, "nodePort");
+        } catch (IOException e) {
+            System.err.println(String.format("Error: %s", e.getMessage()));
+            return false;
+        }
+
+        try {
+            int port = Integer.parseInt(portString);
             Constants.setNodeAddress(new InetSocketAddress(host, port));
         } catch (NumberFormatException e) {
-            System.err.println("Misformatted port number: " + IOUtils.getPropertyChecked(serverProp, "nodePort"));
+            System.err.println("Misformatted port number: " + portString);
             return false;
         }
 

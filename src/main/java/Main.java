@@ -139,7 +139,7 @@ public class Main {
             myPublic = Crypto.loadPublicKey(IOUtils.getPropertyChecked(prop, "publicKey"));
             myPrivate = Crypto.loadPrivateKey(IOUtils.getPropertyChecked(prop, "privateKey"));
             privilegedKey = Crypto.loadPublicKey(IOUtils.getPropertyChecked(prop, "privilegedKey"));
-        } catch (DeserializationException e) {
+        } catch (DeserializationException | IOException e) {
             System.err.println(String.format("Error: %s", e.getMessage()));
             return false;
         }
