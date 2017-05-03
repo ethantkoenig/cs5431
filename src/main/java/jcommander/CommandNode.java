@@ -7,6 +7,8 @@ import com.beust.jcommander.Parameters;
 public class CommandNode {
 
     @Parameter(
+            names = { "-c", "--config" },
+            required = true,
             description = "The path to the configuration file to use")
-    public String configFilePath = "node.properties";
+    public String configFilePath = null;
 }

@@ -7,7 +7,7 @@ import com.beust.jcommander.Parameters;
 public class CommandWebserver {
 
     @Parameter(
-            names = { "-c", "--server-config" },
+            names = { "-sc", "--server-config" },
             description = "The path to the server configuration file to use")
     public String serverConfigFile = "server.properties";
 
@@ -18,7 +18,7 @@ public class CommandWebserver {
     public boolean runNode = true;
 
     @Parameter(
-            names = "--node-config",
+            names = { "-nc", "--node-config" },
             description = "The path to the node configuration file to use (if spawning a node)")
     public String nodeConfigFile = "node.properties";
 }
