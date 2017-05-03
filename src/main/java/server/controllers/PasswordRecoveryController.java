@@ -107,7 +107,7 @@ public class PasswordRecoveryController {
 
     private static String emailBody(String link) {
         return String.format(
-                "Click on the link below to create reset your account password.%n%n%s",
+                "Click on the link below to reset your account password.%n%n%s",
                 link
         );
     }

@@ -81,6 +81,7 @@ public class TransactionControllerTest extends ControllerTest {
         Request request = new MockRequest()
                 .addQueryParam("recipient", fixtures.user.getUsername())
                 .addQueryParam("amount", "100")
+                .addQueryParam("message", "test message")
                 .addSessionAttribute("username", fixtures.user.getUsername())
                 .get();
 
@@ -113,6 +114,7 @@ public class TransactionControllerTest extends ControllerTest {
         Request request = new MockRequest()
                 .addQueryParam("recipient", fixtures.user.getUsername())
                 .addQueryParam("amount", "100")
+                .addQueryParam("message", "this is a test message")
                 .addSessionAttribute("username", fixtures.user.getUsername())
                 .get();
 

@@ -4,13 +4,16 @@ package server.controllers;
 import com.google.inject.Inject;
 import crypto.ECDSAPublicKey;
 import crypto.ECDSASignature;
+import server.access.TransactionAccess;
 import message.IncomingMessage;
 import message.Message;
 import message.OutgoingMessage;
 import message.payloads.GetUTXWithKeysRequestPayload;
 import message.payloads.GetUTXWithKeysResponsePayload;
+
 import server.access.UserAccess;
 import server.models.Key;
+import server.models.Transaction;
 import server.models.User;
 import server.utils.Constants;
 import server.utils.RouteUtils;
@@ -36,11 +39,13 @@ import static spark.Spark.*;
 public class TransactionController {
 
     private final UserAccess userAccess;
+    private final TransactionAccess transactionAccess;
     private final RouteUtils routeUtils;
 
     @Inject
-    private TransactionController(UserAccess userAccess, RouteUtils routeUtils) {
+    private TransactionController(UserAccess userAccess, TransactionAccess transactionAccess, RouteUtils routeUtils) {
         this.userAccess = userAccess;
+        this.transactionAccess = transactionAccess;
         this.routeUtils = routeUtils;
     }
 
@@ -50,20 +55,23 @@ public class TransactionController {
             post("", wrapRoute(this::transact));
         });
 
+        path("/requests", () -> {
+            get("", wrapTemplate(this::getRequests), new FreeMarkerEngine());
+            post("", wrapRoute(this::createRequest));
+        });
+
         post("/sendtransaction", wrapRoute(this::sendTransaction));
     }
 
     ModelAndView getTransact(Request request, Response response) throws Exception {
-        List<String> friends;
-        Optional<User> loggedInUser = routeUtils.loggedInUser(request);
-        if (loggedInUser.isPresent()) {
-            friends = userAccess.getPeopleWhoFriendMe(loggedInUser.get().getUsername());
-        } else {
-            return routeUtils.modelAndView(request, "index.ftl")
-                    .get();
-        }
+        User loggedInUser = routeUtils.forceLoggedInUser(request);
+        String username = loggedInUser.getUsername();
+        List<String> friends = userAccess.getPeopleWhoFriendMe(username);
+        List<Transaction> transactions = transactionAccess.getAllTransactions(username);
+
         return routeUtils.modelAndView(request, "transact.ftl")
                 .add("friends", friends)
+                .add("transactions", transactions)
                 .get();
     }
 
@@ -72,6 +80,8 @@ public class TransactionController {
 
         User loggedInUser = routeUtils.forceLoggedInUser(request);
         String recipientUsername = queryParam(request, "recipient");
+        String message = queryParam(request, "message");
+
         if (!userAccess.isFriendsWith(recipientUsername, loggedInUser.getUsername())) {
             return "This person has not authorized you to send them money.";
         }
@@ -123,6 +133,14 @@ public class TransactionController {
                     .ifPresent(k -> encryptedPrivateKeys.add(k.encryptedPrivateKey));
         }
 
+        // if transaction already exists (meaning it was a requesut) mark as complete
+        if (queryParamExists(request, "tranid")) {
+            int tranid = queryParamInt(request, "tranid");
+            transactionAccess.updateTransactionRequestAsComplete(tranid, loggedInUser.getUsername());
+        } else {
+            transactionAccess.insertTransaction(loggedInUser.getUsername(), recipientUsername, amount, message, false);
+        }
+
         // TODO find a better way to produce JSON
         response.status(200);
         return String.format("{\"payload\":\"%s\", \"encryptedKeys\":[%s]}",
@@ -135,6 +153,7 @@ public class TransactionController {
         byte[] payload = queryParamHex(request, "payload");
         String[] rHexs = queryParam(request, "r").split(",");
         String[] sHexs = queryParam(request, "s").split(",");
+
         if (rHexs.length != sHexs.length) {
             return "mismatched lengths"; // TODO handle properly
         }
@@ -155,5 +174,33 @@ public class TransactionController {
             new OutgoingMessage(Message.TRANSACTION, msgPayload).serialize(socketOut);
         }
         return "ok"; // TODO handle properly
+    }
+
+    ModelAndView getRequests(Request request, Response response) throws Exception {
+        User touser = routeUtils.forceLoggedInUser(request);
+        List<Transaction> requests = transactionAccess.getRequests(touser.getUsername());
+        return routeUtils.modelAndView(request, "request.ftl")
+                .add("requests", requests)
+                .get();
+    }
+
+    String createRequest(Request request, Response response) throws Exception {
+        User touser = routeUtils.forceLoggedInUser(request);
+        String fromuser = queryParam(request, "recipient");
+
+        if (!userAccess.isFriendsWith(fromuser, touser.getUsername())) {
+            return "This person has not authorized you to send them money.";
+        }
+
+        String message = queryParam(request, "message");
+
+        if (message.length() > 250) {
+            return "Message too long, must be under 250 characters";
+        }
+
+        long amount = queryParamLong(request, "amount");
+
+        transactionAccess.insertTransaction(fromuser, touser.getUsername(), amount, message, true);
+        return "Request made.";
     }
 }

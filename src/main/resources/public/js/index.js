@@ -30,7 +30,7 @@ $(document).ready(function () {
         return authPasswordAndConfirm($form);
     });
 
-    $('#loginform').submit(function() {
+    $('#loginform').submit(function () {
         var $form = $(this);
         var $passwordGroup = $form.find('.password-form-group');
         var password = $passwordGroup.find('input').val();
@@ -125,11 +125,27 @@ $(document).ready(function () {
     });
 
     $('#transactform').submit(function () {
+
         console.log("Sending Transaction");
         var action = $(this).attr("action");
         var data = $(this).serialize();
         var password = $('#transaction-password').val();
         var secret = encryptSecret(password);
+
+        if (action == "/requests") {
+            $.post(action, data, function (resp) {
+                if (resp == "Request made."){
+                    $('#status').remove();
+                    $("#status-message").append('<div class="row" id="status" style="padding-top: 10px;"> <div class="alert alert-success"> <strong>Sucess!</strong> Request sent. </div> </div>');
+                }
+            }).fail(function (jqXHR, textStatus, errorThrown) {
+                var error = jqXHR.responseText || "Something went wrong. Please try again.";
+                $('#status').remove();
+                $("#status-message").append('<div class="row" id="status" style="padding-top: 10px;"> <div class="alert alert-danger"> <strong>Error!</strong> ' + error + ' </div> </div>');
+            });
+            return false;
+        }
+
         $.post(action, data, function (resp) {
             console.log(resp);
             // TODO this feels like a hack, eventually make it nice
@@ -220,3 +236,5 @@ function encryptSecret(password) {
     var shaBitArray = sjcl.hash.sha256.hash(password + "encryptSalt");
     return sjcl.codec.hex.fromBits(shaBitArray);
 }
+
+
