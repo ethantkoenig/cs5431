@@ -20,7 +20,7 @@ import java.util.logging.Logger;
  */
 public class BlockChain {
     private final static Logger LOGGER = Logger.getLogger(BlockChain.class.getName());
-    private LinkedHashMap<ShaTwoFiftySix, BlockWrapper> blocks = new LinkedHashMap<>();
+    private final Map<ShaTwoFiftySix, BlockWrapper> blocks = new LinkedHashMap<>();
 
     private Block currentHead;
     private int headDepth;
@@ -100,7 +100,7 @@ public class BlockChain {
             Optional<BlockWrapper> optPrevBlock = getBlockWrapperWithHash(b.previousBlockHash);
             if (optPrevBlock.isPresent()) {
                 BlockWrapper prevBlock = optPrevBlock.get();
-                BlockWrapper newBlock = new BlockWrapper(b, prevBlock.depth + 1, blocks.size());
+                BlockWrapper newBlock = new BlockWrapper(b, prevBlock.depth + 1);
                 blocks.put(b.getShaTwoFiftySix(), newBlock);
                 newBlock.writeToDisk(pathForHash(b.getShaTwoFiftySix()).toFile());
                 updateHead(newBlock);
@@ -109,11 +109,10 @@ public class BlockChain {
                 if (!blocks.isEmpty()) {
                     return false;
                 }
-                BlockWrapper newblock = new BlockWrapper(b, 0, blocks.size());
-                blocks.put(b.getShaTwoFiftySix(), newblock);
-                newblock.writeToDisk(pathForHash(b.getShaTwoFiftySix()).toFile());
-                currentHead = b;
-                headDepth = 0;
+                BlockWrapper newBlock = new BlockWrapper(b, 0);
+                blocks.put(b.getShaTwoFiftySix(), newBlock);
+                newBlock.writeToDisk(pathForHash(b.getShaTwoFiftySix()).toFile());
+                updateHead(newBlock);
                 return true;
             }
         } catch (IOException e) {
@@ -216,6 +215,7 @@ public class BlockChain {
             Block parent = optParent.get();
             return block.verify(getUnspentTransactionsAt(parent));
         } else if (block.isGenesisBlock()) {
+            // TODO the below check always passes
             if (block.verifyGenesis(block.reward.ownerPubKey)) {
                 UnspentTransactions unspentTxs = UnspentTransactions.empty();
                 unspentTxs.put(block.getShaTwoFiftySix(), 0, block.reward);
@@ -242,36 +242,25 @@ public class BlockChain {
         return containsBlockWithHash(b.getShaTwoFiftySix());
     }
 
-    // TODO storing insertion position may no longer be necessary
-    private static final class BlockWrapper implements Comparable<BlockWrapper>, CanBeSerialized {
+    private static final class BlockWrapper implements CanBeSerialized {
         private final Block block;
         private final int depth;
-        // the position in which it was inserted, used for reconstruction
-        private final int insertionPosition;
 
-        private BlockWrapper(Block block, int depth, int insertionPosition) {
+        private BlockWrapper(Block block, int depth) {
             this.block = block;
             this.depth = depth;
-            this.insertionPosition = insertionPosition;
         }
 
         public void serialize(DataOutputStream outputStream) throws IOException {
             block.serialize(outputStream);
             outputStream.writeInt(depth);
-            outputStream.writeInt(insertionPosition);
         }
 
         private static BlockWrapper deserialize(DataInputStream input)
                 throws DeserializationException, IOException {
             Block block = Block.DESERIALIZER.deserialize(input);
             int depth = input.readInt();
-            int insertionPosition = input.readInt();
-            return new BlockWrapper(block, depth, insertionPosition);
-        }
-
-        @Override
-        public int compareTo(BlockWrapper o) {
-            return insertionPosition - o.insertionPosition;
+            return new BlockWrapper(block, depth);
         }
 
         @Override
@@ -283,13 +272,12 @@ public class BlockChain {
                 return false;
             }
             BlockWrapper w = (BlockWrapper) o;
-            return block.equals(w.block) && depth == w.depth
-                    && insertionPosition == w.insertionPosition;
+            return block.equals(w.block) && depth == w.depth;
         }
 
         @Override
         public int hashCode() {
-            return Arrays.hashCode(new Object[]{block, depth, insertionPosition});
+            return Arrays.hashCode(new Object[]{block, depth});
         }
     }
 }

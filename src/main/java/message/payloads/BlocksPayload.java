@@ -9,6 +9,7 @@ import utils.Deserializer;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class BlocksPayload extends MessagePayload {
@@ -28,6 +29,10 @@ public class BlocksPayload extends MessagePayload {
     @Override
     public void serialize(DataOutputStream outputStream) throws IOException {
         CanBeSerialized.serializeList(outputStream, blocks);
+    }
+
+    public List<Block> blocks() {
+        return new ArrayList<>(blocks);
     }
 
     private static final class BlocksPayloadDeserializer implements Deserializer<BlocksPayload> {

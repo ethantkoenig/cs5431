@@ -34,6 +34,7 @@ public class BlockChainTest extends RandomizedTest {
 
         Block genesis = Block.genesis();
         genesis.addReward(senderPair.publicKey);
+        genesis.findValidNonce();
         Assert.assertTrue(bc.insertBlock(genesis));
 
         Assert.assertTrue(errorMessage, bc.verifyBlock(genesis).isPresent());

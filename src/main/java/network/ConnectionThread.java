@@ -52,6 +52,7 @@ public class ConnectionThread extends Thread {
         try {
             receive();
         } catch (DeserializationException | IOException | InterruptedException e) {
+            // TODO don't print exception if socket has been closed
             e.printStackTrace();
         }
         close();
@@ -79,7 +80,6 @@ public class ConnectionThread extends Thread {
         Deserializer<IncomingMessage> deserializer = IncomingMessage.deserializer(this::send);
         while (true) {
             IncomingMessage message = deserializer.deserialize(dataInputStream);
-            LOGGER.info("Putting message on messageQueue: " + message.toString());
             messageQueue.put(message);
         }
     }

@@ -2,340 +2,196 @@ package network;
 
 
 import block.Block;
-import crypto.Crypto;
-import crypto.ECDSAKeyPair;
-import crypto.ECDSAPublicKey;
-import message.IncomingMessage;
 import message.Message;
-import message.OutgoingMessage;
-import message.payloads.GetBlocksRequestPayload;
 import org.junit.Assert;
 import org.junit.Test;
 import testutils.RandomizedTest;
-import testutils.TestUtils;
 import transaction.Transaction;
 import transaction.TxIn;
 import transaction.TxOut;
-import utils.ByteUtil;
 import utils.Config;
-import utils.Deserializer;
-import utils.ShaTwoFiftySix;
 
-import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.TimeUnit;
+
+import static network.MinerSimulation.assertSingleBlockMessage;
 
 public class MinerTest extends RandomizedTest {
 
     @Test
-    public void testSuccessfulRun() throws Exception {
+    public void testCatchUp() throws Exception {
         Config.setHashGoal(1);
 
-        ECDSAKeyPair pair0 = Crypto.signatureKeyPair();
-        ECDSAKeyPair pair1 = Crypto.signatureKeyPair();
-
         MinerSimulation simulation = new MinerSimulation();
-        simulation.addNode(pair0, pair1.publicKey);
-        simulation.addNode(pair1, pair1.publicKey);
+        MinerSimulation.TestMiner miner0 = simulation.addNode();
+        MinerSimulation.TestMiner miner1 = simulation.addPrivileged();
 
-        Block genesisBlock = assertSingleBlockMessage(simulation.getNextMessage());
+        Block genesisBlock = simulation.expectGenesisBlock(miner1);
 
-        simulation.sendBytes(randomBytes(1024), 0); // should be ignored
-        simulation.sendBytes(randomBytes(1024), 1); // should be ignored
-
-        simulation.sendGetBlocksRequest(genesisBlock.getShaTwoFiftySix(), 1, 1);
-        Block getBlockResponse = assertSingleBlockMessage(simulation.getNextMessage(true));
+        simulation.sendGetBlocksRequest(miner1, genesisBlock.getShaTwoFiftySix(), 1);
+        Block getBlockResponse = simulation.getSingleBlockMessage(miner1);
         Assert.assertEquals(genesisBlock, getBlockResponse);
 
+        final int numIters = random.nextInt(3 * Message.MAX_BLOCKS_TO_GET);
+        for (int iter = 0; iter < numIters; iter++) {
+            simulation.addValidBlock(random);
+        }
+
+        List<Transaction> transactions = simulation.validTransactions(random, 2);
+        simulation.sendValidTransaction(miner0, transactions.get(0));
+        MinerSimulation.TestMiner miner2 = simulation.addNode();
+        simulation.sendValidTransaction(miner1, transactions.get(1));
+        simulation.expectValidBlockFromAny();
+        simulation.flushQueues();
+
+        transactions = simulation.validTransactions(random, 2);
+        simulation.sendValidTransaction(miner0, transactions.get(0));
+        simulation.sendValidTransaction(miner0, transactions.get(1));
+
+        Block block = simulation.expectValidBlockFromAny();
+        simulation.flushQueues();
+
+        Thread.sleep(200); // wait for miner2 to get caught up
+
+        simulation.sendGetBlocksRequest(miner2, block.getShaTwoFiftySix(), Message.MAX_BLOCKS_TO_GET);
+        Block[] blocks = simulation.expectBlocks(miner2, Message.MAX_BLOCKS_TO_GET);
+        Assert.assertEquals(block, blocks[0]);
+        if (numIters + 3 < Message.MAX_BLOCKS_TO_GET) {
+            Assert.assertEquals(genesisBlock, blocks[blocks.length - 1]);
+        }
+    }
+
+    @Test
+    public void testOldBlocks() throws Exception {
+        Config.setHashGoal(1);
+
+        MinerSimulation simulation = new MinerSimulation();
+        MinerSimulation.TestMiner miner0 = simulation.addNode();
+        MinerSimulation.TestMiner miner1 = simulation.addNode();
+        MinerSimulation.TestMiner miner2 = simulation.addPrivileged();
+
+        Block genesisBlock = simulation.expectGenesisBlock(miner2);
+
+        final int numIters = 2 + random.nextInt(4);
+        for (int iter = 0; iter < numIters; iter++) {
+            simulation.addValidBlock(random);
+        }
+
         Transaction transaction1 = new Transaction.Builder()
-                .addInput(new TxIn(genesisBlock.getShaTwoFiftySix(), 0), pair1.privateKey)
-                .addOutput(new TxOut(Block.REWARD_AMOUNT, pair0.publicKey))
+                .addInput(new TxIn(genesisBlock.getShaTwoFiftySix(), 0), miner2.keyPair.privateKey)
+                .addOutput(new TxOut(Block.REWARD_AMOUNT - 1, miner0.keyPair.publicKey))
+                .addOutput(new TxOut(1, miner1.keyPair.publicKey))
                 .build();
-        simulation.sendTransaction(transaction1, 0);
-        Transaction deserialized = assertTransactionMessage(simulation.getNextMessage());
-        TestUtils.assertEqualsWithHashCode(errorMessage, transaction1, deserialized);
-
-        ECDSAKeyPair pair2 = Crypto.signatureKeyPair();
-        simulation.addNode(pair2, pair1.publicKey);
-
-        Thread.sleep(200); // TODO actually fix the race conditions
-
         Transaction transaction2 = new Transaction.Builder()
-                .addInput(new TxIn(transaction1.getShaTwoFiftySix(), 0), pair0.privateKey)
-                .addOutput(new TxOut(Block.REWARD_AMOUNT, pair2.publicKey))
+                .addInput(new TxIn(transaction1.getShaTwoFiftySix(), 0), miner0.keyPair.privateKey)
+                .addOutput(new TxOut(Block.REWARD_AMOUNT - 1, miner1.keyPair.publicKey))
                 .build();
-        simulation.sendTransaction(transaction2, 1);
-        deserialized = assertTransactionMessage(simulation.getNextMessage());
-        TestUtils.assertEqualsWithHashCode(errorMessage, transaction2, deserialized);
 
-        Block block = assertSingleBlockMessage(simulation.getNextMessage());
-        boolean minedBy0 = block.reward.ownerPubKey.equals(pair0.publicKey);
-        boolean minedBy1 = block.reward.ownerPubKey.equals(pair1.publicKey);
-        Assert.assertTrue(minedBy0 || minedBy1);
+        Block oldBlock = Block.empty(genesisBlock.getShaTwoFiftySix());
+        oldBlock.addTransaction(transaction1);
+        oldBlock.addTransaction(transaction2);
+        oldBlock.addReward(miner1.keyPair.publicKey);
+        oldBlock.findValidNonce();
+        simulation.sendBlock(miner0, oldBlock);
+        simulation.sendBlock(miner1, oldBlock);
 
-        Thread.sleep(200); // TODO actually fix the race conditions
-
-        simulation.sendGetBlocksRequest(block.getShaTwoFiftySix(), 2, 2);
-        while (true) {
-            // may receive mined block from other node, so repeatedly check
-            // for actual GET_BLOCK response
-            Block[] blocks = assertBlockMessage(simulation.getNextMessage());
-            if (blocks.length == 2) {
-                Assert.assertArrayEquals(
-                        new Block[]{block, genesisBlock},
-                        blocks
-                );
-                break;
-            }
+        for (int iter = 0; iter < numIters; iter++) {
+            simulation.addValidBlock(random);
         }
+    }
 
-        Transaction transaction3 = new Transaction.Builder()
-                .addInput(new TxIn(transaction2.getShaTwoFiftySix(), 0), pair2.privateKey)
-                .addOutput(new TxOut(Block.REWARD_AMOUNT, pair0.publicKey))
-                .build();
-        simulation.sendTransaction(transaction3, 0);
-        deserialized = assertTransactionMessage(simulation.getNextMessage());
-        TestUtils.assertEqualsWithHashCode(errorMessage, transaction3, deserialized);
+    @Test
+    public void testLateGenesis() throws Exception {
+        MinerSimulation simulation = new MinerSimulation();
+        MinerSimulation.TestMiner miner0 = simulation.addNode();
+        MinerSimulation.TestMiner miner1 = simulation.addPrivileged();
 
-        Thread.sleep(200); // TODO
+        Block genesisBlock = simulation.expectGenesisBlock(miner1);
 
-        Transaction transaction4 = new Transaction.Builder()
-                .addInput(new TxIn(transaction3.getShaTwoFiftySix(), 0), pair0.privateKey)
-                .addOutput(new TxOut(Block.REWARD_AMOUNT, pair1.publicKey))
-                .build();
-        simulation.sendTransaction(transaction4, 2);
-        deserialized = assertTransactionMessage(simulation.getNextMessage());
-        TestUtils.assertEqualsWithHashCode(errorMessage, transaction4, deserialized);
+        simulation.sendGetBlocksRequest(miner1, genesisBlock.getShaTwoFiftySix(), 1);
+        Block getBlockResponse = simulation.getSingleBlockMessage(miner1);
+        Assert.assertEquals(genesisBlock, getBlockResponse);
 
-        Block block2 = assertSingleBlockMessage(simulation.getNextMessage());
-        minedBy0 = block2.reward.ownerPubKey.equals(pair0.publicKey);
-        minedBy1 = block2.reward.ownerPubKey.equals(pair1.publicKey);
-        boolean minedBy2 = block2.reward.ownerPubKey.equals(pair2.publicKey);
-        Assert.assertTrue(minedBy0 || minedBy1 || minedBy2);
+        Block badGenesis = Block.genesis();
+        badGenesis.addReward(miner0.keyPair.publicKey);
+        badGenesis.findValidNonce();
+        simulation.sendBlock(miner0, badGenesis);
+        simulation.sendBlock(miner1, badGenesis);
+        simulation.sendGetBlocksRequest(miner0, badGenesis.getShaTwoFiftySix(), 1);
+        simulation.sendGetBlocksRequest(miner1, badGenesis.getShaTwoFiftySix(), 1);
 
-        Thread.sleep(200); // TODO
-
-        simulation.sendGetBlocksRequest(block2.getShaTwoFiftySix(), 3, 2);
-        while (true) {
-            // may receive mined block from other node, so repeatedly check
-            // for actual GET_BLOCK response
-            Block[] blocks = assertBlockMessage(simulation.getNextMessage());
-            if (blocks.length == 3) {
-                Assert.assertEquals(block2, blocks[0]);
-                Assert.assertEquals(genesisBlock, blocks[2]);
-                break;
-            }
-        }
+        // TODO assume that bad GET_BLOCKS request get no response
+        simulation.assertNoMessage();
     }
 
     @Test
     public void testInvalidTransactionRejection() throws Exception {
         Config.setHashGoal(1);
 
-        ECDSAKeyPair pair0 = Crypto.signatureKeyPair();
-        ECDSAKeyPair pair1 = Crypto.signatureKeyPair();
-
         MinerSimulation simulation = new MinerSimulation();
-        simulation.addNode(pair0, pair1.publicKey);
-        simulation.addNode(pair1, pair1.publicKey);
+        MinerSimulation.TestMiner miner0 = simulation.addNode();
+        MinerSimulation.TestMiner miner1 = simulation.addPrivileged();
 
-        Block genesisBlock = assertSingleBlockMessage(simulation.getNextMessage());
+        Block genesisBlock = assertSingleBlockMessage(simulation.getNextMessage(miner1));
 
         Transaction txId = new Transaction.Builder()
-                .addInput(new TxIn(genesisBlock.getShaTwoFiftySix(), 0), pair1.privateKey)
-                .addOutput(new TxOut(Block.REWARD_AMOUNT, pair1.publicKey))
+                .addInput(new TxIn(genesisBlock.getShaTwoFiftySix(), 0), miner1.keyPair.privateKey)
+                .addOutput(new TxOut(Block.REWARD_AMOUNT, miner1.keyPair.publicKey))
                 .build();
+
+        // transactions that cannot validly come after txId
+        List<Transaction> badTransactions = new ArrayList<>();
 
         Transaction txNonexistentBlock = new Transaction.Builder()
-                .addInput(new TxIn(randomShaTwoFiftySix(), 0), pair0.privateKey)
-                .addOutput(new TxOut(50, pair0.publicKey))
+                .addInput(new TxIn(randomShaTwoFiftySix(), 0), miner0.keyPair.privateKey)
+                .addOutput(new TxOut(50, miner0.keyPair.publicKey))
                 .build();
-
-        Block badBlock = Block.empty(genesisBlock.getShaTwoFiftySix());
-        badBlock.addTransaction(txId);
-        badBlock.addTransaction(txNonexistentBlock);
-        badBlock.addReward(pair1.publicKey);
-        badBlock.findValidNonce();
-
-        simulation.sendBlock(badBlock, 0);
-        simulation.sendGetBlocksRequest(badBlock.getShaTwoFiftySix(), 1, 0);
+        badTransactions.add(txNonexistentBlock);
 
         Transaction txBadIndex = new Transaction.Builder()
-                .addInput(new TxIn(txId.getShaTwoFiftySix(), 1), pair1.privateKey)
-                .addOutput(new TxOut(Block.REWARD_AMOUNT, pair1.publicKey))
+                .addInput(new TxIn(txId.getShaTwoFiftySix(), 1), miner1.keyPair.privateKey)
+                .addOutput(new TxOut(Block.REWARD_AMOUNT, miner1.keyPair.publicKey))
                 .build();
-
-        badBlock = Block.empty(genesisBlock.getShaTwoFiftySix());
-        badBlock.addTransaction(txId);
-        badBlock.addTransaction(txBadIndex);
-        badBlock.addReward(pair1.publicKey);
-        badBlock.findValidNonce();
-
-        simulation.sendBlock(badBlock, 0);
-        simulation.sendGetBlocksRequest(badBlock.getShaTwoFiftySix(), 1, 0);
+        badTransactions.add(txBadIndex);
 
         Transaction txBadAmount = new Transaction.Builder()
-                .addInput(new TxIn(txId.getShaTwoFiftySix(), 0), pair1.privateKey)
-                .addOutput(new TxOut(Block.REWARD_AMOUNT + 1, pair1.publicKey))
+                .addInput(new TxIn(txId.getShaTwoFiftySix(), 0), miner1.keyPair.privateKey)
+                .addOutput(new TxOut(Block.REWARD_AMOUNT + 1, miner1.keyPair.publicKey))
                 .build();
-
-        badBlock = Block.empty(genesisBlock.getShaTwoFiftySix());
-        badBlock.addTransaction(txId);
-        badBlock.addTransaction(txBadAmount);
-        badBlock.addReward(pair1.publicKey);
-        badBlock.findValidNonce();
-
-        simulation.sendBlock(badBlock, 0);
-        simulation.sendGetBlocksRequest(badBlock.getShaTwoFiftySix(), 1, 0);
+        badTransactions.add(txBadAmount);
 
         Transaction txWrongOwner = new Transaction.Builder()
-                .addInput(new TxIn(txId.getShaTwoFiftySix(), 0), pair0.privateKey)
-                .addOutput(new TxOut(Block.REWARD_AMOUNT, pair1.publicKey))
+                .addInput(new TxIn(txId.getShaTwoFiftySix(), 0), miner0.keyPair.privateKey)
+                .addOutput(new TxOut(Block.REWARD_AMOUNT, miner1.keyPair.publicKey))
                 .build();
-
-        badBlock = Block.empty(genesisBlock.getShaTwoFiftySix());
-        badBlock.addTransaction(txId);
-        badBlock.addTransaction(txWrongOwner);
-        badBlock.addReward(pair1.publicKey);
-        badBlock.findValidNonce();
-
-        simulation.sendBlock(badBlock, 0);
-        simulation.sendGetBlocksRequest(badBlock.getShaTwoFiftySix(), 1, 0);
+        badTransactions.add(txWrongOwner);
 
         Transaction txZeroOutput = new Transaction.Builder()
-                .addInput(new TxIn(txId.getShaTwoFiftySix(), 0), pair1.privateKey)
-                .addOutput(new TxOut(Block.REWARD_AMOUNT, pair1.publicKey))
-                .addOutput(new TxOut(0, pair1.publicKey))
+                .addInput(new TxIn(txId.getShaTwoFiftySix(), 0), miner1.keyPair.privateKey)
+                .addOutput(new TxOut(Block.REWARD_AMOUNT, miner1.keyPair.publicKey))
+                .addOutput(new TxOut(0, miner1.keyPair.publicKey))
                 .build();
-
-        badBlock = Block.empty(genesisBlock.getShaTwoFiftySix());
-        badBlock.addTransaction(txId);
-        badBlock.addTransaction(txZeroOutput);
-        badBlock.addReward(pair1.publicKey);
-        badBlock.findValidNonce();
-
-        simulation.sendBlock(badBlock, 0);
-        simulation.sendGetBlocksRequest(badBlock.getShaTwoFiftySix(), 1, 0);
+        badTransactions.add(txZeroOutput);
 
         Transaction txNegativeOutput = new Transaction.Builder()
-                .addInput(new TxIn(txId.getShaTwoFiftySix(), 0), pair1.privateKey)
-                .addOutput(new TxOut(Block.REWARD_AMOUNT + 1, pair1.publicKey))
-                .addOutput(new TxOut(-1, pair1.publicKey))
+                .addInput(new TxIn(txId.getShaTwoFiftySix(), 0), miner1.keyPair.privateKey)
+                .addOutput(new TxOut(Block.REWARD_AMOUNT + 1, miner1.keyPair.publicKey))
+                .addOutput(new TxOut(-1, miner1.keyPair.publicKey))
                 .build();
+        badTransactions.add(txNegativeOutput);
 
-        badBlock = Block.empty(genesisBlock.getShaTwoFiftySix());
-        badBlock.addTransaction(txId);
-        badBlock.addTransaction(txNegativeOutput);
-        badBlock.addReward(pair1.publicKey);
-        badBlock.findValidNonce();
+        for (Transaction badTransaction : badTransactions) {
+            Block badBlock = Block.empty(genesisBlock.getShaTwoFiftySix());
+            badBlock.addTransaction(txId);
+            badBlock.addTransaction(badTransaction);
+            badBlock.addReward(miner1.keyPair.publicKey);
+            badBlock.findValidNonce();
+            simulation.sendBlock(miner0, badBlock);
+            simulation.sendGetBlocksRequest(miner0, badBlock.getShaTwoFiftySix(), 1);
+        }
 
-        simulation.sendBlock(badBlock, 0);
-        simulation.sendGetBlocksRequest(badBlock.getShaTwoFiftySix(), 1, 0);
-
-        // should have never received message
+        // should have never received response for any bad block
+        // TODO assume that bad GET_BLOCKS request get no response
         simulation.assertNoMessage();
-    }
-
-    private static Transaction assertTransactionMessage(Message msg) throws Exception {
-        Assert.assertEquals(Message.TRANSACTION, msg.type);
-        return Transaction.DESERIALIZER.deserialize(msg.payload);
-    }
-
-    private static Block[] assertBlockMessage(Message msg) throws Exception {
-        Assert.assertEquals(Message.BLOCKS, msg.type);
-        return Deserializer.deserializeList(msg.payload, Block.DESERIALIZER)
-                .toArray(new Block[0]);
-    }
-
-    private static Block assertSingleBlockMessage(Message msg) throws Exception {
-        Block[] blocks = assertBlockMessage(msg);
-        Assert.assertEquals(1, blocks.length);
-        return blocks[0];
-    }
-
-    private static final class MinerSimulation {
-        private final BlockingQueue<IncomingMessage> queue = new ArrayBlockingQueue<>(100);
-        private final HashSet<Message> seenMessages = new HashSet<>();
-        private final List<ConnectionThread> connectionThreads = new ArrayList<>();
-        private final ServerSocket serverSocket;
-        private final List<Integer> minerPortNums = new ArrayList<>();
-
-        private MinerSimulation() throws Exception {
-            serverSocket = new ServerSocket(0);
-        }
-
-        private void addNode(ECDSAKeyPair keyPair, ECDSAPublicKey privilegedKey) throws Exception {
-            final List<Integer> portNumsToConnectTo = new ArrayList<>(minerPortNums);
-            ServerSocket socket = new ServerSocket(0);
-            new Thread(() -> {
-                Miner miner = new Miner(socket, keyPair, privilegedKey);
-                miner.connect("localhost", serverSocket.getLocalPort());
-                for (int portNumToConnectTo : portNumsToConnectTo) {
-                    miner.connect("localhost", portNumToConnectTo);
-                }
-                miner.startMiner();
-            }).start();
-            minerPortNums.add(socket.getLocalPort());
-            ConnectionThread conn = new ConnectionThread(serverSocket.accept(), queue);
-            conn.start();
-            connectionThreads.add(conn);
-            Thread.sleep(50); // give miner a chance to start
-        }
-
-        private void sendTransaction(Transaction transaction, int node) throws IOException {
-            byte[] serialized = ByteUtil.asByteArray(transaction::serialize);
-            sendMessage(new OutgoingMessage(Message.TRANSACTION, serialized), node);
-        }
-
-        private void sendBlock(Block block, int node) throws IOException {
-            byte[] serialized = ByteUtil.asByteArray(block::serialize);
-            sendMessage(new OutgoingMessage(Message.BLOCKS, serialized), node);
-        }
-
-        private void sendGetBlocksRequest(ShaTwoFiftySix hash, int numRequested, int node) throws IOException {
-            sendMessage(new GetBlocksRequestPayload(hash, numRequested).toMessage(), node);
-        }
-
-        private void sendMessage(OutgoingMessage message, int node) throws IOException {
-            connectionThreads.get(node).send(message);
-        }
-
-        private void sendBytes(byte[] bytes, int node) throws IOException {
-            try (Socket socket = new Socket("localhost", minerPortNums.get(node))) {
-                socket.getOutputStream().write(bytes);
-            }
-        }
-
-        private Message getNextMessage() throws Exception {
-            return getNextMessage(false);
-        }
-
-        private Message getNextMessage(boolean allowDuplicate) throws Exception {
-            return getNextMessage(allowDuplicate, 500);
-        }
-
-        private Message getNextMessage(boolean allowDuplicate, long timeout) throws Exception {
-            while (true) {
-                Message msg = queue.poll(timeout, TimeUnit.MILLISECONDS);
-                Assert.assertNotNull(msg);
-                if (allowDuplicate || !seenMessages.contains(msg)) {
-                    seenMessages.add(msg);
-                    return msg;
-                }
-            }
-        }
-
-        private void assertNoMessage() throws Exception {
-            TestUtils.assertThrows(
-                    "Expected no response but found message",
-                    () -> getNextMessage(false, 250),
-                    AssertionError.class);
-        }
     }
 }

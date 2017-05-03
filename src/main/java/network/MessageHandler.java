@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * The MessageHandler class manages internal state and handles incoming messages
@@ -47,18 +48,17 @@ public class MessageHandler {
      * Takes in an Incoming message and Transaction, adds the transactions to
      * our set of received transactions, and adds it to the block we are mining
      *
-     * @param msg The incoming mesg that we recievd
+     * @param msg The incoming message that we received
      * @param tx  The transaction object that has been deserialized from msg and
      *            is to be added to the block we are working on
      */
     public void txMsgHandler(IncomingMessage msg, Transaction tx)
             throws InterruptedException, IOException {
-        if (!recentTransactionsReceived.contains(msg)) {
-            LOGGER.info("[!] New transaction, so I am broadcasting to all other miners.");
-            broadcastQueue.put(new OutgoingMessage(msg.type, msg.payload));
-        } else {
+        if (recentTransactionsReceived.contains(msg)) {
             return;
         }
+        LOGGER.info("[!] New transaction, so I am broadcasting to all other miners.");
+        broadcastQueue.put(new OutgoingMessage(msg.type, msg.payload));
         recentTransactionsReceived.add(msg);
         addTransaction(tx);
     }
@@ -115,18 +115,13 @@ public class MessageHandler {
      */
     public void getFundsMsgHandler(IncomingMessage message, GetFundsRequestPayload request)
             throws IOException {
-        // For each key, get the available funds from unspend Txs
-        List<ECDSAPublicKey> keys = request.requestedKeys;
-        HashMap<ECDSAPublicKey, Long> funds = new HashMap<>();
+        Map<ECDSAPublicKey, Long> funds = request.requestedKeys.stream()
+                .collect(Collectors.toMap(key -> key, key -> 0L));
         for (Map.Entry<TxIn, TxOut> entry : bundle.getUnspentTransactions()) {
-            for (ECDSAPublicKey key : keys) {
-                if (key.equals(entry.getValue().ownerPubKey)) {
-                    funds.compute(key, (k, v) -> ((v == null) ? 0L : v) + entry.getValue().value);
-                }
+            ECDSAPublicKey key = entry.getValue().ownerPubKey;
+            if (funds.containsKey(key)) {
+                funds.put(key, funds.get(key) + entry.getValue().value);
             }
-        }
-        for (ECDSAPublicKey key : keys) {
-            funds.putIfAbsent(key, 0L);
         }
         message.respond(new GetFundsResponsePayload(funds).toMessage());
     }
@@ -155,8 +150,10 @@ public class MessageHandler {
     }
 
     private void addBlockToChain(Block block) throws IOException {
-        if (bundle.getBlockChain().getCurrentHead() == null) {
-            if (block.verifyGenesis(bundle.privilegedKey)) {
+        if (block.isGenesisBlock()) {
+            if (bundle.getBlockChain().getCurrentHead() != null) {
+                LOGGER.warning("Received a genesis block after having already received one");
+            } else if (block.verifyGenesis(bundle.privilegedKey)) {
                 LOGGER.info("Received the genesis block");
                 LOGGER.info(String.format("Genesis hash: %s", block.getShaTwoFiftySix().toString()));
                 if (!bundle.getBlockChain().insertBlock(block)) {
@@ -188,7 +185,9 @@ public class MessageHandler {
         // Add block to chain
         LOGGER.info("[+] Adding completed block to block chain");
         bundle.getBlockChain().insertBlock(block);
-        bundle.setUnspentTransactions(verifiedUnspentTransactions.get());
+        if (bundle.getBlockChain().getCurrentHead().equals(block)) {
+            bundle.setUnspentTransactions(verifiedUnspentTransactions.get());
+        }
         if (isMining) {
             unminedTransactions.clear();
             startMiningThread();

@@ -140,6 +140,7 @@ public class BlockTest extends RandomizedTest {
 
         Block genesis = Block.genesis();
         genesis.addReward(pair.publicKey);
+        genesis.findValidNonce();
         Assert.assertTrue(errorMessage, genesis.verifyGenesis(pair.publicKey));
 
         genesis.reward = new TxOut(Block.REWARD_AMOUNT + 1, pair.publicKey);
