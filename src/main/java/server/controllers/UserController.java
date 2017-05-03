@@ -43,11 +43,14 @@ import static spark.Spark.*;
 public class UserController {
     private static final Logger LOGGER = Logger.getLogger(UserController.class.getName());
 
+    private static final String LOCKOUT_SUBJECT = "Yaccoin account alert";
+    private static final String LOCKOUT_BODY = "Your account has had several failed login attempts. For your safety, your account has been locked. Please unlock your password using the link below.";
+
     private static final String REGISTER_INVALID_USERNAME = "Username must be alphanumeric and between 6 and 24 characters.";
     private static final String REGISTER_INVALID_EMAIL = "Hmm, that doesn't look like an email address.";
     private static final String REGISTER_TAKEN_USERNAME_OR_EMAIL = "Username and/or email already taken.";
     private static final String LOGIN_ERROR = "Invalid username or password.";
-    private static final String LOCKOUT_ALERT = "For your safety, your account has been locked due to too many failed login attempts. Please reset your password below.";
+    private static final String LOCKOUT_ALERT = "This account has been locked, check your inbox for instructions.";
     private static final int FAILED_LOGIN_LIMIT = 5;
 
     private static SecureRandom random = Config.secureRandom(); // TODO use Guice
@@ -58,7 +61,9 @@ public class UserController {
     private final MailService mailService;
 
     @Inject
-    private UserController(UserAccess userAccess, RouteUtils routeUtils, MailService mailService) {
+    private UserController(UserAccess userAccess,
+                           RouteUtils routeUtils,
+                           MailService mailService) {
         this.userAccess = userAccess;
         this.routeUtils = routeUtils;
         this.mailService = mailService;
@@ -136,13 +141,22 @@ public class UserController {
             return "redirected";
         }
         User user = optUser.get();
-        if (user.getFailedLogins() >= FAILED_LOGIN_LIMIT) {
-            RouteUtils.alertMessage(request, LOCKOUT_ALERT);
-            response.redirect("/recover");
-            return "redirected";
-        }
-        if (!validPassword(user, password)) {
+        boolean validAuth = user.checkPassword(password);
+        boolean lockedOut = user.getFailedLogins() >= FAILED_LOGIN_LIMIT;
+        if (!lockedOut && !validAuth) {
             userAccess.incrementFailedLogins(user.getId());
+            if (user.getFailedLogins() + 1 == FAILED_LOGIN_LIMIT) {
+                String link = baseURL(request) + "/unlock";
+                mailService.sendEmail(user.getEmail(), LOCKOUT_SUBJECT, lockoutBody(link));
+                lockedOut = true;
+            }
+        }
+
+        if (lockedOut) {
+            RouteUtils.alertMessage(request, LOCKOUT_ALERT);
+            response.redirect("/unlock");
+            return "redirected";
+        } else if(!validAuth) {
             RouteUtils.errorMessage(request, LOGIN_ERROR);
             response.redirect("/login");
             return "redirected";
@@ -209,7 +223,7 @@ public class UserController {
 
         User user = routeUtils.forceLoggedInUser(request);
 
-        if (!validPassword(user, password)) {
+        if (!user.checkPassword(password)) {
             // user mistyped password
             RouteUtils.errorMessage(request, "Incorrect password");
             response.redirect("/user/" + user.getUsername());
@@ -315,8 +329,8 @@ public class UserController {
         return new BigInteger(130, random).toString(32);
     }
 
-    private boolean validPassword(User user, String password) throws Exception {
-        byte[] hash = Crypto.hashAndSalt(password, user.getSalt());
-        return Arrays.equals(hash, user.getHashedPassword());
+    private static String lockoutBody(String link) {
+        return String.format("%s%n%n%s", LOCKOUT_BODY, link);
     }
+
 }

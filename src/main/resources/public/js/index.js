@@ -25,13 +25,8 @@ $(document).ready(function () {
         return true; // submit form
     }
 
-    $('#registerform').submit(function () {
-        var $form = $(this);
-        return authPasswordAndConfirm($form);
-    });
-
-    $('#loginform').submit(function () {
-        var $form = $(this);
+    // for login and account unlock
+    function login($form) {
         var $passwordGroup = $form.find('.password-form-group');
         var password = $passwordGroup.find('input').val();
         if (password.length == 0) {
@@ -41,6 +36,16 @@ $(document).ready(function () {
         }
         $form.find('.hidden-password').val(authSecret(password));
         return true; // submit form
+    }
+
+    $('#registerform').submit(function () {
+        var $form = $(this);
+        return authPasswordAndConfirm($form);
+    });
+
+    $('#loginform').submit(function () {
+        var $form = $(this);
+        return login($form);
     });
 
     $('#logout').click(function () {
@@ -56,6 +61,11 @@ $(document).ready(function () {
     $('#resetform').submit(function () {
         var $form = $(this);
         return authPasswordAndConfirm($form);
+    });
+
+    $('#unlockform').submit(function () {
+        var $form = $(this);
+        return login($form);
     });
 
     $('#keyform-generate').change(function () {
@@ -134,7 +144,7 @@ $(document).ready(function () {
 
         if (action == "/requests") {
             $.post(action, data, function (resp) {
-                if (resp == "Request made."){
+                if (resp == "Request made.") {
                     $('#status').remove();
                     $("#status-message").append('<div class="row" id="status" style="padding-top: 10px;"> <div class="alert alert-success"> <strong>Sucess!</strong> Request sent. </div> </div>');
                 }

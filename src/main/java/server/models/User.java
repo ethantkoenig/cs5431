@@ -1,5 +1,7 @@
 package server.models;
 
+import crypto.Crypto;
+
 import java.util.Arrays;
 
 public class User {
@@ -46,5 +48,9 @@ public class User {
 
     public int getFailedLogins() {
         return failedLogins;
+    }
+
+    public boolean checkPassword(String password) throws Exception {
+        return Arrays.equals(Crypto.hashAndSalt(password, salt), hashedPassword);
     }
 }

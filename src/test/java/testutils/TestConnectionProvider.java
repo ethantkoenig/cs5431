@@ -51,7 +51,7 @@ public final class TestConnectionProvider extends PooledConnectionProvider {
                     + "  ON DELETE CASCADE"
                     + ")");
 
-            statement.executeUpdate("CREATE TABLE IF NOT EXISTS passrecover ("
+            statement.executeUpdate("CREATE TABLE IF NOT EXISTS recover ("
                     + "userid int NOT NULL,"
                     + "dt DATETIME DEFAULT CURRENT_TIMESTAMP,"
                     + "guidhash varchar(2048) NOT NULL,"

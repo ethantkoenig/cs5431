@@ -36,7 +36,7 @@ public final class Statements {
             + "  REFERENCES users(id)"
             + "  ON DELETE CASCADE"
             + ")";
-    public static final String CREATE_PASSWORD_RECOVERY_TABLE = "CREATE TABLE passrecover ("
+    public static final String CREATE_PASSWORD_RECOVERY_TABLE = "CREATE TABLE recover ("
             + "userid int NOT NULL,"
             + "dt DATETIME DEFAULT CURRENT_TIMESTAMP,"
             + "guidhash varchar(2048) NOT NULL,"
@@ -90,6 +90,14 @@ public final class Statements {
             statement.close();
             throw e;
         }
+    }
+
+    public static PreparedStatement selectUserByID(Connection connection, int userID)
+            throws SQLException {
+        return prepareStatement(connection.prepareStatement(
+                "SELECT * FROM users WHERE id = ?"),
+                statement -> statement.setInt(1, userID)
+        );
     }
 
     public static PreparedStatement selectUserByUsername(Connection connection, String username)
@@ -176,18 +184,25 @@ public final class Statements {
     public static PreparedStatement getPasswordRecoveryUserID(Connection connection, String GUIDHash)
             throws SQLException {
         return prepareStatement(connection.prepareStatement(
-                "SELECT * FROM passrecover WHERE guidhash=? and dt BETWEEN (NOW() - INTERVAL " + RECOVERY_TIME + " SECOND) AND NOW()"),
+                "SELECT * FROM recover WHERE guidhash=? and dt BETWEEN (NOW() - INTERVAL " + RECOVERY_TIME + " SECOND) AND NOW()"),
                 statement -> statement.setString(1, GUIDHash)
         );
     }
 
     public static PreparedStatement insertPasswordRecovery(Connection connection, int userID, String GUIDHash) throws SQLException {
         return prepareStatement(connection.prepareStatement(
-                "INSERT INTO passrecover (userid, guidhash) VALUES (?, ?)"),
+                "INSERT INTO recover (userid, guidhash) VALUES (?, ?)"),
                 statement -> {
                     statement.setInt(1, userID);
                     statement.setString(2, GUIDHash);
                 }
+        );
+    }
+
+    public static PreparedStatement deletePasswordRecovery(Connection connection, String GUIDHash) throws SQLException {
+        return prepareStatement(connection.prepareStatement(
+                "DELETE FROM recover WHERE guidhash = ?"),
+                statement -> statement.setString(1, GUIDHash)
         );
     }
 
