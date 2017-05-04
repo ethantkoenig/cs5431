@@ -72,6 +72,8 @@ public class MinerTest extends RandomizedTest {
 
         Block genesisBlock = simulation.expectGenesisBlock(miner2);
 
+        Thread.sleep(50); // make sure other miners get the genesis block
+
         final int numIters = 2 + random.nextInt(4);
         for (int iter = 0; iter < numIters; iter++) {
             simulation.addValidBlock(random);
