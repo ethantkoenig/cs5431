@@ -146,7 +146,12 @@ public class Main {
             node = new Node(new ServerSocket(port), new ECDSAKeyPair(myPrivate, myPublic), privilegedKey);
         }
 
-        String[] nodes = IOUtils.getPropertyChecked(prop, "nodeList").split(",");
+        // Dirty hack to get split to behave
+        //
+        // "".split(",")  gives { "" }, but
+        // ",".split(",") gives { }
+        String nodeList = "," + IOUtils.getPropertyChecked(prop, "nodeList");
+        String[] nodes = nodeList.split(",");
 
         for (String s: nodes) {
             Optional<InetSocketAddress> optAddr = IOUtils.parseAddress(s);
