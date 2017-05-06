@@ -1,114 +1,179 @@
 package server.access;
 
-import server.models.Key;
+import com.google.inject.Inject;
 import server.models.User;
+import server.utils.ConnectionProvider;
+import server.utils.Statements;
 
-import java.sql.SQLException;
+import java.sql.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public interface UserAccess {
+/**
+ * The layer between user objects and the "users" table in the DB.
+ * Utilities for reading and modifying database.
+ */
+public final class UserAccess extends AbstractAccess {
+    private final ConnectionProvider connectionProvider;
 
-    /**
-     * @returns a list of all String usernames
-     */
-    List<String> getAllUsernames() throws SQLException;
+    @Inject
+    public UserAccess(ConnectionProvider connectionProvider) {
+        this.connectionProvider = connectionProvider;
+    }
 
-    Optional<User> getUserByID(int userID) throws SQLException;
+    public List<String> getAllUsernames() throws SQLException {
+        try (Connection conn = connectionProvider.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(Statements.GET_ALL_USERS)
+        ) {
+            List<String> users = new ArrayList<>();
+            while (rs.next()) {
+                users.add(rs.getString("username"));
+            }
+            return users;
+        }
+    }
 
-    /**
-     * Given a username return the user object in the DB that is associated with this username
-     * NOTE: we will need to not allow duplicate usernames.
-     *
-     * @param username the username of the user being queried
-     */
-    Optional<User> getUserByUsername(String username) throws SQLException;
+    public Optional<User> getUserByID(int userID) throws SQLException {
+        try (
+                Connection conn = connectionProvider.getConnection();
+                PreparedStatement preparedStmt = Statements.selectUserByID(conn, userID);
+                ResultSet rs = preparedStmt.executeQuery()
+        ) {
+            if (rs.next()) {
+                return Optional.of(getUser(rs));
+            }
+            return Optional.empty();
+        }
+    }
 
-    /**
-     * Given an email return the user object in the DB that is associated with this username
-     *
-     * @param email the email of the user being queried
-     */
+    public Optional<User> getUserByUsername(String username) throws SQLException {
+        try (
+                Connection conn = connectionProvider.getConnection();
+                PreparedStatement preparedStmt = Statements.selectUserByUsername(conn, username);
+                ResultSet rs = preparedStmt.executeQuery()
+        ) {
+            if (rs.next()) {
+                return Optional.of(getUser(rs));
+            }
+            return Optional.empty();
+        }
+    }
 
-    Optional<User> getUserByEmail(String email) throws SQLException;
+    public Optional<User> getUserByEmail(String email) throws SQLException {
+        try (
+                Connection conn = connectionProvider.getConnection();
+                PreparedStatement preparedStmt = Statements.selectUserByEmail(conn, email);
+                ResultSet rs = preparedStmt.executeQuery()
+        ) {
+            if (rs.next()) {
+                return Optional.of(getUser(rs));
+            }
+            return Optional.empty();
+        }
+    }
 
-    /**
-     * @return The keys associated with a given userID
-     */
-    List<Key> getKeysByUserID(int userID) throws SQLException;
-
-    Optional<Key> getKey(int userID, byte[] publicKey) throws SQLException;
-
-    /**
-     * Add the given public/private keys to the database, under the given userID.
-     */
-    void insertKey(int userID, byte[] publicKey, String privateKey) throws SQLException;
-
-    /**
-     * Remove the given key from the database
-     */
-    void deleteKey(int keyID) throws SQLException;
-
-    /**
-     * Remove all keys associated with the given user
-     */
-    void deleteAllKeys(int userID) throws SQLException;
-
-    /**
-     * Inserts a user into the users table in the yaccoin database
-     */
-    void insertUser(String username, String email, byte[] salt, byte[] hashedPassword) throws SQLException;
-
-    void updateUserPass(int userID, byte[] salt, byte[] hashedPassword) throws SQLException;
-
-    /**
-     * Increments the failed login attempts associated with the given userID
-     */
-    void incrementFailedLogins(int userID) throws SQLException;
-
-    /**
-     * Resets the failed login attempts associated with the given userID to 0
-     */
-    void resetFailedLogins(int userID) throws SQLException;
+    public void insertUser(String username, String email, byte[] salt, byte[] hashedPassword) throws SQLException {
+        try (Connection conn = connectionProvider.getConnection();
+             PreparedStatement preparedStmt = Statements.insertUser(conn, username, email, salt, hashedPassword)
+        ) {
+            checkRowCount(preparedStmt.executeUpdate(), 1);
+        }
+    }
 
 
-    /**
-     * @returns true if username is friends with friend. Thus, friend can send username money
-     */
-    boolean isFriendsWith(String username, String friend) throws SQLException;
+    public void updateUserPass(int userID, byte[] salt, byte[] hashedPassword) throws SQLException {
+        try (Connection conn = connectionProvider.getConnection();
+             PreparedStatement preparedStmt = Statements.updateUserPassword(conn, userID, salt, hashedPassword)
+        ) {
+            checkRowCount(preparedStmt.executeUpdate(), 1);
+        }
+    }
 
-    /**
-     * Adds the username friend combo to friends database
-     */
-    void insertFriends(String username, String friend) throws SQLException;
 
-    /**
-     * Removes the username friend combo from friends database
-     */
-    void deleteFriends(String username, String friend) throws SQLException;
+    public void incrementFailedLogins(int userID) throws SQLException {
+        try (Connection conn = connectionProvider.getConnection();
+             PreparedStatement preparedStmt = Statements.incrementFailedLogins(conn, userID)
+        ) {
+            checkRowCount(preparedStmt.executeUpdate(), 1);
+        }
+    }
 
-    /**
-     * @returns a list of username strings to display on front end
-     */
-    List<String> getFriends(String username) throws SQLException;
 
-    /**
-     * @returns a list of username strings that have befriended username, thus, username can send funds to these people
-     */
-    List<String> getPeopleWhoFriendMe(String username) throws SQLException;
+    public void resetFailedLogins(int userID) throws SQLException {
+        try (Connection conn = connectionProvider.getConnection();
+             PreparedStatement preparedStmt = Statements.resetFailedLogins(conn, userID)
+        ) {
+            checkRowCount(preparedStmt.executeUpdate(), 1);
+        }
+    }
 
-    /**
-     * Inserts a pending key.
-     */
-    void insertPendingKey(int userid, byte[] publickey, String privatekey, String guidhash) throws SQLException;
 
-    /**
-     * @return Optional of Key, if it is successfully inserted.
-     */
-    Optional<Key> lookupPendingKey(String guidhash) throws SQLException;
+    public boolean isFriendsWith(String username, String friend) throws SQLException {
+        try (Connection conn = connectionProvider.getConnection();
+             PreparedStatement preparedStmt = Statements.isFriendsWith(conn, username, friend);
+             ResultSet rs = preparedStmt.executeQuery()
+        ) {
+            if (rs.next()) {
+                return true;
+            }
+        }
+        return false;
+    }
 
-    /**
-     * Removes pending key corresponding to the guid
-     */
-    void removePendingKey(String guidhash) throws SQLException;
+
+    public void insertFriends(String username, String friend) throws SQLException {
+        try (Connection conn = connectionProvider.getConnection();
+             PreparedStatement preparedStmt = Statements.insertFriends(conn, username, friend)
+        ) {
+            checkRowCount(preparedStmt.executeUpdate(), 1);
+        }
+    }
+
+
+    public void deleteFriends(String username, String friend) throws SQLException {
+        try (Connection conn = connectionProvider.getConnection();
+             PreparedStatement preparedStmt = Statements.deleteFriends(conn, username, friend)
+        ) {
+            checkRowCount(preparedStmt.executeUpdate(), 1);
+        }
+    }
+
+
+    public List<String> getFriends(String username) throws SQLException {
+        try (Connection conn = connectionProvider.getConnection();
+             PreparedStatement preparedStmt = Statements.getFriends(conn, username);
+             ResultSet rs = preparedStmt.executeQuery()
+        ) {
+            List<String> friends = new ArrayList<>();
+            while (rs.next()) {
+                friends.add(rs.getString("friend"));
+            }
+            return friends;
+        }
+    }
+
+    public List<String> getPeopleWhoFriendMe(String username) throws SQLException {
+        try (Connection conn = connectionProvider.getConnection();
+             PreparedStatement preparedStmt = Statements.getPeopleWhoFriendMe(conn, username);
+             ResultSet rs = preparedStmt.executeQuery()
+        ) {
+            List<String> usernames = new ArrayList<>();
+            while (rs.next()) {
+                usernames.add(rs.getString("username"));
+            }
+            return usernames;
+        }
+    }
+
+    private User getUser(ResultSet resultSet) throws SQLException {
+        int id = resultSet.getInt("id");
+        String username = resultSet.getString("username");
+        byte[] salt = resultSet.getBytes("salt");
+        byte[] hashedPassword = resultSet.getBytes("pass");
+        String email = resultSet.getString("email");
+        int failedLogins = resultSet.getInt("failedLogins");
+        return new User(id, username, email, salt, hashedPassword, failedLogins);
+    }
 }

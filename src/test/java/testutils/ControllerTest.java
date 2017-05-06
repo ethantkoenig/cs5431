@@ -7,13 +7,10 @@ import org.dbunit.dataset.IDataSet;
 import org.dbunit.dataset.xml.FlatXmlDataSetBuilder;
 import org.dbunit.operation.DatabaseOperation;
 import org.junit.Before;
-import server.access.DatabaseUserAccess;
-import server.access.UserAccess;
 import server.utils.ConnectionProvider;
 import server.utils.MailService;
 
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
 
@@ -50,7 +47,6 @@ public abstract class ControllerTest extends RandomizedTest {
         @Override
         protected void configure() {
             bind(ConnectionProvider.class).to(TestConnectionProvider.class);
-            bind(UserAccess.class).to(DatabaseUserAccess.class);
             bind(MailService.class).to(MockMailService.class);
         }
     }

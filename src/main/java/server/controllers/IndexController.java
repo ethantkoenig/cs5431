@@ -7,7 +7,7 @@ import spark.template.freemarker.FreeMarkerEngine;
 import static spark.Spark.get;
 
 
-public class IndexController {
+public class IndexController extends AbstractController {
 
     private final RouteUtils routeUtils;
 

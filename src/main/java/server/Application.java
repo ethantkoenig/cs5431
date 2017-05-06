@@ -3,15 +3,12 @@ package server;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import server.access.DatabaseUserAccess;
-import server.access.UserAccess;
 import server.config.DatabaseConfig;
 import server.controllers.*;
 import server.utils.*;
 import utils.IOUtils;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Properties;
 
@@ -83,7 +80,6 @@ public class Application {
     private static class Module extends AbstractModule {
         @Override
         protected void configure() {
-            bind(UserAccess.class).to(DatabaseUserAccess.class);
             bind(ConnectionProvider.class).to(ProductionConnectionProvider.class);
             bind(MailService.class).to(GmailService.class);
         }

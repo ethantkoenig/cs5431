@@ -4,13 +4,13 @@ package server.controllers;
 import com.google.inject.Inject;
 import crypto.ECDSAPublicKey;
 import crypto.ECDSASignature;
-import server.access.TransactionAccess;
 import message.IncomingMessage;
 import message.Message;
 import message.OutgoingMessage;
 import message.payloads.GetUTXWithKeysRequestPayload;
 import message.payloads.GetUTXWithKeysResponsePayload;
-
+import server.access.KeyAccess;
+import server.access.TransactionAccess;
 import server.access.UserAccess;
 import server.models.Key;
 import server.models.Transaction;
@@ -36,15 +36,17 @@ import java.util.stream.Collectors;
 import static server.utils.RouteUtils.*;
 import static spark.Spark.*;
 
-public class TransactionController {
+public class TransactionController extends AbstractController {
 
     private final UserAccess userAccess;
+    private final KeyAccess keyAccess;
     private final TransactionAccess transactionAccess;
     private final RouteUtils routeUtils;
 
     @Inject
-    private TransactionController(UserAccess userAccess, TransactionAccess transactionAccess, RouteUtils routeUtils) {
+    private TransactionController(UserAccess userAccess, KeyAccess keyAccess, TransactionAccess transactionAccess, RouteUtils routeUtils) {
         this.userAccess = userAccess;
+        this.keyAccess = keyAccess;
         this.transactionAccess = transactionAccess;
         this.routeUtils = routeUtils;
     }
@@ -90,9 +92,9 @@ public class TransactionController {
         if (!recipient.isPresent()) {
             return "invalid recipient"; // TODO handle properly
         }
-        List<ECDSAPublicKey> keys = userAccess.getKeysByUserID(loggedInUser.getId()).stream()
+        List<ECDSAPublicKey> keys = keyAccess.getKeysByUserID(loggedInUser.getId()).stream()
                 .map(Key::asKey).flatMap(Optionals::stream).collect(Collectors.toList());
-        List<ECDSAPublicKey> recipientKeys = userAccess.getKeysByUserID(recipient.get().getId()).stream()
+        List<ECDSAPublicKey> recipientKeys = keyAccess.getKeysByUserID(recipient.get().getId()).stream()
                 .map(Key::asKey).flatMap(Optionals::stream).collect(Collectors.toList());
         long amount = queryParamLong(request, "amount");
 
@@ -129,7 +131,7 @@ public class TransactionController {
         List<String> encryptedPrivateKeys = new ArrayList<>();
         for (ECDSAPublicKey publicKey : unsigned.keysUsed) {
             byte[] serialized = ByteUtil.asByteArray(publicKey::serialize);
-            userAccess.getKey(loggedInUser.getId(), serialized)
+            keyAccess.getKey(loggedInUser.getId(), serialized)
                     .ifPresent(k -> encryptedPrivateKeys.add(k.encryptedPrivateKey));
         }
 
