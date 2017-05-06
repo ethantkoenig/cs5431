@@ -198,6 +198,7 @@ public final class MinerSimulation {
     }
 
     public void flushQueues() throws Exception {
+        Thread.sleep(100); // TODO wait for ongoing activity to finish
         final int pingNumber = 12345;
         for (TestMiner miner : miners) {
             miner.connectionThread.send(new PingPayload(pingNumber).toMessage());
