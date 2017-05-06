@@ -5,14 +5,14 @@ import server.models.Transaction;
 import server.utils.ConnectionProvider;
 import server.utils.Statements;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
-public class TransactionAccess {
-    private static final Logger LOGGER = Logger.getLogger(TransactionAccess.class.getName());
-
+public class TransactionAccess extends AbstractAccess {
     private final ConnectionProvider connectionProvider;
 
     @Inject
@@ -25,13 +25,9 @@ public class TransactionAccess {
      */
     public void insertTransaction(String fromuser, String touser, long amount, String message, boolean isrequest) throws SQLException {
         try (Connection conn = connectionProvider.getConnection();
-             PreparedStatement preparedStmt = Statements.insertTransaction(conn, fromuser, touser, amount, message, isrequest);
+             PreparedStatement preparedStmt = Statements.insertTransaction(conn, fromuser, touser, amount, message, isrequest)
         ) {
-            int rowCount = preparedStmt.executeUpdate();
-            if (rowCount != 1) {
-                String msg = String.format("Update affected %d rows, expected 1", rowCount);
-                LOGGER.severe(msg);
-            }
+            checkRowCount(preparedStmt.executeUpdate(), 1);
         }
     }
 
@@ -41,17 +37,11 @@ public class TransactionAccess {
     public List<Transaction> getAllTransactions(String user) throws SQLException {
         try (Connection conn = connectionProvider.getConnection();
              PreparedStatement preparedStmt = Statements.getAllTransactions(conn, user);
-             ResultSet rs = preparedStmt.executeQuery();
+             ResultSet rs = preparedStmt.executeQuery()
         ) {
             List<Transaction> transactions = new ArrayList<>();
             while (rs.next()) {
-                int tranid = rs.getInt("tranid");
-                String fromuser = rs.getString("fromuser");
-                String touser = rs.getString("touser");
-                long amount = rs.getLong("amount");
-                String message = rs.getString("message");
-                boolean isrequest = rs.getBoolean("isrequest");
-                transactions.add(new Transaction(tranid, fromuser, touser, amount, message, isrequest));
+                transactions.add(getTransaction(rs));
             }
             return transactions;
         }
@@ -64,29 +54,30 @@ public class TransactionAccess {
         try (Connection conn = connectionProvider.getConnection();
              PreparedStatement preparedStmt = Statements.updateTransactionRequestAsComplete(conn, tranid, fromuser)
         ) {
-            int rowCount = preparedStmt.executeUpdate();
-            if (rowCount != 1) {
-                String msg = String.format("Update affected %d rows, expected 1", rowCount);
-                LOGGER.severe(msg);
-            }
+            checkRowCount(preparedStmt.executeUpdate(), 1);
         }
     }
 
     public List<Transaction> getRequests(String fromuser) throws SQLException {
         try (Connection conn = connectionProvider.getConnection();
              PreparedStatement preparedStmt = Statements.getTransactionRequests(conn, fromuser);
-             ResultSet rs = preparedStmt.executeQuery();
+             ResultSet rs = preparedStmt.executeQuery()
         ) {
             List<Transaction> requests = new ArrayList<>();
             while (rs.next()) {
-                int tranid = rs.getInt("tranid");
-                String touser = rs.getString("touser");
-                long amount = rs.getLong("amount");
-                String message = rs.getString("message");
-                boolean isrequest = rs.getBoolean("isrequest");
-                requests.add(new Transaction(tranid, fromuser, touser, amount, message, isrequest));
+                requests.add(getTransaction(rs));
             }
             return requests;
         }
+    }
+
+    private Transaction getTransaction(ResultSet rs) throws SQLException {
+        int tranid = rs.getInt("tranid");
+        String fromuser = rs.getString("fromuser");
+        String touser = rs.getString("touser");
+        long amount = rs.getLong("amount");
+        String message = rs.getString("message");
+        boolean isrequest = rs.getBoolean("isrequest");
+        return new Transaction(tranid, fromuser, touser, amount, message, isrequest);
     }
 }

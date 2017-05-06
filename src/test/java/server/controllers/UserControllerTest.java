@@ -2,18 +2,15 @@ package server.controllers;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import crypto.Crypto;
-import crypto.ECDSAKeyPair;
 import crypto.ECDSAPublicKey;
 import message.IncomingMessage;
 import message.Message;
 import message.OutgoingMessage;
 import message.payloads.GetFundsRequestPayload;
 import message.payloads.GetFundsResponsePayload;
-import network.*;
+import network.ConnectionThread;
 import org.junit.Assert;
 import org.junit.Test;
-import server.access.DatabaseUserAccess;
 import server.access.UserAccess;
 import server.utils.ConnectionProvider;
 import server.utils.Constants;
@@ -43,7 +40,7 @@ public class UserControllerTest extends ControllerTest {
         Injector injector = Guice.createInjector(new Model());
         controller = injector.getInstance(UserController.class);
         controller.init();
-        userAccess = injector.getInstance(DatabaseUserAccess.class);
+        userAccess = injector.getInstance(UserAccess.class);
         setConnectionProvider(injector.getInstance(ConnectionProvider.class));
         fixtures = new Fixtures();
     }
@@ -181,37 +178,6 @@ public class UserControllerTest extends ControllerTest {
         controller.viewUser(request, mockResponse.get());
         Assert.assertTrue(mockResponse.redirected());
         Assert.assertEquals("/login", mockResponse.redirectedTo());
-    }
-
-    @Test
-    public void testAddUserKey() throws Exception {
-        ECDSAKeyPair pair = Crypto.signatureKeyPair();
-        byte[] publicBytes = ByteUtil.asByteArray(pair.publicKey::serialize);
-        String privateKey = ByteUtil.bytesToHexString(ByteUtil.asByteArray(pair.privateKey::serialize));
-
-        Request request = new MockRequest()
-                .addQueryParamHex("publickey", publicBytes)
-                .addQueryParam("privatekey", privateKey)
-                .addQueryParam("password", Fixtures.USER_PASSWORD)
-                .addSessionAttribute("username", fixtures.user.getUsername())
-                .get();
-
-        Response response = new MockResponse().get();
-        controller.addUserKey(request, response);
-        Assert.assertFalse(userAccess.getKey(fixtures.user.getId(), publicBytes).isPresent());
-    }
-
-    @Test
-    public void testRemoveUserKey() throws Exception {
-        byte[] publicBytes = ByteUtil.asByteArray(fixtures.key::serialize);
-        Request request = new MockRequest()
-                .addQueryParamHex("publickey", publicBytes)
-                .addSessionAttribute("username", fixtures.user.getUsername())
-                .get();
-
-        Response response = new MockResponse().get();
-        controller.deleteKey(request, response);
-        Assert.assertFalse(userAccess.getKey(fixtures.user.getId(), publicBytes).isPresent());
     }
 
     @Test

@@ -4,6 +4,7 @@ package server.controllers;
 import com.google.inject.Inject;
 import crypto.Crypto;
 import server.access.AccountRecoveryAccess;
+import server.access.KeyAccess;
 import server.access.UserAccess;
 import server.models.User;
 import server.utils.MailService;
@@ -25,22 +26,25 @@ import static spark.Spark.*;
 import static utils.Optionals.ifPresent;
 
 
-public class AccountRecoveryController {
+public class AccountRecoveryController extends AbstractController {
     private static final String RECOVERY_SUBJECT = "Yaccoin Password Recovery";
     private static final String UNLOCK_SUBJECT = "Yaccoin Account Unlock";
     private static SecureRandom random = Config.secureRandom(); // TODO use Guice
 
     private final UserAccess userAccess;
+    private final KeyAccess keyAccess;
     private final AccountRecoveryAccess accountRecoveryAccess;
     private final RouteUtils routeUtils;
     private final MailService mailService;
 
     @Inject
     private AccountRecoveryController(UserAccess userAccess,
+                                      KeyAccess keyAccess,
                                       AccountRecoveryAccess accountRecoveryAccess,
                                       RouteUtils routeUtils,
                                       MailService mailService) {
         this.userAccess = userAccess;
+        this.keyAccess = keyAccess;
         this.accountRecoveryAccess = accountRecoveryAccess;
         this.routeUtils = routeUtils;
         this.mailService = mailService;
@@ -128,7 +132,7 @@ public class AccountRecoveryController {
             return "redirected";
         }
         int userID = optUserID.getAsInt();
-        userAccess.deleteAllKeys(userID);
+        keyAccess.deleteAllKeys(userID);
 
         byte[] salt = Crypto.generateSalt();
         byte[] hash = Crypto.hashAndSalt(password, salt);
@@ -154,7 +158,7 @@ public class AccountRecoveryController {
     }
 
     private Optional<String> createGUID(String emailAddress) throws Exception {
-        String guid = nextGUID();
+        String guid = nextGUID(random);
         Optional<User> optUser = userAccess.getUserByEmail(emailAddress);
         if (!optUser.isPresent()) {
             return Optional.empty();
@@ -176,9 +180,5 @@ public class AccountRecoveryController {
                 "Click on the link below to create unlock your password.%n%n%s",
                 link
         );
-    }
-
-    private static String nextGUID() {
-        return new BigInteger(130, random).toString(32);
     }
 }

@@ -7,6 +7,7 @@ import message.IncomingMessage;
 import message.Message;
 import message.payloads.GetFundsRequestPayload;
 import message.payloads.GetFundsResponsePayload;
+import server.access.KeyAccess;
 import server.access.UserAccess;
 import server.models.Key;
 import server.models.User;
@@ -19,18 +20,12 @@ import spark.Request;
 import spark.Response;
 import spark.template.freemarker.FreeMarkerEngine;
 import utils.ByteUtil;
-import utils.Config;
 import utils.Optionals;
-import utils.DeserializationException;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.IOException;
-import java.math.BigInteger;
 import java.net.Socket;
-import java.security.SecureRandom;
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -40,7 +35,7 @@ import java.util.stream.Collectors;
 import static server.utils.RouteUtils.*;
 import static spark.Spark.*;
 
-public class UserController {
+public class UserController extends AbstractController {
     private static final Logger LOGGER = Logger.getLogger(UserController.class.getName());
 
     private static final String LOCKOUT_SUBJECT = "Yaccoin account alert";
@@ -53,18 +48,18 @@ public class UserController {
     private static final String LOCKOUT_ALERT = "This account has been locked, check your inbox for instructions.";
     private static final int FAILED_LOGIN_LIMIT = 5;
 
-    private static SecureRandom random = Config.secureRandom(); // TODO use Guice
-    private static final String SUBJECT = "Yaccoin New Key";
-
     private final UserAccess userAccess;
+    private final KeyAccess keyAccess;
     private final RouteUtils routeUtils;
     private final MailService mailService;
 
     @Inject
     private UserController(UserAccess userAccess,
+                           KeyAccess keyAccess,
                            RouteUtils routeUtils,
                            MailService mailService) {
         this.userAccess = userAccess;
+        this.keyAccess = keyAccess;
         this.routeUtils = routeUtils;
         this.mailService = mailService;
     }
@@ -84,10 +79,6 @@ public class UserController {
 
         path("/user", () -> {
             get("/:name", wrapTemplate(this::viewUser), new FreeMarkerEngine());
-            post("/keys", wrapRoute(this::addUserKey));
-            delete("/keys", wrapRoute(this::deleteKey));
-            get("/keys/addkey", wrapRoute(this::finalizeInsertKey));
-
         });
 
         get("/balance", wrapTemplate(this::balance), new FreeMarkerEngine());
@@ -203,65 +194,6 @@ public class UserController {
                 .get();
     }
 
-    // TODO: Get request modifies state. Should fix this somehow.
-    String finalizeInsertKey(Request request, Response response) throws Exception {
-        String guid = RouteUtils.queryParam(request, "guid");
-
-        Optional<Key> key = userAccess.lookupPendingKey(guid);
-        if (!key.isPresent()) return "Did not find GUID";
-        userAccess.removePendingKey(guid);
-        userAccess.insertKey(key.get().getUserId(), key.get().getPublicKey(), key.get().encryptedPrivateKey);
-        return "ok";
-    }
-
-    String addUserKey(Request request, Response response) throws Exception {
-        byte[] publicKey = RouteUtils.queryParamHex(request, "publickey");
-        String privateKey = RouteUtils.queryParam(request, "privatekey");
-        String password = RouteUtils.queryParam(request, "password");
-        String guid = nextGUID();
-        String link = request.url() + "/addkey" + "?guid=" + guid;
-
-        User user = routeUtils.forceLoggedInUser(request);
-
-        if (!user.checkPassword(password)) {
-            // user mistyped password
-            RouteUtils.errorMessage(request, "Incorrect password");
-            response.redirect("/user/" + user.getUsername());
-            return "redirected";
-        }
-
-        boolean validKey = true;
-        try {
-            ECDSAPublicKey.DESERIALIZER.deserialize(publicKey);
-        } catch (DeserializationException | IOException e) {
-            validKey = false;
-        }
-
-        if (validKey) {
-            String email = user.getEmail();
-            mailService.sendEmail(email, SUBJECT, emailBody(link));
-            RouteUtils.successMessage(request, "Check your inbox.");
-            userAccess.insertPendingKey(user.getId(), publicKey, privateKey, guid);
-        }
-
-        else {
-            RouteUtils.errorMessage(request, "Invalid public key");
-        }
-        response.redirect("/user/" + user.getUsername());
-        return "redirected";
-
-    }
-
-    String deleteKey(Request request, Response response) throws Exception {
-        byte[] publicKey = RouteUtils.queryParamHex(request, "publickey");
-        User user = routeUtils.forceLoggedInUser(request);
-        Optional<Key> optKey = userAccess.getKey(user.getId(), publicKey);
-        if (optKey.isPresent()) {
-            userAccess.deleteKey(optKey.get().getId());
-        }
-        return "ok";
-    }
-
     String addFriend(Request request, Response response) throws Exception {
         User loggedInUser = routeUtils.forceLoggedInUser(request);
         String friend = RouteUtils.queryParam(request, "friend");
@@ -282,12 +214,28 @@ public class UserController {
 
     ModelAndView balance(Request request, Response response) throws Exception {
         User loggedInUser = routeUtils.forceLoggedInUser(request);
-        List<Key> keys = userAccess.getKeysByUserID(loggedInUser.getId());
+        List<Key> keys = keyAccess.getKeysByUserID(loggedInUser.getId());
 
         List<ECDSAPublicKey> publicKeys = keys.stream()
                 .map(Key::asKey).flatMap(Optionals::stream).collect(Collectors.toList());
 
-        GetFundsResponsePayload fundsResponse;
+        GetFundsResponsePayload fundsResponse = queryForFunds(publicKeys);
+
+        long totalBalance = fundsResponse.keyFunds.values().stream()
+                .mapToLong(Long::longValue).sum();
+
+        Map<String, Long> balancesByKey = fundsResponse.keyFunds.entrySet().stream()
+                .collect(Collectors.toMap(entry -> ByteUtil.bytesToHexString(
+                        ByteUtil.forceByteArray(entry.getKey()::serialize)
+                ), Map.Entry::getValue));
+
+        return routeUtils.modelAndView(request, "balance.ftl")
+                .add("balances", balancesByKey)
+                .add("total", totalBalance)
+                .get();
+    }
+
+    private GetFundsResponsePayload queryForFunds(List<ECDSAPublicKey> publicKeys) throws Exception {
         try (Socket socket = new Socket(
                 Constants.getNodeAddress().getAddress(),
                 Constants.getNodeAddress().getPort())) {
@@ -300,33 +248,9 @@ public class UserController {
             if (respMessage.type != Message.FUNDS) {
                 LOGGER.severe(String.format("Unexpected response type %d, expected %d",
                         respMessage.type, Message.FUNDS));
-                RouteUtils.errorMessage(request, "An internal error has occurred.");
-                return RouteUtils.redirectTo(response, "/");
             }
-            fundsResponse = GetFundsResponsePayload.DESERIALIZER.deserialize(respMessage.payload);
+            return GetFundsResponsePayload.DESERIALIZER.deserialize(respMessage.payload);
         }
-        long totalBalance = fundsResponse.keyFunds.values().stream()
-                .mapToLong(Long::longValue).sum();
-        Map<String, Long> balancesByKey = fundsResponse.keyFunds.entrySet().stream()
-                .collect(Collectors.toMap(entry -> ByteUtil.bytesToHexString(
-                        ByteUtil.forceByteArray(entry.getKey()::serialize)
-                ), Map.Entry::getValue));
-        return routeUtils.modelAndView(request, "balance.ftl")
-                .add("balances", balancesByKey)
-                .add("total", totalBalance)
-                .get();
-    }
-
-    // XXX: Don't duplicate these.
-    private static String emailBody(String link) {
-        return String.format(
-                "Click on the link below to verify new key.%n%n%s",
-                link
-        );
-    }
-
-    private static String nextGUID() {
-        return new BigInteger(130, random).toString(32);
     }
 
     private static String lockoutBody(String link) {
