@@ -1,5 +1,7 @@
 package server.utils;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import com.google.inject.Inject;
 import server.access.UserAccess;
 import server.models.User;
@@ -17,10 +19,12 @@ public final class RouteUtils {
     private final static Logger LOGGER = Logger.getLogger(RouteUtils.class.getName());
 
     private final UserAccess userAccess;
+    private final Gson gson;
 
     @Inject
-    public RouteUtils(UserAccess userAccess) {
+    public RouteUtils(UserAccess userAccess, Gson gson) {
         this.userAccess = userAccess;
+        this.gson = gson;
     }
 
     public static Route wrapRoute(Route route) {
@@ -164,6 +168,20 @@ public final class RouteUtils {
     public static String baseURL(Request request) throws IOException {
         URL url = new URL(request.url());
         return String.format("%s://%s", url.getProtocol(), url.getAuthority());
+    }
+
+    public <T> T parseBody(Request request, Class<T> clazz)
+            throws InvalidParamException {
+        try {
+            return gson.fromJson(request.body(), clazz);
+        } catch (JsonSyntaxException e) {
+            String msg = String.format("Invalid request body: %s", e.getMessage());
+            throw new InvalidParamException(msg);
+        }
+    }
+
+    public String toJson(Object o) {
+        return gson.toJson(o);
     }
 
     public static class NotLoggedInException extends Exception {

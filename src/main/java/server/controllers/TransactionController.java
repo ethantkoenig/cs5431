@@ -15,6 +15,8 @@ import server.access.UserAccess;
 import server.models.Key;
 import server.models.Transaction;
 import server.models.User;
+import server.bodies.SendTransactionBody;
+import server.bodies.TransactionResponseBody;
 import server.utils.Constants;
 import server.utils.RouteUtils;
 import spark.ModelAndView;
@@ -26,7 +28,6 @@ import utils.Optionals;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.math.BigInteger;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
@@ -143,29 +144,20 @@ public class TransactionController extends AbstractController {
             transactionAccess.insertTransaction(loggedInUser.getUsername(), recipientUsername, amount, message, false);
         }
 
-        // TODO find a better way to produce JSON
         response.status(200);
-        return String.format("{\"payload\":\"%s\", \"encryptedKeys\":[%s]}",
+        return routeUtils.toJson(new TransactionResponseBody(
                 ByteUtil.bytesToHexString(payload),
-                String.join(", ", encryptedPrivateKeys)
-        );
+                encryptedPrivateKeys
+        ));
     }
 
     String sendTransaction(Request request, Response response) throws Exception {
-        byte[] payload = queryParamHex(request, "payload");
-        String[] rHexs = queryParam(request, "r").split(",");
-        String[] sHexs = queryParam(request, "s").split(",");
-
-        if (rHexs.length != sHexs.length) {
-            return "mismatched lengths"; // TODO handle properly
-        }
+        SendTransactionBody payload = routeUtils.parseBody(request, SendTransactionBody.class);
 
         byte[] msgPayload = ByteUtil.asByteArray(outputStream -> {
-            outputStream.write(payload);
-            for (int i = 0; i < rHexs.length; i++) {
-                BigInteger r = new BigInteger(rHexs[i], 16);
-                BigInteger s = new BigInteger(sHexs[i], 16);
-                new ECDSASignature(r, s).serialize(outputStream);
+            outputStream.write(payload.payload());
+            for (ECDSASignature signature : payload.signatures()) {
+                signature.serialize(outputStream);
             }
         });
 
