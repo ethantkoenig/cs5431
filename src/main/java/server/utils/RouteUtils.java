@@ -173,14 +173,19 @@ public final class RouteUtils {
     public <T> T parseBody(Request request, Class<T> clazz)
             throws InvalidParamException {
         try {
-            return gson.fromJson(request.body(), clazz);
+            T t = gson.fromJson(request.body(), clazz);
+            if (t == null) {
+                throw new InvalidParamException("Invalid request body: empty");
+            }
+            return t;
         } catch (JsonSyntaxException e) {
             String msg = String.format("Invalid request body: %s", e.getMessage());
             throw new InvalidParamException(msg);
         }
     }
 
-    public String toJson(Object o) {
+    public String toJson(Response response, Object o) {
+        response.type("application/json");
         return gson.toJson(o);
     }
 

@@ -68,6 +68,44 @@ $(document).ready(function () {
         return login($form);
     });
 
+    $('#changepasswordform').submit(function () {
+        var $form = $(this);
+        if (!login($form)) {
+            return false;
+        }
+        var $oldPasswordGroup = $form.find('.old-password-form-group');
+        var $newPasswordGroup = $form.find('.password-form-group');
+        var oldPassword = $oldPasswordGroup.find('input').val();
+        var newPassword = $newPasswordGroup.find('input').val();
+        var oldSecret = encryptSecret(oldPassword);
+        var newSecret = encryptSecret(newPassword);
+        $.ajax({
+            url: "/keys",
+            success: function (response) {
+                response.keys.forEach(function(key) {
+                    var privateKey = sjcl.decrypt(oldSecret, key.encryptedPrivateKey);
+                    key.encryptedPrivateKey = sjcl.encrypt(newSecret, privateKey);
+                });
+                var guid = $form.find(".hidden-guid").val();
+                var url = "/change_password?guid=" + guid + "&password=" + authSecret(newPassword);
+                $.ajax({
+                    url: url,
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(response),
+                    success: function () {
+                        // TODO eventually redirect to logged-in user's page
+                        window.location.replace("/");
+                    },
+                    error: function () {
+                        window.location.replace("/change_password");
+                    }
+                });
+            }
+        });
+        return false; // don't submit form
+    });
+
     $('#keyform-generate').change(function () {
         var $form = $('#keyform');
         $form.find('.publickey-form-group').find('input').prop('disabled', this.checked);

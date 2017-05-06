@@ -3,18 +3,23 @@ package server.controllers;
 import com.google.inject.Inject;
 import crypto.ECDSAPublicKey;
 import server.access.KeyAccess;
+import server.bodies.KeyBody;
+import server.bodies.KeysBody;
 import server.models.Key;
 import server.models.User;
 import server.utils.MailService;
 import server.utils.RouteUtils;
 import spark.Request;
 import spark.Response;
+import utils.ByteUtil;
 import utils.Config;
 import utils.DeserializationException;
 
 import java.io.IOException;
 import java.security.SecureRandom;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static server.utils.RouteUtils.wrapRoute;
 import static spark.Spark.*;
@@ -38,10 +43,21 @@ public class KeyController extends AbstractController {
 
     public void init() {
         path("/keys", () -> {
+            get("", wrapRoute(this::getKeys));
             post("", wrapRoute(this::addUserKey));
             delete("", wrapRoute(this::deleteKey));
-            get("addkey", wrapRoute(this::finalizeInsertKey));
+            get("/addkey", wrapRoute(this::finalizeInsertKey));
         });
+    }
+
+    String getKeys(Request request, Response response) throws Exception {
+        User user = routeUtils.forceLoggedInUser(request);
+        List<KeyBody> keys = keyAccess.getKeysByUserID(user.getId()).stream()
+                .map(key -> {
+                    String publicKey = ByteUtil.bytesToHexString(key.getPublicKey());
+                    return new KeyBody(publicKey, key.encryptedPrivateKey);
+                }).collect(Collectors.toList());
+        return routeUtils.toJson(response, new KeysBody(keys));
     }
 
     // TODO: Get request modifies state. Should fix this somehow.

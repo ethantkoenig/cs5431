@@ -74,6 +74,9 @@
                         <a href="/requests">Requests</a>
                     </li>
                     <li>
+                        <a href="/change_password">Change Password</a>
+                    </li>
+                    <li>
                         <a href="#" id="logout">Logout</a>
                     </li>
                 <#else>
