@@ -41,6 +41,7 @@ public class Application {
 
         injector.getInstance(IndexController.class).init();
         injector.getInstance(UserController.class).init();
+        injector.getInstance(KeyController.class).init();
         injector.getInstance(TransactionController.class).init();
         injector.getInstance(AccountRecoveryController.class).init();
 
