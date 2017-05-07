@@ -7,15 +7,17 @@ import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import crypto.Crypto;
 import message.IncomingMessage;
 import message.Message;
-import message.OutgoingMessage;
 import message.payloads.GetUTXWithKeysResponsePayload;
 import network.*;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import server.bodies.SendTransactionBody;
+import server.bodies.SignatureBody;
 import server.utils.ConnectionProvider;
 import server.utils.Constants;
+import server.utils.RouteUtils;
 import spark.Request;
 import spark.Response;
 import testutils.ControllerTest;
@@ -33,6 +35,8 @@ import java.util.Collections;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.stream.Collectors;
+
+import static testutils.TestUtils.assertThrows;
 
 @RunWith(JUnitQuickcheck.class)
 public class TransactionControllerTest extends ControllerTest {
@@ -147,20 +151,33 @@ public class TransactionControllerTest extends ControllerTest {
         }).start();
 
         byte[] payload = ByteUtil.asByteArray(transaction::serializeWithoutSignatures);
-        String r = transaction.signatures().map(sig -> sig.r).map(i -> i.toString(16))
-                .collect(Collectors.joining(","));
-        String s = transaction.signatures().map(sig -> sig.s).map(i -> i.toString(16))
-                .collect(Collectors.joining(","));
+        SendTransactionBody body = new SendTransactionBody(
+                ByteUtil.bytesToHexString(payload),
+                transaction.signatures()
+                        .map(sig -> new SignatureBody(sig.r.toString(16), sig.s.toString(16)))
+                        .collect(Collectors.toList())
+        );
 
         Request request = new MockRequest()
-                .addQueryParamHex("payload", payload)
-                .addQueryParam("r", r)
-                .addQueryParam("s", s)
+                .jsonBody(body)
                 .get();
         request.session().attribute("username", "username");
 
         Response response = new MockResponse().get();
         String resp = controller.sendTransaction(request, response); // TODO check return value
         Assert.assertEquals("ok", resp); // TODO this is temporary
+    }
+
+    public void testSendTransactionInvalidBody() throws Exception {
+        Request request = new MockRequest()
+                .setBody(randomAsciiString(1024))
+                .addSessionAttribute("username", fixtures.user.getUsername())
+                .get();
+
+        Response response = new MockResponse().get();
+        assertThrows(errorMessage,
+                () -> controller.sendTransaction(request, response),
+                RouteUtils.InvalidParamException.class
+        );
     }
 }

@@ -135,8 +135,6 @@ $(document).ready(function () {
     });
 
     $('#transactform').submit(function () {
-
-        console.log("Sending Transaction");
         var action = $(this).attr("action");
         var data = $(this).serialize();
         var password = $('#transaction-password').val();
@@ -157,13 +155,8 @@ $(document).ready(function () {
         }
 
         $.post(action, data, function (resp) {
-            console.log(resp);
-            // TODO this feels like a hack, eventually make it nice
-            var rString = "";
-            var sString = "";
-            console.log("resp: " + JSON.stringify(resp));
-            for (var i = 0; i < resp.encryptedKeys.length; i++) {
-                var decrypted = sjcl.decrypt(secret, JSON.stringify(resp.encryptedKeys[i]));
+            var signatures = resp.encryptedKeys.map(function (encryptedKey) {
+                var decrypted = sjcl.decrypt(secret, encryptedKey);
                 var key = new sjcl.ecc.ecdsa.secretKey(sjcl.ecc.curves.c256, new sjcl.bn(decrypted));
 
                 var payload = sjcl.codec.hex.toBits(resp.payload);
@@ -172,25 +165,27 @@ $(document).ready(function () {
 
                 var r = sjcl.bitArray.bitSlice(signature, 0, 256);
                 var s = sjcl.bitArray.bitSlice(signature, 256, 512);
+                return {
+                    r: sjcl.codec.hex.fromBits(r),
+                    s: sjcl.codec.hex.fromBits(s)
+                };
+            });
 
-                if (i > 0) {
-                    rString += ",";
-                    sString += ",";
+            $.ajax({
+                url: '/sendtransaction',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    payload: resp.payload,
+                    signatures: signatures
+                }),
+                success: function () {
+                    // TODO better handling of successful transactions
+                    $('#status').remove();
+                    $("#status-message").append('<div class="row" id="status" style="padding-top: 10px;"> <div class="alert alert-success"> <strong>Sucess!</strong> Transaction sent.  </div> </div>');
+                    window.location.replace("/");
                 }
-                rString += sjcl.codec.hex.fromBits(r);
-                sString += sjcl.codec.hex.fromBits(s);
-            }
-
-            $.post("/sendtransaction", {
-                payload: resp.payload,
-                r: rString,
-                s: sString
-            }, function () {
-                // TODO better handling of successful transactions
-                $('#status').remove();
-                $("#status-message").append('<div class="row" id="status" style="padding-top: 10px;"> <div class="alert alert-success"> <strong>Sucess!</strong> Transaction sent.  </div> </div>');
-                window.location.replace("/");
-            })
+            });
         }).fail(function (jqXHR, textStatus, errorThrown) {
             var error = jqXHR.responseText || "Something went wrong. Please try again.";
             $('#status').remove();

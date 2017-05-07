@@ -1,5 +1,6 @@
 package testutils;
 
+import com.google.gson.Gson;
 import org.mockito.Mockito;
 import spark.Request;
 import spark.Session;
@@ -18,6 +19,7 @@ public class MockRequest {
 
     private final Map<String, String> params = new HashMap<>();
     private final Map<String, String> queryParams = new HashMap<>();
+    private String body = null;
 
     public MockRequest() {
         when(mock.params(any())).then(invocationOnMock -> {
@@ -30,9 +32,21 @@ public class MockRequest {
             return queryParams.get(param);
         });
 
+        when(mock.body()).then(invocationOnMock -> body);
+
         when(mock.queryParams()).then(invocationOnMock -> queryParams.keySet());
 
         when(mock.url()).thenReturn("https://localhost:5000/foo/bar");
+    }
+
+    public MockRequest jsonBody(Object object) {
+        body = new Gson().toJson(object);
+        return this;
+    }
+
+    public MockRequest setBody(String body) {
+        this.body = body;
+        return this;
     }
 
     public MockRequest addParam(String param, String value) {
