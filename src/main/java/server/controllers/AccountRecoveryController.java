@@ -171,7 +171,7 @@ public class AccountRecoveryController extends AbstractController {
 
         User user = accountRecoveryAccess.getUserByGUID(guid).orElseThrow(() -> {
             RouteUtils.errorMessage(request, "This link has expired. Please retry.");
-            return new NotLoggedInException();
+            return new RouteUtils.InvalidParamException("Invalid guid");
         });
 
         KeysBody keys = routeUtils.parseBody(request, KeysBody.class);
