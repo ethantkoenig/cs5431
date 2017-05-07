@@ -125,7 +125,7 @@ $(document).ready(function () {
         e.preventDefault();
         $.ajax({
             type: 'DELETE',
-            url: '/user/keys' + '?' + $.param({
+            url: '/keys' + '?' + $.param({
                 publickey: this.dataset.publickey
             }),
             success: function () {

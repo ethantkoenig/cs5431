@@ -15,7 +15,7 @@
         <#if loggedIn && loggedInUsername == username>
             <div class="col-sm-6 padding-top">
 
-                <form method="post" action="/user/keys" id="keyform" style="padding-top: 20px;">
+                <form method="post" action="/keys" id="keyform" style="padding-top: 20px;">
                     <div class="form-group">
                         <label>
                             <input title="Generate new key" type="checkbox" id="keyform-generate">Generate new key
