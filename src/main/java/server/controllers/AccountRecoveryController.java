@@ -16,7 +16,6 @@ import spark.Response;
 import spark.template.freemarker.FreeMarkerEngine;
 import utils.Config;
 
-import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -72,8 +71,9 @@ public class AccountRecoveryController extends AbstractController {
         ifPresent(createGUID(email), guid -> {
             String link = baseURL(request) + "/reset?guid=" + guid;
             mailService.sendEmail(email, RECOVERY_SUBJECT, resetEmailBody(link));
-            RouteUtils.successMessage(request, "Check your inbox.");
         });
+        // Send success message regardless to prevent email guessing
+        RouteUtils.successMessage(request, "Check your inbox.");
         response.redirect("/reset");
         return "redirected";
     }

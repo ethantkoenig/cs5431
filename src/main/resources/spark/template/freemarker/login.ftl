@@ -21,7 +21,7 @@
                 </div>
                 <div class="row text-center" style="padding-top: 10px;">
                 <#-- TODO: The reletive path here and throughout is bad. Need to figure out how the template works with paths to fix-->
-                    <a href="../recover" class="show_hide">Forgot password?</a>
+                    <a href="../reset" class="show_hide">Forgot password?</a>
                 </div>
             </form>
         </div>

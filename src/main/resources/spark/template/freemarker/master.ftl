@@ -92,34 +92,30 @@
     </div>
     <!-- /.container -->
 </nav>
-<#if success??>
-    <div class="row" style="padding-top: 10px;">
+    <#if success??>
+    <div class="container" style="padding-top: 10px;">
         <div class="alert alert-success">
             <strong>Success!</strong> ${success}
         </div>
     </div>
-</#if>
-<#if alert??>
-    <div class="row" style="padding-top: 10px;">
-        <div class="col-md-4 col-md-offset-4">
-            <div class="alert alert-warning">
-                <strong>Alert!</strong> ${alert}
-            </div>
+    </#if>
+    <#if alert??>
+    <div class="container" style="padding-top: 10px;">
+        <div class="alert alert-warning">
+            <strong>Alert!</strong> ${alert}
         </div>
     </div>
-</#if>
-<#if error??>
-    <div class="row" style="padding-top: 10px;">
-        <div class="col-md-4 col-md-offset-4">
-            <div class="alert alert-danger">
-                <strong>Error!</strong> ${error}
-            </div>
+    </#if>
+    <#if error??>
+    <div class="container" style="padding-top: 10px;">
+        <div class="alert alert-danger">
+            <strong>Error!</strong> ${error}
         </div>
     </div>
-</#if>
+    </#if>
 <div>
     <div>
-        <#nested />
+        <#nested/>
     </div>
 </div>
 

@@ -172,15 +172,6 @@ public class UserControllerTest extends ControllerTest {
     }
 
     @Test
-    public void testViewUserNotLoggedIn() throws Exception {
-        Request request = new MockRequest().get();
-        MockResponse mockResponse = new MockResponse();
-        controller.viewUser(request, mockResponse.get());
-        Assert.assertTrue(mockResponse.redirected());
-        Assert.assertEquals("/login", mockResponse.redirectedTo());
-    }
-
-    @Test
     public void testAddFriend() throws Exception {
         Request request = new MockRequest()
                 .addSessionAttribute("username", fixtures.user.getUsername())

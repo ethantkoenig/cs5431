@@ -26,6 +26,8 @@
                     </div>
                 </form>
             </div>
+            <div class="row" id="status-message"></div>
+
         </div>
     </div>
 </div>
