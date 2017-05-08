@@ -55,7 +55,6 @@ public class ConnectionThread extends Thread {
         } catch (EOFException e) {
             LOGGER.info("[-] Connection closed");
         } catch (DeserializationException | IOException | InterruptedException e) {
-            // TODO don't print exception if socket has been closed
             e.printStackTrace();
         }
         close();
