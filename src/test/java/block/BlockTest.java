@@ -6,7 +6,6 @@ import crypto.Crypto;
 import crypto.ECDSAKeyPair;
 import crypto.ECDSAPublicKey;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import testutils.RandomizedTest;
 import testutils.TestModule;
@@ -120,7 +119,7 @@ public class BlockTest extends RandomizedTest {
             block.nonceAddOne();
         }
 
-        UnspentTransactions result = TestUtils.assertPresent(block.verify(pair.getRight()));
+        UnspentTransactions result = TestUtils.assertPresent(block.verifyNonGenesis(pair.getRight()));
 
         UnspentTransactions expected = UnspentTransactions.empty();
         Transaction lastTxn = block.transactions[Block.NUM_TRANSACTIONS_PER_BLOCK - 1];
@@ -130,10 +129,10 @@ public class BlockTest extends RandomizedTest {
         TestUtils.assertEqualsWithHashCode(errorMessage, result, expected);
 
         block.reward = new TxOut(block.reward.value + 1, block.reward.ownerPubKey);
-        Assert.assertFalse(errorMessage, block.verify(pair.getRight()).isPresent());
+        Assert.assertFalse(errorMessage, block.verifyNonGenesis(pair.getRight()).isPresent());
 
         block = randomBlock(randomShaTwoFiftySix());
-        Assert.assertFalse(errorMessage, block.verify(UnspentTransactions.empty()).isPresent());
+        Assert.assertFalse(errorMessage, block.verifyNonGenesis(UnspentTransactions.empty()).isPresent());
     }
 
     @Test

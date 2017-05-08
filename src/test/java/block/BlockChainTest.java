@@ -1,6 +1,5 @@
 package block;
 
-import crypto.Crypto;
 import crypto.ECDSAKeyPair;
 import crypto.ECDSAPublicKey;
 import org.junit.Assert;
@@ -24,7 +23,7 @@ public class BlockChainTest extends RandomizedTest {
 
     @Test
     public void testVerify() throws Exception {
-        // Test getUnspentTransactionsAt(...) and verifyBlock(...)
+        // Test getUnspentTransactionsAt(...) and verifyNonGenesisBlock(...)
         BlockChain bc = new BlockChain(Files.createTempDirectory("test"));
         assertEquals(UnspentTransactions.empty(),
                 bc.getUnspentTransactionsAt(randomBlock(randomShaTwoFiftySix())));
@@ -37,7 +36,7 @@ public class BlockChainTest extends RandomizedTest {
         genesis.findValidNonce();
         Assert.assertTrue(bc.insertBlock(genesis));
 
-        Assert.assertTrue(errorMessage, bc.verifyBlock(genesis).isPresent());
+        Assert.assertTrue(errorMessage, genesis.verifyGenesis(senderPair.publicKey));
         UnspentTransactions unspentTxs = UnspentTransactions.empty();
 
         Block next = Block.empty(genesis.getShaTwoFiftySix());
@@ -62,16 +61,16 @@ public class BlockChainTest extends RandomizedTest {
                 next.transactions[Block.NUM_TRANSACTIONS_PER_BLOCK - 1].getOutput(0));
         unspentTxs.put(next.getShaTwoFiftySix(), 0, next.reward);
 
-        Assert.assertTrue(errorMessage, bc.verifyBlock(next).isPresent());
+        Assert.assertTrue(errorMessage, bc.verifyNonGenesisBlock(next).isPresent());
         bc.insertBlock(next);
-        Assert.assertTrue(errorMessage, bc.verifyBlock(next).isPresent());
+        Assert.assertTrue(errorMessage, bc.verifyNonGenesisBlock(next).isPresent());
         assertEquals(errorMessage, unspentTxs, bc.getUnspentTransactionsAt(next));
 
-        Assert.assertFalse(errorMessage, bc.verifyBlock(randomBlock(randomShaTwoFiftySix())).isPresent());
+        Assert.assertFalse(errorMessage, bc.verifyNonGenesisBlock(randomBlock(randomShaTwoFiftySix())).isPresent());
 
         Block fauxGenesis = Block.genesis();
         fauxGenesis.reward = new TxOut(Block.REWARD_AMOUNT + 1, crypto.signatureKeyPair().publicKey);
-        Assert.assertFalse(errorMessage, bc.verifyBlock(fauxGenesis).isPresent());
+        Assert.assertFalse(errorMessage, bc.verifyNonGenesisBlock(fauxGenesis).isPresent());
     }
 
     @Test

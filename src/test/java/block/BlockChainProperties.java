@@ -2,14 +2,12 @@ package block;
 
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
-import crypto.Crypto;
 import crypto.ECDSAKeyPair;
 import crypto.ECDSAPrivateKey;
 import crypto.ECDSAPublicKey;
 import generators.model.SigningKeyPairGenerator;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import transaction.Transaction;
 import transaction.TxIn;
@@ -66,8 +64,8 @@ public class BlockChainProperties {
         newblock.addReward(keyPair.publicKey);
 
         // Verify the block against the old UTXO set and the new one, then insert
-        newblock.verify(newutxos);
-        newblock.verify(oldutxos);
+        newblock.verifyNonGenesis(newutxos);
+        newblock.verifyNonGenesis(oldutxos);
         bc.insertBlock(newblock);
     }
 }
