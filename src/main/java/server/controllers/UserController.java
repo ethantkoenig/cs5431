@@ -46,7 +46,7 @@ public class UserController extends AbstractController {
     private static final String REGISTER_TAKEN_USERNAME_OR_EMAIL = "Username and/or email already taken.";
     private static final String LOGIN_ERROR = "Invalid username or password.";
     private static final String LOCKOUT_ALERT = "This account has been locked, check your inbox for instructions.";
-    private static final int FAILED_LOGIN_LIMIT = 5;
+    static final int FAILED_LOGIN_LIMIT = 5;
 
     private final UserAccess userAccess;
     private final KeyAccess keyAccess;

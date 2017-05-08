@@ -8,20 +8,26 @@ import org.junit.Assert;
 import org.junit.Test;
 import server.access.KeyAccess;
 import server.bodies.KeysBody;
+import server.models.Key;
 import server.utils.ConnectionProvider;
 import spark.ModelAndView;
 import spark.Request;
 import spark.Response;
 import testutils.*;
 
+import java.net.URL;
+
+import static testutils.MockMailService.getParam;
+import static testutils.MockMailService.getURL;
 import static testutils.TestUtils.assertPresent;
 import static utils.ByteUtil.asByteArray;
 import static utils.ByteUtil.bytesToHexString;
 
 public class KeyControllerTest extends ControllerTest {
-    private KeyAccess keyAccess;
-    private KeyController controller;
+    private final KeyAccess keyAccess;
+    private final KeyController controller;
     private final Fixtures fixtures;
+    private final MockMailService mailService;
 
     public KeyControllerTest() throws Exception {
         super();
@@ -31,6 +37,7 @@ public class KeyControllerTest extends ControllerTest {
         keyAccess = injector.getInstance(KeyAccess.class);
         setConnectionProvider(injector.getInstance(ConnectionProvider.class));
         fixtures = new Fixtures();
+        mailService = injector.getInstance(MockMailService.class);
     }
 
     @Test
@@ -63,6 +70,30 @@ public class KeyControllerTest extends ControllerTest {
 
         Response response = new MockResponse().get();
         controller.addUserKey(request, response);
+        URL guidURL = getURL(mailService.assertMailToGetBody(fixtures.user.getEmail()));
+        String guid = getParam(guidURL, "guid");
+        Key pendingKey = assertPresent(keyAccess.lookupPendingKey(guid));
+        Assert.assertEquals(privateKey, pendingKey.encryptedPrivateKey);
+        Assert.assertFalse(keyAccess.getKey(fixtures.user.getId(), publicBytes).isPresent());
+    }
+
+    @Test
+    public void testAddUserKeyWrongPassword() throws Exception {
+        ECDSAKeyPair pair = crypto.signatureKeyPair();
+        byte[] publicBytes = asByteArray(pair.publicKey::serialize);
+        String privateKey = bytesToHexString(asByteArray(pair.privateKey::serialize));
+
+        Request request = new MockRequest()
+                .addQueryParamHex("publickey", publicBytes)
+                .addQueryParam("privatekey", privateKey)
+                .addQueryParam("password", randomShaTwoFiftySix().toString())
+                .addSessionAttribute("username", fixtures.user.getUsername())
+                .get();
+
+        MockResponse mockResponse = new MockResponse();
+        controller.addUserKey(request, mockResponse.get());
+        Assert.assertEquals("/user", mockResponse.redirectedTo());
+        Assert.assertFalse(mailService.sentTo(fixtures.user.getUsername()));
         Assert.assertFalse(keyAccess.getKey(fixtures.user.getId(), publicBytes).isPresent());
     }
 
@@ -99,6 +130,17 @@ public class KeyControllerTest extends ControllerTest {
     }
 
     @Test
+    public void testGetAddKeyBadGuid() throws Exception {
+        final String guid = randomShaTwoFiftySix().toString();
+        Request request = new MockRequest()
+                .addQueryParam("guid", guid)
+                .get();
+        MockResponse mockResponse = new MockResponse();
+        controller.getAddKey(request, mockResponse.get());
+        Assert.assertEquals("/user", mockResponse.redirectedTo());
+    }
+
+    @Test
     public void testFinalizeKeyInsert() throws Exception {
         final String guid = randomShaTwoFiftySix().toString();
 
@@ -116,5 +158,16 @@ public class KeyControllerTest extends ControllerTest {
         controller.finalizeKeyInsert(request, mockResponse.get());
         Assert.assertFalse(keyAccess.lookupPendingKey(guid).isPresent());
         assertPresent(keyAccess.getKey(fixtures.user.getId(), publicBytes));
+    }
+
+    @Test
+    public void testFinalizeKeyInsertBadGuid() throws Exception {
+        final String guid = randomShaTwoFiftySix().toString();
+        Request request = new MockRequest()
+                .addQueryParam("guid", guid)
+                .get();
+        MockResponse mockResponse = new MockResponse();
+        controller.finalizeKeyInsert(request, mockResponse.get());
+        Assert.assertEquals("/user", mockResponse.redirectedTo());
     }
 }
