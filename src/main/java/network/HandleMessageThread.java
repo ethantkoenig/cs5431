@@ -104,6 +104,8 @@ public class HandleMessageThread extends Thread {
                 if (!added) {
                     ShaTwoFiftySix hash = blocks.get(blocks.size() - 1).getShaTwoFiftySix();
                     message.respond(new GetBlocksRequestPayload(hash, Message.MAX_BLOCKS_TO_GET).toMessage());
+                } else {
+                    handler.blockBroadcaster(message);
                 }
                 break;
             case Message.GET_BLOCKS:

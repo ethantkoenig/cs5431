@@ -33,6 +33,7 @@ public class MessageHandler {
     private MinerThread minerThread;
     private LinkedList<Block> miningQueue = new LinkedList<>();
     private FixedSizeSet<IncomingMessage> recentTransactionsReceived = new FixedSizeSet<>();
+    private FixedSizeSet<IncomingMessage> recentBlocksReceived = new FixedSizeSet<>();
 
     private boolean isMining;
 
@@ -78,6 +79,18 @@ public class MessageHandler {
             return false;
         }
         return true;
+    }
+
+    /**
+     * Rebroadcasts new blocks to other all other nodes.
+     */
+    public void blockBroadcaster(IncomingMessage msg) throws InterruptedException {
+        if (recentBlocksReceived.contains(msg)) {
+            return;
+        }
+        LOGGER.info("New block, broadcasting to all other miners.");
+        broadcastQueue.put(new OutgoingMessage(msg.type, msg.payload));
+        recentBlocksReceived.add(msg);
     }
 
     /**
