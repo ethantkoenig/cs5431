@@ -2,6 +2,7 @@ package network;
 
 
 import block.Block;
+import message.IncomingMessage;
 import message.Message;
 import org.junit.Assert;
 import org.junit.Test;
@@ -13,7 +14,9 @@ import utils.Config;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
+import static network.MinerSimulation.assertBlocksMessage;
 import static network.MinerSimulation.assertSingleBlockMessage;
 
 public class MinerTest extends RandomizedTest {
@@ -51,10 +54,21 @@ public class MinerTest extends RandomizedTest {
         Block block = simulation.expectValidBlockFromAny();
         simulation.flushQueues();
 
-        Thread.sleep(200); // wait for miner2 to get caught up
 
-        simulation.sendGetBlocksRequest(miner2, block.getShaTwoFiftySix(), Message.MAX_BLOCKS_TO_GET);
-        Block[] blocks = simulation.expectBlocks(miner2, Message.MAX_BLOCKS_TO_GET);
+        IncomingMessage response = null;
+        for (int i = 0; i < 15; i++) {
+            simulation.sendGetBlocksRequest(miner2, block.getShaTwoFiftySix(), Message.MAX_BLOCKS_TO_GET);
+            Optional<IncomingMessage> optMsg = simulation.checkForMessage(miner2);
+            if (optMsg.isPresent()) {
+                response = optMsg.get();
+                break;
+            }
+            Thread.sleep(100); // wait for miner2 to get caught up
+        }
+
+        Assert.assertNotNull(response);
+        final int expectedNumBlocks = Math.min(numIters + 3, Message.MAX_BLOCKS_TO_GET);
+        Block[] blocks = assertBlocksMessage(response, expectedNumBlocks);
         Assert.assertEquals(block, blocks[0]);
         if (numIters + 3 < Message.MAX_BLOCKS_TO_GET) {
             Assert.assertEquals(genesisBlock, blocks[blocks.length - 1]);
