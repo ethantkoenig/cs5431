@@ -10,18 +10,12 @@ import utils.Config;
 
 
 public class CryptoTest extends RandomizedTest {
-
-    @BeforeClass
-    public static void setUpBeforeClass() {
-        Crypto.init();
-    }
-
     @Test
     public void testHashAndSalt() throws Exception {
         Config.setPbkdf2Cost(5);
 
         String pass = "password";
-        byte[] salt = Crypto.generateSalt();
+        byte[] salt = crypto.generateSalt();
         byte[] hash = Crypto.hashAndSalt(pass, salt);
 
         Assert.assertArrayEquals(hash, Crypto.pbkdf2(pass, salt));
@@ -29,12 +23,12 @@ public class CryptoTest extends RandomizedTest {
 
     @Test
     public void testSignatureKeyPair() throws Exception {
-        Assert.assertNotNull(Crypto.signatureKeyPair());
+        Assert.assertNotNull(crypto.signatureKeyPair());
     }
 
     @Test
     public void testDeserializePublicKey() throws Exception {
-        ECDSAPublicKey publicKey = Crypto.signatureKeyPair().publicKey;
+        ECDSAPublicKey publicKey = crypto.signatureKeyPair().publicKey;
 
         ECDSAPublicKey deserializedKey = ECDSAPublicKey.DESERIALIZER.deserialize(
                 ByteUtil.asByteArray(publicKey::serialize)
@@ -46,8 +40,8 @@ public class CryptoTest extends RandomizedTest {
     public void testSign() throws Exception {
         byte[] content = randomBytes(random.nextInt(1024));
 
-        ECDSAKeyPair pair = Crypto.signatureKeyPair();
-        ECDSASignature signature = Crypto.sign(content, pair.privateKey);
+        ECDSAKeyPair pair = crypto.signatureKeyPair();
+        ECDSASignature signature = crypto.sign(content, pair.privateKey);
         Assert.assertTrue(errorMessage,
                 Crypto.verify(content, signature, pair.publicKey));
 

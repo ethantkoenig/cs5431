@@ -24,19 +24,14 @@ public abstract class RandomizedTest {
 
     protected Random random;
     protected String errorMessage;
-
-    @BeforeClass
-    public static void setUpClass() {
-        Crypto.init();
-    }
+    protected Crypto crypto;
 
     @Before
     public void setUp() throws Exception {
         SeededRandom seededRandom = SeededRandom.randomSeed();
         random = seededRandom.random();
         errorMessage = seededRandom.errorMessage();
-
-        Config.setSecureRandom(new InsecureSecureRandom(random));
+        crypto = new Crypto(new InsecureSecureRandom(random));
     }
 
     protected byte[] randomBytes(int length) {
@@ -55,8 +50,8 @@ public abstract class RandomizedTest {
     }
 
     protected Transaction randomTransaction() throws GeneralSecurityException, IOException {
-        ECDSAKeyPair senderPair = Crypto.signatureKeyPair();
-        ECDSAKeyPair recipientPair = Crypto.signatureKeyPair();
+        ECDSAKeyPair senderPair = crypto.signatureKeyPair();
+        ECDSAKeyPair recipientPair = crypto.signatureKeyPair();
 
         ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(randomBytes(256));
         return new Transaction.Builder()
@@ -70,15 +65,15 @@ public abstract class RandomizedTest {
         for (int i = 0; i < Block.NUM_TRANSACTIONS_PER_BLOCK; ++i) {
             b.addTransaction(randomTransaction());
         }
-        b.addReward(Crypto.signatureKeyPair().publicKey);
+        b.addReward(crypto.signatureKeyPair().publicKey);
         b.setRandomNonce(random);
         return b;
     }
 
     protected Pair<Block, UnspentTransactions> randomValidBlock(ShaTwoFiftySix previousHash)
             throws GeneralSecurityException, IOException {
-        ECDSAKeyPair senderPair = Crypto.signatureKeyPair();
-        ECDSAKeyPair recipientPair = Crypto.signatureKeyPair();
+        ECDSAKeyPair senderPair = crypto.signatureKeyPair();
+        ECDSAKeyPair recipientPair = crypto.signatureKeyPair();
 
         TxOut output = new TxOut(1 + random.nextInt(1024), recipientPair.publicKey);
         Transaction initTransaction = new Transaction.Builder()
@@ -90,7 +85,7 @@ public abstract class RandomizedTest {
 
         for (int i = 0; i < Block.NUM_TRANSACTIONS_PER_BLOCK; i++) {
             senderPair = recipientPair;
-            recipientPair = Crypto.signatureKeyPair();
+            recipientPair = crypto.signatureKeyPair();
 
             Transaction previous = i > 0 ? block.transactions[i - 1] : initTransaction;
 

@@ -52,16 +52,19 @@ public class UserController extends AbstractController {
     private final KeyAccess keyAccess;
     private final RouteUtils routeUtils;
     private final MailService mailService;
+    private final Crypto crypto;
 
     @Inject
     private UserController(UserAccess userAccess,
                            KeyAccess keyAccess,
                            RouteUtils routeUtils,
-                           MailService mailService) {
+                           MailService mailService,
+                           Crypto crypto) {
         this.userAccess = userAccess;
         this.keyAccess = keyAccess;
         this.routeUtils = routeUtils;
         this.mailService = mailService;
+        this.crypto = crypto;
     }
 
     public void init() {
@@ -113,7 +116,7 @@ public class UserController extends AbstractController {
             response.redirect("/register");
             return "redirected";
         }
-        byte[] salt = Crypto.generateSalt();
+        byte[] salt = crypto.generateSalt();
         byte[] hash = Crypto.hashAndSalt(password, salt);
         userAccess.insertUser(username, email, salt, hash);
         request.session(true).attribute("username", username);

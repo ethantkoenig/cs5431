@@ -10,12 +10,6 @@ import server.models.Key;
 import utils.ByteUtil;
 
 public class KeyGenerator extends Generator<Key> {
-
-    @BeforeClass
-    public static void initCrypto() {
-        Crypto.init();
-    }
-
     public KeyGenerator() {
         super(Key.class);
     }

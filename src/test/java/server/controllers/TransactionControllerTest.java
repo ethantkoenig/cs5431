@@ -20,10 +20,7 @@ import server.utils.Constants;
 import server.utils.RouteUtils;
 import spark.Request;
 import spark.Response;
-import testutils.ControllerTest;
-import testutils.Fixtures;
-import testutils.MockRequest;
-import testutils.MockResponse;
+import testutils.*;
 import transaction.Transaction;
 import utils.ByteUtil;
 
@@ -45,16 +42,11 @@ public class TransactionControllerTest extends ControllerTest {
 
     public TransactionControllerTest() throws Exception {
         super();
-        Injector injector = Guice.createInjector(new Model());
+        Injector injector = Guice.createInjector(new TestModule());
         controller = injector.getInstance(TransactionController.class);
         controller.init();
         setConnectionProvider(injector.getInstance(ConnectionProvider.class));
         fixtures = new Fixtures();
-    }
-
-    @BeforeClass
-    public static void initCrypto() {
-        Crypto.init();
     }
 
     @Property(trials = 1)

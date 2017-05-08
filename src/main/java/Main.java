@@ -1,5 +1,9 @@
 import cli.ClientInterface;
 import com.beust.jcommander.JCommander;
+import com.google.inject.AbstractModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Module;
 import crypto.Crypto;
 import crypto.ECDSAKeyPair;
 import crypto.ECDSAPrivateKey;
@@ -11,6 +15,8 @@ import jcommander.CommandWebserver;
 import network.Miner;
 import network.Node;
 import server.Application;
+import server.utils.ConnectionProvider;
+import server.utils.MailService;
 import utils.DeserializationException;
 import utils.IOUtils;
 import edu.umd.cs.findbugs.annotations.SuppressWarnings;
@@ -52,8 +58,7 @@ public class Main {
             System.exit(0);
         }
 
-        Crypto.init();
-
+        Injector injector = injector();
         switch (jc.getParsedCommand()) {
             case "node": {
                 Properties nodeProp = parseConfigFile(cn.configFilePath);
@@ -69,7 +74,7 @@ public class Main {
                 }
             }
             case "client": {
-                new ClientInterface().startInterface();
+                injector.getInstance(ClientInterface.class).startInterface();
                 break;
             }
             case "webserver": {
@@ -174,4 +179,15 @@ public class Main {
 
         return true;
     }
+
+    private static Injector injector() {
+        return Guice.createInjector(new Module());
+    }
+
+    private static final class Module extends AbstractModule {
+        @Override
+        protected void configure() {
+        }
+    }
+
 }

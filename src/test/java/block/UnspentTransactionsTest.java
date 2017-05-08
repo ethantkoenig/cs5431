@@ -20,17 +20,12 @@ import java.util.Optional;
 
 public class UnspentTransactionsTest extends RandomizedTest {
 
-    @BeforeClass
-    public static void setupClass() {
-        Crypto.init();
-    }
-
     @Test
     public void testPutContains() throws GeneralSecurityException {
         UnspentTransactions ut = UnspentTransactions.empty();
         ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(randomBytes(1024));
 
-        ECDSAKeyPair pair = Crypto.signatureKeyPair();
+        ECDSAKeyPair pair = crypto.signatureKeyPair();
         TxOut out = new TxOut(1024, pair.publicKey);
         ut.put(hash, 0, out);
 
@@ -46,7 +41,7 @@ public class UnspentTransactionsTest extends RandomizedTest {
         UnspentTransactions ut = UnspentTransactions.empty();
         ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(randomBytes(1024));
 
-        ECDSAKeyPair pair = Crypto.signatureKeyPair();
+        ECDSAKeyPair pair = crypto.signatureKeyPair();
         TxOut out = new TxOut(1024, pair.publicKey);
         ut.put(hash, 0, out);
 
@@ -66,7 +61,7 @@ public class UnspentTransactionsTest extends RandomizedTest {
         UnspentTransactions ut = UnspentTransactions.empty();
         ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(randomBytes(1024));
 
-        ECDSAKeyPair pair = Crypto.signatureKeyPair();
+        ECDSAKeyPair pair = crypto.signatureKeyPair();
         TxOut out = new TxOut(1024, pair.publicKey);
         ut.put(hash, 0, out);
 
@@ -84,7 +79,7 @@ public class UnspentTransactionsTest extends RandomizedTest {
         UnspentTransactions ut = UnspentTransactions.empty();
         ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(randomBytes(1024));
 
-        ECDSAKeyPair pair = Crypto.signatureKeyPair();
+        ECDSAKeyPair pair = crypto.signatureKeyPair();
         TxOut out = new TxOut(1024, pair.publicKey);
         ut.put(hash, 0, out);
 
@@ -104,11 +99,11 @@ public class UnspentTransactionsTest extends RandomizedTest {
         ShaTwoFiftySix hash3 = ShaTwoFiftySix.hashOf(randomBytes(1024));
         ShaTwoFiftySix hash4 = ShaTwoFiftySix.hashOf(randomBytes(1024));
 
-        ECDSAKeyPair pair1 = Crypto.signatureKeyPair();
-        ECDSAKeyPair pair2 = Crypto.signatureKeyPair();
-        ECDSAKeyPair pair3 = Crypto.signatureKeyPair();
-        ECDSAKeyPair pair4 = Crypto.signatureKeyPair();
-        ECDSAKeyPair pair5 = Crypto.signatureKeyPair();
+        ECDSAKeyPair pair1 = crypto.signatureKeyPair();
+        ECDSAKeyPair pair2 = crypto.signatureKeyPair();
+        ECDSAKeyPair pair3 = crypto.signatureKeyPair();
+        ECDSAKeyPair pair4 = crypto.signatureKeyPair();
+        ECDSAKeyPair pair5 = crypto.signatureKeyPair();
         TxOut out1 = new TxOut(1024, pair1.publicKey);
         TxOut out2 = new TxOut(1024, pair2.publicKey);
         TxOut out3 = new TxOut(1024, pair3.publicKey);
@@ -165,11 +160,11 @@ public class UnspentTransactionsTest extends RandomizedTest {
         ShaTwoFiftySix hash3 = randomShaTwoFiftySix();
         ShaTwoFiftySix hash4 = randomShaTwoFiftySix();
 
-        ECDSAKeyPair pair1 = Crypto.signatureKeyPair();
-        ECDSAKeyPair pair2 = Crypto.signatureKeyPair();
-        ECDSAKeyPair pair3 = Crypto.signatureKeyPair();
-        ECDSAKeyPair pair4 = Crypto.signatureKeyPair();
-        ECDSAKeyPair pair5 = Crypto.signatureKeyPair();
+        ECDSAKeyPair pair1 = crypto.signatureKeyPair();
+        ECDSAKeyPair pair2 = crypto.signatureKeyPair();
+        ECDSAKeyPair pair3 = crypto.signatureKeyPair();
+        ECDSAKeyPair pair4 = crypto.signatureKeyPair();
+        ECDSAKeyPair pair5 = crypto.signatureKeyPair();
         TxOut out1 = new TxOut(1024, pair1.publicKey);
         TxOut out2 = new TxOut(1024, pair2.publicKey);
         TxOut out3 = new TxOut(1024, pair3.publicKey);

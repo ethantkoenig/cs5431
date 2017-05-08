@@ -14,11 +14,6 @@ import java.util.Arrays;
 
 public class ShaTwoFiftySixTest extends RandomizedTest {
 
-    @BeforeClass
-    public static void setUpBeforeClass() {
-        Crypto.init();
-    }
-
     @Test
     public void testDeserialize() throws GeneralSecurityException, IOException {
         byte[] hash = randomBytes(ShaTwoFiftySix.HASH_SIZE_IN_BYTES);

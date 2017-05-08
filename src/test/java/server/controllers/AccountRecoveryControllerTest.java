@@ -13,10 +13,7 @@ import server.utils.ConnectionProvider;
 import spark.ModelAndView;
 import spark.Request;
 import spark.Response;
-import testutils.ControllerTest;
-import testutils.Fixtures;
-import testutils.MockRequest;
-import testutils.MockResponse;
+import testutils.*;
 import utils.ByteUtil;
 
 import java.util.Collections;
@@ -33,7 +30,7 @@ public class AccountRecoveryControllerTest extends ControllerTest {
 
     public AccountRecoveryControllerTest() throws Exception {
         super();
-        Injector injector = Guice.createInjector(new Model());
+        Injector injector = Guice.createInjector(new TestModule());
         controller = injector.getInstance(AccountRecoveryController.class);
         controller.init();
         access = injector.getInstance(AccountRecoveryAccess.class);
@@ -237,7 +234,7 @@ public class AccountRecoveryControllerTest extends ControllerTest {
                 ByteUtil.asByteArray(fixtures.key::serialize)
         );
         final KeysBody keysBody = new KeysBody(Collections.singletonList(
-           new KeyBody(publicKey, randomAsciiString(128))
+                new KeyBody(publicKey, randomAsciiString(128))
         ));
 
         final String guid = randomShaTwoFiftySix().toString();

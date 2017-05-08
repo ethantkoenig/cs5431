@@ -27,16 +27,11 @@ public class SigningKeyPairGenerator extends Generator<ECDSAKeyPair> {
         super(ECDSAKeyPair.class);
     }
 
-    @BeforeClass
-    public static void setupClass() {
-        Crypto.init();
-    }
-
     @Override
     public ECDSAKeyPair generate(SourceOfRandomness random, GenerationStatus status) {
-        Config.setSecureRandom(new InsecureSecureRandom(random.toJDKRandom()));
         try {
-            ECDSAKeyPair keys = Crypto.signatureKeyPair();
+            Crypto crypto = new Crypto(new InsecureSecureRandom(random.toJDKRandom()));
+            ECDSAKeyPair keys = crypto.signatureKeyPair();
             keyMapping.put(keys.publicKey, keys.privateKey);
             return keys;
         } catch (GeneralSecurityException e) {

@@ -17,12 +17,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class BlockProperties extends RandomizedTest {
 
     @BeforeClass
-    public static void initCrypto() {
-        Crypto.init();
-    }
-
-
-    @BeforeClass
     public static void setHashGoal() {
         Config.setHashGoal(1);
     }

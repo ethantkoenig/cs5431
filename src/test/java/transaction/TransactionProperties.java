@@ -11,12 +11,6 @@ import static testutils.TestUtils.assertEqualsWithHashCode;
 
 @RunWith(JUnitQuickcheck.class)
 public class TransactionProperties {
-
-    @BeforeClass
-    public static void initCrypto() {
-        Crypto.init();
-    }
-
     @Property(trials = 5)
     public void deserializeSerializeInverse(Transaction tx) throws Exception {
         byte[] ser = ByteUtil.asByteArray(tx::serialize);

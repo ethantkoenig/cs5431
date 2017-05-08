@@ -1,5 +1,7 @@
 package block;
 
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import crypto.Crypto;
 import crypto.ECDSAKeyPair;
 import crypto.ECDSAPublicKey;
@@ -7,6 +9,7 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import testutils.RandomizedTest;
+import testutils.TestModule;
 import testutils.TestUtils;
 import transaction.Transaction;
 import transaction.TxOut;
@@ -18,10 +21,11 @@ import utils.ShaTwoFiftySix;
 import java.util.Collections;
 
 public class BlockTest extends RandomizedTest {
+    private final Crypto crypto;
 
-    @BeforeClass
-    public static void setupClass() {
-        Crypto.init();
+    public BlockTest() {
+        Injector injector = Guice.createInjector(new TestModule());
+        crypto = injector.getInstance(Crypto.class);
     }
 
     @Test
@@ -53,7 +57,7 @@ public class BlockTest extends RandomizedTest {
         for (int i = 0; i < Block.NUM_TRANSACTIONS_PER_BLOCK; i++) {
             block.transactions[i] = randomTransaction();
         }
-        block.addReward(Crypto.signatureKeyPair().publicKey);
+        block.addReward(crypto.signatureKeyPair().publicKey);
 
         Block deserialized = Block.DESERIALIZER.deserialize(ByteUtil.asByteArray(block::serialize));
 
@@ -67,7 +71,7 @@ public class BlockTest extends RandomizedTest {
     @Test
     public void testAddReward() throws Exception {
         Block b = Block.empty(ShaTwoFiftySix.zero());
-        ECDSAPublicKey key = Crypto.signatureKeyPair().publicKey;
+        ECDSAPublicKey key = crypto.signatureKeyPair().publicKey;
         b.addReward(key);
 
         Assert.assertEquals(Block.REWARD_AMOUNT, b.reward.value);
@@ -94,7 +98,7 @@ public class BlockTest extends RandomizedTest {
     @Test
     public void testSerializeGenesis() throws Exception {
         Block block = Block.genesis();
-        block.addReward(Crypto.signatureKeyPair().publicKey);
+        block.addReward(crypto.signatureKeyPair().publicKey);
 
         Block deserialized = Block.DESERIALIZER.deserialize(ByteUtil.asByteArray(block::serialize));
 
@@ -111,7 +115,7 @@ public class BlockTest extends RandomizedTest {
         ShaTwoFiftySix previousBlockHash = ShaTwoFiftySix.hashOf(randomBytes(256));
         Pair<Block, UnspentTransactions> pair = randomValidBlock(previousBlockHash);
         Block block = pair.getLeft();
-        block.addReward(Crypto.signatureKeyPair().publicKey);
+        block.addReward(crypto.signatureKeyPair().publicKey);
         while (!block.checkHash()) { // mine the block
             block.nonceAddOne();
         }
@@ -134,7 +138,7 @@ public class BlockTest extends RandomizedTest {
 
     @Test
     public void testVerifyGenesis() throws Exception {
-        ECDSAKeyPair pair = Crypto.signatureKeyPair();
+        ECDSAKeyPair pair = crypto.signatureKeyPair();
         Assert.assertFalse(errorMessage,
                 randomBlock(randomShaTwoFiftySix()).verifyGenesis(pair.publicKey));
 

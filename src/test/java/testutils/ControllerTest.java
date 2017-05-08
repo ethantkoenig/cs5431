@@ -42,12 +42,4 @@ public abstract class ControllerTest extends RandomizedTest {
         IDatabaseConnection databaseConnection = new DatabaseConnection(connection);
         DatabaseOperation.CLEAN_INSERT.execute(databaseConnection, dataSet);
     }
-
-    public static final class Model extends AbstractModule {
-        @Override
-        protected void configure() {
-            bind(ConnectionProvider.class).to(TestConnectionProvider.class);
-            bind(MailService.class).to(MockMailService.class);
-        }
-    }
 }
