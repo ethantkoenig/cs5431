@@ -20,6 +20,7 @@ import spark.Request;
 import spark.Response;
 import spark.template.freemarker.FreeMarkerEngine;
 import utils.ByteUtil;
+import utils.Config;
 import utils.Optionals;
 
 import java.io.DataInputStream;
@@ -36,7 +37,8 @@ import static server.utils.RouteUtils.*;
 import static spark.Spark.*;
 
 public class UserController extends AbstractController {
-    private static final Logger LOGGER = Logger.getLogger(UserController.class.getName());
+    private static final Logger LOGGER =
+        Logger.getLogger(Config.getLogParent() + "." + UserController.class.getName());
 
     private static final String LOCKOUT_SUBJECT = "Yaccoin account alert";
     private static final String LOCKOUT_BODY = "Your account has had several failed login attempts. For your safety, your account has been locked. Please unlock your password using the link below.";

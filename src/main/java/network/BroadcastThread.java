@@ -1,6 +1,7 @@
 package network;
 
 import message.OutgoingMessage;
+import utils.Config;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.function.Consumer;
@@ -15,7 +16,8 @@ import java.util.logging.Logger;
  */
 public class BroadcastThread extends Thread {
 
-    private static final Logger LOGGER = Logger.getLogger(BroadcastThread.class.getName());
+    private static final Logger LOGGER =
+        Logger.getLogger(Config.getLogParent() + "." + BroadcastThread.class.getName());
 
     private final Consumer<OutgoingMessage> broadcast;
 

@@ -4,6 +4,7 @@ import block.Block;
 import message.Message;
 import message.OutgoingMessage;
 import utils.ByteUtil;
+import utils.Config;
 
 import java.io.IOException;
 import java.util.concurrent.BlockingQueue;
@@ -21,7 +22,8 @@ import static utils.CanBeSerialized.serializeSingleton;
  */
 public class MinerThread extends Thread {
 
-    private static final Logger LOGGER = Logger.getLogger(MinerThread.class.getName());
+    private static final Logger LOGGER =
+        Logger.getLogger(Config.getLogParent() + "." + MinerThread.class.getName());
     private Block block;
     private final AtomicBoolean stopMining = new AtomicBoolean(false);
 

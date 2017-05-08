@@ -2,6 +2,7 @@ package network;
 
 import message.IncomingMessage;
 import message.OutgoingMessage;
+import utils.Config;
 import utils.DeserializationException;
 import utils.Deserializer;
 
@@ -21,7 +22,8 @@ import java.util.logging.Logger;
  * @version 1.0, Feb 16 2017
  */
 public class ConnectionThread extends Thread {
-    private static final Logger LOGGER = Logger.getLogger(ConnectionThread.class.getName());
+    private static final Logger LOGGER =
+        Logger.getLogger(Config.getLogParent() + "." + ConnectionThread.class.getName());
 
     private final Socket socket;
     private final BlockingQueue<IncomingMessage> messageQueue;

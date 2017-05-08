@@ -7,6 +7,7 @@ import server.access.UserAccess;
 import server.models.User;
 import spark.*;
 import utils.ByteUtil;
+import utils.Config;
 
 import java.io.IOException;
 import java.net.URL;
@@ -16,7 +17,8 @@ import java.util.Optional;
 import java.util.logging.Logger;
 
 public final class RouteUtils {
-    private final static Logger LOGGER = Logger.getLogger(RouteUtils.class.getName());
+    private final static Logger LOGGER =
+        Logger.getLogger(Config.getLogParent() + "." + RouteUtils.class.getName());
 
     private final UserAccess userAccess;
     private final Gson gson;

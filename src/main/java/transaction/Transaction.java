@@ -21,7 +21,8 @@ import java.util.stream.Stream;
  */
 public final class Transaction extends HashCache implements CanBeSerialized {
 
-    private final static Logger LOGGER = Logger.getLogger(Logger.class.getName());
+    private final static Logger LOGGER =
+        Logger.getLogger(Config.getLogParent() + "." + Logger.class.getName());
     public static final Deserializer<Transaction> DESERIALIZER = new TransactionDeserializer();
 
     private final TxIn[] txIn;

@@ -11,6 +11,7 @@ import transaction.Transaction;
 import transaction.TxIn;
 import transaction.TxOut;
 import utils.ByteUtil;
+import utils.Config;
 import utils.Pair;
 
 import java.io.IOException;
@@ -23,7 +24,8 @@ import java.util.stream.Collectors;
  * The MessageHandler class manages internal state and handles incoming messages
  */
 public class MessageHandler {
-    private static final Logger LOGGER = Logger.getLogger(MessageHandler.class.getName());
+    private static final Logger LOGGER =
+        Logger.getLogger(Config.getLogParent() + "." + MessageHandler.class.getName());
 
     private final MiningBundle bundle;
     private final BlockingQueue<OutgoingMessage> broadcastQueue;

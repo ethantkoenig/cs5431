@@ -1,7 +1,5 @@
 package utils;
 
-import java.security.SecureRandom;
-
 /**
  * Various system-wide constants and configurations. These "constants" should be
  * modified only in tests.
@@ -11,6 +9,7 @@ public final class Config {
     private static int PBKDF2_COST = 12;
     private static int HASH_GOAL = 2;
     private static String MAIL_FROM = "yaccoin5431@gmail.com";
+    private static String LOG_PARENT_NAME = "YACCOIN";
 
     // Disallow instances of this class
     private Config() {
@@ -34,5 +33,9 @@ public final class Config {
 
     public static String getMailFrom() {
         return MAIL_FROM;
+    }
+
+    public static String getLogParent() {
+        return LOG_PARENT_NAME;
     }
 }

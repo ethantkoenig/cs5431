@@ -3,7 +3,6 @@ import com.beust.jcommander.JCommander;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.google.inject.Module;
 import crypto.Crypto;
 import crypto.ECDSAKeyPair;
 import crypto.ECDSAPrivateKey;
@@ -15,23 +14,26 @@ import jcommander.CommandWebserver;
 import network.Miner;
 import network.Node;
 import server.Application;
-import server.utils.ConnectionProvider;
-import server.utils.MailService;
+import utils.Config;
 import utils.DeserializationException;
 import utils.IOUtils;
-import edu.umd.cs.findbugs.annotations.SuppressWarnings;
 
-import java.io.*;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.logging.FileHandler;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 public class Main {
+    private static final Logger LOGGER = Logger.getLogger(Config.getLogParent());
 
     public static void main(String[] args) {
         CommandClient cc = new CommandClient();
@@ -137,14 +139,25 @@ public class Main {
         ECDSAPublicKey myPublic;
         ECDSAPrivateKey myPrivate;
         ECDSAPublicKey privilegedKey;
+        String logpath;
         Node node;
         try {
             myPublic = Crypto.loadPublicKey(IOUtils.getPropertyChecked(prop, "publicKey"));
             myPrivate = Crypto.loadPrivateKey(IOUtils.getPropertyChecked(prop, "privateKey"));
             privilegedKey = Crypto.loadPublicKey(IOUtils.getPropertyChecked(prop, "privilegedKey"));
+            logpath = IOUtils.getPropertyChecked(prop, "logfilePath");
         } catch (DeserializationException | IOException e) {
             System.err.println(String.format("Error: %s", e.getMessage()));
             return false;
+        }
+
+        try {
+            FileHandler filelog = new FileHandler(logpath);
+            LOGGER.addHandler(filelog);
+            LOGGER.info("Logging to file " + logpath);
+        } catch (IOException e) {
+            LOGGER.warning("Cannot log to file " + logpath + ". Dumping error message");
+            LOGGER.warning(e.toString());
         }
 
         if (isMining) {

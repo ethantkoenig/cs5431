@@ -7,6 +7,7 @@ import message.Message;
 import message.OutgoingMessage;
 import message.payloads.*;
 import transaction.Transaction;
+import utils.Config;
 import utils.DeserializationException;
 import utils.Deserializer;
 import utils.ShaTwoFiftySix;
@@ -25,7 +26,8 @@ import java.util.logging.Logger;
  */
 public class HandleMessageThread extends Thread {
     // Blocks to request when we are behind other nodes
-    private static final Logger LOGGER = Logger.getLogger(HandleMessageThread.class.getName());
+    private static final Logger LOGGER =
+        Logger.getLogger(Config.getLogParent() + "." + HandleMessageThread.class.getName());
 
     private BlockingQueue<IncomingMessage> messageQueue;
 

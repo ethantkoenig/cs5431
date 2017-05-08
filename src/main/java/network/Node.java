@@ -6,6 +6,7 @@ import crypto.ECDSAKeyPair;
 import crypto.ECDSAPublicKey;
 import message.IncomingMessage;
 import message.OutgoingMessage;
+import utils.Config;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -28,7 +29,8 @@ import java.util.logging.Logger;
  * @version 2.0, Feb 16 2017
  */
 public class Node {
-    private static final Logger LOGGER = Logger.getLogger(Node.class.getName());
+    private static final Logger LOGGER =
+        Logger.getLogger(Config.getLogParent() + "." + Node.class.getName());
 
     private final ServerSocket serverSocket;
 
@@ -43,7 +45,9 @@ public class Node {
     // The connections list holds all of the Nodes current connections
     protected ArrayList<ConnectionThread> connections;
 
-    public Node(ServerSocket serverSocket, ECDSAKeyPair myKeyPair, ECDSAPublicKey privilegedKey) {
+    public Node(ServerSocket serverSocket,
+                ECDSAKeyPair myKeyPair,
+                ECDSAPublicKey privilegedKey) {
         this.connections = new ArrayList<>();
         this.messageQueue = new SynchronousQueue<>();
         this.broadcastQueue = new SynchronousQueue<>();

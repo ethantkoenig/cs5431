@@ -6,16 +6,20 @@ import com.google.inject.Injector;
 import server.config.DatabaseConfig;
 import server.controllers.*;
 import server.utils.*;
+import utils.Config;
 import utils.IOUtils;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.Properties;
+import java.util.logging.Logger;
+import java.util.logging.FileHandler;
 
 import static spark.Spark.*;
 
 
 public class Application {
+    private static final Logger LOGGER = Logger.getLogger(Config.getLogParent());
 
     public static boolean run(Properties serverProp) {
         if (!handleArgs(serverProp)) {
@@ -52,13 +56,24 @@ public class Application {
         String keystorePath;
         String host;
         String portString;
+        String logpath;
         try {
             keystorePath = IOUtils.getPropertyChecked(serverProp, "keystore");
             host = IOUtils.getPropertyChecked(serverProp, "nodeAddress");
             portString = IOUtils.getPropertyChecked(serverProp, "nodePort");
+            logpath = IOUtils.getPropertyChecked(serverProp, "logfilePath");
         } catch (IOException e) {
             System.err.println(String.format("Error: %s", e.getMessage()));
             return false;
+        }
+
+        try {
+            FileHandler filelog = new FileHandler(logpath);
+            LOGGER.addHandler(filelog);
+            LOGGER.info("Logging to file " + logpath);
+        } catch (IOException e) {
+            LOGGER.warning("Cannot log to file " + logpath + ". Dumping error message");
+            LOGGER.warning(e.toString());
         }
 
         try {

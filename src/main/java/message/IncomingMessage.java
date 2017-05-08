@@ -1,6 +1,6 @@
 package message;
 
-
+import utils.Config;
 import utils.DeserializationException;
 import utils.Deserializer;
 import utils.IOUtils;
@@ -11,7 +11,8 @@ import java.util.Arrays;
 import java.util.logging.Logger;
 
 public class IncomingMessage extends Message {
-    private static final Logger LOGGER = Logger.getLogger(IncomingMessage.class.getName());
+    private static final Logger LOGGER =
+        Logger.getLogger(Config.getLogParent() + "." + IncomingMessage.class.getName());
 
     private final MessageResponder responder; // may be null
 
