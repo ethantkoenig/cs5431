@@ -46,6 +46,13 @@ public class KeyAccess extends AbstractAccess {
         }
     }
 
+    public void updateKey(int userID, byte[] publicKey, String encryptedPrivateKey) throws SQLException {
+        try (Connection conn = connectionProvider.getConnection();
+             PreparedStatement preparedStmt = Statements.updateKey(conn, userID, publicKey, encryptedPrivateKey)) {
+            checkRowCount(preparedStmt.executeUpdate(), 1);
+        }
+    }
+
     public void insertKey(int userID, byte[] publicKey, String privateKey) throws SQLException {
         try (Connection conn = connectionProvider.getConnection();
              PreparedStatement preparedStmt = Statements.insertKey(conn, userID, publicKey, privateKey)

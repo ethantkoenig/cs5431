@@ -165,6 +165,20 @@ public final class Statements {
         );
     }
 
+    public static PreparedStatement updateKey(Connection connection,
+                                              int userId,
+                                              byte[] publicKey,
+                                              String privateKey) throws SQLException {
+        return prepareStatement(connection.prepareStatement(
+                "UPDATE keypairs SET privatekey = ? WHERE userid = ? AND publickey = ?"),
+                statement -> {
+                    statement.setString(1, privateKey);
+                    statement.setInt(2, userId);
+                    statement.setBytes(3, publicKey);
+                }
+        );
+    }
+
     public static PreparedStatement deleteKey(Connection connection,
                                               int keyID) throws SQLException {
         return prepareStatement(connection.prepareStatement(

@@ -79,8 +79,6 @@ public class TransactionController extends AbstractController {
     }
 
     String transact(Request request, Response response) throws Exception {
-        response.type("application/json");
-
         User loggedInUser = routeUtils.forceLoggedInUser(request);
         String recipientUsername = queryParam(request, "recipient");
         String message = queryParam(request, "message");
@@ -145,7 +143,7 @@ public class TransactionController extends AbstractController {
         }
 
         response.status(200);
-        return routeUtils.toJson(new TransactionResponseBody(
+        return routeUtils.toJson(response, new TransactionResponseBody(
                 ByteUtil.bytesToHexString(payload),
                 encryptedPrivateKeys
         ));
