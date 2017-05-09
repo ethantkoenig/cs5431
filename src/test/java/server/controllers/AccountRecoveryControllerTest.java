@@ -157,7 +157,7 @@ public class AccountRecoveryControllerTest extends ControllerTest {
 
         MockResponse mockResponse = new MockResponse();
         controller.unlock(request, mockResponse.get());
-        Assert.assertEquals("/user/" + fixtures.user.getUsername(), mockResponse.redirectedTo());
+        Assert.assertEquals("/user", mockResponse.redirectedTo());
         User user = assertPresent(userAccess.getUserByID(fixtures.user.getId()));
         Assert.assertEquals(0, user.getFailedLogins());
         Assert.assertEquals(fixtures.user.getUsername(), request.session().attribute("username"));

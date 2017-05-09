@@ -77,9 +77,7 @@ public class UserController extends AbstractController {
 
         delete("/logout", wrapRoute(this::logout));
 
-        path("/user", () -> {
-            get("/:name", wrapTemplate(this::viewUser), new FreeMarkerEngine());
-        });
+        get("/user", wrapTemplate(this::viewUser), new FreeMarkerEngine());
 
         get("/balance", wrapTemplate(this::balance), new FreeMarkerEngine());
 
@@ -147,7 +145,7 @@ public class UserController extends AbstractController {
             RouteUtils.alertMessage(request, LOCKOUT_ALERT);
             response.redirect("/unlock");
             return "redirected";
-        } else if(!validAuth) {
+        } else if (!validAuth) {
             RouteUtils.errorMessage(request, LOGIN_ERROR);
             response.redirect("/login");
             return "redirected";

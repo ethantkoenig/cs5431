@@ -62,7 +62,7 @@
             <ul class="nav navbar-nav">
                 <#if loggedIn>
                     <li>
-                        <a href="/user/${loggedInUsername}">${loggedInUsername}</a>
+                        <a href="/user">${loggedInUsername}</a>
                     </li>
                     <li>
                         <a href="/balance">Balance</a>

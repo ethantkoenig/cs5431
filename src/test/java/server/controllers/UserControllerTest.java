@@ -120,7 +120,7 @@ public class UserControllerTest extends ControllerTest {
 
         MockResponse mockResponse = new MockResponse();
         controller.login(request, mockResponse.get());
-        Assert.assertEquals("/user/" + fixtures.user.getUsername(), mockResponse.redirectedTo());
+        Assert.assertEquals("/user", mockResponse.redirectedTo());
         Assert.assertEquals(fixtures.user.getUsername(), request.session().attribute("username"));
     }
 
@@ -164,7 +164,7 @@ public class UserControllerTest extends ControllerTest {
     @Test
     public void testViewUser() throws Exception {
         Request request = new MockRequest()
-                .addParam(":name", fixtures.user.getUsername())
+                .addSessionAttribute("username", fixtures.user.getUsername())
                 .get();
 
         Response response = new MockResponse().get();
