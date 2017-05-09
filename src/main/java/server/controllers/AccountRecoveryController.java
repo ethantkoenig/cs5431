@@ -113,7 +113,7 @@ public class AccountRecoveryController extends AbstractController {
         }
         userAccess.resetFailedLogins(user.getId());
         request.session().attribute("username", user.getUsername());
-        response.redirect("/user/" + user.getUsername());
+        response.redirect("/user");
         RouteUtils.successMessage(request, "Account unlocked");
         return "redirected";
     }
