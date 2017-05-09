@@ -6,6 +6,8 @@ import org.junit.Assert;
 import org.junit.Test;
 import server.access.AccountRecoveryAccess;
 import server.access.UserAccess;
+import server.bodies.KeyBody;
+import server.bodies.KeysBody;
 import server.models.User;
 import server.utils.ConnectionProvider;
 import spark.ModelAndView;
@@ -15,7 +17,11 @@ import testutils.ControllerTest;
 import testutils.Fixtures;
 import testutils.MockRequest;
 import testutils.MockResponse;
+import utils.ByteUtil;
 
+import java.util.Collections;
+
+import static server.utils.RouteUtils.wrapRoute;
 import static testutils.TestUtils.assertPresent;
 
 public class AccountRecoveryControllerTest extends ControllerTest {
@@ -190,5 +196,89 @@ public class AccountRecoveryControllerTest extends ControllerTest {
         controller.unlock(request, mockResponse.get());
         Assert.assertEquals("/unlock", mockResponse.redirectedTo());
         Assert.assertNull(request.session().attribute("username"));
+    }
+
+    @Test
+    public void testGetChangePasswordNoGuid() throws Exception {
+        Request request = new MockRequest()
+                .addSessionAttribute("username", fixtures.user.getUsername())
+                .get();
+        MockResponse mockResponse = new MockResponse();
+        ModelAndView modelAndView = controller.getChangePassword(request, mockResponse.get());
+        Assert.assertEquals("changePasswordRequest.ftl", modelAndView.getViewName());
+    }
+
+    @Test
+    public void testGetChangePasswordGuid() throws Exception {
+        final String guid = randomShaTwoFiftySix().toString();
+        access.insertRecovery(fixtures.user.getId(), guid);
+
+        Request request = new MockRequest()
+                .addSessionAttribute("username", fixtures.user.getUsername())
+                .get();
+        MockResponse mockResponse = new MockResponse();
+        ModelAndView modelAndView = controller.getChangePassword(request, mockResponse.get());
+        Assert.assertEquals("changePasswordRequest.ftl", modelAndView.getViewName());
+    }
+
+    @Test
+    public void testChangePasswordMail() throws Exception {
+        Request request = new MockRequest()
+                .addSessionAttribute("username", fixtures.user.getUsername())
+                .get();
+        MockResponse mockResponse = new MockResponse();
+        controller.changePasswordMail(request, mockResponse.get());
+        Assert.assertEquals("/change_password", mockResponse.redirectedTo());
+    }
+
+    @Test
+    public void testChangePassword() throws Exception {
+        String publicKey = ByteUtil.bytesToHexString(
+                ByteUtil.asByteArray(fixtures.key::serialize)
+        );
+        final KeysBody keysBody = new KeysBody(Collections.singletonList(
+           new KeyBody(publicKey, randomAsciiString(128))
+        ));
+
+        final String guid = randomShaTwoFiftySix().toString();
+        access.insertRecovery(fixtures.user.getId(), guid);
+        final String newPassword = randomShaTwoFiftySix().toString();
+
+        Request request = new MockRequest()
+                .addSessionAttribute("username", fixtures.user.getUsername())
+                .addQueryParam("guid", guid)
+                .addQueryParam("password", newPassword)
+                .jsonBody(keysBody)
+                .get();
+        MockResponse mockResponse = new MockResponse();
+        controller.changePassword(request, mockResponse.get());
+
+        User user = assertPresent(userAccess.getUserByID(fixtures.user.getId()));
+        Assert.assertTrue(user.checkPassword(newPassword));
+    }
+
+    @Test
+    public void testChangePasswordBadGuid() throws Exception {
+        String publicKey = ByteUtil.bytesToHexString(
+                ByteUtil.asByteArray(fixtures.key::serialize)
+        );
+        final KeysBody keysBody = new KeysBody(Collections.singletonList(
+                new KeyBody(publicKey, randomAsciiString(128))
+        ));
+
+        final String guid = randomShaTwoFiftySix().toString();
+        final String newPassword = randomShaTwoFiftySix().toString();
+
+        Request request = new MockRequest()
+                .addSessionAttribute("username", fixtures.user.getUsername())
+                .addQueryParam("guid", guid)
+                .addQueryParam("password", newPassword)
+                .jsonBody(keysBody)
+                .get();
+        MockResponse mockResponse = new MockResponse();
+        wrapRoute(controller::changePassword).handle(request, mockResponse.get());
+        Assert.assertEquals(400, mockResponse.status());
+        User user = assertPresent(userAccess.getUserByID(fixtures.user.getId()));
+        Assert.assertFalse(user.checkPassword(newPassword));
     }
 }

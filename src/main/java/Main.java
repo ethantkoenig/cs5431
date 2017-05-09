@@ -20,8 +20,10 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 public class Main {
 
@@ -146,12 +148,11 @@ public class Main {
             node = new Node(new ServerSocket(port), new ECDSAKeyPair(myPrivate, myPublic), privilegedKey);
         }
 
-        // Dirty hack to get split to behave
-        //
-        // "".split(",")  gives { "" }, but
-        // ",".split(",") gives { }
-        String nodeList = "," + IOUtils.getPropertyChecked(prop, "nodeList");
-        String[] nodes = nodeList.split(",");
+        String nodeList = IOUtils.getPropertyChecked(prop, "nodeList");
+        List<String> nodes = Arrays.stream(nodeList.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toList());
 
         for (String s: nodes) {
             Optional<InetSocketAddress> optAddr = IOUtils.parseAddress(s);

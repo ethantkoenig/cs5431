@@ -147,17 +147,6 @@ public final class MinerSimulation {
         return block;
     }
 
-    public Block[] expectBlocks(TestMiner from, int numExpected) throws Exception {
-        Block[] blocks = assertBlockMessage(getNextMessage(from));
-        Assert.assertEquals(numExpected, blocks.length);
-        for (int i = 0; i < blocks.length - 1; i++) {
-            Block child = blocks[i];
-            Block parent = blocks[i + 1];
-            Assert.assertEquals(child.previousBlockHash, parent.getShaTwoFiftySix());
-        }
-        return blocks;
-    }
-
     public void sendValidTransaction(TestMiner repr, Transaction transaction) throws Exception {
         byte[] serialized = ByteUtil.asByteArray(transaction::serialize);
         sendMessage(repr, new OutgoingMessage(Message.TRANSACTION, serialized));
@@ -243,6 +232,10 @@ public final class MinerSimulation {
         return msg;
     }
 
+    public Optional<IncomingMessage> checkForMessage(TestMiner testMiner) throws Exception {
+        return Optional.ofNullable(testMiner.queue.poll(1, TimeUnit.MILLISECONDS));
+    }
+
     public void assertNoMessage() throws Exception {
         for (TestMiner miner : miners) {
             if (!miner.queue.isEmpty()) {
@@ -276,6 +269,17 @@ public final class MinerSimulation {
         Assert.assertEquals(Message.BLOCKS, msg.type);
         return Deserializer.deserializeList(msg.payload, Block.DESERIALIZER)
                 .toArray(new Block[0]);
+    }
+
+    public static Block[] assertBlocksMessage(IncomingMessage message, int numExpected) throws Exception {
+        Block[] blocks = assertBlockMessage(message);
+        Assert.assertEquals(numExpected, blocks.length);
+        for (int i = 0; i < blocks.length - 1; i++) {
+            Block child = blocks[i];
+            Block parent = blocks[i + 1];
+            Assert.assertEquals(child.previousBlockHash, parent.getShaTwoFiftySix());
+        }
+        return blocks;
     }
 
     public static Block assertSingleBlockMessage(Message msg) throws Exception {

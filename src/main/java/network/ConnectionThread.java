@@ -7,6 +7,7 @@ import utils.Deserializer;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
@@ -51,8 +52,9 @@ public class ConnectionThread extends Thread {
     public void run() {
         try {
             receive();
+        } catch (EOFException e) {
+            LOGGER.info("[-] Connection closed");
         } catch (DeserializationException | IOException | InterruptedException e) {
-            // TODO don't print exception if socket has been closed
             e.printStackTrace();
         }
         close();

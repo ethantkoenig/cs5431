@@ -7,6 +7,8 @@ import server.access.AccountRecoveryAccess;
 import server.access.KeyAccess;
 import server.access.UserAccess;
 import server.models.User;
+import server.bodies.KeyBody;
+import server.bodies.KeysBody;
 import server.utils.MailService;
 import server.utils.RouteUtils;
 import server.utils.ValidateUtils;
@@ -14,8 +16,10 @@ import spark.ModelAndView;
 import spark.Request;
 import spark.Response;
 import spark.template.freemarker.FreeMarkerEngine;
+import utils.ByteUtil;
 import utils.Config;
 
+import java.security.InvalidParameterException;
 import java.security.SecureRandom;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -28,6 +32,7 @@ import static utils.Optionals.ifPresent;
 public class AccountRecoveryController extends AbstractController {
     private static final String RECOVERY_SUBJECT = "Yaccoin Password Recovery";
     private static final String UNLOCK_SUBJECT = "Yaccoin Account Unlock";
+    private static final String CHANGE_PASSWORD_SUBJECT = "Yaccoin Password Change";
     private static SecureRandom random = Config.secureRandom(); // TODO use Guice
 
     private final UserAccess userAccess;
@@ -60,6 +65,11 @@ public class AccountRecoveryController extends AbstractController {
             post("/mail", wrapRoute(this::unlockMail));
             post("", wrapRoute(this::unlock));
         });
+        path("/change_password", () -> {
+            get("", wrapTemplate(this::getChangePassword), new FreeMarkerEngine());
+            post("/mail", wrapRoute(this::changePasswordMail));
+            post("", wrapRoute(this::changePassword));
+        });
     }
 
     ModelAndView getReset(Request request, Response response) throws Exception {
@@ -82,7 +92,7 @@ public class AccountRecoveryController extends AbstractController {
         return getRecoveryPage(request, "unlockRequest.ftl", "unlock.ftl");
     }
 
-    String unlockMail(Request request, Response response) throws Exception{
+    String unlockMail(Request request, Response response) throws Exception {
         String email = queryParam(request, "email");
         ifPresent(createGUID(email), guid -> {
             String link = baseURL(request) + "/unlock?guid=" + guid;
@@ -133,14 +143,48 @@ public class AccountRecoveryController extends AbstractController {
         }
         int userID = optUserID.getAsInt();
         keyAccess.deleteAllKeys(userID);
-
-        byte[] salt = Crypto.generateSalt();
-        byte[] hash = Crypto.hashAndSalt(password, salt);
-        userAccess.updateUserPass(userID, salt, hash);
+        updatePassword(userID, password);
 
         RouteUtils.successMessage(request, "Password updated.");
         response.redirect("/login");
         return "redirected";
+    }
+
+    ModelAndView getChangePassword(Request request, Response response) throws Exception {
+        routeUtils.forceLoggedInUser(request);
+        return getRecoveryPage(request, "changePasswordRequest.ftl", "changePassword.ftl");
+    }
+
+    String changePasswordMail(Request request, Response response) throws Exception {
+        User user = routeUtils.forceLoggedInUser(request);
+        String guid = nextGUID(random);
+        accountRecoveryAccess.insertRecovery(user.getId(), guid);
+        String link = baseURL(request) + "/change_password?guid=" + guid;
+        mailService.sendEmail(user.getEmail(), CHANGE_PASSWORD_SUBJECT, changePasswordEmailBody(link));
+        RouteUtils.successMessage(request, "Check your inbox.");
+        response.redirect("/change_password");
+        return "redirected";
+    }
+
+    String changePassword(Request request, Response response) throws Exception {
+        String guid = queryParam(request, "guid");
+        String password = queryParam(request, "password");
+
+        User user = accountRecoveryAccess.getUserByGUID(guid).orElseThrow(() -> {
+            RouteUtils.errorMessage(request, "This link has expired. Please retry.");
+            return new RouteUtils.InvalidParamException("Invalid guid");
+        });
+
+        KeysBody keys = routeUtils.parseBody(request, KeysBody.class);
+        for (KeyBody key : keys.keys) {
+            byte[] publicKey = ByteUtil.hexStringToByteArray(key.publicKey)
+                    .orElseThrow(() -> new InvalidParameterException("Invalid public key"));
+            keyAccess.updateKey(user.getId(), publicKey, key.encryptedPrivateKey);
+        }
+
+        updatePassword(user.getId(), password);
+        RouteUtils.successMessage(request, "Successfully changed password.");
+        return "ok";
     }
 
     private ModelAndView getRecoveryPage(Request request, String requestView, String formView)
@@ -155,6 +199,12 @@ public class AccountRecoveryController extends AbstractController {
         return routeUtils.modelAndView(request, formView)
                 .add("guid", guid)
                 .get();
+    }
+
+    private void updatePassword(int userID, String newPassword) throws Exception {
+        byte[] salt = Crypto.generateSalt();
+        byte[] hashedPassword = Crypto.hashAndSalt(newPassword, salt);
+        userAccess.updateUserPass(userID, salt, hashedPassword);
     }
 
     private Optional<String> createGUID(String emailAddress) throws Exception {
@@ -178,6 +228,13 @@ public class AccountRecoveryController extends AbstractController {
     private static String unlockEmailBody(String link) {
         return String.format(
                 "Click on the link below to create unlock your password.%n%n%s",
+                link
+        );
+    }
+
+    private static String changePasswordEmailBody(String link) {
+        return String.format(
+                "Click on the link below to change your password.%n%n%s",
                 link
         );
     }
