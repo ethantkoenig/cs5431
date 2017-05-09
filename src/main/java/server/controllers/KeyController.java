@@ -83,7 +83,7 @@ public class KeyController extends AbstractController {
         if (!user.checkPassword(password)) {
             // user mistyped password
             RouteUtils.errorMessage(request, "Incorrect password");
-            response.redirect("/user/" + user.getUsername());
+            response.redirect("/user");
             return "redirected";
         }
 
@@ -104,7 +104,7 @@ public class KeyController extends AbstractController {
         else {
             RouteUtils.errorMessage(request, "Invalid public key");
         }
-        response.redirect("/user/" + user.getUsername());
+        response.redirect("/user");
         return "redirected";
 
     }

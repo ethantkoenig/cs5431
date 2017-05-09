@@ -81,8 +81,9 @@ public class AccountRecoveryController extends AbstractController {
         ifPresent(createGUID(email), guid -> {
             String link = baseURL(request) + "/reset?guid=" + guid;
             mailService.sendEmail(email, RECOVERY_SUBJECT, resetEmailBody(link));
-            RouteUtils.successMessage(request, "Check your inbox.");
         });
+        // Send success message regardless to prevent email guessing
+        RouteUtils.successMessage(request, "Check your inbox.");
         response.redirect("/reset");
         return "redirected";
     }
@@ -122,7 +123,7 @@ public class AccountRecoveryController extends AbstractController {
         }
         userAccess.resetFailedLogins(user.getId());
         request.session().attribute("username", user.getUsername());
-        response.redirect("/user/" + user.getUsername());
+        response.redirect("/user");
         RouteUtils.successMessage(request, "Account unlocked");
         return "redirected";
     }

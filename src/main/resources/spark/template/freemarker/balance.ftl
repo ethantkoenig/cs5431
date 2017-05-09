@@ -6,16 +6,26 @@
 
     <div class="row">
         <div class="col-lg-12 text-center">
-            <h1>Balance for ${loggedInUsername}</h1>
+            <h1>Balance for ${loggedInUsername}<span class="label label-default pull-right">Total: ${total}</span></h1>
         </div>
+        <h1></h1>
     </div>
 
-    <div class="row">
-        <!-- TODO eventually put in a table and make it look nice -->
+    <div class="row padding-top">
+
         <#list balances?keys as key>
-        ${key}: ${balances[key]} <a class="delete-key" data-publickey="${key}">remove key</a> <br>
+        <table class="table">
+            <tr>
+                <th>Key</th>
+                <th>Balance</th>
+                <th></th>
+            </tr>
+            <tr>
+                <td>${key}</td>
+                <td>${balances[key]}</td>
+                <td><a class="delete-key button" data-publickey="${key}">remove key</a></td>
+            </tr>
         </#list>
-        Total: ${total}
     </div>
 </div>
 <!-- /.container -->

@@ -56,7 +56,7 @@ public class UserControllerTest extends ControllerTest {
         MockResponse mockResponse = new MockResponse();
         controller.register(request, mockResponse.get());
         Assert.assertTrue(mockResponse.redirected());
-        Assert.assertEquals("/user/newUsername", mockResponse.redirectedTo());
+        Assert.assertEquals("/user", mockResponse.redirectedTo());
         Assert.assertEquals(request.session().attribute("username"), "newUsername");
         TestUtils.assertPresent(userAccess.getUserByUsername("newUsername"));
         TestUtils.assertPresent(userAccess.getUserByEmail("newuser@example.com"));
@@ -120,7 +120,7 @@ public class UserControllerTest extends ControllerTest {
 
         MockResponse mockResponse = new MockResponse();
         controller.login(request, mockResponse.get());
-        Assert.assertEquals("/user/" + fixtures.user.getUsername(), mockResponse.redirectedTo());
+        Assert.assertEquals("/user", mockResponse.redirectedTo());
         Assert.assertEquals(fixtures.user.getUsername(), request.session().attribute("username"));
     }
 
@@ -164,20 +164,11 @@ public class UserControllerTest extends ControllerTest {
     @Test
     public void testViewUser() throws Exception {
         Request request = new MockRequest()
-                .addParam(":name", fixtures.user.getUsername())
+                .addSessionAttribute("username", fixtures.user.getUsername())
                 .get();
 
         Response response = new MockResponse().get();
         controller.viewUser(request, response);
-    }
-
-    @Test
-    public void testViewUserNotLoggedIn() throws Exception {
-        Request request = new MockRequest().get();
-        MockResponse mockResponse = new MockResponse();
-        controller.viewUser(request, mockResponse.get());
-        Assert.assertTrue(mockResponse.redirected());
-        Assert.assertEquals("/login", mockResponse.redirectedTo());
     }
 
     @Test

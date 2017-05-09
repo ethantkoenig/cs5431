@@ -77,9 +77,7 @@ public class UserController extends AbstractController {
 
         delete("/logout", wrapRoute(this::logout));
 
-        path("/user", () -> {
-            get("/:name", wrapTemplate(this::viewUser), new FreeMarkerEngine());
-        });
+        get("/user", wrapTemplate(this::viewUser), new FreeMarkerEngine());
 
         get("/balance", wrapTemplate(this::balance), new FreeMarkerEngine());
 
@@ -118,7 +116,7 @@ public class UserController extends AbstractController {
         userAccess.insertUser(username, email, salt, hash);
         request.session(true).attribute("username", username);
         RouteUtils.successMessage(request, "Registration complete. Welcome!");
-        response.redirect("/user/" + username);
+        response.redirect("/user");
         return "ok";
     }
 
@@ -147,7 +145,7 @@ public class UserController extends AbstractController {
             RouteUtils.alertMessage(request, LOCKOUT_ALERT);
             response.redirect("/unlock");
             return "redirected";
-        } else if(!validAuth) {
+        } else if (!validAuth) {
             RouteUtils.errorMessage(request, LOGIN_ERROR);
             response.redirect("/login");
             return "redirected";
@@ -155,7 +153,7 @@ public class UserController extends AbstractController {
         userAccess.resetFailedLogins(user.getId());
         request.session(true).attribute("username", username);
 
-        response.redirect("/user/" + username);
+        response.redirect("/user");
         return "redirected";
     }
 
@@ -166,29 +164,15 @@ public class UserController extends AbstractController {
     }
 
     ModelAndView viewUser(Request request, Response response) throws Exception {
-        String name = request.params(":name");
-        Optional<User> optUser = userAccess.getUserByUsername(name);
-        if (!optUser.isPresent()) {
-            // TODO 404 handling
-            return RouteUtils.redirectTo(response, "/login");
-        }
-        String loggedInUserName = null;
-        List<String> friends = null;
-        List<String> users = null;
+        User loggedInUser = routeUtils.forceLoggedInUser(request);
+        String loggedInUsername = loggedInUser.getUsername();
 
-        Optional<User> loggedInUser = routeUtils.loggedInUser(request);
-        User user = optUser.get();
-
-        if (loggedInUser.isPresent()) {
-            loggedInUserName = loggedInUser.get().getUsername();
-            friends = userAccess.getFriends(user.getUsername());
-            users = userAccess.getAllUsernames();
-            users.removeAll(friends);
-        }
+        List<String> friends = userAccess.getFriends(loggedInUsername);
+        List<String> users = userAccess.getAllUsernames();
+        users.removeAll(friends);
 
         return routeUtils.modelAndView(request, "user.ftl")
-                .add("username", user.getUsername())
-                .add("loggedInUser", loggedInUserName)
+                .add("loggedInUser", loggedInUsername)
                 .add("friends", friends)
                 .add("users", users)
                 .get();

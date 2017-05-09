@@ -11,13 +11,15 @@ $(document).ready(function () {
         if (!validPassword(password)) {
             $passwordGroup.addClass('has-error');
             $confirmGroup.addClass('has-error');
-            // TODO actually a display message to the user
+            display_alert("Password must be at least 16 characters.", "error")
+
             return false; // don't submit form
         }
         if ($confirmInput.val() != password) {
             $passwordGroup.addClass('has-error');
             $confirmGroup.addClass('has-error');
-            // TODO actually a display message to the user
+            display_alert("Passwords do not match", "error")
+
             return false; // don't submit form
         }
 
@@ -30,7 +32,7 @@ $(document).ready(function () {
         var $passwordGroup = $form.find('.password-form-group');
         var password = $passwordGroup.find('input').val();
         if (password.length == 0) {
-            // TODO actually a display message to the user
+            display_alert("Please enter your password.", "error")
             $passwordGroup.addClass('has-error');
             return false; // don't submit form
         }
@@ -82,7 +84,7 @@ $(document).ready(function () {
         $.ajax({
             url: "/keys",
             success: function (response) {
-                response.keys.forEach(function(key) {
+                response.keys.forEach(function (key) {
                     var privateKey = sjcl.decrypt(oldSecret, key.encryptedPrivateKey);
                     key.encryptedPrivateKey = sjcl.encrypt(newSecret, privateKey);
                 });
@@ -121,10 +123,18 @@ $(document).ready(function () {
         var $passwordGroup = $form.find('.password-form-group');
         var $passwordInput = $passwordGroup.find('input');
 
+        $.each($form, function () {
+            console.log($(this))
+            if ($(this).val() == "") {
+                display_alert("Please fill out all fields.", "error")
+                return false;
+            }
+        })
+
         var password = $passwordInput.val();
         if (password.length == 0) {
             $passwordGroup.addClass('has-error');
-            // TODO eventually display an actual error message
+            display_alert("Please enter a valid password.", "error")
             return false; // do not submit
         }
         if ($('#keyform-generate').is(':checked')) {
@@ -142,12 +152,12 @@ $(document).ready(function () {
         }
 
         if (!validHexString($publicKeyInput.val(), 128)) {
-            // TODO eventually display an actual error message
             $publicKeyGroup.addClass('has-error');
+            display_alert("Please enter valid hex strings for keys.", "error")
             return false; // don't submit form
         } else if (!validHexString($privateKeyInput.val(), 64)) {
-            // TODO eventually display an actual error message
             $privateKeyGroup.addClass('has-error');
+            display_alert("Please enter valid hex strings for keys.", "error")
             return false; // don't submit form
         }
 
@@ -172,6 +182,7 @@ $(document).ready(function () {
         });
     });
 
+
     $('#transactform').submit(function () {
         var action = $(this).attr("action");
         var data = $(this).serialize();
@@ -181,13 +192,12 @@ $(document).ready(function () {
         if (action == "/requests") {
             $.post(action, data, function (resp) {
                 if (resp == "Request made.") {
-                    $('#status').remove();
-                    $("#status-message").append('<div class="row" id="status" style="padding-top: 10px;"> <div class="alert alert-success"> <strong>Sucess!</strong> Request sent. </div> </div>');
+                    display_alert("Request sent", "success")
+                    window.location.replace("/");
                 }
             }).fail(function (jqXHR, textStatus, errorThrown) {
                 var error = jqXHR.responseText || "Something went wrong. Please try again.";
-                $('#status').remove();
-                $("#status-message").append('<div class="row" id="status" style="padding-top: 10px;"> <div class="alert alert-danger"> <strong>Error!</strong> ' + error + ' </div> </div>');
+                display_alert(error, "error")
             });
             return false;
         }
@@ -218,16 +228,13 @@ $(document).ready(function () {
                     signatures: signatures
                 }),
                 success: function () {
-                    // TODO better handling of successful transactions
-                    $('#status').remove();
-                    $("#status-message").append('<div class="row" id="status" style="padding-top: 10px;"> <div class="alert alert-success"> <strong>Sucess!</strong> Transaction sent.  </div> </div>');
+                    display_alert("Transaction sent", "success")
                     window.location.replace("/");
                 }
             });
         }).fail(function (jqXHR, textStatus, errorThrown) {
             var error = jqXHR.responseText || "Something went wrong. Please try again.";
-            $('#status').remove();
-            $("#status-message").append('<div class="row" id="status" style="padding-top: 10px;"> <div class="alert alert-danger"> <strong>Error!</strong> ' + error + ' </div> </div>');
+            display_alert(error, "error")
         });
         return false; // don't submit form, since we already have
     });
@@ -278,6 +285,24 @@ function authSecret(password) {
 function encryptSecret(password) {
     var shaBitArray = sjcl.hash.sha256.hash(password + "encryptSalt");
     return sjcl.codec.hex.fromBits(shaBitArray);
+}
+
+function display_alert(message, type) {
+    $('#status').remove();
+    switch (type) {
+        case "warning":
+            $("#status-message").append('<div class="row" id="status" style="padding-top: 10px;"> <div class="alert alert-warning"> <strong>Warning!</strong> ' + message + ' </div> </div>');
+            break;
+        case "success":
+            $("#status-message").append('<div class="row" id="status" style="padding-top: 10px;"> <div class="alert alert-success"> <strong>Success!</strong> ' + message + ' </div> </div>');
+            break;
+        case "error":
+            $("#status-message").append('<div class="row" id="status" style="padding-top: 10px;"> <div class="alert alert-danger"> <strong>Error!</strong> ' + message + ' </div> </div>');
+            break;
+        default:
+            break;
+    }
+
 }
 
 
