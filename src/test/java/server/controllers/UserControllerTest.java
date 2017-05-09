@@ -56,7 +56,7 @@ public class UserControllerTest extends ControllerTest {
         MockResponse mockResponse = new MockResponse();
         controller.register(request, mockResponse.get());
         Assert.assertTrue(mockResponse.redirected());
-        Assert.assertEquals("/user/newUsername", mockResponse.redirectedTo());
+        Assert.assertEquals("/user", mockResponse.redirectedTo());
         Assert.assertEquals(request.session().attribute("username"), "newUsername");
         TestUtils.assertPresent(userAccess.getUserByUsername("newUsername"));
         TestUtils.assertPresent(userAccess.getUserByEmail("newuser@example.com"));

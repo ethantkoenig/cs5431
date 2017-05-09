@@ -116,7 +116,7 @@ public class UserController extends AbstractController {
         userAccess.insertUser(username, email, salt, hash);
         request.session(true).attribute("username", username);
         RouteUtils.successMessage(request, "Registration complete. Welcome!");
-        response.redirect("/user/" + username);
+        response.redirect("/user");
         return "ok";
     }
 
