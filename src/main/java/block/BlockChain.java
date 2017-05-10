@@ -208,21 +208,12 @@ public class BlockChain {
      * @param block The {@code Block} to verify. It may or may not be in {@code this BlockChain}
      * @return The {@code UnspentTransactions} of {@code block}, or {@code Optional.empty()} if verification failed
      */
-    public Optional<UnspentTransactions> verifyBlock(Block block) throws IOException {
+    public Optional<UnspentTransactions> verifyNonGenesisBlock(Block block) throws IOException {
         Optional<Block> optParent = getBlockWithHash(block.previousBlockHash);
-
         if (optParent.isPresent()) {
             Block parent = optParent.get();
-            return block.verify(getUnspentTransactionsAt(parent));
-        } else if (block.isGenesisBlock()) {
-            // TODO the below check always passes
-            if (block.verifyGenesis(block.reward.ownerPubKey)) {
-                UnspentTransactions unspentTxs = UnspentTransactions.empty();
-                unspentTxs.put(block.getShaTwoFiftySix(), 0, block.reward);
-                return Optional.of(unspentTxs);
-            }
+            return block.verifyNonGenesis(getUnspentTransactionsAt(parent));
         }
-
         return Optional.empty();
     }
 

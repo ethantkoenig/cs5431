@@ -140,7 +140,7 @@ public final class MinerSimulation {
         Block block = assertSingleBlockMessage(getAny());
         Block parent = TestUtils.assertPresent(blockChain.getBlockWithHash(block.previousBlockHash));
         UnspentTransactions unspent = blockChain.getUnspentTransactionsAt(parent);
-        Assert.assertTrue(block.verify(unspent).isPresent());
+        Assert.assertTrue(block.verifyNonGenesis(unspent).isPresent());
         Assert.assertEquals(1, miners.stream().map(m -> m.keyPair.publicKey)
                 .filter(block.reward.ownerPubKey::equals)
                 .count()

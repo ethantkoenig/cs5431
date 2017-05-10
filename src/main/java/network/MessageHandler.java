@@ -166,7 +166,7 @@ public class MessageHandler {
             }
             return;
         }
-        Optional<UnspentTransactions> verifiedUnspentTransactions = bundle.getBlockChain().verifyBlock(block);
+        Optional<UnspentTransactions> verifiedUnspentTransactions = bundle.getBlockChain().verifyNonGenesisBlock(block);
         if (!verifiedUnspentTransactions.isPresent()) {
             LOGGER.warning("Received invalid block");
             return;

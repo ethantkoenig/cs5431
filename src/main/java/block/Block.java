@@ -227,11 +227,13 @@ public class Block extends HashCache implements Iterable<Transaction>, CanBeSeri
      * @return The new {@code Map} with spent transactions removed, if verification passes. Otherwise {@code Optional.empty()}.
      * @throws IOException
      */
-    public Optional<UnspentTransactions> verify(UnspentTransactions unspentTransactions)
+    public Optional<UnspentTransactions> verifyNonGenesis(UnspentTransactions unspentTransactions)
             throws IOException {
         if (!this.checkHash()) {
             return Optional.empty();
         } else if (this.reward.value != REWARD_AMOUNT) {
+            return Optional.empty();
+        } else if (this.transactions.length != NUM_TRANSACTIONS_PER_BLOCK) {
             return Optional.empty();
         }
 
