@@ -322,11 +322,13 @@ public final class Statements {
         );
     }
 
-
     public static PreparedStatement getTransactionRequests(Connection connection, String fromuser) throws SQLException {
         return prepareStatement(connection.prepareStatement(
-                "SELECT * FROM transactions WHERE fromuser = ?"),
-                statement -> statement.setString(1, fromuser)
+                "SELECT * FROM transactions WHERE fromuser = ? AND isrequest = ?"),
+                statement -> {
+                    statement.setString(1, fromuser);
+                    statement.setBoolean(2, true);
+                }
         );
     }
 
