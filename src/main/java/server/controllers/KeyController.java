@@ -10,20 +10,20 @@ import server.models.Key;
 import server.models.User;
 import server.utils.MailService;
 import server.utils.RouteUtils;
+import spark.ModelAndView;
 import spark.Request;
 import spark.Response;
-import utils.ByteUtil;
-import utils.Config;
+import spark.template.freemarker.FreeMarkerEngine;
 import utils.DeserializationException;
 
 import java.io.IOException;
-import java.security.SecureRandom;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static server.utils.RouteUtils.wrapRoute;
+import static server.utils.RouteUtils.*;
 import static spark.Spark.*;
+import static utils.ByteUtil.bytesToHexString;
 
 public class KeyController extends AbstractController {
     private static final String SUBJECT = "Yaccoin New Key";
@@ -49,7 +49,8 @@ public class KeyController extends AbstractController {
             get("", wrapRoute(this::getKeys));
             post("", wrapRoute(this::addUserKey));
             delete("", wrapRoute(this::deleteKey));
-            get("/addkey", wrapRoute(this::finalizeInsertKey));
+            get("/add", wrapTemplate(this::getAddKey), new FreeMarkerEngine());
+            post("/add", wrapRoute(this::finalizeKeyInsert));
         });
     }
 
@@ -57,21 +58,43 @@ public class KeyController extends AbstractController {
         User user = routeUtils.forceLoggedInUser(request);
         List<KeyBody> keys = keyAccess.getKeysByUserID(user.getId()).stream()
                 .map(key -> {
-                    String publicKey = ByteUtil.bytesToHexString(key.getPublicKey());
+                    String publicKey = bytesToHexString(key.getPublicKey());
                     return new KeyBody(publicKey, key.encryptedPrivateKey);
                 }).collect(Collectors.toList());
         return routeUtils.toJson(response, new KeysBody(keys));
     }
 
-    // TODO: Get request modifies state. Should fix this somehow.
-    String finalizeInsertKey(Request request, Response response) throws Exception {
+    ModelAndView getAddKey(Request request, Response response) throws Exception {
+        if (!RouteUtils.queryParamExists(request, "guid")) {
+            return redirectTo(response, "/");
+        }
         String guid = RouteUtils.queryParam(request, "guid");
+        Optional<Key> optKey = keyAccess.lookupPendingKey(guid);
+        if (!optKey.isPresent()) {
+            RouteUtils.errorMessage(request, "This link has expired. Please retry.");
+            return redirectTo(response, "/user");
+        }
+        String publicKey = bytesToHexString(optKey.get().getPublicKey());
+        return routeUtils.modelAndView(request, "finalizeKey.ftl")
+                .add("guid", guid)
+                .add("publickey", publicKey)
+                .get();
+    }
 
-        Optional<Key> key = keyAccess.lookupPendingKey(guid);
-        if (!key.isPresent()) return "Did not find GUID";
+    String finalizeKeyInsert(Request request, Response response) throws Exception {
+        String guid = RouteUtils.queryParam(request, "guid");
+        Optional<Key> optKey = keyAccess.lookupPendingKey(guid);
+        if (!optKey.isPresent()) {
+            RouteUtils.errorMessage(request, "This link has expired. Please retry.");
+            response.redirect("/user");
+            return "redirected";
+        }
+        Key key = optKey.get();
         keyAccess.removePendingKey(guid);
-        keyAccess.insertKey(key.get().getUserId(), key.get().getPublicKey(), key.get().encryptedPrivateKey);
-        return "ok";
+        keyAccess.insertKey(key.getUserId(), key.getPublicKey(), key.encryptedPrivateKey);
+        RouteUtils.successMessage(request, "Key successfully uploaded.");
+        response.redirect("/user");
+        return "redirected";
     }
 
     String addUserKey(Request request, Response response) throws Exception {
@@ -79,7 +102,7 @@ public class KeyController extends AbstractController {
         String privateKey = RouteUtils.queryParam(request, "privatekey");
         String password = RouteUtils.queryParam(request, "password");
         String guid = crypto.nextGUID();
-        String link = request.url() + "/addkey" + "?guid=" + guid;
+        String link = baseURL(request) + "/keys/add?guid=" + guid;
 
         User user = routeUtils.forceLoggedInUser(request);
 
@@ -102,9 +125,7 @@ public class KeyController extends AbstractController {
             mailService.sendEmail(email, SUBJECT, emailBody(link));
             RouteUtils.successMessage(request, "Check your inbox.");
             keyAccess.insertPendingKey(user.getId(), publicKey, privateKey, guid);
-        }
-
-        else {
+        } else {
             RouteUtils.errorMessage(request, "Invalid public key");
         }
         response.redirect("/user");

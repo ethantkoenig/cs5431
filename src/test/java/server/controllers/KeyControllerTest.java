@@ -9,10 +9,12 @@ import org.junit.Test;
 import server.access.KeyAccess;
 import server.bodies.KeysBody;
 import server.utils.ConnectionProvider;
+import spark.ModelAndView;
 import spark.Request;
 import spark.Response;
 import testutils.*;
 
+import static testutils.TestUtils.assertPresent;
 import static utils.ByteUtil.asByteArray;
 import static utils.ByteUtil.bytesToHexString;
 
@@ -78,7 +80,7 @@ public class KeyControllerTest extends ControllerTest {
     }
 
     @Test
-    public void testFinalizeInsertKey() throws Exception {
+    public void testGetAddKey() throws Exception {
         final String guid = randomShaTwoFiftySix().toString();
 
         ECDSAKeyPair pair = crypto.signatureKeyPair();
@@ -91,9 +93,28 @@ public class KeyControllerTest extends ControllerTest {
                 .addQueryParam("guid", guid)
                 .get();
 
-        Response response = new MockResponse().get();
-        controller.finalizeInsertKey(request, response);
+        MockResponse mockResponse = new MockResponse();
+        ModelAndView modelAndView = controller.getAddKey(request, mockResponse.get());
+        Assert.assertEquals("finalizeKey.ftl", modelAndView.getViewName());
+    }
 
+    @Test
+    public void testFinalizeKeyInsert() throws Exception {
+        final String guid = randomShaTwoFiftySix().toString();
+
+        ECDSAKeyPair pair = crypto.signatureKeyPair();
+        byte[] publicBytes = asByteArray(pair.publicKey::serialize);
+        String privateKey = bytesToHexString(asByteArray(pair.privateKey::serialize));
+
+        keyAccess.insertPendingKey(fixtures.user.getId(), publicBytes, privateKey, guid);
+
+        Request request = new MockRequest()
+                .addQueryParam("guid", guid)
+                .get();
+
+        MockResponse mockResponse = new MockResponse();
+        controller.finalizeKeyInsert(request, mockResponse.get());
         Assert.assertFalse(keyAccess.lookupPendingKey(guid).isPresent());
+        assertPresent(keyAccess.getKey(fixtures.user.getId(), publicBytes));
     }
 }
