@@ -1,6 +1,7 @@
 package server.controllers;
 
 import com.google.inject.Inject;
+import crypto.Crypto;
 import crypto.ECDSAPublicKey;
 import server.access.KeyAccess;
 import server.bodies.KeyBody;
@@ -26,19 +27,21 @@ import static spark.Spark.*;
 
 public class KeyController extends AbstractController {
     private static final String SUBJECT = "Yaccoin New Key";
-    private static SecureRandom random = Config.secureRandom(); // TODO use Guice
 
     private final KeyAccess keyAccess;
     private final RouteUtils routeUtils;
     private final MailService mailService;
+    private final Crypto crypto;
 
     @Inject
     public KeyController(KeyAccess keyAccess,
                          RouteUtils routeUtils,
-                         MailService mailService) {
+                         MailService mailService,
+                         Crypto crypto) {
         this.keyAccess = keyAccess;
         this.routeUtils = routeUtils;
         this.mailService = mailService;
+        this.crypto = crypto;
     }
 
     public void init() {
@@ -75,7 +78,7 @@ public class KeyController extends AbstractController {
         byte[] publicKey = RouteUtils.queryParamHex(request, "publickey");
         String privateKey = RouteUtils.queryParam(request, "privatekey");
         String password = RouteUtils.queryParam(request, "password");
-        String guid = nextGUID(random);
+        String guid = crypto.nextGUID();
         String link = request.url() + "/addkey" + "?guid=" + guid;
 
         User user = routeUtils.forceLoggedInUser(request);

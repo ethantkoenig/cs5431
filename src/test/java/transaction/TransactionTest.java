@@ -28,15 +28,10 @@ public class TransactionTest extends RandomizedTest {
         }
     }
 
-    @BeforeClass
-    public static void setupClass() {
-        Crypto.init();
-    }
-
     @Test
     public void testEqualsHashCode() throws Exception {
-        ECDSAKeyPair senderPair = Crypto.signatureKeyPair();
-        ECDSAKeyPair recipientPair = Crypto.signatureKeyPair();
+        ECDSAKeyPair senderPair = crypto.signatureKeyPair();
+        ECDSAKeyPair recipientPair = crypto.signatureKeyPair();
 
         ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(randomBytes(256));
         long value = random.nextInt(Integer.MAX_VALUE);
@@ -60,9 +55,9 @@ public class TransactionTest extends RandomizedTest {
 
     @Test
     public void testRollback() throws Exception {
-        ECDSAKeyPair initialPair = Crypto.signatureKeyPair();
-        ECDSAKeyPair middlePair = Crypto.signatureKeyPair();
-        ECDSAKeyPair finalPair = Crypto.signatureKeyPair();
+        ECDSAKeyPair initialPair = crypto.signatureKeyPair();
+        ECDSAKeyPair middlePair = crypto.signatureKeyPair();
+        ECDSAKeyPair finalPair = crypto.signatureKeyPair();
 
         TxOut middleOut0 = new TxOut(100, middlePair.publicKey);
         TxOut middleOut1 = new TxOut(200, middlePair.publicKey);
@@ -98,8 +93,8 @@ public class TransactionTest extends RandomizedTest {
 
     @Test
     public void doTransaction() throws Exception {
-        ECDSAKeyPair senderPair = Crypto.signatureKeyPair();
-        ECDSAKeyPair recipientPair = Crypto.signatureKeyPair();
+        ECDSAKeyPair senderPair = crypto.signatureKeyPair();
+        ECDSAKeyPair recipientPair = crypto.signatureKeyPair();
 
         ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(randomBytes(256));
         Transaction tx = new Transaction.Builder()
@@ -120,8 +115,8 @@ public class TransactionTest extends RandomizedTest {
     //  Sign transaction with key that does not match, should fail.
     @Test
     public void failTransaction() throws Exception {
-        ECDSAKeyPair senderPair = Crypto.signatureKeyPair();
-        ECDSAKeyPair recipientPair = Crypto.signatureKeyPair();
+        ECDSAKeyPair senderPair = crypto.signatureKeyPair();
+        ECDSAKeyPair recipientPair = crypto.signatureKeyPair();
 
         ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(randomBytes(256));
         Transaction txn = new Transaction.Builder()
@@ -143,11 +138,11 @@ public class TransactionTest extends RandomizedTest {
 
     @Test
     public void doThreeOutTransaction() throws Exception {
-        ECDSAKeyPair senderPair = Crypto.signatureKeyPair();
+        ECDSAKeyPair senderPair = crypto.signatureKeyPair();
 
-        ECDSAKeyPair recipientPair1 = Crypto.signatureKeyPair();
-        ECDSAKeyPair recipientPair2 = Crypto.signatureKeyPair();
-        ECDSAKeyPair recipientPair3 = Crypto.signatureKeyPair();
+        ECDSAKeyPair recipientPair1 = crypto.signatureKeyPair();
+        ECDSAKeyPair recipientPair2 = crypto.signatureKeyPair();
+        ECDSAKeyPair recipientPair3 = crypto.signatureKeyPair();
 
         ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(randomBytes(256));
         Transaction txn = new Transaction.Builder()
@@ -167,13 +162,13 @@ public class TransactionTest extends RandomizedTest {
 
     @Test
     public void doMultiInOutTransaction() throws Exception {
-        ECDSAKeyPair senderPair1 = Crypto.signatureKeyPair();
-        ECDSAKeyPair senderPair2 = Crypto.signatureKeyPair();
-        ECDSAKeyPair senderPair3 = Crypto.signatureKeyPair();
+        ECDSAKeyPair senderPair1 = crypto.signatureKeyPair();
+        ECDSAKeyPair senderPair2 = crypto.signatureKeyPair();
+        ECDSAKeyPair senderPair3 = crypto.signatureKeyPair();
 
-        ECDSAKeyPair recipientPair1 = Crypto.signatureKeyPair();
-        ECDSAKeyPair recipientPair2 = Crypto.signatureKeyPair();
-        ECDSAKeyPair recipientPair3 = Crypto.signatureKeyPair();
+        ECDSAKeyPair recipientPair1 = crypto.signatureKeyPair();
+        ECDSAKeyPair recipientPair2 = crypto.signatureKeyPair();
+        ECDSAKeyPair recipientPair3 = crypto.signatureKeyPair();
 
         ShaTwoFiftySix hash = ShaTwoFiftySix.hashOf(randomBytes(256));
         Transaction txn = new Transaction.Builder()
@@ -214,7 +209,7 @@ public class TransactionTest extends RandomizedTest {
 
     @Test
     public void testVerificationFailure() throws Exception {
-        ECDSAKeyPair badSpender = Crypto.signatureKeyPair();
+        ECDSAKeyPair badSpender = crypto.signatureKeyPair();
         TxOut unspent = new TxOut(50, badSpender.publicKey);
         ShaTwoFiftySix hash = randomShaTwoFiftySix();
 
@@ -222,7 +217,7 @@ public class TransactionTest extends RandomizedTest {
         unspentTxs.put(hash, 0, unspent);
 
         Transaction tx = new Transaction.Builder()
-                .addInput(new TxIn(hash, 0), Crypto.signatureKeyPair().privateKey)
+                .addInput(new TxIn(hash, 0), crypto.signatureKeyPair().privateKey)
                 .addOutput(new TxOut(50, badSpender.publicKey))
                 .build();
 

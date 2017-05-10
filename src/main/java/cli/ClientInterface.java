@@ -1,5 +1,6 @@
 package cli;
 
+import com.google.inject.Inject;
 import utils.DeserializationException;
 import utils.IOUtils;
 
@@ -42,8 +43,9 @@ public class ClientInterface {
     }
 
     // Reader which reads the input stream reader, buffers for efficiency
-    private BufferedReader buffer;
-    protected PrintStream outputStream;
+    private final GenerateKey generateKey;
+    private final BufferedReader buffer;
+    private final PrintStream outputStream;
     private List<InetSocketAddress> socketAddresses = null;
     private boolean quit = false;
 
@@ -54,8 +56,9 @@ public class ClientInterface {
      * Create a new client interface which by default reads from System.in as
      * UTF8 encoding and outputs to System.out.
      */
-    public ClientInterface() {
-        this(new InputStreamReader(System.in, StandardCharsets.UTF_8), System.out);
+    @Inject
+    public ClientInterface(GenerateKey generateKey) {
+        this(generateKey, new InputStreamReader(System.in, StandardCharsets.UTF_8), System.out);
     }
 
     /**
@@ -64,7 +67,8 @@ public class ClientInterface {
      * @param in  InputStream to recieve data from user
      * @param out PrintStream to send data to the user
      */
-    public ClientInterface(Reader in, PrintStream out) {
+    public ClientInterface(GenerateKey generateKey, Reader in, PrintStream out) {
+        this.generateKey = generateKey;
         buffer = new BufferedReader(in);
         outputStream = out;
         populateCmdMap();
@@ -151,7 +155,7 @@ public class ClientInterface {
                     return false;
                 }
                 try {
-                    GenerateKey.generateKey(privateFid, publicFid);
+                    generateKey.generateKey(privateFid, publicFid);
                 } catch (GeneralSecurityException | IOException e) {
                     e.printStackTrace();
                     return false;

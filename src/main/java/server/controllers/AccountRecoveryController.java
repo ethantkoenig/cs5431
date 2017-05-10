@@ -6,9 +6,9 @@ import crypto.Crypto;
 import server.access.AccountRecoveryAccess;
 import server.access.KeyAccess;
 import server.access.UserAccess;
-import server.models.User;
 import server.bodies.KeyBody;
 import server.bodies.KeysBody;
+import server.models.User;
 import server.utils.MailService;
 import server.utils.RouteUtils;
 import server.utils.ValidateUtils;
@@ -17,10 +17,8 @@ import spark.Request;
 import spark.Response;
 import spark.template.freemarker.FreeMarkerEngine;
 import utils.ByteUtil;
-import utils.Config;
 
 import java.security.InvalidParameterException;
-import java.security.SecureRandom;
 import java.util.Optional;
 import java.util.OptionalInt;
 
@@ -33,25 +31,27 @@ public class AccountRecoveryController extends AbstractController {
     private static final String RECOVERY_SUBJECT = "Yaccoin Password Recovery";
     private static final String UNLOCK_SUBJECT = "Yaccoin Account Unlock";
     private static final String CHANGE_PASSWORD_SUBJECT = "Yaccoin Password Change";
-    private static SecureRandom random = Config.secureRandom(); // TODO use Guice
 
     private final UserAccess userAccess;
     private final KeyAccess keyAccess;
     private final AccountRecoveryAccess accountRecoveryAccess;
     private final RouteUtils routeUtils;
     private final MailService mailService;
+    private final Crypto crypto;
 
     @Inject
     private AccountRecoveryController(UserAccess userAccess,
                                       KeyAccess keyAccess,
                                       AccountRecoveryAccess accountRecoveryAccess,
                                       RouteUtils routeUtils,
-                                      MailService mailService) {
+                                      MailService mailService,
+                                      Crypto crypto) {
         this.userAccess = userAccess;
         this.keyAccess = keyAccess;
         this.accountRecoveryAccess = accountRecoveryAccess;
         this.routeUtils = routeUtils;
         this.mailService = mailService;
+        this.crypto = crypto;
     }
 
     public void init() {
@@ -157,7 +157,7 @@ public class AccountRecoveryController extends AbstractController {
 
     String changePasswordMail(Request request, Response response) throws Exception {
         User user = routeUtils.forceLoggedInUser(request);
-        String guid = nextGUID(random);
+        String guid = crypto.nextGUID();
         accountRecoveryAccess.insertRecovery(user.getId(), guid);
         String link = baseURL(request) + "/change_password?guid=" + guid;
         mailService.sendEmail(user.getEmail(), CHANGE_PASSWORD_SUBJECT, changePasswordEmailBody(link));
@@ -202,13 +202,13 @@ public class AccountRecoveryController extends AbstractController {
     }
 
     private void updatePassword(int userID, String newPassword) throws Exception {
-        byte[] salt = Crypto.generateSalt();
+        byte[] salt = crypto.generateSalt();
         byte[] hashedPassword = Crypto.hashAndSalt(newPassword, salt);
         userAccess.updateUserPass(userID, salt, hashedPassword);
     }
 
     private Optional<String> createGUID(String emailAddress) throws Exception {
-        String guid = nextGUID(random);
+        String guid = crypto.nextGUID();
         Optional<User> optUser = userAccess.getUserByEmail(emailAddress);
         if (!optUser.isPresent()) {
             return Optional.empty();

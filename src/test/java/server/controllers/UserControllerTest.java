@@ -37,7 +37,7 @@ public class UserControllerTest extends ControllerTest {
 
     public UserControllerTest() throws Exception {
         super();
-        Injector injector = Guice.createInjector(new Model());
+        Injector injector = Guice.createInjector(new TestModule());
         controller = injector.getInstance(UserController.class);
         controller.init();
         userAccess = injector.getInstance(UserAccess.class);

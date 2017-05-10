@@ -1,5 +1,7 @@
 package crypto;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import org.bouncycastle.crypto.params.ECDomainParameters;
 import org.bouncycastle.crypto.params.ECPrivateKeyParameters;
 import org.bouncycastle.crypto.params.ECPublicKeyParameters;
@@ -25,6 +27,7 @@ import java.security.spec.KeySpec;
 /**
  * Various crypto-related functions
  */
+@Singleton
 public final class Crypto {
     static final ECNamedCurveParameterSpec SPEC =
             ECNamedCurveTable.getParameterSpec("P-256");
@@ -34,23 +37,19 @@ public final class Crypto {
             SPEC.getN()
     );
     public static final int ECDSA_ORDER_IN_BYTES = 32;
+    public static final int SALT_LEN_IN_BYTES = 16;
 
-    private static boolean initialized = false;
+    private SecureRandom secureRandom;
 
-    // Disallow instances of this class
-    private Crypto() {
+    @Inject
+    public Crypto(SecureRandom secureRandom) {
+        Security.addProvider(new BouncyCastleProvider());
+        this.secureRandom = secureRandom;
     }
 
-    public static void init() {
-        if (!initialized) {
-            Security.addProvider(new BouncyCastleProvider());
-            initialized = true;
-        }
-    }
-
-    public static ECDSAKeyPair signatureKeyPair() throws GeneralSecurityException {
+    public ECDSAKeyPair signatureKeyPair() throws GeneralSecurityException {
         KeyPairGenerator keyGen = KeyPairGenerator.getInstance("ECDSA", "BC");
-        keyGen.initialize(SPEC, Config.secureRandom());
+        keyGen.initialize(SPEC, secureRandom);
         KeyPair pair = keyGen.generateKeyPair();
 
         ECPrivateKey ecPrivateKey = (ECPrivateKey) pair.getPrivate();
@@ -60,6 +59,17 @@ public final class Crypto {
         ECDSAPublicKey publicKey = new ECDSAPublicKey(ecPublicKey.getQ());
         return new ECDSAKeyPair(privateKey, publicKey);
     }
+
+    public byte[] generateSalt() {
+        byte[] salt = new byte[SALT_LEN_IN_BYTES];
+        secureRandom.nextBytes(salt);
+        return salt;
+    }
+
+    public String nextGUID() {
+        return new BigInteger(130, secureRandom).toString(32);
+    }
+
 
     public static ECDSASignature sign(byte[] toSign, ECDSAPrivateKey key) {
         ECDSASigner signer = new ECDSASigner();
@@ -107,12 +117,6 @@ public final class Crypto {
         KeySpec spec = new PBEKeySpec(content.toCharArray(), salt, Config.pbkdf2Cost(), 2048);
         SecretKeyFactory f = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
         return f.generateSecret(spec).getEncoded();
-    }
-
-    public static byte[] generateSalt() {
-        byte[] salt = new byte[16];
-        Config.secureRandom().nextBytes(salt);
-        return salt;
     }
 
     public static byte[] hashAndSalt(String password, byte[] salt)

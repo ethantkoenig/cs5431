@@ -116,8 +116,8 @@ public class ClientInterfaceTest extends RandomizedTest {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         try {
             PrintStream out = new PrintStream(outputStream, true, StandardCharsets.UTF_8.displayName());
-
-            ClientInterface cli = new ClientInterface(in, out);
+            GenerateKey generateKey = new GenerateKey(crypto);
+            ClientInterface cli = new ClientInterface(generateKey, in, out);
             cli.startInterface();
             return new String(outputStream.toByteArray(), StandardCharsets.UTF_8);
         } catch (UnsupportedEncodingException e) {

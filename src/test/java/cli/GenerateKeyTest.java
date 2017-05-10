@@ -16,7 +16,8 @@ public class GenerateKeyTest extends RandomizedTest {
     public void testGenerateKey() throws Exception {
         File privateFile = File.createTempFile("private", ".tmp");
         File publicFile = File.createTempFile("public", ".tmp");
-        GenerateKey.generateKey(privateFile.getAbsolutePath(), publicFile.getAbsolutePath());
+        GenerateKey generateKey = new GenerateKey(crypto);
+        generateKey.generateKey(privateFile.getAbsolutePath(), publicFile.getAbsolutePath());
 
         ECDSAPrivateKey privateKey = Crypto.loadPrivateKey(privateFile.getAbsolutePath());
         ECDSAPublicKey publicKey = Crypto.loadPublicKey(publicFile.getAbsolutePath());

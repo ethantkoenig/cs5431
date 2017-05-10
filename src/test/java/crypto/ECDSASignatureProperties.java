@@ -10,11 +10,6 @@ import utils.ByteUtil;
 @RunWith(JUnitQuickcheck.class)
 public class ECDSASignatureProperties {
 
-    @BeforeClass
-    public static void initCrypto() {
-        Crypto.init();
-    }
-
     @Property(trials = 3)
     public void serializeDeserialize(ECDSASignature signature) throws Exception {
         byte[] serialized = ByteUtil.asByteArray(signature::serialize);

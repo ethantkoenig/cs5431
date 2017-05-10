@@ -3,6 +3,7 @@ package block;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import crypto.Crypto;
+import crypto.ECDSAKeyPair;
 import crypto.ECDSAPrivateKey;
 import crypto.ECDSAPublicKey;
 import generators.model.SigningKeyPairGenerator;
@@ -21,18 +22,13 @@ import java.util.Map;
 @RunWith(JUnitQuickcheck.class)
 public class BlockChainProperties {
 
-    @BeforeClass
-    public static void initCrypto() {
-        Crypto.init();
-    }
-
     @Before
     public void setConfig() {
         Config.setHashGoal(0);
     }
 
-    @Property(trials = 2)
-    public void deserializeSerializeInverse(BlockChain blockchain) throws Exception {
+    @Property(trials = 1)
+    public void deserializeSerializeInverse(BlockChain blockchain, ECDSAKeyPair keyPair) throws Exception {
         // Store blockchain, reload
         BlockChain bc = new BlockChain(blockchain.blockStorePath);
 
@@ -67,7 +63,7 @@ public class BlockChainProperties {
             }
         }
 
-        newblock.addReward(Crypto.signatureKeyPair().publicKey);
+        newblock.addReward(keyPair.publicKey);
 
         // Verify the block against the old UTXO set and the new one, then insert
         newblock.verify(newutxos);

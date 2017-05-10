@@ -10,11 +10,6 @@ import utils.ByteUtil;
 @RunWith(JUnitQuickcheck.class)
 public class ECDSAPrivateKeyProperties {
 
-    @BeforeClass
-    public static void setupClass() {
-        Crypto.init();
-    }
-
     @Property(trials = 3)
     public void serializeDeserialize(ECDSAKeyPair pair) throws Exception {
         ECDSAPrivateKey key = pair.privateKey;

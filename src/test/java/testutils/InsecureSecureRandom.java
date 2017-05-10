@@ -12,6 +12,10 @@ public class InsecureSecureRandom extends SecureRandom {
     private static final long serialVersionUID = 42L;
     private final Random random;
 
+    public InsecureSecureRandom() {
+        this(new Random());
+    }
+
     public InsecureSecureRandom(Random random) {
         super(new InsecureSecureRandomSpi(random), null);
         this.random = random;

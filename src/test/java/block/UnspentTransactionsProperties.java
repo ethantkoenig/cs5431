@@ -20,12 +20,7 @@ import java.util.Map;
 @RunWith(JUnitQuickcheck.class)
 public class UnspentTransactionsProperties {
 
-    @BeforeClass
-    public static void initCrypto() {
-        Crypto.init();
-    }
-
-    @Property
+    @Property(trials = 5)
     public void builtTransactionHasCorrectAmountAndChange(
             @Size(min = 10, max = 20) UnspentTransactions utx, @InRange(min = "0", max = "1") float proportionToSpend) throws Exception {
         List<ECDSAPublicKey> keys = new ArrayList<>();

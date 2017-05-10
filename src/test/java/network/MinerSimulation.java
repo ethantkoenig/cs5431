@@ -40,12 +40,14 @@ public final class MinerSimulation {
     private final ServerSocket serverSocket;
     private final ECDSAKeyPair privilegedKeyPair;
     private final BlockChain blockChain;
+    private final Crypto crypto;
 
-    public MinerSimulation() throws Exception {
-        this(Crypto.signatureKeyPair());
+    public MinerSimulation(Crypto crypto) throws Exception {
+        this(crypto, crypto.signatureKeyPair());
     }
 
-    public MinerSimulation(ECDSAKeyPair privilegedKeyPair) throws IOException {
+    public MinerSimulation(Crypto crypto, ECDSAKeyPair privilegedKeyPair) throws IOException {
+        this.crypto = crypto;
         serverSocket = new ServerSocket(0);
         this.privilegedKeyPair = privilegedKeyPair;
         // TODO use a temporary directory
@@ -53,7 +55,7 @@ public final class MinerSimulation {
     }
 
     public TestMiner addNode() throws Exception {
-        return addNode(Crypto.signatureKeyPair());
+        return addNode(crypto.signatureKeyPair());
     }
 
     public TestMiner addPrivileged() throws Exception {

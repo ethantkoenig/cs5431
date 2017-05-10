@@ -25,7 +25,7 @@ public class MinerTest extends RandomizedTest {
     public void testCatchUp() throws Exception {
         Config.setHashGoal(1);
 
-        MinerSimulation simulation = new MinerSimulation();
+        MinerSimulation simulation = new MinerSimulation(crypto);
         MinerSimulation.TestMiner miner0 = simulation.addNode();
         MinerSimulation.TestMiner miner1 = simulation.addPrivileged();
 
@@ -79,7 +79,7 @@ public class MinerTest extends RandomizedTest {
     public void testOldBlocks() throws Exception {
         Config.setHashGoal(1);
 
-        MinerSimulation simulation = new MinerSimulation();
+        MinerSimulation simulation = new MinerSimulation(crypto);
         MinerSimulation.TestMiner miner0 = simulation.addNode();
         MinerSimulation.TestMiner miner1 = simulation.addNode();
         MinerSimulation.TestMiner miner2 = simulation.addPrivileged();
@@ -88,7 +88,7 @@ public class MinerTest extends RandomizedTest {
 
         Thread.sleep(50); // make sure other miners get the genesis block
 
-        final int numIters = 2 + random.nextInt(4);
+        final int numIters = 2 + random.nextInt(3);
         for (int iter = 0; iter < numIters; iter++) {
             simulation.addValidBlock(random);
         }
@@ -111,14 +111,13 @@ public class MinerTest extends RandomizedTest {
         simulation.sendBlock(miner0, oldBlock);
         simulation.sendBlock(miner1, oldBlock);
 
-        for (int iter = 0; iter < numIters; iter++) {
-            simulation.addValidBlock(random);
-        }
+        simulation.addValidBlock(random);
+        simulation.addValidBlock(random);
     }
 
     @Test
     public void testLateGenesis() throws Exception {
-        MinerSimulation simulation = new MinerSimulation();
+        MinerSimulation simulation = new MinerSimulation(crypto);
         MinerSimulation.TestMiner miner0 = simulation.addNode();
         MinerSimulation.TestMiner miner1 = simulation.addPrivileged();
 
@@ -144,7 +143,7 @@ public class MinerTest extends RandomizedTest {
     public void testInvalidTransactionRejection() throws Exception {
         Config.setHashGoal(1);
 
-        MinerSimulation simulation = new MinerSimulation();
+        MinerSimulation simulation = new MinerSimulation(crypto);
         MinerSimulation.TestMiner miner0 = simulation.addNode();
         MinerSimulation.TestMiner miner1 = simulation.addPrivileged();
 
