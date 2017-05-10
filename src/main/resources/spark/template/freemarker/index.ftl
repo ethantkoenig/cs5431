@@ -6,7 +6,7 @@
 
     <div class="row">
         <div class="col-lg-12 text-center">
-            <h1>CS 5431 YACCoin Project</h1>
+            <h1>EzraCoinL Wallet</h1>
         </div>
     </div>
     <!-- /.row -->

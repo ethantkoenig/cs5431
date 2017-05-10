@@ -26,7 +26,7 @@ import static spark.Spark.*;
 import static utils.ByteUtil.bytesToHexString;
 
 public class KeyController extends AbstractController {
-    private static final String SUBJECT = "Yaccoin New Key";
+    private static final String SUBJECT = "EzraCoinL New Key";
 
     private final KeyAccess keyAccess;
     private final RouteUtils routeUtils;

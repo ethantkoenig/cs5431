@@ -41,7 +41,7 @@ public class Main {
         CommandWebserver cw = new CommandWebserver();
 
         JCommander jc = new JCommander();
-        jc.setProgramName("yaccoin");
+        jc.setProgramName("EzraCoinL");
         jc.addCommand("client", cc);
         jc.addCommand("miner", cm);
         jc.addCommand("node", cn);

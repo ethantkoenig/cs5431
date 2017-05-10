@@ -23,9 +23,9 @@
                 <label>Password</label>
                 <input type="password" class="form-control" id="transaction-password">
             </div>
-            <input id="transact-button" class="btn btn-primary" type="submit" data-url="/transact" value="Send Yaccoin">
+            <input id="transact-button" class="btn btn-primary" type="submit" data-url="/transact" value="Send EzraCoinL">
             <input id="request-button" class="btn btn-primary" type="submit" data-url="/requests"
-                   value="Request Yaccoin">
+                   value="Request EzraCoinL">
         </form>
 
         <div class="row" id="status-message"></div>
