@@ -4,8 +4,7 @@
 <!-- Page Content -->
 <div class="container">
     <div class="col-sm-6 padding-top">
-
-        <form action="/transact" method="post" id="transactform">
+        <form action="/transact" method="post" class="transactform">
             <div class="form-group">
                 <label>Recipient</label>
                 <select class="form-control" name="recipient" id="recipient-selector">
@@ -23,9 +22,7 @@
                 <label>Password</label>
                 <input type="password" class="form-control" id="transaction-password">
             </div>
-            <input id="transact-button" class="btn btn-primary" type="submit" data-url="/transact" value="Send EzraCoinL">
-            <input id="request-button" class="btn btn-primary" type="submit" data-url="/requests"
-                   value="Request EzraCoinL">
+            <input id="transact-button" class="btn btn-primary" type="submit" value="Send EzraCoinL">
         </form>
 
         <div class="row" id="status-message"></div>
@@ -60,7 +57,7 @@
     </div>
 
 
-    <#if friends??>
+    <#if friends?? && friends?has_content>
         <#list friends as friend>
             <script>
                 $('#recipient-selector').append($('<option>', {value: "${friend}", text: "${friend}"}));

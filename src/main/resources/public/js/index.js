@@ -182,25 +182,24 @@ $(document).ready(function () {
         });
     });
 
+    $('.delete-request').click(function (e) {
+        e.preventDefault();
+        $.ajax({
+            type: 'DELETE',
+            url: '/requests' + '?' + $.param({
+                tranid: this.dataset.tranid
+            }),
+            success: function () {
+                window.location.replace("/requests");
+            }
+        });
+    });
 
-    $('#transactform').submit(function () {
+    $('.transactform').submit(function () {
         var action = $(this).attr("action");
         var data = $(this).serialize();
         var password = $('#transaction-password').val();
         var secret = encryptSecret(password);
-
-        if (action == "/requests") {
-            $.post(action, data, function (resp) {
-                if (resp == "Request made.") {
-                    display_alert("Request sent", "success")
-                    window.location.replace("/");
-                }
-            }).fail(function (jqXHR, textStatus, errorThrown) {
-                var error = jqXHR.responseText || "Something went wrong. Please try again.";
-                display_alert(error, "error")
-            });
-            return false;
-        }
 
         $.post(action, data, function (resp) {
             var signatures = resp.encryptedKeys.map(function (encryptedKey) {

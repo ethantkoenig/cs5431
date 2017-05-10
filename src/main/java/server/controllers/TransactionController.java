@@ -61,6 +61,7 @@ public class TransactionController extends AbstractController {
         path("/requests", () -> {
             get("", wrapTemplate(this::getRequests), new FreeMarkerEngine());
             post("", wrapRoute(this::createRequest));
+            delete("", wrapRoute(this::deleteRequest));
         });
 
         post("/sendtransaction", wrapRoute(this::sendTransaction));
@@ -134,7 +135,7 @@ public class TransactionController extends AbstractController {
                     .ifPresent(k -> encryptedPrivateKeys.add(k.encryptedPrivateKey));
         }
 
-        // if transaction already exists (meaning it was a requesut) mark as complete
+        // if transaction already exists (meaning it was a request) mark as complete
         if (queryParamExists(request, "tranid")) {
             int tranid = queryParamInt(request, "tranid");
             transactionAccess.updateTransactionRequestAsComplete(tranid, loggedInUser.getUsername());
@@ -171,7 +172,9 @@ public class TransactionController extends AbstractController {
     ModelAndView getRequests(Request request, Response response) throws Exception {
         User touser = routeUtils.forceLoggedInUser(request);
         List<Transaction> requests = transactionAccess.getRequests(touser.getUsername());
+        List<String> friends = userAccess.getFriends(touser.getUsername());
         return routeUtils.modelAndView(request, "request.ftl")
+                .add("friends", friends)
                 .add("requests", requests)
                 .get();
     }
@@ -193,6 +196,14 @@ public class TransactionController extends AbstractController {
         long amount = queryParamLong(request, "amount");
 
         transactionAccess.insertTransaction(fromuser, touser.getUsername(), amount, message, true);
-        return "Request made.";
+        response.redirect("/user");
+        return "redirected";
+    }
+
+    String deleteRequest(Request request, Response response) throws Exception {
+        User user = routeUtils.forceLoggedInUser(request);
+        int transactionId = queryParamInt(request, "tranid");
+        transactionAccess.deleteRequest(transactionId, user.getUsername());
+        return "ok";
     }
 }
