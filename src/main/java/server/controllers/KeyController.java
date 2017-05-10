@@ -71,9 +71,8 @@ public class KeyController extends AbstractController {
         String guid = RouteUtils.queryParam(request, "guid");
         Optional<Key> optKey = keyAccess.lookupPendingKey(guid);
         if (!optKey.isPresent()) {
-            // TODO redirect to user page once route is updated
             RouteUtils.errorMessage(request, "This link has expired. Please retry.");
-            return redirectTo(response, "/");
+            return redirectTo(response, "/user");
         }
         String publicKey = bytesToHexString(optKey.get().getPublicKey());
         return routeUtils.modelAndView(request, "finalizeKey.ftl")
@@ -86,17 +85,15 @@ public class KeyController extends AbstractController {
         String guid = RouteUtils.queryParam(request, "guid");
         Optional<Key> optKey = keyAccess.lookupPendingKey(guid);
         if (!optKey.isPresent()) {
-            // TODO redirect to user page once route is changed
             RouteUtils.errorMessage(request, "This link has expired. Please retry.");
-            response.redirect("/");
+            response.redirect("/user");
             return "redirected";
         }
         Key key = optKey.get();
         keyAccess.removePendingKey(guid);
         keyAccess.insertKey(key.getUserId(), key.getPublicKey(), key.encryptedPrivateKey);
-        // TODO redirect to user page once route is changed
         RouteUtils.successMessage(request, "Key successfully uploaded.");
-        response.redirect("/");
+        response.redirect("/user");
         return "redirected";
     }
 
