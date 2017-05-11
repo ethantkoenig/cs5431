@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Properties;
 
 public class GmailService implements MailService {
-    private static final String APPLICATION_NAME = "Yaccoin Email Service";
+    private static final String APPLICATION_NAME = "EzraCoinL Wallet Email Service";
     private static final File DATA_STORE_DIR = new File("gmail-data-store");
     private static final List<String> SCOPES = Collections.singletonList(GmailScopes.GMAIL_SEND);
     private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();

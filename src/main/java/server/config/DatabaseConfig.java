@@ -27,34 +27,21 @@ public final class DatabaseConfig {
 
     public void dbInit() {
         LOGGER.info("[!] Initializing database");
-        try (
-                Connection connection = connectionProvider.getConnection();
-                Statement statement = connection.createStatement()
-        ) {
-            int result = statement.executeUpdate(Statements.SHOW_DB_LIKE);
-            if (result == 0) { // database does not exist
-                LOGGER.info("[+] Creating database " + Statements.DB_NAME);
-                createDB(statement);
-                createTables(statement);
-            } else {
-                LOGGER.info("[!] Database already created: " + Statements.DB_NAME);
-            }
+        try (Connection connection = connectionProvider.getConnection()) {
+            setUp(connection);
         } catch (SQLException e) {
             LOGGER.severe(e.getMessage());
         }
     }
 
-    public static void createDB(Statement statement) throws SQLException {
-        statement.executeUpdate(Statements.CREATE_DB);
-        statement.executeUpdate(Statements.USE_DB);
-    }
-
-    public static void createTables(Statement statement) throws SQLException {
-        statement.executeUpdate(Statements.CREATE_USERS_TABLE);
-        statement.executeUpdate(Statements.CREATE_KEYS_TABLE);
-        statement.executeUpdate(Statements.CREATE_PASSWORD_RECOVERY_TABLE);
-        statement.executeUpdate(Statements.CREATE_FRIENDS_TABLE);
-        statement.executeUpdate(Statements.CREATE_TRANSACTIONS_TABLE);
-        statement.executeUpdate(Statements.CREATE_PENDING_KEYS_TABLE);
+    public static void setUp(Connection connection) throws SQLException {
+        try (Statement statement = connection.createStatement()) {
+            statement.executeUpdate(Statements.CREATE_USERS_TABLE);
+            statement.executeUpdate(Statements.CREATE_KEYS_TABLE);
+            statement.executeUpdate(Statements.CREATE_PASSWORD_RECOVERY_TABLE);
+            statement.executeUpdate(Statements.CREATE_FRIENDS_TABLE);
+            statement.executeUpdate(Statements.CREATE_TRANSACTIONS_TABLE);
+            statement.executeUpdate(Statements.CREATE_PENDING_KEYS_TABLE);
+        }
     }
 }

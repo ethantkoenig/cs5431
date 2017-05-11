@@ -38,7 +38,7 @@ import static spark.Spark.*;
 public class UserController extends AbstractController {
     private static final Log LOGGER = Log.forClass(UserController.class);
 
-    private static final String LOCKOUT_SUBJECT = "Yaccoin account alert";
+    private static final String LOCKOUT_SUBJECT = "EzraCoinL account alert";
     private static final String LOCKOUT_BODY = "Your account has had several failed login attempts. For your safety, your account has been locked. Please unlock your password using the link below.";
 
     private static final String REGISTER_INVALID_USERNAME = "Username must be alphanumeric and between 6 and 24 characters.";

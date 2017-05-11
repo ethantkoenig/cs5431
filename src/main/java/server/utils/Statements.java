@@ -11,10 +11,8 @@ public final class Statements {
     }
 
     // Update statements
-    public static final String DB_NAME = "yaccoin";
-    public static final String CREATE_DB = "CREATE DATABASE yaccoin";
-    public static final String USE_DB = "USE yaccoin";
-    public static final String CREATE_USERS_TABLE = "CREATE TABLE users ("
+    public static final String DB_NAME = "ezracoinl";
+    public static final String CREATE_USERS_TABLE = "CREATE TABLE IF NOT EXISTS users ("
             + "id int NOT NULL AUTO_INCREMENT,"
             + "username varchar(32) NOT NULL,"
             + "email varchar(128) NOT NULL,"
@@ -25,7 +23,7 @@ public final class Statements {
             + "UNIQUE (username),"
             + "UNIQUE (email)"
             + ")";
-    public static final String CREATE_KEYS_TABLE = "CREATE TABLE keypairs ("
+    public static final String CREATE_KEYS_TABLE = "CREATE TABLE IF NOT EXISTS keypairs ("
             + "keypairid int NOT NULL AUTO_INCREMENT,"
             + "userid int NOT NULL,"
             + "publickey varbinary(91) NOT NULL,"
@@ -36,7 +34,7 @@ public final class Statements {
             + "  REFERENCES users(id)"
             + "  ON DELETE CASCADE"
             + ")";
-    public static final String CREATE_PASSWORD_RECOVERY_TABLE = "CREATE TABLE recover ("
+    public static final String CREATE_PASSWORD_RECOVERY_TABLE = "CREATE TABLE IF NOT EXISTS recover ("
             + "userid int NOT NULL,"
             + "dt DATETIME DEFAULT CURRENT_TIMESTAMP,"
             + "guidhash varchar(2048) NOT NULL,"
@@ -44,12 +42,12 @@ public final class Statements {
             + "  REFERENCES users(id)"
             + "  ON DELETE CASCADE"
             + ")";
-    public static final String CREATE_FRIENDS_TABLE = "CREATE TABLE friends ("
+    public static final String CREATE_FRIENDS_TABLE = "CREATE TABLE IF NOT EXISTS friends ("
             + "username varchar(32) NOT NULL,"
             + "friend varchar(32) NOT NULL"
             + ")";
 
-    public static final String CREATE_TRANSACTIONS_TABLE = "CREATE TABLE transactions ("
+    public static final String CREATE_TRANSACTIONS_TABLE = "CREATE TABLE IF NOT EXISTS transactions ("
             + "tranid int NOT NULL AUTO_INCREMENT,"
             + "fromuser varchar(32) NOT NULL,"
             + "touser varchar(32) NOT NULL,"
@@ -59,7 +57,7 @@ public final class Statements {
             + "PRIMARY KEY (tranid)"
             + ")";
 
-    public static final String CREATE_PENDING_KEYS_TABLE = "CREATE TABLE pendingkeys ("
+    public static final String CREATE_PENDING_KEYS_TABLE = "CREATE TABLE IF NOT EXISTS pendingkeys ("
             + "userid int NOT NULL,"
             + "publickey varbinary(91) NOT NULL,"
             + "privatekey text NOT NULL,"
@@ -71,7 +69,6 @@ public final class Statements {
             + "  ON DELETE CASCADE"
             + ")";
 
-    public static final String SHOW_DB_LIKE = String.format("SHOW DATABASES LIKE '%s'", DB_NAME);
     public static final String GET_ALL_USERS = "SELECT * FROM users";
     private static final int RECOVERY_TIME = 60 * 60; // 1 hour for recovery link to remain active
 

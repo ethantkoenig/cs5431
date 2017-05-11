@@ -28,9 +28,9 @@ import static utils.Optionals.ifPresent;
 
 
 public class AccountRecoveryController extends AbstractController {
-    private static final String RECOVERY_SUBJECT = "Yaccoin Password Recovery";
-    private static final String UNLOCK_SUBJECT = "Yaccoin Account Unlock";
-    private static final String CHANGE_PASSWORD_SUBJECT = "Yaccoin Password Change";
+    private static final String RECOVERY_SUBJECT = "EzraCoinL Wallet Password Recovery";
+    private static final String UNLOCK_SUBJECT = "EzraCoinL Wallet Account Unlock";
+    private static final String CHANGE_PASSWORD_SUBJECT = "EzraCoinL Password Change";
 
     private final UserAccess userAccess;
     private final KeyAccess keyAccess;

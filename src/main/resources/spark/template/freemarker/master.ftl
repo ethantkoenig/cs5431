@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Yaccoin</title>
+    <title>EzraCoinL Wallet</title>
 
     <!------------------------------------------- CSS ------------------------------------------>
 
@@ -55,7 +55,7 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand" href="#">Yaccoin</a>
+            <a class="navbar-brand" href="#">EzraCoinL Wallet</a>
         </div>
         <!-- Collect the nav links, forms, and other content for toggling -->
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
