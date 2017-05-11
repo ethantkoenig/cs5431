@@ -7,8 +7,8 @@
         <div class="col-md-6">
             <form action="/requests" method="post">
                 <div class="form-group">
-                    <label>Recipient</label>
-                    <select class="form-control" name="recipient" id="recipient-selector">
+                    <label>Requestee</label>
+                    <select class="form-control" name="requestee" id="recipient-selector">
                     </select>
                 </div>
                 <div class="form-group">

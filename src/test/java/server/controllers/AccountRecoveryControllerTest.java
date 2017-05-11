@@ -36,7 +36,7 @@ public class AccountRecoveryControllerTest extends ControllerTest {
         access = injector.getInstance(AccountRecoveryAccess.class);
         userAccess = injector.getInstance(UserAccess.class);
         setConnectionProvider(injector.getInstance(ConnectionProvider.class));
-        fixtures = new Fixtures();
+        fixtures = injector.getInstance(Fixtures.class);
     }
 
     @Test
@@ -50,10 +50,10 @@ public class AccountRecoveryControllerTest extends ControllerTest {
     @Test
     public void testGetResetGUID() throws Exception {
         final String guid = randomShaTwoFiftySix().toString();
-        access.insertRecovery(fixtures.user.getId(), guid);
+        access.insertRecovery(fixtures.user(1).getId(), guid);
 
         Request request = new MockRequest()
-                .addSessionAttribute("username", fixtures.user.getUsername())
+                .addSessionAttribute("username", fixtures.user(1).getUsername())
                 .addQueryParam("guid", guid)
                 .get();
         Response response = new MockResponse().get();
@@ -86,7 +86,7 @@ public class AccountRecoveryControllerTest extends ControllerTest {
     @Test
     public void testReset() throws Exception {
         final String guid = randomShaTwoFiftySix().toString();
-        access.insertRecovery(fixtures.user.getId(), guid);
+        access.insertRecovery(fixtures.user(1).getId(), guid);
 
         final String newPassword = randomShaTwoFiftySix().toString();
         Request request = new MockRequest()
@@ -99,7 +99,7 @@ public class AccountRecoveryControllerTest extends ControllerTest {
         controller.reset(request, mockResponse.get());
         Assert.assertEquals("/login", mockResponse.redirectedTo());
 
-        User user = assertPresent(userAccess.getUserByID(fixtures.user.getId()));
+        User user = assertPresent(userAccess.getUserByID(fixtures.user(1).getId()));
         Assert.assertTrue(user.checkPassword(newPassword));
     }
 
@@ -124,7 +124,7 @@ public class AccountRecoveryControllerTest extends ControllerTest {
     @Test
     public void testGetUnlock() throws Exception {
         final String guid = randomShaTwoFiftySix().toString();
-        access.insertRecovery(fixtures.user.getId(), guid);
+        access.insertRecovery(fixtures.user(1).getId(), guid);
 
         Request request = new MockRequest()
                 .addQueryParam("guid", guid)
@@ -137,10 +137,10 @@ public class AccountRecoveryControllerTest extends ControllerTest {
     @Test
     public void testUnlockMail() throws Exception {
         final String guid = randomShaTwoFiftySix().toString();
-        access.insertRecovery(fixtures.user.getId(), guid);
+        access.insertRecovery(fixtures.user(1).getId(), guid);
 
         Request request = new MockRequest()
-                .addQueryParam("email", fixtures.user.getEmail())
+                .addQueryParam("email", fixtures.user(1).getEmail())
                 .addQueryParam("guid", guid)
                 .get();
         MockResponse mockResponse = new MockResponse();
@@ -151,7 +151,7 @@ public class AccountRecoveryControllerTest extends ControllerTest {
     @Test
     public void testUnlock() throws Exception {
         final String guid = randomShaTwoFiftySix().toString();
-        access.insertRecovery(fixtures.user.getId(), guid);
+        access.insertRecovery(fixtures.user(1).getId(), guid);
 
         Request request = new MockRequest()
                 .addQueryParam("password", Fixtures.USER_PASSWORD)
@@ -161,9 +161,9 @@ public class AccountRecoveryControllerTest extends ControllerTest {
         MockResponse mockResponse = new MockResponse();
         controller.unlock(request, mockResponse.get());
         Assert.assertEquals("/user", mockResponse.redirectedTo());
-        User user = assertPresent(userAccess.getUserByID(fixtures.user.getId()));
+        User user = assertPresent(userAccess.getUserByID(fixtures.user(1).getId()));
         Assert.assertEquals(0, user.getFailedLogins());
-        Assert.assertEquals(fixtures.user.getUsername(), request.session().attribute("username"));
+        Assert.assertEquals(fixtures.user(1).getUsername(), request.session().attribute("username"));
     }
 
     @Test
@@ -182,7 +182,7 @@ public class AccountRecoveryControllerTest extends ControllerTest {
     @Test
     public void testUnlockBadPassword() throws Exception {
         final String guid = randomShaTwoFiftySix().toString();
-        access.insertRecovery(fixtures.user.getId(), guid);
+        access.insertRecovery(fixtures.user(1).getId(), guid);
 
         Request request = new MockRequest()
                 .addQueryParam("password", randomShaTwoFiftySix().toString())
@@ -198,7 +198,7 @@ public class AccountRecoveryControllerTest extends ControllerTest {
     @Test
     public void testGetChangePasswordNoGuid() throws Exception {
         Request request = new MockRequest()
-                .addSessionAttribute("username", fixtures.user.getUsername())
+                .addSessionAttribute("username", fixtures.user(1).getUsername())
                 .get();
         MockResponse mockResponse = new MockResponse();
         ModelAndView modelAndView = controller.getChangePassword(request, mockResponse.get());
@@ -208,10 +208,10 @@ public class AccountRecoveryControllerTest extends ControllerTest {
     @Test
     public void testGetChangePasswordGuid() throws Exception {
         final String guid = randomShaTwoFiftySix().toString();
-        access.insertRecovery(fixtures.user.getId(), guid);
+        access.insertRecovery(fixtures.user(1).getId(), guid);
 
         Request request = new MockRequest()
-                .addSessionAttribute("username", fixtures.user.getUsername())
+                .addSessionAttribute("username", fixtures.user(1).getUsername())
                 .get();
         MockResponse mockResponse = new MockResponse();
         ModelAndView modelAndView = controller.getChangePassword(request, mockResponse.get());
@@ -221,7 +221,7 @@ public class AccountRecoveryControllerTest extends ControllerTest {
     @Test
     public void testChangePasswordMail() throws Exception {
         Request request = new MockRequest()
-                .addSessionAttribute("username", fixtures.user.getUsername())
+                .addSessionAttribute("username", fixtures.user(1).getUsername())
                 .get();
         MockResponse mockResponse = new MockResponse();
         controller.changePasswordMail(request, mockResponse.get());
@@ -230,19 +230,20 @@ public class AccountRecoveryControllerTest extends ControllerTest {
 
     @Test
     public void testChangePassword() throws Exception {
+        final int userId = 1;
         String publicKey = ByteUtil.bytesToHexString(
-                ByteUtil.asByteArray(fixtures.key::serialize)
+                ByteUtil.asByteArray(fixtures.ecKeyOwnedBy(userId)::serialize)
         );
         final KeysBody keysBody = new KeysBody(Collections.singletonList(
                 new KeyBody(publicKey, randomAsciiString(128))
         ));
 
         final String guid = randomShaTwoFiftySix().toString();
-        access.insertRecovery(fixtures.user.getId(), guid);
+        access.insertRecovery(fixtures.user(1).getId(), guid);
         final String newPassword = randomShaTwoFiftySix().toString();
 
         Request request = new MockRequest()
-                .addSessionAttribute("username", fixtures.user.getUsername())
+                .addSessionAttribute("username", fixtures.user(userId).getUsername())
                 .addQueryParam("guid", guid)
                 .addQueryParam("password", newPassword)
                 .jsonBody(keysBody)
@@ -250,14 +251,15 @@ public class AccountRecoveryControllerTest extends ControllerTest {
         MockResponse mockResponse = new MockResponse();
         controller.changePassword(request, mockResponse.get());
 
-        User user = assertPresent(userAccess.getUserByID(fixtures.user.getId()));
+        User user = assertPresent(userAccess.getUserByID(fixtures.user(userId).getId()));
         Assert.assertTrue(user.checkPassword(newPassword));
     }
 
     @Test
     public void testChangePasswordBadGuid() throws Exception {
+        final int userId = 1;
         String publicKey = ByteUtil.bytesToHexString(
-                ByteUtil.asByteArray(fixtures.key::serialize)
+                ByteUtil.asByteArray(fixtures.ecKeyOwnedBy(userId)::serialize)
         );
         final KeysBody keysBody = new KeysBody(Collections.singletonList(
                 new KeyBody(publicKey, randomAsciiString(128))
@@ -267,7 +269,7 @@ public class AccountRecoveryControllerTest extends ControllerTest {
         final String newPassword = randomShaTwoFiftySix().toString();
 
         Request request = new MockRequest()
-                .addSessionAttribute("username", fixtures.user.getUsername())
+                .addSessionAttribute("username", fixtures.user(userId).getUsername())
                 .addQueryParam("guid", guid)
                 .addQueryParam("password", newPassword)
                 .jsonBody(keysBody)
@@ -275,7 +277,7 @@ public class AccountRecoveryControllerTest extends ControllerTest {
         MockResponse mockResponse = new MockResponse();
         wrapRoute(controller::changePassword).handle(request, mockResponse.get());
         Assert.assertEquals(400, mockResponse.status());
-        User user = assertPresent(userAccess.getUserByID(fixtures.user.getId()));
+        User user = assertPresent(userAccess.getUserByID(fixtures.user(userId).getId()));
         Assert.assertFalse(user.checkPassword(newPassword));
     }
 }

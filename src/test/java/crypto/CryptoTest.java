@@ -1,12 +1,14 @@
 package crypto;
 
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
+import testutils.Fixtures;
 import testutils.RandomizedTest;
 import testutils.TestUtils;
 import utils.ByteUtil;
 import utils.Config;
+
+import java.util.Base64;
 
 
 public class CryptoTest extends RandomizedTest {
@@ -62,5 +64,13 @@ public class CryptoTest extends RandomizedTest {
         byte[] content = randomBytes(random.nextInt(1024));
         byte[] hash = Crypto.sha256(content);
         Assert.assertEquals(errorMessage, 32, hash.length);
+    }
+
+    @Test
+    public void testTemp() throws Exception {
+        byte[] salt = crypto.generateSalt();
+        System.out.println(Base64.getMimeEncoder().encodeToString(salt));
+        byte[] hashedPassword = Crypto.hashAndSalt(Fixtures.USER_PASSWORD, salt);
+        System.out.println(Base64.getMimeEncoder().encodeToString(hashedPassword));
     }
 }
