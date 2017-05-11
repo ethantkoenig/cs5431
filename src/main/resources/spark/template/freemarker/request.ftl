@@ -29,24 +29,25 @@
                     <form action="/transact" method="post" class="transactform">
                         <h2>${request.touser} has requested $${request.amount}.</h2>
                         <p>${request.message}</p>
-                        <div class="input-group">
-                            <input type="hidden" name="recipient" value="${request.touser}">
-                            <input type="hidden" name="tranid" value="${request.tranid}">
-                            <input type="hidden" name="amount" value="${request.amount}">
-                            <input type="hidden" name="message" value="${request.message}">
-
-                            <input type="password" id="transaction-password"
-                                   class="form-control" placeholder="Password">
-                              <span class="input-group-btn">
-                                <button class="btn btn-secondary" type="submit">Accept</button>
-                              </span>
+                        <div class="horizontal">
+                            <div class="input-group col-md-8">
+                                <input type="hidden" name="recipient" value="${request.touser}">
+                                <input type="hidden" name="tranid" value="${request.tranid}">
+                                <input type="hidden" name="amount" value="${request.amount}">
+                                <input type="hidden" name="message" value="${request.message}">
+                                <input type="password" id="transaction-password"
+                                       class="form-control" placeholder="Password">
+                                <span class="input-group-btn">
+                                    <button class="btn btn-secondary btn-success" type="submit">Accept</button>
+                                </span>
+                            </div>
+                            <div class="input-group">
+                                <button class="btn btn-secondary btn-danger delete-request" data-tranid=${request.tranid}>
+                                    Delete
+                                </button>
+                            </div>
                         </div>
                     </form>
-                    <span class="input-group-btn">
-                        <button class="btn btn-secondary delete-request" data-tranid=${request.tranid}>
-                            Delete
-                        </button>
-                    </span>
                 </div>
             </#list>
             <div class="row" id="status-message"></div>
