@@ -63,14 +63,18 @@ public class Main {
         switch (jc.getParsedCommand()) {
             case "node": {
                 Properties nodeProp = parseConfigFile(cn.configFilePath);
-                if (nodeProp == null || !runNode(nodeProp)) {
+                if (nodeProp == null
+                        || !configureLog(nodeProp)
+                        || !runNode(nodeProp)) {
                     System.exit(1);
                 }
                 break;
             }
             case "miner": {
                 Properties nodeProp = parseConfigFile(cm.configFilePath);
-                if (nodeProp == null || !runMiner(nodeProp)) {
+                if (nodeProp == null
+                        || !configureLog(nodeProp)
+                        || !runMiner(nodeProp)) {
                     System.exit(1);
                 }
             }
@@ -80,14 +84,10 @@ public class Main {
             }
             case "webserver": {
                 Properties serverProp = parseConfigFile(cw.serverConfigFile);
-                if (serverProp == null || !Application.run(serverProp)) {
+                if (serverProp == null
+                        || !configureLog(serverProp)
+                        || !Application.run(serverProp)) {
                     System.exit(1);
-                }
-                if (cw.runNode) {
-                    Properties nodeProp = parseConfigFile(cw.nodeConfigFile);
-                    if (nodeProp == null || !runNode(nodeProp)) {
-                        System.exit(1);
-                    }
                 }
                 break;
             }
@@ -112,6 +112,17 @@ public class Main {
         } catch (IOException e) {
             System.err.println("Unexpected error while reading the node config file. Aborting...");
             return null;
+        }
+    }
+
+    private static boolean configureLog(Properties prop) {
+        try {
+            String logPath = IOUtils.getPropertyChecked(prop, "logfilePath");
+            LOGGER.logger.addHandler(new FileHandler(logPath));
+            return true;
+        } catch (IOException | SecurityException e) {
+            System.err.println(e.toString());
+            return false;
         }
     }
 
@@ -144,19 +155,9 @@ public class Main {
             myPublic = Crypto.loadPublicKey(IOUtils.getPropertyChecked(prop, "publicKey"));
             myPrivate = Crypto.loadPrivateKey(IOUtils.getPropertyChecked(prop, "privateKey"));
             privilegedKey = Crypto.loadPublicKey(IOUtils.getPropertyChecked(prop, "privilegedKey"));
-            logpath = IOUtils.getPropertyChecked(prop, "logfilePath");
         } catch (DeserializationException | IOException e) {
             System.err.println(String.format("Error: %s", e.getMessage()));
             return false;
-        }
-
-        try {
-            FileHandler filelog = new FileHandler(logpath);
-            LOGGER.logger.addHandler(filelog);
-            LOGGER.info("Logging to file %s", logpath);
-        } catch (IOException | SecurityException e) {
-            LOGGER.warning("Cannot log to file %s.", logpath);
-            LOGGER.warning(e.toString());
         }
 
         if (isMining) {

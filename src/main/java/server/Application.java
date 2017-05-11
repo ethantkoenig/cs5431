@@ -3,27 +3,27 @@ package server;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import message.payloads.PingPayload;
 import server.config.DatabaseConfig;
 import server.controllers.*;
 import server.utils.*;
-import utils.Config;
 import utils.IOUtils;
-import utils.Log;
 
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.util.Properties;
-import java.util.logging.Logger;
-import java.util.logging.FileHandler;
 
 import static spark.Spark.*;
 
 
 public class Application {
-    private static final Log LOGGER = Log.parentLog();
+    private static final int PING_NUMBER = 5431;
 
     public static boolean run(Properties serverProp) {
-        if (!handleArgs(serverProp)) {
+        if (!handleArgs(serverProp)
+                || !pingNode()) {
             return false;
         }
 
@@ -57,24 +57,13 @@ public class Application {
         String keystorePath;
         String host;
         String portString;
-        String logpath;
         try {
             keystorePath = IOUtils.getPropertyChecked(serverProp, "keystore");
             host = IOUtils.getPropertyChecked(serverProp, "nodeAddress");
             portString = IOUtils.getPropertyChecked(serverProp, "nodePort");
-            logpath = IOUtils.getPropertyChecked(serverProp, "logfilePath");
         } catch (IOException e) {
             System.err.println(String.format("Error: %s", e.getMessage()));
             return false;
-        }
-
-        try {
-            FileHandler filelog = new FileHandler(logpath);
-            LOGGER.logger.addHandler(filelog);
-            LOGGER.info("Logging to file %s", logpath);
-        } catch (IOException | SecurityException e) {
-            LOGGER.warning("Cannot log to file %s.", logpath);
-            LOGGER.warning(e.toString());
         }
 
         try {
@@ -91,6 +80,21 @@ public class Application {
             return false;
         }
         secure(keystorePath, keystorePassword, null, null);
+        return true;
+    }
+
+    private static boolean pingNode() {
+        try (Socket socket = new Socket(
+                Constants.getNodeAddress().getAddress(),
+                Constants.getNodeAddress().getPort())) {
+            DataOutputStream socketOut = new DataOutputStream(socket.getOutputStream());
+            new PingPayload(PING_NUMBER).toMessage().serialize(socketOut);
+        } catch (IOException e) {
+            System.err.println(String.format("Unable to connect to node at %s",
+                    Constants.getNodeAddress()));
+            System.err.println(e.getMessage());
+            return false;
+        }
         return true;
     }
 
