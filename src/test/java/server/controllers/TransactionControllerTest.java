@@ -4,20 +4,20 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
-import crypto.Crypto;
 import message.IncomingMessage;
 import message.Message;
 import message.payloads.GetUTXWithKeysResponsePayload;
-import network.*;
+import network.ConnectionThread;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import server.access.TransactionAccess;
 import server.bodies.SendTransactionBody;
 import server.bodies.SignatureBody;
 import server.utils.ConnectionProvider;
 import server.utils.Constants;
 import server.utils.RouteUtils;
+import spark.ModelAndView;
 import spark.Request;
 import spark.Response;
 import testutils.*;
@@ -38,6 +38,7 @@ import static testutils.TestUtils.assertThrows;
 @RunWith(JUnitQuickcheck.class)
 public class TransactionControllerTest extends ControllerTest {
     private TransactionController controller;
+    private TransactionAccess access;
     private Fixtures fixtures;
 
     public TransactionControllerTest() throws Exception {
@@ -45,8 +46,19 @@ public class TransactionControllerTest extends ControllerTest {
         Injector injector = Guice.createInjector(new TestModule());
         controller = injector.getInstance(TransactionController.class);
         controller.init();
+        access = injector.getInstance(TransactionAccess.class);
         setConnectionProvider(injector.getInstance(ConnectionProvider.class));
         fixtures = new Fixtures();
+    }
+
+    @Test
+    public void testGetTransact() throws Exception {
+        Request request = new MockRequest()
+                .addSessionAttribute("username", fixtures.user.getUsername())
+                .get();
+        MockResponse mockResponse = new MockResponse();
+        ModelAndView modelAndView = controller.getTransact(request, mockResponse.get());
+        Assert.assertEquals("transact.ftl", modelAndView.getViewName());
     }
 
     @Property(trials = 1)
@@ -160,6 +172,7 @@ public class TransactionControllerTest extends ControllerTest {
         Assert.assertEquals("ok", resp); // TODO this is temporary
     }
 
+    @Test
     public void testSendTransactionInvalidBody() throws Exception {
         Request request = new MockRequest()
                 .setBody(randomAsciiString(1024))
@@ -171,5 +184,37 @@ public class TransactionControllerTest extends ControllerTest {
                 () -> controller.sendTransaction(request, response),
                 RouteUtils.InvalidParamException.class
         );
+    }
+
+    @Test
+    public void testGetRequests() throws Exception {
+        Request request = new MockRequest()
+                .addSessionAttribute("username", fixtures.user.getUsername())
+                .get();
+        MockResponse mockResponse = new MockResponse();
+        ModelAndView modelAndView = controller.getRequests(request, mockResponse.get());
+        Assert.assertEquals("request.ftl", modelAndView.getViewName());
+    }
+
+    @Test
+    public void testCreateRequest() throws Exception {
+        final long amount = (long) (1 + random.nextInt(1000));
+        final String message = "Transaction message";
+        final String senderUsername = fixtures.user.getUsername();
+        final String recipient = fixtures.user.getUsername();
+        Request request = new MockRequest()
+                .addSessionAttribute("username", senderUsername)
+                .addQueryParam("recipient", recipient)
+                .addQueryParam("amount", Long.toString(amount))
+                .addQueryParam("message", message)
+                .get();
+        MockResponse mockResponse = new MockResponse();
+        controller.createRequest(request, mockResponse.get());
+        boolean requestAdded = access.getRequests(senderUsername).stream()
+                .anyMatch(t -> t.isRequest()
+                        && t.getTouser().equals(recipient)
+                        && t.getMessage().equals(message)
+                        && t.getAmount() == amount);
+        Assert.assertTrue(requestAdded);
     }
 }

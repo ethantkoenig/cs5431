@@ -12,6 +12,7 @@ import network.ConnectionThread;
 import org.junit.Assert;
 import org.junit.Test;
 import server.access.UserAccess;
+import server.models.User;
 import server.utils.ConnectionProvider;
 import server.utils.Constants;
 import spark.ModelAndView;
@@ -29,6 +30,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
 import static server.utils.RouteUtils.wrapRoute;
+import static testutils.TestUtils.assertPresent;
 
 public class UserControllerTest extends ControllerTest {
     private UserAccess userAccess;
@@ -58,8 +60,8 @@ public class UserControllerTest extends ControllerTest {
         Assert.assertTrue(mockResponse.redirected());
         Assert.assertEquals("/user", mockResponse.redirectedTo());
         Assert.assertEquals(request.session().attribute("username"), "newUsername");
-        TestUtils.assertPresent(userAccess.getUserByUsername("newUsername"));
-        TestUtils.assertPresent(userAccess.getUserByEmail("newuser@example.com"));
+        assertPresent(userAccess.getUserByUsername("newUsername"));
+        assertPresent(userAccess.getUserByEmail("newuser@example.com"));
     }
 
     @Test
@@ -126,15 +128,8 @@ public class UserControllerTest extends ControllerTest {
 
     @Test
     public void testLoginInvalidPassword() throws Exception {
-        Request request = new MockRequest()
-                .addQueryParam("username", fixtures.user.getUsername())
-                .addQueryParam("password", "wr0ngP@ssword!!")
-                .get();
-
-        MockResponse mockResponse = new MockResponse();
-        controller.login(request, mockResponse.get());
+        MockResponse mockResponse = invalidLogin(fixtures.user.getUsername());
         Assert.assertEquals("/login", mockResponse.redirectedTo());
-        Assert.assertNull(request.attribute("username"));
     }
 
     @Test
@@ -148,6 +143,18 @@ public class UserControllerTest extends ControllerTest {
         controller.login(request, mockResponse.get());
         Assert.assertEquals("/login", mockResponse.redirectedTo());
         Assert.assertNull(request.attribute("username"));
+    }
+
+    @Test
+    public void testLoginLockout() throws Exception {
+        for (int i = 0; i < UserController.FAILED_LOGIN_LIMIT - 1; i++) {
+            MockResponse mockResponse = invalidLogin(fixtures.user.getUsername());
+            Assert.assertEquals("/login", mockResponse.redirectedTo());
+        }
+        User user = assertPresent(userAccess.getUserByUsername(fixtures.user.getUsername()));
+        Assert.assertEquals(UserController.FAILED_LOGIN_LIMIT - 1, user.getFailedLogins());
+        MockResponse mockResponse = invalidLogin(fixtures.user.getUsername());
+        Assert.assertEquals("/unlock", mockResponse.redirectedTo());
     }
 
     @Test
@@ -226,5 +233,16 @@ public class UserControllerTest extends ControllerTest {
         Response response = new MockResponse().get();
         ModelAndView modelAndView = controller.balance(request, response);
         Assert.assertEquals("balance.ftl", modelAndView.getViewName());
+    }
+
+    private MockResponse invalidLogin(String username) throws Exception {
+        Request request = new MockRequest()
+                .addQueryParam("username", username)
+                .addQueryParam("password", "wr0ngP@ssword!!")
+                .get();
+        MockResponse mockResponse = new MockResponse();
+        controller.login(request, mockResponse.get());
+        Assert.assertNull(request.attribute("username"));
+        return mockResponse;
     }
 }
