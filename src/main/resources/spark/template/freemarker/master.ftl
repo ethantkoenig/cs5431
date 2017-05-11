@@ -37,14 +37,10 @@
     <script src="/js/ecc.js"></script>
     <script src="/js/index.js"></script>
 
-    <!------------------------------------------- Themes ------------------------------------------>
-
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css"
-          integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
 </head>
 <body>
 <!-- Navigation -->
-<nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+<header class="navbar navbar-default navbar-fixed-top" role="navigation">
     <div class="container">
         <!-- Brand and toggle get grouped for better mobile display -->
         <div class="navbar-header">
@@ -94,7 +90,7 @@
         <!-- /.navbar-collapse -->
     </div>
     <!-- /.container -->
-</nav>
+</header>
     <#if success??>
     <div class="container" style="padding-top: 10px;">
         <div class="alert alert-success">
