@@ -4,16 +4,19 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public final class Log {
-    private static Log parentLog = forClass(Log.class);
+    private static Log parentLog = getParentLog();
     public final Logger logger;
 
     private Log(Logger logger) {
         this.logger = logger;
     }
 
+    private static Log getParentLog() {
+        return new Log(Logger.getLogger(""));
+    }
+
     public static Log forClass(Class<?> clazz) {
-        String name = Log.class.getName() + "." + clazz.getName();
-        return new Log(Logger.getLogger(name));
+        return new Log(Logger.getLogger(clazz.getName()));
     }
 
     public static Log parentLog() {

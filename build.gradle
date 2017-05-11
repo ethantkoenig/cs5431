@@ -39,7 +39,9 @@ findbugs {
     reportLevel = "low"
 }
 
-applicationDefaultJvmArgs = ["-Djava.security.properties=java.security"]
+applicationDefaultJvmArgs = [
+        "-Djava.security.properties=java.security",
+        "-Djava.util.logging.SimpleFormatter.format=%1\$tY-%1\$tm-%1\$td %1\$tH:%1\$tM:%1\$tS %4\$s %3\$s%n%5\$s%6\$s%n"]
 mainClassName = "Main"
 
 jar {
