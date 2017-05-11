@@ -5,15 +5,11 @@ import message.OutgoingMessage;
 import utils.Config;
 import utils.DeserializationException;
 import utils.Deserializer;
+import utils.Log;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.EOFException;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.Socket;
 import java.util.concurrent.BlockingQueue;
-import java.util.logging.Logger;
 
 /**
  * The network.ConnectionThread class extends Thread and represents another node in the network that one is connected to.
@@ -22,8 +18,7 @@ import java.util.logging.Logger;
  * @version 1.0, Feb 16 2017
  */
 public class ConnectionThread extends Thread {
-    private static final Logger LOGGER =
-        Logger.getLogger(Config.getLogParent() + "." + ConnectionThread.class.getName());
+    private static final Log LOGGER = Log.forClass(ConnectionThread.class);
 
     private final Socket socket;
     private final BlockingQueue<IncomingMessage> messageQueue;

@@ -6,7 +6,7 @@ import crypto.ECDSAKeyPair;
 import crypto.ECDSAPublicKey;
 import message.IncomingMessage;
 import message.OutgoingMessage;
-import utils.Config;
+import utils.Log;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -19,7 +19,6 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.SynchronousQueue;
-import java.util.logging.Logger;
 
 /**
  * The network.Node class represents an arbitrary node in the network that can communicate
@@ -29,8 +28,7 @@ import java.util.logging.Logger;
  * @version 2.0, Feb 16 2017
  */
 public class Node {
-    private static final Logger LOGGER =
-        Logger.getLogger(Config.getLogParent() + "." + Node.class.getName());
+    private static final Log LOGGER = Log.forClass(Node.class);
 
     private final ServerSocket serverSocket;
 
@@ -109,7 +107,7 @@ public class Node {
      * @param host is the ip address of the remote Node you wish to connect to.
      */
     public void connect(String host, int port) {
-        LOGGER.info(String.format("[+] Connecting to host: %s.%n", host));
+        LOGGER.info("[+] Connecting to host: %s.%n", host);
         try {
             Socket socket = new Socket(host, port);
             ConnectionThread connectionThread = new ConnectionThread(socket, this.messageQueue);
@@ -118,7 +116,7 @@ public class Node {
                 this.connections.add(connectionThread);
             }
         } catch (IOException e) {
-            LOGGER.severe(String.format("Could not connect to host: %s.%n", host));
+            LOGGER.severe("Could not connect to host: %s.%n", host);
         }
     }
 

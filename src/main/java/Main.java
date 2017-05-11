@@ -14,9 +14,9 @@ import jcommander.CommandWebserver;
 import network.Miner;
 import network.Node;
 import server.Application;
-import utils.Config;
 import utils.DeserializationException;
 import utils.IOUtils;
+import utils.Log;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -29,11 +29,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.logging.FileHandler;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 public class Main {
-    private static final Logger LOGGER = Logger.getLogger(Config.getLogParent());
+    private static final Log LOGGER = Log.parentLog();
 
     public static void main(String[] args) {
         CommandClient cc = new CommandClient();
@@ -153,10 +152,10 @@ public class Main {
 
         try {
             FileHandler filelog = new FileHandler(logpath);
-            LOGGER.addHandler(filelog);
-            LOGGER.info("Logging to file " + logpath);
-        } catch (IOException e) {
-            LOGGER.warning("Cannot log to file " + logpath + ". Dumping error message");
+            LOGGER.logger.addHandler(filelog);
+            LOGGER.info("Logging to file %s", logpath);
+        } catch (IOException | SecurityException e) {
+            LOGGER.warning("Cannot log to file %s.", logpath);
             LOGGER.warning(e.toString());
         }
 

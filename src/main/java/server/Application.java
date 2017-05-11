@@ -8,6 +8,7 @@ import server.controllers.*;
 import server.utils.*;
 import utils.Config;
 import utils.IOUtils;
+import utils.Log;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -19,7 +20,7 @@ import static spark.Spark.*;
 
 
 public class Application {
-    private static final Logger LOGGER = Logger.getLogger(Config.getLogParent());
+    private static final Log LOGGER = Log.parentLog();
 
     public static boolean run(Properties serverProp) {
         if (!handleArgs(serverProp)) {
@@ -69,10 +70,10 @@ public class Application {
 
         try {
             FileHandler filelog = new FileHandler(logpath);
-            LOGGER.addHandler(filelog);
-            LOGGER.info("Logging to file " + logpath);
-        } catch (IOException e) {
-            LOGGER.warning("Cannot log to file " + logpath + ". Dumping error message");
+            LOGGER.logger.addHandler(filelog);
+            LOGGER.info("Logging to file %s", logpath);
+        } catch (IOException | SecurityException e) {
+            LOGGER.warning("Cannot log to file %s.", logpath);
             LOGGER.warning(e.toString());
         }
 

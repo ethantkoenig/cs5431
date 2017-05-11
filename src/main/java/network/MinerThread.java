@@ -4,12 +4,11 @@ import block.Block;
 import message.Message;
 import message.OutgoingMessage;
 import utils.ByteUtil;
-import utils.Config;
+import utils.Log;
 
 import java.io.IOException;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Logger;
 
 import static utils.CanBeSerialized.serializeSingleton;
 
@@ -21,9 +20,7 @@ import static utils.CanBeSerialized.serializeSingleton;
  * @version 1.0, Feb 22 2017
  */
 public class MinerThread extends Thread {
-
-    private static final Logger LOGGER =
-        Logger.getLogger(Config.getLogParent() + "." + MinerThread.class.getName());
+    private static final Log LOGGER = Log.forClass(MinerThread.class);
     private Block block;
     private final AtomicBoolean stopMining = new AtomicBoolean(false);
 

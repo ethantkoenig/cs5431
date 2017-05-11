@@ -3,11 +3,7 @@ package block;
 import transaction.Transaction;
 import transaction.TxIn;
 import transaction.TxOut;
-import utils.ByteUtil;
-import utils.Config;
-import utils.CanBeSerialized;
-import utils.DeserializationException;
-import utils.ShaTwoFiftySix;
+import utils.*;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -20,8 +16,7 @@ import java.util.logging.Logger;
  * A {@code BlockChain} represents a forest of related {@code Blocks} which together represent a secure public ledger.
  */
 public class BlockChain {
-    private final static Logger LOGGER =
-        Logger.getLogger(Config.getLogParent() + "." + BlockChain.class.getName());
+    private final static Log LOGGER = Log.forClass(BlockChain.class);
     private final Map<ShaTwoFiftySix, BlockWrapper> blocks = new LinkedHashMap<>();
 
     private Block currentHead;

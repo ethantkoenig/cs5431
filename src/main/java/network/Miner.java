@@ -3,16 +3,13 @@ package network;
 import block.Block;
 import crypto.ECDSAKeyPair;
 import crypto.ECDSAPublicKey;
-import utils.Config;
+import utils.Log;
 
 import java.io.IOException;
 import java.net.ServerSocket;
-import java.util.logging.Logger;
 
 public class Miner extends Node {
-
-    private final static Logger LOGGER =
-        Logger.getLogger(Config.getLogParent() + "." + Miner.class.getName());
+    private final static Log LOGGER = Log.forClass(Miner.class);
 
     public Miner(ServerSocket serverSocket,
                  ECDSAKeyPair myKeyPair,

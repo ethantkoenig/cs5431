@@ -3,11 +3,11 @@ package server.config;
 import com.google.inject.Inject;
 import server.utils.ConnectionProvider;
 import server.utils.Statements;
+import utils.Log;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.logging.Logger;
 
 /**
  * Class to config and initialize DB with necessary tables. So far only creates a users table.
@@ -23,7 +23,7 @@ public final class DatabaseConfig {
         this.connectionProvider = connectionProvider;
     }
 
-    private static final Logger LOGGER = Logger.getLogger(DatabaseConfig.class.getName());
+    private static final Log LOGGER = Log.forClass(DatabaseConfig.class);
 
     public void dbInit() {
         LOGGER.info("[!] Initializing database");

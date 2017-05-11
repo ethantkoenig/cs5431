@@ -11,21 +11,19 @@ import transaction.Transaction;
 import transaction.TxIn;
 import transaction.TxOut;
 import utils.ByteUtil;
-import utils.Config;
+import utils.Log;
 import utils.Pair;
 
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.BlockingQueue;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
  * The MessageHandler class manages internal state and handles incoming messages
  */
 public class MessageHandler {
-    private static final Logger LOGGER =
-        Logger.getLogger(Config.getLogParent() + "." + MessageHandler.class.getName());
+    private static final Log LOGGER = Log.forClass(MessageHandler.class);
 
     private final MiningBundle bundle;
     private final BlockingQueue<OutgoingMessage> broadcastQueue;
@@ -157,7 +155,7 @@ public class MessageHandler {
                 LOGGER.warning("Received a genesis block after having already received one");
             } else if (block.verifyGenesis(bundle.privilegedKey)) {
                 LOGGER.info("Received the genesis block");
-                LOGGER.info(String.format("Genesis hash: %s", block.getShaTwoFiftySix().toString()));
+                LOGGER.info("Genesis hash: %s", block.getShaTwoFiftySix());
                 if (!bundle.getBlockChain().insertBlock(block)) {
                     LOGGER.severe("Unable to add genesis block");
                     return;
@@ -174,7 +172,7 @@ public class MessageHandler {
             return;
         }
 
-        LOGGER.info(String.format("Received valid block: hash=%s", block.getShaTwoFiftySix()));
+        LOGGER.info("Received valid block: hash=%s", block.getShaTwoFiftySix());
 
         // interrupt the mining thread
         if (isMining) {

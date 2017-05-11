@@ -20,7 +20,7 @@ import spark.Request;
 import spark.Response;
 import spark.template.freemarker.FreeMarkerEngine;
 import utils.ByteUtil;
-import utils.Config;
+import utils.Log;
 import utils.Optionals;
 
 import java.io.DataInputStream;
@@ -30,15 +30,13 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import static server.utils.RouteUtils.*;
 import static spark.Spark.*;
 
 public class UserController extends AbstractController {
-    private static final Logger LOGGER =
-        Logger.getLogger(Config.getLogParent() + "." + UserController.class.getName());
+    private static final Log LOGGER = Log.forClass(UserController.class);
 
     private static final String LOCKOUT_SUBJECT = "Yaccoin account alert";
     private static final String LOCKOUT_BODY = "Your account has had several failed login attempts. For your safety, your account has been locked. Please unlock your password using the link below.";
@@ -138,6 +136,7 @@ public class UserController extends AbstractController {
         boolean validAuth = user.checkPassword(password);
         boolean lockedOut = user.getFailedLogins() >= FAILED_LOGIN_LIMIT;
         if (!lockedOut && !validAuth) {
+            LOGGER.info("Failed login attempt for %s", user.getUsername());
             userAccess.incrementFailedLogins(user.getId());
             if (user.getFailedLogins() + 1 == FAILED_LOGIN_LIMIT) {
                 String link = baseURL(request) + "/unlock";
