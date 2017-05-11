@@ -7,14 +7,15 @@ import message.Message;
 import message.OutgoingMessage;
 import message.payloads.*;
 import transaction.Transaction;
+import utils.Config;
 import utils.DeserializationException;
 import utils.Deserializer;
+import utils.Log;
 import utils.ShaTwoFiftySix;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
-import java.util.logging.Logger;
 
 
 /**
@@ -24,8 +25,7 @@ import java.util.logging.Logger;
  * @version 1.0, Feb 22 2017
  */
 public class HandleMessageThread extends Thread {
-    // Blocks to request when we are behind other nodes
-    private static final Logger LOGGER = Logger.getLogger(HandleMessageThread.class.getName());
+    private static final Log LOGGER = Log.forClass(HandleMessageThread.class);
 
     private BlockingQueue<IncomingMessage> messageQueue;
 
@@ -33,6 +33,7 @@ public class HandleMessageThread extends Thread {
 
     private MiningBundle bundle;
 
+    // Blocks to request when we are behind other nodes
     private final OrphanedBlocks orphanedBlocks = new OrphanedBlocks();
 
     // Needs reference to parent in order to call Node.broadcast()
@@ -117,7 +118,7 @@ public class HandleMessageThread extends Thread {
                 message.respond(new PongPayload(pingNumber).toMessage());
                 break;
             default:
-                LOGGER.severe(String.format("Unexpected message type: %d", message.type));
+                LOGGER.severe("Unexpected message type: %d", message.type);
         }
     }
 
@@ -127,15 +128,10 @@ public class HandleMessageThread extends Thread {
         BlockChain chain = bundle.getBlockChain();
         if (request.numBlocksRequested <= 0 ||
                 request.numBlocksRequested > Message.MAX_BLOCKS_TO_GET) {
-            String msg = String.format("GET_BLOCKS request, invalid number of requested blocks: %d",
-                    request.numBlocksRequested);
-            LOGGER.info(msg);
+            LOGGER.info("GET_BLOCKS request, invalid number of requested blocks: %d", request.numBlocksRequested);
             return;
         } else if (!chain.containsBlockWithHash(request.hash)) {
-            String msg = String.format("GET_BLOCKS message received with unknown hash: %s",
-                    request.hash
-            );
-            LOGGER.info(msg);
+            LOGGER.info("GET_BLOCKS message received with unknown hash: %s", request.hash);
             return;
         }
         handler.getBlockMsgHandler(message, request);

@@ -1,9 +1,10 @@
 package message;
 
-
+import utils.Config;
 import utils.DeserializationException;
 import utils.Deserializer;
 import utils.IOUtils;
+import utils.Log;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -11,7 +12,7 @@ import java.util.Arrays;
 import java.util.logging.Logger;
 
 public class IncomingMessage extends Message {
-    private static final Logger LOGGER = Logger.getLogger(IncomingMessage.class.getName());
+    private static final Log LOGGER = Log.forClass(IncomingMessage.class);
 
     private final MessageResponder responder; // may be null
 
@@ -35,7 +36,7 @@ public class IncomingMessage extends Message {
 
     public void respond(OutgoingMessage message) throws IOException {
         if (responder == null) {
-            LOGGER.warning("Cannot response to this message: " + this);
+            LOGGER.warning("Cannot response to this message: %s", this);
             return;
         }
         responder.respond(message);

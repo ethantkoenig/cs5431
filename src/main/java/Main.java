@@ -3,7 +3,6 @@ import com.beust.jcommander.JCommander;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.google.inject.Module;
 import crypto.Crypto;
 import crypto.ECDSAKeyPair;
 import crypto.ECDSAPrivateKey;
@@ -15,23 +14,25 @@ import jcommander.CommandWebserver;
 import network.Miner;
 import network.Node;
 import server.Application;
-import server.utils.ConnectionProvider;
-import server.utils.MailService;
 import utils.DeserializationException;
 import utils.IOUtils;
-import edu.umd.cs.findbugs.annotations.SuppressWarnings;
+import utils.Log;
 
-import java.io.*;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.logging.FileHandler;
 import java.util.stream.Collectors;
 
 public class Main {
+    private static final Log LOGGER = Log.parentLog();
 
     public static void main(String[] args) {
         CommandClient cc = new CommandClient();
@@ -62,14 +63,18 @@ public class Main {
         switch (jc.getParsedCommand()) {
             case "node": {
                 Properties nodeProp = parseConfigFile(cn.configFilePath);
-                if (nodeProp == null || !runNode(nodeProp)) {
+                if (nodeProp == null
+                        || !configureLog(nodeProp)
+                        || !runNode(nodeProp)) {
                     System.exit(1);
                 }
                 break;
             }
             case "miner": {
                 Properties nodeProp = parseConfigFile(cm.configFilePath);
-                if (nodeProp == null || !runMiner(nodeProp)) {
+                if (nodeProp == null
+                        || !configureLog(nodeProp)
+                        || !runMiner(nodeProp)) {
                     System.exit(1);
                 }
             }
@@ -79,14 +84,10 @@ public class Main {
             }
             case "webserver": {
                 Properties serverProp = parseConfigFile(cw.serverConfigFile);
-                if (serverProp == null || !Application.run(serverProp)) {
+                if (serverProp == null
+                        || !configureLog(serverProp)
+                        || !Application.run(serverProp)) {
                     System.exit(1);
-                }
-                if (cw.runNode) {
-                    Properties nodeProp = parseConfigFile(cw.nodeConfigFile);
-                    if (nodeProp == null || !runNode(nodeProp)) {
-                        System.exit(1);
-                    }
                 }
                 break;
             }
@@ -114,6 +115,17 @@ public class Main {
         }
     }
 
+    private static boolean configureLog(Properties prop) {
+        try {
+            String logPath = IOUtils.getPropertyChecked(prop, "logfilePath");
+            LOGGER.logger.addHandler(new FileHandler(logPath));
+            return true;
+        } catch (IOException | SecurityException e) {
+            System.err.println(e.toString());
+            return false;
+        }
+    }
+
     private static boolean runMiner(Properties prop) {
         return runNode(prop, true);
     }
@@ -137,6 +149,7 @@ public class Main {
         ECDSAPublicKey myPublic;
         ECDSAPrivateKey myPrivate;
         ECDSAPublicKey privilegedKey;
+        String logpath;
         Node node;
         try {
             myPublic = Crypto.loadPublicKey(IOUtils.getPropertyChecked(prop, "publicKey"));

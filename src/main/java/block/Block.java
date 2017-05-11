@@ -18,7 +18,7 @@ import java.util.logging.Logger;
  * Represents a block of transactions in the ledger
  */
 public class Block extends HashCache implements Iterable<Transaction>, CanBeSerialized {
-    private final static Logger LOGGER = Logger.getLogger(Block.class.getName());
+    private final static Log LOGGER = Log.forClass(Block.class);
     public final static Deserializer<Block> DESERIALIZER = new BlockDeserializer();
 
     public final static int NUM_TRANSACTIONS_PER_BLOCK = 2;

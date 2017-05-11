@@ -7,17 +7,15 @@ import server.access.UserAccess;
 import server.models.User;
 import spark.*;
 import utils.ByteUtil;
+import utils.Config;
 
 import java.io.IOException;
 import java.net.URL;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Optional;
-import java.util.logging.Logger;
 
 public final class RouteUtils {
-    private final static Logger LOGGER = Logger.getLogger(RouteUtils.class.getName());
-
     private final UserAccess userAccess;
     private final Gson gson;
 
@@ -35,7 +33,6 @@ public final class RouteUtils {
                 response.status(403);
                 return "";
             } catch (InvalidParamException e) {
-                LOGGER.warning(e.getMessage());
                 response.status(400);
                 response.body("Invalid Parameters.");
                 return "";
@@ -50,8 +47,6 @@ public final class RouteUtils {
             } catch (NotLoggedInException e) {
                 return RouteUtils.redirectTo(response, "/login");
             } catch (InvalidParamException e) {
-                // TODO find better way to handle
-                LOGGER.warning(e.getMessage());
                 response.status(400);
                 response.body("Invalid Parameters.");
                 return null;

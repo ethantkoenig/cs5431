@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import server.models.User;
 import server.utils.ConnectionProvider;
 import server.utils.Statements;
+import utils.Log;
 
 import java.security.GeneralSecurityException;
 import java.sql.Connection;
@@ -12,10 +13,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Optional;
 import java.util.OptionalInt;
-import java.util.logging.Logger;
 
 public class AccountRecoveryAccess extends AbstractAccess {
-    private static final Logger LOGGER = Logger.getLogger(AccountRecoveryAccess.class.getName());
+    private static final Log LOGGER = Log.forClass(AccountRecoveryAccess.class);
 
     private final ConnectionProvider connectionProvider;
     private final UserAccess userAccess;

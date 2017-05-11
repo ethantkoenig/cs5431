@@ -1,10 +1,10 @@
 package network;
 
 import message.OutgoingMessage;
+import utils.Log;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.function.Consumer;
-import java.util.logging.Logger;
 
 /**
  * The network.BroadcastThread class extends Thread and is started by a node in order to broadcast messages.
@@ -14,8 +14,7 @@ import java.util.logging.Logger;
  * @version 1.0, March 1 2017
  */
 public class BroadcastThread extends Thread {
-
-    private static final Logger LOGGER = Logger.getLogger(BroadcastThread.class.getName());
+    private static final Log LOGGER = Log.forClass(BroadcastThread.class);
 
     private final Consumer<OutgoingMessage> broadcast;
 

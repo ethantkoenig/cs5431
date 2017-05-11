@@ -20,8 +20,7 @@ import java.util.stream.Stream;
  * Contains an array of inputs, outputs and signatures.
  */
 public final class Transaction extends HashCache implements CanBeSerialized {
-
-    private final static Logger LOGGER = Logger.getLogger(Logger.class.getName());
+    private final static Log LOGGER = Log.forClass(Logger.class);
     public static final Deserializer<Transaction> DESERIALIZER = new TransactionDeserializer();
 
     private final TxIn[] txIn;
