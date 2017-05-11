@@ -196,9 +196,10 @@ $(document).ready(function () {
     });
 
     $('.transactform').submit(function () {
-        var action = $(this).attr("action");
-        var data = $(this).serialize();
-        var password = $('#transaction-password').val();
+        var $form = $(this);
+        var action = $form.attr("action");
+        var data = $form.serialize();
+        var password = $form.find('.transaction-password').val();
         var secret = encryptSecret(password);
 
         $.post(action, data, function (resp) {

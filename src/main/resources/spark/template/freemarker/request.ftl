@@ -35,8 +35,7 @@
                                 <input type="hidden" name="tranid" value="${request.tranid?c}">
                                 <input type="hidden" name="amount" value="${request.amount?c}">
                                 <input type="hidden" name="message" value="${request.message}">
-                                <input type="password" id="transaction-password"
-                                       class="form-control" placeholder="Password">
+                                <input type="password" class="form-control transaction-password" placeholder="Password">
                                 <span class="input-group-btn">
                                     <button class="btn btn-secondary btn-success" type="submit">Accept</button>
                                 </span>
