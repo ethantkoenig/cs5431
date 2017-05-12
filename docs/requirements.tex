@@ -91,21 +91,23 @@ Yes & User & Funds & Must & As a user, I can check my balance. \\
 \hline
 Yes & User & Keys & Must & As a user, I can add keys to my account. \\
 \hline
-No & User & Funds & Should & As a user, I can request funds from another user. \\
+Yes & User & Funds & Should & As a user, I can request funds from another user. \\
 \hline
-%No & User & Funds & Should & As a user, I can accept or decline a request from another user. \\
-%\hline
-No & User & User Accounts & Should & As a user, I can search for other users by name, so that I don't have to remember other users' usernames. \\
+Yes & User & Funds & Should & As a user, I can accept or decline a request from another user. \\
 \hline
-No & User & Transactions & Should & As a user, I can view my transaction history. \\
+% No & User & User Accounts & Should & As a user, I can search for other users by name, so that I don't have to remember other users' usernames. \\
+% \hline
+Yes & User & Transactions & Should & As a user, I can view my transaction history. \\
 \hline
-Yes & User & Credentials & Could & As a user, I can reset my password if I forget it. \\
+Yes & User & Credentials & Could & As a user, I can reset my master password if I forget it. \\
 \hline
 No & User & Funds & Could & As a user, I can send funds to a group of multiple users, so that I can easily make several related payments. \\
 \hline
 No & User & Funds & Could & As a user, I can request funds from a group of multiple users, so that I can easily make several related requests. \\
 \hline
 Yes & User & Transactions & Could & As a user, I can create a friends list, to block spam requests from users I do not know. \\
+\hline
+Yes & User & Credentials & Could & As a user, I can update my master password. \\
 \hline
 No & User & User Accounts & Would & As a user, I can associate a profile picture with my account. \\
 \hline
@@ -194,10 +196,11 @@ The integrity and availability goals are feasible, and will hold due to the inhe
 \item The wallet software must prevent unauthorized access to a user's credentials. This goals concerns confidentiality, since it involves unauthorized access of an asset.
 \item The wallet software must prevent unauthorized modification of a user's credentials. This goal concerns integrity, since users' credentials are a system asset.
 \item The wallet software must prevent users from constructing invalid transactions. This goal concerns integrity. If we allowed users to construct malformed transactions, it could lead them to believe they have performed transactions that will never be accepted by the blockchain, leading to inconsistencies between the wallet software and the blockchain.
-\item The wallet software must not store plaintext private keys. This goal concerns confidentiality, as a users private key allows them to spend their coins, and if a malicious user compromises the server they should not have access to everyone's private keys.
+\item The wallet software must prevent unauthorized disclosure of a user's friend list. This goal concerns confidentiality, since it involves unauthorized access of an asset.
+\item The wallet software must prevent unauthorized modification/deletion of a user's friend list. This goal concerns integrity, since it involves unauthorized modification of an asset.
 \end{itemize}
 
-Authentication passwords could be disclosed to an attacker, since attackers may have access to the memory contents of the server. In this scenario, preventing unauthorized access to a user's balance, transaction history, and keys will not be possible. Preventing unauthorized modification of a user's keys will still be possible, through use of two-factor authorization for such operations.
+The authentication secret derived from a user's master password could be disclosed to an attacker, since attackers may obtain access to the memory contents of the server. In this scenario, preventing unauthorized access to a user's balance, transaction history, public keys, and friends list will not be possible. Preventing unauthorized modification of a user's keys will still be possible, through use of two-factor authorization for such operations.
 
 All other goals are completely feasible, and do not need to be relaxed.
 
@@ -207,7 +210,7 @@ All other goals are completely feasible, and do not need to be relaxed.
 
 For the cryptocurrency itself, there is no authentication. All parties in the cryptocurrency network remain pseudonymous, so there are no places where authentication comes into play.
 
-Our Venmo-style web app will authenticate users via a password-based login. Access to all of the app's service will be mediated through logging in.
+Our Venmo-style web app will authenticate users via an authentication secret derived from their master password. Access to all of the app's service will be mediated through logging in.
 
 \subsection{Authorization}
 
