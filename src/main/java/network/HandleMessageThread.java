@@ -80,8 +80,14 @@ public class HandleMessageThread extends Thread {
                     break;
                 }
                 boolean added = false;
-
-                // TODO check that blocks are in "correct" order (grandchild, child, parent ...)
+                for (int i = 0; i < blocks.size() - 1; i++) {
+                    Block child = blocks.get(i);
+                    Block parent = blocks.get(i);
+                    if (child.previousBlockHash.equals(parent.getShaTwoFiftySix())) {
+                        LOGGER.warning("Received out of order blocks");
+                        break;
+                    }
+                }
                 for (Block block : blocks) {
                     if (handler.blockHandler(block)) {
                         for (Block descendant : orphanedBlocks.popDescendantsOf(block.getShaTwoFiftySix())) {

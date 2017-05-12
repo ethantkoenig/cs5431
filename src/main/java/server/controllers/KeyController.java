@@ -143,8 +143,6 @@ public class KeyController extends AbstractController {
         return "ok";
     }
 
-
-    // TODO: Don't duplicate these.
     private static String emailBody(String link) {
         return String.format(
                 "Click on the link below to verify new key.%n%n%s",

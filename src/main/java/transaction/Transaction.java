@@ -130,12 +130,7 @@ public final class Transaction extends HashCache implements CanBeSerialized {
             throw new IllegalArgumentException(msg);
         }
 
-        // TODO: eventually find a way to not re-serializeWithoutSignatures every time
-        return Crypto.verify(
-                ByteUtil.asByteArray(this::serializeWithoutSignatures),
-                signatures[inputIndex],
-                key
-        );
+        return Crypto.verify(getShaTwoFiftySix(), signatures[inputIndex], key);
     }
 
     /**
