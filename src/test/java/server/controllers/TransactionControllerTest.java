@@ -226,7 +226,7 @@ public class TransactionControllerTest extends ControllerTest {
         controller.createRequest(request, mockResponse.get());
         boolean requestAdded = access.getRequests(sender).stream()
                 .anyMatch(t -> t.isRequest()
-                        && t.getTouser().equals(recipient)
+                        && t.getToUser().equals(recipient)
                         && t.getMessage().equals(message)
                         && t.getAmount() == amount);
         Assert.assertTrue(requestAdded);
@@ -244,20 +244,20 @@ public class TransactionControllerTest extends ControllerTest {
         server.models.Transaction transaction = assertPresent(
                 access.getRequests(sender.getUsername()).stream()
                         .filter(t -> t.isRequest()
-                                && t.getTouser().equals(recipient.getUsername())
+                                && t.getToUser().equals(recipient.getUsername())
                                 && t.getMessage().equals(message)
                                 && t.getAmount() == amount)
                         .findFirst()
         );
         Request request = new MockRequest()
                 .addSessionAttribute("username", sender.getUsername())
-                .addQueryParam("tranid", Integer.toString(transaction.getTranid()))
+                .addQueryParam("tranid", Integer.toString(transaction.getTranId()))
                 .get();
         MockResponse mockResponse = new MockResponse();
         controller.deleteRequest(request, mockResponse.get());
 
         Assert.assertFalse(access.getRequests(sender.getUsername()).stream()
-                .anyMatch(t -> t.getTranid() == transaction.getTranid())
+                .anyMatch(t -> t.getTranId() == transaction.getTranId())
         );
     }
 }

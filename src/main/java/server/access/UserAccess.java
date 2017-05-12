@@ -5,8 +5,8 @@ import server.models.User;
 import server.utils.ConnectionProvider;
 import server.utils.Statements;
 
-import java.sql.*;
-import java.util.ArrayList;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,156 +15,71 @@ import java.util.Optional;
  * Utilities for reading and modifying database.
  */
 public final class UserAccess extends AbstractAccess {
-    private final ConnectionProvider connectionProvider;
 
     @Inject
     public UserAccess(ConnectionProvider connectionProvider) {
-        this.connectionProvider = connectionProvider;
+        super(connectionProvider);
     }
 
     public List<String> getAllUsernames() throws SQLException {
-        try (Connection conn = connectionProvider.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(Statements.GET_ALL_USERS)
-        ) {
-            List<String> users = new ArrayList<>();
-            while (rs.next()) {
-                users.add(rs.getString("username"));
-            }
-            return users;
-        }
+        return select(conn -> conn.prepareStatement(Statements.GET_ALL_USERS),
+                list(resultSet -> resultSet.getString("username")));
     }
 
     public Optional<User> getUserByID(int userID) throws SQLException {
-        try (
-                Connection conn = connectionProvider.getConnection();
-                PreparedStatement preparedStmt = Statements.selectUserByID(conn, userID);
-                ResultSet rs = preparedStmt.executeQuery()
-        ) {
-            if (rs.next()) {
-                return Optional.of(getUser(rs));
-            }
-            return Optional.empty();
-        }
+        return select(Statements.selectUserByID(userID), optional(this::getUser));
     }
 
     public Optional<User> getUserByUsername(String username) throws SQLException {
-        try (
-                Connection conn = connectionProvider.getConnection();
-                PreparedStatement preparedStmt = Statements.selectUserByUsername(conn, username);
-                ResultSet rs = preparedStmt.executeQuery()
-        ) {
-            if (rs.next()) {
-                return Optional.of(getUser(rs));
-            }
-            return Optional.empty();
-        }
+        return select(Statements.selectUserByUsername(username), optional(this::getUser));
     }
 
     public Optional<User> getUserByEmail(String email) throws SQLException {
-        try (
-                Connection conn = connectionProvider.getConnection();
-                PreparedStatement preparedStmt = Statements.selectUserByEmail(conn, email);
-                ResultSet rs = preparedStmt.executeQuery()
-        ) {
-            if (rs.next()) {
-                return Optional.of(getUser(rs));
-            }
-            return Optional.empty();
-        }
+        return select(Statements.selectUserByEmail(email), optional(this::getUser));
     }
 
     public void insertUser(String username, String email, byte[] salt, byte[] hashedPassword) throws SQLException {
-        try (Connection conn = connectionProvider.getConnection();
-             PreparedStatement preparedStmt = Statements.insertUser(conn, username, email, salt, hashedPassword)
-        ) {
-            checkRowCount(preparedStmt.executeUpdate(), 1);
-        }
+        update(Statements.insertUser(username, email, salt, hashedPassword), 1);
     }
 
-
     public void updateUserPass(int userID, byte[] salt, byte[] hashedPassword) throws SQLException {
-        try (Connection conn = connectionProvider.getConnection();
-             PreparedStatement preparedStmt = Statements.updateUserPassword(conn, userID, salt, hashedPassword)
-        ) {
-            checkRowCount(preparedStmt.executeUpdate(), 1);
-        }
+        update(Statements.updateUserPassword(userID, salt, hashedPassword), 1);
     }
 
 
     public void incrementFailedLogins(int userID) throws SQLException {
-        try (Connection conn = connectionProvider.getConnection();
-             PreparedStatement preparedStmt = Statements.incrementFailedLogins(conn, userID)
-        ) {
-            checkRowCount(preparedStmt.executeUpdate(), 1);
-        }
+        update(Statements.incrementFailedLogins(userID), 1);
     }
 
 
     public void resetFailedLogins(int userID) throws SQLException {
-        try (Connection conn = connectionProvider.getConnection();
-             PreparedStatement preparedStmt = Statements.resetFailedLogins(conn, userID)
-        ) {
-            checkRowCount(preparedStmt.executeUpdate(), 1);
-        }
+        update(Statements.resetFailedLogins(userID), 1);
     }
 
 
     public boolean isFriendsWith(String username, String friend) throws SQLException {
-        try (Connection conn = connectionProvider.getConnection();
-             PreparedStatement preparedStmt = Statements.isFriendsWith(conn, username, friend);
-             ResultSet rs = preparedStmt.executeQuery()
-        ) {
-            if (rs.next()) {
-                return true;
-            }
-        }
-        return false;
+        return select(Statements.isFriendsWith(username, friend), ResultSet::next);
     }
 
 
     public void insertFriends(String username, String friend) throws SQLException {
-        try (Connection conn = connectionProvider.getConnection();
-             PreparedStatement preparedStmt = Statements.insertFriends(conn, username, friend)
-        ) {
-            checkRowCount(preparedStmt.executeUpdate(), 1);
-        }
+        update(Statements.insertFriends(username, friend), 1);
     }
 
 
     public void deleteFriends(String username, String friend) throws SQLException {
-        try (Connection conn = connectionProvider.getConnection();
-             PreparedStatement preparedStmt = Statements.deleteFriends(conn, username, friend)
-        ) {
-            checkRowCount(preparedStmt.executeUpdate(), 1);
-        }
+        update(Statements.deleteFriends(username, friend), 1);
     }
 
 
     public List<String> getFriends(String username) throws SQLException {
-        try (Connection conn = connectionProvider.getConnection();
-             PreparedStatement preparedStmt = Statements.getFriends(conn, username);
-             ResultSet rs = preparedStmt.executeQuery()
-        ) {
-            List<String> friends = new ArrayList<>();
-            while (rs.next()) {
-                friends.add(rs.getString("friend"));
-            }
-            return friends;
-        }
+        return select(Statements.getFriends(username),
+                list(resultSet -> resultSet.getString("friend")));
     }
 
     public List<String> getPeopleWhoFriendMe(String username) throws SQLException {
-        try (Connection conn = connectionProvider.getConnection();
-             PreparedStatement preparedStmt = Statements.getPeopleWhoFriendMe(conn, username);
-             ResultSet rs = preparedStmt.executeQuery()
-        ) {
-            List<String> usernames = new ArrayList<>();
-            while (rs.next()) {
-                usernames.add(rs.getString("username"));
-            }
-            return usernames;
-        }
+        return select(Statements.getPeopleWhoFriendMe(username),
+                list(resultSet -> resultSet.getString("username")));
     }
 
     private User getUser(ResultSet resultSet) throws SQLException {

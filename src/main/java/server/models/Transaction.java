@@ -3,32 +3,37 @@ package server.models;
 
 public class Transaction {
 
-    private int tranid;
-    private String fromuser;
-    private String touser;
+    private int tranId;
+    private String fromUser;
+    private String toUser;
     private long amount;
     private String message;
-    private boolean request;
+    private boolean isRequest;
 
-    public Transaction(int tranid, String fromuser, String touser, long amount, String message, boolean request) {
-        this.tranid = tranid;
-        this.fromuser = fromuser;
-        this.touser = touser;
+    public Transaction(int tranId,
+                       String fromUser,
+                       String toUser,
+                       long amount,
+                       String message,
+                       boolean isRequest) {
+        this.tranId = tranId;
+        this.fromUser = fromUser;
+        this.toUser = toUser;
         this.amount = amount;
         this.message = message;
-        this.request = request;
+        this.isRequest = isRequest;
     }
 
-    public int getTranid() {
-        return tranid;
+    public int getTranId() {
+        return tranId;
     }
 
-    public String getFromuser() {
-        return fromuser;
+    public String getFromUser() {
+        return fromUser;
     }
 
-    public String getTouser() {
-        return touser;
+    public String getToUser() {
+        return toUser;
     }
 
     public long getAmount() {
@@ -40,6 +45,6 @@ public class Transaction {
     }
 
     public boolean isRequest() {
-        return request;
+        return isRequest;
     }
 }
