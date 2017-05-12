@@ -339,6 +339,18 @@ public final class Statements {
         );
     }
 
+    public static PreparedStatement deleteTransactionRequest(Connection connection, int transId, String toUser)
+            throws SQLException {
+        return prepareStatement(connection.prepareStatement(
+                "DELETE FROM transactions WHERE tranid = ? AND fromuser = ? AND isrequest = ?"),
+                statement -> {
+                    statement.setInt(1, transId);
+                    statement.setString(2, toUser);
+                    statement.setBoolean(3, true);
+                }
+        );
+    }
+
     public static PreparedStatement insertPendingKeyPair(Connection connection, int userid, byte[] publickey,
                                                          String privatekey, String guidhash) throws SQLException {
         return prepareStatement(connection.prepareStatement(

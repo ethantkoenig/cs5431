@@ -34,8 +34,7 @@ public final class RouteUtils {
                 return "";
             } catch (InvalidParamException e) {
                 response.status(400);
-                response.body("Invalid Parameters.");
-                return "";
+                return e.getMessage();
             }
         };
     }

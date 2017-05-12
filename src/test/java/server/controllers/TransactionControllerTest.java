@@ -33,6 +33,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.stream.Collectors;
 
+import static testutils.TestUtils.assertPresent;
 import static testutils.TestUtils.assertThrows;
 
 @RunWith(JUnitQuickcheck.class)
@@ -216,5 +217,33 @@ public class TransactionControllerTest extends ControllerTest {
                         && t.getMessage().equals(message)
                         && t.getAmount() == amount);
         Assert.assertTrue(requestAdded);
+    }
+
+    @Test
+    public void testDeleteRequest() throws Exception {
+        final long amount = 100;
+        final String message = "Message";
+        final String senderUsername = fixtures.user.getUsername();
+        final String recipient = fixtures.user.getUsername();
+        access.insertTransaction(senderUsername, recipient, amount, message, true);
+
+        server.models.Transaction transaction = assertPresent(
+                access.getRequests(senderUsername).stream()
+                        .filter(t -> t.isRequest()
+                                && t.getTouser().equals(recipient)
+                                && t.getMessage().equals(message)
+                                && t.getAmount() == amount)
+                        .findFirst()
+        );
+        Request request = new MockRequest()
+                .addSessionAttribute("username", fixtures.user.getUsername())
+                .addQueryParam("tranid", Integer.toString(transaction.getTranid()))
+                .get();
+        MockResponse mockResponse = new MockResponse();
+        controller.deleteRequest(request, mockResponse.get());
+
+        Assert.assertFalse(access.getRequests(senderUsername).stream()
+                .anyMatch(t -> t.getTranid() == transaction.getTranid())
+        );
     }
 }

@@ -71,6 +71,14 @@ public class TransactionAccess extends AbstractAccess {
         }
     }
 
+    public void deleteRequest(int transactionId, String toUser) throws SQLException {
+        try (Connection conn = connectionProvider.getConnection();
+             PreparedStatement preparedStmt = Statements.deleteTransactionRequest(conn, transactionId, toUser)
+        ) {
+            preparedStmt.executeUpdate();
+        }
+    }
+
     private Transaction getTransaction(ResultSet rs) throws SQLException {
         int tranid = rs.getInt("tranid");
         String fromuser = rs.getString("fromuser");
