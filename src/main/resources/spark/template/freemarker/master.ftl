@@ -37,6 +37,8 @@
     <script src="/js/ecc.js"></script>
     <script src="/js/index.js"></script>
 
+    <link rel="shortcut icon" type="image/x-icon" href="/png/icon.png">
+
 </head>
 <body>
 <!-- Navigation -->
