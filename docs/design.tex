@@ -55,7 +55,6 @@
 	\item If an attacker manages to hijack a user's session, or glean a user's login credentials, then most of our confidentiality goals will not be upheld.
 	The attacker will be able to view that user's transaction history, public keys, and other profile information.
 	Importantly, however, the attacker cannot view the user's private keys.
-	% is this last one true now, if the attacker knows the user's login credentials?
 \end{itemize}
 
 \section{Integrity}
@@ -66,8 +65,6 @@
 	\item We employ a proof-of-work scheme for mining blocks; only blocks with a SHA-256 hash beneath a threshold are considered valid, and only valid blocks will be added to the blockchain.
 	This requires miners to find a nonce that caused their proposed blocks to have a sufficiently low SHA-256 hash.
 	This proof-of-work protocol forces an attacker to control at least 51\% of the computing power of the network in order to disrupt the blockchain\cite{bitcoin}.
-	% \item Once a miner finds a nonce that satisfies the difficulty, he broadcasts his block to the network, where other miners will pause their mining operations (if they have enough transactions to be mining) to verify the block.
-	% \item If a new block that has been verified contains transactions that the miner has, those transactions are removed from the block he is mining, and he must wait for more transactions to come in before resuming mining operation.
 	\item We do protect the integrity of transactions through use of digital signatures.
 	If a transaction message is modified (perhaps through a man-in-the-middle attack), the message's signature will not verify, and the transaction will be rejected as invalid.
 \end{itemize}
@@ -79,17 +76,16 @@
 	We use TLS 1.2, and default to the TLS \_ECDHE\_RSA\_WITH\_AES\_256\_GCM\_SHA384 cipher suite.
 	We disallow cipher suites using RC4, SHA1, MD5, DH (with key size $< 768$), RSA (with key size $< 2048$), and 3DES.
 	We are using a self-signed certificate, but our server-client communication is properly encrypted as a result.
-	Using a self-signed certificate for more than testing would allow another server to impersonate our web server and, among other things, replace our Javascript that deals with passwords with some that transmits it to a third party.
+	Using a self-signed certificate for more than testing would allow an attacker to impersonate our web server. This attacker could steal user's master passwords by replacing our Javascript code with malicious code that transmits master passwords.
 	Therefore, we would need a properly signed certificate before we deploy our web server in the wild.
-	
+
 	\item If an attacker manages to hijack a user's session, or glean a user's login credentials, some of our integrity goals will not be upheld.
 	\begin{itemize}
-		\item The attacker will be able to make requests to other users on behalf of the user.
-		In the final version of our app, the attacker will not be able to upload or delete the user's keys. % Again, I'm not sure if this is true now that we derive the user's keys from the same password
-		We plan to use an email-based two factor authorization for operations that add or remove an account's keys; we hope to implement this next sprint.
-		This countermeasure is not yet implemented, so currently an attacker is able to upload and delete the user's keys.
-		\item The attacker cannot make transactions on behalf of the user, provided the attacker does not know the user's encryption password.
-		The assumption that attackers cannot know user's encryption passwords will hold under our threat model so long as users do not reuse their encryption password, either as their authentication password or in other services.
+		\item The attacker will be able to make requests to other users on behalf of the user, and delete the user's keys.
+		However, the attacker will not be able to upload new keys on behalf of the user.
+		We prevent this through an email-based two factor authorization mechanism for uploading keys.
+		\item The attacker cannot make transactions on behalf of the user, provided the attacker does not know the user's master password, or the encryption secret derived from the master password.
+		This assumption will hold under our threat model. so long as users do not reuse their encryption password, either as their authentication password or in other services.
 		The risk of users using the same password for both authentication and encryption may make it worthwhile to have users remember a single master password, from which two different authentication and encryption secrets are derived. % This is the case now (?)
 		This is something we will consider for our next sprint.
 	\end{itemize}
@@ -106,16 +102,18 @@
 \subsection{Wallet app}
 
 \begin{itemize}
-	\item Users register with a username and password. The username must be alphanumeric, and between 6 and 24 characters in length.
-	The password must contain a number, lowercase letter, and uppercase letter, and be at least 16 characters in length.
-	\item The user password is salted, using a 16-byte, randomly generated salt, and then hashed with PBKDF2 using SHA-256 and 4096 iterations.
-	The hashed password is stored along with the salt in the database.
-	\item Upon login, the user salt is retrieved from the database and hashed with the provided password.
+	\item Users register with a username and a master password. The username must be alphanumeric, and between 6 and 24 characters in length.
+	The master password must be at least 16 characters in length.
+  \item Two secrets, an authentication secret and an encryption secret, are derived from the master password.
+  The master password and derived encryption secret are never sent over the network; only the authentication secret is sent to the webserver.
+	\item The authentication secret is salted, using a 16-byte, randomly generated salt, and then hashed with PBKDF2 using SHA-256 and 4096 iterations.
+	The hashed ``password'' is stored along with the salt in the database.
+	\item Upon login, the user must present their authentication secret. The user's salt is retrieved from the database and hashed with the provided secret.
 	This result is compared with the hash stored in the database.
 	\item After logging in, the user is identified via a session cookie.
-	Spark, the web framework we are using, handles the details of cookie management. % We need details about this
+	Spark, the web framework we are using, handles the details of cookie management. % TODO we need details about this, Evan save the day
 	\item To protect against online guessing attacks, a user's account is ``locked'' after 5 failed login attempts.
-	If a user's account is locked, the user is notified via email, and must unlock their account using the password reset workflow.
+	If a user's account is locked, the user is notified via email, and must unlock their account using a one-time link that is sent to the user's email account (similar to the password reset workflow).
 \end{itemize}
 
 
@@ -161,7 +159,7 @@
 \subsection{Wallet app}
 
 \begin{itemize}
-	\item We plan to log all requests and transactions made via the web application. 
+	\item We plan to log all requests and transactions made via the web application.
 	This log will enable us to detect if a user's funds are illicitly spent. Unfortunately, the decentralized nature of the underlying cryptocurrency will prevent us from undoing fraudulent transactions.
 	\item We are also considering recording failed login attempts, so that administrators can review and assess online guessing attacks. % Are we doing this or not? I believe it's in (?)
 \end{itemize}
