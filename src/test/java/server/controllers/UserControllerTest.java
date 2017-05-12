@@ -44,7 +44,7 @@ public class UserControllerTest extends ControllerTest {
         controller.init();
         userAccess = injector.getInstance(UserAccess.class);
         setConnectionProvider(injector.getInstance(ConnectionProvider.class));
-        fixtures = new Fixtures();
+        fixtures = injector.getInstance(Fixtures.class);
     }
 
     @Test
@@ -101,7 +101,7 @@ public class UserControllerTest extends ControllerTest {
     public void testRegisterTakenUsername() throws Exception {
         Request request = new MockRequest()
                 .addQueryParam("email", "newuser@example.com")
-                .addQueryParam("username", fixtures.user.getUsername())
+                .addQueryParam("username", fixtures.user(1).getUsername())
                 .addQueryParam("password", Fixtures.USER_PASSWORD)
                 .addQueryParam("confirm", Fixtures.USER_PASSWORD)
                 .get();
@@ -116,19 +116,19 @@ public class UserControllerTest extends ControllerTest {
     @Test
     public void testLoginValid() throws Exception {
         Request request = new MockRequest()
-                .addQueryParam("username", fixtures.user.getUsername())
+                .addQueryParam("username", fixtures.user(1).getUsername())
                 .addQueryParam("password", Fixtures.USER_PASSWORD)
                 .get();
 
         MockResponse mockResponse = new MockResponse();
         controller.login(request, mockResponse.get());
         Assert.assertEquals("/user", mockResponse.redirectedTo());
-        Assert.assertEquals(fixtures.user.getUsername(), request.session().attribute("username"));
+        Assert.assertEquals(fixtures.user(1).getUsername(), request.session().attribute("username"));
     }
 
     @Test
     public void testLoginInvalidPassword() throws Exception {
-        MockResponse mockResponse = invalidLogin(fixtures.user.getUsername());
+        MockResponse mockResponse = invalidLogin(fixtures.user(1).getUsername());
         Assert.assertEquals("/login", mockResponse.redirectedTo());
     }
 
@@ -148,19 +148,19 @@ public class UserControllerTest extends ControllerTest {
     @Test
     public void testLoginLockout() throws Exception {
         for (int i = 0; i < UserController.FAILED_LOGIN_LIMIT - 1; i++) {
-            MockResponse mockResponse = invalidLogin(fixtures.user.getUsername());
+            MockResponse mockResponse = invalidLogin(fixtures.user(1).getUsername());
             Assert.assertEquals("/login", mockResponse.redirectedTo());
         }
-        User user = assertPresent(userAccess.getUserByUsername(fixtures.user.getUsername()));
+        User user = assertPresent(userAccess.getUserByUsername(fixtures.user(1).getUsername()));
         Assert.assertEquals(UserController.FAILED_LOGIN_LIMIT - 1, user.getFailedLogins());
-        MockResponse mockResponse = invalidLogin(fixtures.user.getUsername());
+        MockResponse mockResponse = invalidLogin(fixtures.user(1).getUsername());
         Assert.assertEquals("/unlock", mockResponse.redirectedTo());
     }
 
     @Test
     public void testLogout() throws Exception {
         Request request = new MockRequest()
-                .addSessionAttribute("username", fixtures.user.getUsername())
+                .addSessionAttribute("username", fixtures.user(1).getUsername())
                 .get();
 
         Response response = new MockResponse().get();
@@ -171,7 +171,7 @@ public class UserControllerTest extends ControllerTest {
     @Test
     public void testViewUser() throws Exception {
         Request request = new MockRequest()
-                .addSessionAttribute("username", fixtures.user.getUsername())
+                .addSessionAttribute("username", fixtures.user(1).getUsername())
                 .get();
 
         Response response = new MockResponse().get();
@@ -181,8 +181,8 @@ public class UserControllerTest extends ControllerTest {
     @Test
     public void testAddFriend() throws Exception {
         Request request = new MockRequest()
-                .addSessionAttribute("username", fixtures.user.getUsername())
-                .addQueryParam("friend", fixtures.user.getUsername())
+                .addSessionAttribute("username", fixtures.user(1).getUsername())
+                .addQueryParam("friend", fixtures.user(1).getUsername())
                 .get();
         Response response = new MockResponse().get();
         controller.addFriend(request, response);
@@ -191,8 +191,8 @@ public class UserControllerTest extends ControllerTest {
     @Test
     public void testDeleteFriend() throws Exception {
         Request request = new MockRequest()
-                .addSessionAttribute("username", fixtures.user.getUsername())
-                .addQueryParam("friend", fixtures.user.getUsername())
+                .addSessionAttribute("username", fixtures.user(1).getUsername())
+                .addQueryParam("friend", fixtures.user(1).getUsername())
                 .get();
         Response response = new MockResponse().get();
         controller.deleteFriend(request, response);
@@ -228,7 +228,7 @@ public class UserControllerTest extends ControllerTest {
         }).start();
 
         Request request = new MockRequest()
-                .addSessionAttribute("username", fixtures.user.getUsername())
+                .addSessionAttribute("username", fixtures.user(1).getUsername())
                 .get();
         Response response = new MockResponse().get();
         ModelAndView modelAndView = controller.balance(request, response);

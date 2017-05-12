@@ -1,31 +1,57 @@
 package testutils;
 
-import crypto.Crypto;
+import com.google.inject.Inject;
 import crypto.ECDSAPublicKey;
+import server.access.KeyAccess;
+import server.access.UserAccess;
+import server.models.Key;
 import server.models.User;
-import utils.DeserializationException;
 
-import java.io.IOException;
-import java.security.GeneralSecurityException;
-import java.util.Base64;
+import java.sql.SQLException;
+import java.util.List;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.fail;
+import static testutils.TestUtils.assertPresent;
 
 public final class Fixtures {
+    // all users have same password
     public static final String USER_PASSWORD = "34f3234917379d0ec59fbdaf897bd2aa58ae07f8339d41e3060000a5c4120013";
-    public final User user;
 
-    public final ECDSAPublicKey key;
+    private final UserAccess userAccess;
+    private final KeyAccess keyAccess;
 
-    public Fixtures() {
+    @Inject
+    public Fixtures(UserAccess userAccess, KeyAccess keyAccess) {
+        this.userAccess = userAccess;
+        this.keyAccess = keyAccess;
+    }
+
+    public User user(int userId) {
         try {
-            byte[] salt = Base64.getDecoder().decode("m/g+zPZtEQIsWPLvjMoQCg==");
-            byte[] passwordHash = Crypto.pbkdf2(USER_PASSWORD, salt);
-            user = new User(1, "username", "example@example.com", salt, passwordHash, 0);
-
-            byte[] keyBytes = Base64.getDecoder()
-                    .decode("Q2Wpo3zjP9wplEpXdTLceXeVvj1HTHZHdQbD4fg1Ttg9gPYbRRRxJc4AL0Dkt2bWnQVIYECUCJEb80lNhDPKSg==");
-            key = ECDSAPublicKey.DESERIALIZER.deserialize(keyBytes);
-        } catch (DeserializationException | GeneralSecurityException | IOException e) {
-            throw new RuntimeException(e);
+            return assertPresent(
+                    String.format("No such user with id %d", userId),
+                    userAccess.getUserByID(userId)
+            );
+        } catch (SQLException e) {
+            fail(e.getMessage());
+            throw new AssertionError();
         }
+    }
+
+    public Key keyOwnedBy(int userId) {
+        try {
+            List<Key> keys = keyAccess.getKeysByUserID(userId);
+            assertFalse(String.format("User %d does not have any keys", userId), keys.isEmpty());
+            return keys.get(0);
+        } catch (SQLException e) {
+            fail(e.getMessage());
+            throw new AssertionError();
+        }
+
+    }
+
+    public ECDSAPublicKey ecKeyOwnedBy(int userId) {
+        return assertPresent(keyOwnedBy(userId).asKey());
     }
 }

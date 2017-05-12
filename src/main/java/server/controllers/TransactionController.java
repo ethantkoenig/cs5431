@@ -181,7 +181,7 @@ public class TransactionController extends AbstractController {
 
     String createRequest(Request request, Response response) throws Exception {
         User touser = routeUtils.forceLoggedInUser(request);
-        String fromuser = queryParam(request, "recipient");
+        String fromuser = queryParam(request, "requestee");
 
         if (!userAccess.isFriendsWith(fromuser, touser.getUsername())) {
             return "This person has not authorized you to send them money.";

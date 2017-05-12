@@ -36,21 +36,22 @@ public class KeyControllerTest extends ControllerTest {
         controller.init();
         keyAccess = injector.getInstance(KeyAccess.class);
         setConnectionProvider(injector.getInstance(ConnectionProvider.class));
-        fixtures = new Fixtures();
+        fixtures = injector.getInstance(Fixtures.class);
         mailService = injector.getInstance(MockMailService.class);
     }
 
     @Test
     public void testGetKeys() throws Exception {
+        final int userId = 1;
         Request request = new MockRequest()
-                .addSessionAttribute("username", fixtures.user.getUsername())
+                .addSessionAttribute("username", fixtures.user(userId).getUsername())
                 .get();
         MockResponse mockResponse = new MockResponse();
         String json = controller.getKeys(request, mockResponse.get());
         KeysBody keysBody = new Gson().fromJson(json, KeysBody.class);
         Assert.assertEquals(1, keysBody.keys.size());
         Assert.assertEquals(
-                bytesToHexString(asByteArray(fixtures.key::serialize)),
+                bytesToHexString(asByteArray(fixtures.ecKeyOwnedBy(userId)::serialize)),
                 keysBody.keys.get(0).publicKey
         );
     }
@@ -65,16 +66,16 @@ public class KeyControllerTest extends ControllerTest {
                 .addQueryParamHex("publickey", publicBytes)
                 .addQueryParam("privatekey", privateKey)
                 .addQueryParam("password", Fixtures.USER_PASSWORD)
-                .addSessionAttribute("username", fixtures.user.getUsername())
+                .addSessionAttribute("username", fixtures.user(1).getUsername())
                 .get();
 
         Response response = new MockResponse().get();
         controller.addUserKey(request, response);
-        URL guidURL = getURL(mailService.assertMailToGetBody(fixtures.user.getEmail()));
+        URL guidURL = getURL(mailService.assertMailToGetBody(fixtures.user(1).getEmail()));
         String guid = getParam(guidURL, "guid");
         Key pendingKey = assertPresent(keyAccess.lookupPendingKey(guid));
         Assert.assertEquals(privateKey, pendingKey.encryptedPrivateKey);
-        Assert.assertFalse(keyAccess.getKey(fixtures.user.getId(), publicBytes).isPresent());
+        Assert.assertFalse(keyAccess.getKey(fixtures.user(1).getId(), publicBytes).isPresent());
     }
 
     @Test
@@ -87,27 +88,28 @@ public class KeyControllerTest extends ControllerTest {
                 .addQueryParamHex("publickey", publicBytes)
                 .addQueryParam("privatekey", privateKey)
                 .addQueryParam("password", randomShaTwoFiftySix().toString())
-                .addSessionAttribute("username", fixtures.user.getUsername())
+                .addSessionAttribute("username", fixtures.user(1).getUsername())
                 .get();
 
         MockResponse mockResponse = new MockResponse();
         controller.addUserKey(request, mockResponse.get());
         Assert.assertEquals("/user", mockResponse.redirectedTo());
-        Assert.assertFalse(mailService.sentTo(fixtures.user.getUsername()));
-        Assert.assertFalse(keyAccess.getKey(fixtures.user.getId(), publicBytes).isPresent());
+        Assert.assertFalse(mailService.sentTo(fixtures.user(1).getUsername()));
+        Assert.assertFalse(keyAccess.getKey(fixtures.user(1).getId(), publicBytes).isPresent());
     }
 
     @Test
     public void testRemoveUserKey() throws Exception {
-        byte[] publicBytes = asByteArray(fixtures.key::serialize);
+        final int userId = 1;
+        byte[] publicBytes = asByteArray(fixtures.ecKeyOwnedBy(userId)::serialize);
         Request request = new MockRequest()
                 .addQueryParamHex("publickey", publicBytes)
-                .addSessionAttribute("username", fixtures.user.getUsername())
+                .addSessionAttribute("username", fixtures.user(userId).getUsername())
                 .get();
 
         Response response = new MockResponse().get();
         controller.deleteKey(request, response);
-        Assert.assertFalse(keyAccess.getKey(fixtures.user.getId(), publicBytes).isPresent());
+        Assert.assertFalse(keyAccess.getKey(userId, publicBytes).isPresent());
     }
 
     @Test
@@ -118,7 +120,7 @@ public class KeyControllerTest extends ControllerTest {
         byte[] publicBytes = asByteArray(pair.publicKey::serialize);
         String privateKey = bytesToHexString(asByteArray(pair.privateKey::serialize));
 
-        keyAccess.insertPendingKey(fixtures.user.getId(), publicBytes, privateKey, guid);
+        keyAccess.insertPendingKey(fixtures.user(1).getId(), publicBytes, privateKey, guid);
 
         Request request = new MockRequest()
                 .addQueryParam("guid", guid)
@@ -148,7 +150,7 @@ public class KeyControllerTest extends ControllerTest {
         byte[] publicBytes = asByteArray(pair.publicKey::serialize);
         String privateKey = bytesToHexString(asByteArray(pair.privateKey::serialize));
 
-        keyAccess.insertPendingKey(fixtures.user.getId(), publicBytes, privateKey, guid);
+        keyAccess.insertPendingKey(fixtures.user(1).getId(), publicBytes, privateKey, guid);
 
         Request request = new MockRequest()
                 .addQueryParam("guid", guid)
@@ -157,7 +159,7 @@ public class KeyControllerTest extends ControllerTest {
         MockResponse mockResponse = new MockResponse();
         controller.finalizeKeyInsert(request, mockResponse.get());
         Assert.assertFalse(keyAccess.lookupPendingKey(guid).isPresent());
-        assertPresent(keyAccess.getKey(fixtures.user.getId(), publicBytes));
+        assertPresent(keyAccess.getKey(fixtures.user(1).getId(), publicBytes));
     }
 
     @Test
