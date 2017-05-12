@@ -123,14 +123,6 @@ $(document).ready(function () {
         var $passwordGroup = $form.find('.password-form-group');
         var $passwordInput = $passwordGroup.find('input');
 
-        $.each($form, function () {
-            console.log($(this))
-            if ($(this).val() == "") {
-                display_alert("Please fill out all fields.", "error")
-                return false;
-            }
-        })
-
         var password = $passwordInput.val();
         if (password.length == 0) {
             $passwordGroup.addClass('has-error');
@@ -153,11 +145,11 @@ $(document).ready(function () {
 
         if (!validHexString($publicKeyInput.val(), 128)) {
             $publicKeyGroup.addClass('has-error');
-            display_alert("Please enter valid hex strings for keys.", "error")
+            display_alert("Please enter valid hex strings for keys.", "error");
             return false; // don't submit form
         } else if (!validHexString($privateKeyInput.val(), 64)) {
             $privateKeyGroup.addClass('has-error');
-            display_alert("Please enter valid hex strings for keys.", "error")
+            display_alert("Please enter valid hex strings for keys.", "error");
             return false; // don't submit form
         }
 
