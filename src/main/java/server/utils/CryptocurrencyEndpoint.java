@@ -6,6 +6,9 @@ import utils.DeserializationException;
 
 import java.io.IOException;
 
+/**
+ * Interface for communicating with the cryptocurrency network
+ */
 public interface CryptocurrencyEndpoint extends AutoCloseable {
     void send(OutgoingMessage message) throws IOException;
 
