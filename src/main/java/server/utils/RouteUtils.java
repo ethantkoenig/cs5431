@@ -7,7 +7,6 @@ import server.access.UserAccess;
 import server.models.User;
 import spark.*;
 import utils.ByteUtil;
-import utils.Config;
 
 import java.io.IOException;
 import java.net.URL;
@@ -25,36 +24,8 @@ public final class RouteUtils {
         this.gson = gson;
     }
 
-    public static Route wrapRoute(Route route) {
-        return (request, response) -> {
-            try {
-                return route.handle(request, response);
-            } catch (NotLoggedInException e) {
-                response.status(403);
-                return "";
-            } catch (InvalidParamException e) {
-                response.status(400);
-                return e.getMessage();
-            }
-        };
-    }
-
-    public static TemplateViewRoute wrapTemplate(TemplateViewRoute route) {
-        return (request, response) -> {
-            try {
-                return route.handle(request, response);
-            } catch (NotLoggedInException e) {
-                return RouteUtils.redirectTo(response, "/login");
-            } catch (InvalidParamException e) {
-                response.status(400);
-                response.body("Invalid Parameters.");
-                return null;
-            }
-        };
-    }
-
     public TemplateViewRoute template(String templatePath) {
-        return wrapTemplate((request, response) -> modelAndView(request, templatePath).get());
+        return (request, response) -> modelAndView(request, templatePath).get();
     }
 
     public MapModelAndView modelAndView(Request request, String viewName)

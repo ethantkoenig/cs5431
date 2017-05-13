@@ -29,7 +29,6 @@ import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
-import static server.utils.RouteUtils.wrapRoute;
 import static testutils.TestUtils.assertPresent;
 
 public class UserControllerTest extends ControllerTest {
@@ -56,7 +55,7 @@ public class UserControllerTest extends ControllerTest {
                 .addQueryParam("confirm", Fixtures.USER_PASSWORD)
                 .get();
         MockResponse mockResponse = new MockResponse();
-        controller.register(request, mockResponse.get());
+        route(controller::register).handle(request, mockResponse.get());
         Assert.assertTrue(mockResponse.redirected());
         Assert.assertEquals("/user", mockResponse.redirectedTo());
         Assert.assertEquals(request.session().attribute("username"), "newUsername");
@@ -74,7 +73,7 @@ public class UserControllerTest extends ControllerTest {
                 .get();
 
         MockResponse mockResponse = new MockResponse();
-        controller.register(request, mockResponse.get());
+        route(controller::register).handle(request, mockResponse.get());
         Assert.assertEquals("/register", mockResponse.redirectedTo());
         Assert.assertNull(request.session().attribute("username"));
         Assert.assertFalse(userAccess.getUserByEmail("newuser@example.com").isPresent());
@@ -91,7 +90,7 @@ public class UserControllerTest extends ControllerTest {
                 .get();
 
         MockResponse mockResponse = new MockResponse();
-        wrapRoute(controller::register).handle(request, mockResponse.get());
+        route(controller::register).handle(request, mockResponse.get());
         Assert.assertEquals(400, mockResponse.status());
         Assert.assertNull(request.session().attribute("username"));
         Assert.assertFalse(userAccess.getUserByEmail("newuser@example.com").isPresent());
@@ -107,7 +106,7 @@ public class UserControllerTest extends ControllerTest {
                 .get();
 
         MockResponse mockResponse = new MockResponse();
-        controller.register(request, mockResponse.get());
+        route(controller::register).handle(request, mockResponse.get());
         Assert.assertEquals("/register", mockResponse.redirectedTo());
         Assert.assertNull(request.session().attribute("username"));
         Assert.assertFalse(userAccess.getUserByEmail("newuser@example.com").isPresent());
@@ -121,7 +120,7 @@ public class UserControllerTest extends ControllerTest {
                 .get();
 
         MockResponse mockResponse = new MockResponse();
-        controller.login(request, mockResponse.get());
+        route(controller::login).handle(request, mockResponse.get());
         Assert.assertEquals("/user", mockResponse.redirectedTo());
         Assert.assertEquals(fixtures.user(1).getUsername(), request.session().attribute("username"));
     }
@@ -140,7 +139,7 @@ public class UserControllerTest extends ControllerTest {
                 .get();
 
         MockResponse mockResponse = new MockResponse();
-        controller.login(request, mockResponse.get());
+        route(controller::login).handle(request, mockResponse.get());
         Assert.assertEquals("/login", mockResponse.redirectedTo());
         Assert.assertNull(request.attribute("username"));
     }
@@ -164,7 +163,7 @@ public class UserControllerTest extends ControllerTest {
                 .get();
 
         Response response = new MockResponse().get();
-        controller.logout(request, response);
+        route(controller::logout).handle(request, response);
         Assert.assertNull(request.attribute("username"));
     }
 
@@ -175,7 +174,8 @@ public class UserControllerTest extends ControllerTest {
                 .get();
 
         Response response = new MockResponse().get();
-        controller.viewUser(request, response);
+        ModelAndView modelAndView = template(controller::viewUser).handle(request, response);
+        Assert.assertEquals("user.ftl", modelAndView.getViewName());
     }
 
     @Test
@@ -185,7 +185,7 @@ public class UserControllerTest extends ControllerTest {
                 .addQueryParam("friend", fixtures.user(1).getUsername())
                 .get();
         Response response = new MockResponse().get();
-        controller.addFriend(request, response);
+        route(controller::addFriend).handle(request, response);
     }
 
     @Test
@@ -195,7 +195,7 @@ public class UserControllerTest extends ControllerTest {
                 .addQueryParam("friend", fixtures.user(1).getUsername())
                 .get();
         Response response = new MockResponse().get();
-        controller.deleteFriend(request, response);
+        route(controller::deleteFriend).handle(request, response);
     }
 
     @Test
@@ -231,7 +231,7 @@ public class UserControllerTest extends ControllerTest {
                 .addSessionAttribute("username", fixtures.user(1).getUsername())
                 .get();
         Response response = new MockResponse().get();
-        ModelAndView modelAndView = controller.balance(request, response);
+        ModelAndView modelAndView = template(controller::balance).handle(request, response);
         Assert.assertEquals("balance.ftl", modelAndView.getViewName());
     }
 
@@ -241,7 +241,7 @@ public class UserControllerTest extends ControllerTest {
                 .addQueryParam("password", "wr0ngP@ssword!!")
                 .get();
         MockResponse mockResponse = new MockResponse();
-        controller.login(request, mockResponse.get());
+        route(controller::login).handle(request, mockResponse.get());
         Assert.assertNull(request.attribute("username"));
         return mockResponse;
     }

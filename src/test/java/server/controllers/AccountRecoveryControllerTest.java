@@ -18,7 +18,6 @@ import utils.ByteUtil;
 
 import java.util.Collections;
 
-import static server.utils.RouteUtils.wrapRoute;
 import static testutils.TestUtils.assertPresent;
 
 public class AccountRecoveryControllerTest extends ControllerTest {
@@ -43,7 +42,7 @@ public class AccountRecoveryControllerTest extends ControllerTest {
     public void testGetResetNoGUID() throws Exception {
         Request request = new MockRequest().get();
         Response response = new MockResponse().get();
-        ModelAndView modelAndView = controller.getReset(request, response);
+        ModelAndView modelAndView = template(controller::getReset).handle(request, response);
         Assert.assertEquals("resetRequest.ftl", modelAndView.getViewName());
     }
 
@@ -57,7 +56,7 @@ public class AccountRecoveryControllerTest extends ControllerTest {
                 .addQueryParam("guid", guid)
                 .get();
         Response response = new MockResponse().get();
-        ModelAndView modelAndView = controller.getReset(request, response);
+        ModelAndView modelAndView = template(controller::getReset).handle(request, response);
         Assert.assertEquals("reset.ftl", modelAndView.getViewName());
     }
 
@@ -68,7 +67,7 @@ public class AccountRecoveryControllerTest extends ControllerTest {
                 .get();
 
         MockResponse mockResponse = new MockResponse();
-        controller.resetMail(request, mockResponse.get());
+        route(controller::resetMail).handle(request, mockResponse.get());
         Assert.assertEquals("/reset", mockResponse.redirectedTo());
     }
 
@@ -79,7 +78,7 @@ public class AccountRecoveryControllerTest extends ControllerTest {
                 .get();
 
         MockResponse mockResponse = new MockResponse();
-        controller.resetMail(request, mockResponse.get());
+        route(controller::resetMail).handle(request, mockResponse.get());
         Assert.assertEquals("/reset", mockResponse.redirectedTo());
     }
 
@@ -96,7 +95,7 @@ public class AccountRecoveryControllerTest extends ControllerTest {
                 .get();
 
         MockResponse mockResponse = new MockResponse();
-        controller.reset(request, mockResponse.get());
+        route(controller::reset).handle(request, mockResponse.get());
         Assert.assertEquals("/login", mockResponse.redirectedTo());
 
         User user = assertPresent(userAccess.getUserByID(fixtures.user(1).getId()));
@@ -107,7 +106,7 @@ public class AccountRecoveryControllerTest extends ControllerTest {
     public void testGetUnlockNoGUID() throws Exception {
         Request request = new MockRequest().get();
         Response response = new MockResponse().get();
-        ModelAndView modelAndView = controller.getUnlock(request, response);
+        ModelAndView modelAndView = template(controller::getUnlock).handle(request, response);
         Assert.assertEquals("unlockRequest.ftl", modelAndView.getViewName());
     }
 
@@ -117,7 +116,7 @@ public class AccountRecoveryControllerTest extends ControllerTest {
                 .addQueryParam("guid", randomShaTwoFiftySix().toString())
                 .get();
         Response response = new MockResponse().get();
-        ModelAndView modelAndView = controller.getUnlock(request, response);
+        ModelAndView modelAndView = template(controller::getUnlock).handle(request, response);
         Assert.assertEquals("unlockRequest.ftl", modelAndView.getViewName());
     }
 
@@ -130,7 +129,7 @@ public class AccountRecoveryControllerTest extends ControllerTest {
                 .addQueryParam("guid", guid)
                 .get();
         Response response = new MockResponse().get();
-        ModelAndView modelAndView = controller.getUnlock(request, response);
+        ModelAndView modelAndView = template(controller::getUnlock).handle(request, response);
         Assert.assertEquals("unlock.ftl", modelAndView.getViewName());
     }
 
@@ -144,7 +143,7 @@ public class AccountRecoveryControllerTest extends ControllerTest {
                 .addQueryParam("guid", guid)
                 .get();
         MockResponse mockResponse = new MockResponse();
-        controller.unlockMail(request, mockResponse.get());
+        route(controller::unlockMail).handle(request, mockResponse.get());
         Assert.assertEquals("/unlock", mockResponse.redirectedTo());
     }
 
@@ -159,7 +158,7 @@ public class AccountRecoveryControllerTest extends ControllerTest {
                 .get();
 
         MockResponse mockResponse = new MockResponse();
-        controller.unlock(request, mockResponse.get());
+        route(controller::unlock).handle(request, mockResponse.get());
         Assert.assertEquals("/user", mockResponse.redirectedTo());
         User user = assertPresent(userAccess.getUserByID(fixtures.user(1).getId()));
         Assert.assertEquals(0, user.getFailedLogins());
@@ -174,7 +173,7 @@ public class AccountRecoveryControllerTest extends ControllerTest {
                 .get();
 
         MockResponse mockResponse = new MockResponse();
-        controller.unlock(request, mockResponse.get());
+        route(controller::unlock).handle(request, mockResponse.get());
         Assert.assertEquals("/unlock", mockResponse.redirectedTo());
         Assert.assertNull(request.session().attribute("username"));
     }
@@ -190,7 +189,7 @@ public class AccountRecoveryControllerTest extends ControllerTest {
                 .get();
 
         MockResponse mockResponse = new MockResponse();
-        controller.unlock(request, mockResponse.get());
+        route(controller::unlock).handle(request, mockResponse.get());
         Assert.assertEquals("/unlock", mockResponse.redirectedTo());
         Assert.assertNull(request.session().attribute("username"));
     }
@@ -201,7 +200,7 @@ public class AccountRecoveryControllerTest extends ControllerTest {
                 .addSessionAttribute("username", fixtures.user(1).getUsername())
                 .get();
         MockResponse mockResponse = new MockResponse();
-        ModelAndView modelAndView = controller.getChangePassword(request, mockResponse.get());
+        ModelAndView modelAndView = template(controller::getChangePassword).handle(request, mockResponse.get());
         Assert.assertEquals("changePasswordRequest.ftl", modelAndView.getViewName());
     }
 
@@ -214,7 +213,7 @@ public class AccountRecoveryControllerTest extends ControllerTest {
                 .addSessionAttribute("username", fixtures.user(1).getUsername())
                 .get();
         MockResponse mockResponse = new MockResponse();
-        ModelAndView modelAndView = controller.getChangePassword(request, mockResponse.get());
+        ModelAndView modelAndView = template(controller::getChangePassword).handle(request, mockResponse.get());
         Assert.assertEquals("changePasswordRequest.ftl", modelAndView.getViewName());
     }
 
@@ -224,7 +223,7 @@ public class AccountRecoveryControllerTest extends ControllerTest {
                 .addSessionAttribute("username", fixtures.user(1).getUsername())
                 .get();
         MockResponse mockResponse = new MockResponse();
-        controller.changePasswordMail(request, mockResponse.get());
+        route(controller::changePasswordMail).handle(request, mockResponse.get());
         Assert.assertEquals("/change_password", mockResponse.redirectedTo());
     }
 
@@ -249,7 +248,7 @@ public class AccountRecoveryControllerTest extends ControllerTest {
                 .jsonBody(keysBody)
                 .get();
         MockResponse mockResponse = new MockResponse();
-        controller.changePassword(request, mockResponse.get());
+        route(controller::changePassword).handle(request, mockResponse.get());
 
         User user = assertPresent(userAccess.getUserByID(fixtures.user(userId).getId()));
         Assert.assertTrue(user.checkPassword(newPassword));
@@ -275,7 +274,7 @@ public class AccountRecoveryControllerTest extends ControllerTest {
                 .jsonBody(keysBody)
                 .get();
         MockResponse mockResponse = new MockResponse();
-        wrapRoute(controller::changePassword).handle(request, mockResponse.get());
+        route(controller::changePassword).handle(request, mockResponse.get());
         Assert.assertEquals(400, mockResponse.status());
         User user = assertPresent(userAccess.getUserByID(fixtures.user(userId).getId()));
         Assert.assertFalse(user.checkPassword(newPassword));

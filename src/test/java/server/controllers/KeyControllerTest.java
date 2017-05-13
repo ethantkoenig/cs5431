@@ -47,8 +47,8 @@ public class KeyControllerTest extends ControllerTest {
                 .addSessionAttribute("username", fixtures.user(userId).getUsername())
                 .get();
         MockResponse mockResponse = new MockResponse();
-        String json = controller.getKeys(request, mockResponse.get());
-        KeysBody keysBody = new Gson().fromJson(json, KeysBody.class);
+        Object json = route(controller::getKeys).handle(request, mockResponse.get());
+        KeysBody keysBody = new Gson().fromJson(json.toString(), KeysBody.class);
         Assert.assertEquals(1, keysBody.keys.size());
         Assert.assertEquals(
                 bytesToHexString(asByteArray(fixtures.ecKeyOwnedBy(userId)::serialize)),
@@ -70,7 +70,7 @@ public class KeyControllerTest extends ControllerTest {
                 .get();
 
         Response response = new MockResponse().get();
-        controller.addUserKey(request, response);
+        route(controller::addUserKey).handle(request, response);
         URL guidURL = getURL(mailService.assertMailToGetBody(fixtures.user(1).getEmail()));
         String guid = getParam(guidURL, "guid");
         Key pendingKey = assertPresent(keyAccess.lookupPendingKey(guid));
@@ -92,7 +92,7 @@ public class KeyControllerTest extends ControllerTest {
                 .get();
 
         MockResponse mockResponse = new MockResponse();
-        controller.addUserKey(request, mockResponse.get());
+        route(controller::addUserKey).handle(request, mockResponse.get());
         Assert.assertEquals("/user", mockResponse.redirectedTo());
         Assert.assertFalse(mailService.sentTo(fixtures.user(1).getUsername()));
         Assert.assertFalse(keyAccess.getKey(fixtures.user(1).getId(), publicBytes).isPresent());
@@ -108,7 +108,7 @@ public class KeyControllerTest extends ControllerTest {
                 .get();
 
         Response response = new MockResponse().get();
-        controller.deleteKey(request, response);
+        route(controller::deleteKey).handle(request, response);
         Assert.assertFalse(keyAccess.getKey(userId, publicBytes).isPresent());
     }
 
@@ -127,7 +127,7 @@ public class KeyControllerTest extends ControllerTest {
                 .get();
 
         MockResponse mockResponse = new MockResponse();
-        ModelAndView modelAndView = controller.getAddKey(request, mockResponse.get());
+        ModelAndView modelAndView = template(controller::getAddKey).handle(request, mockResponse.get());
         Assert.assertEquals("finalizeKey.ftl", modelAndView.getViewName());
     }
 
@@ -138,7 +138,7 @@ public class KeyControllerTest extends ControllerTest {
                 .addQueryParam("guid", guid)
                 .get();
         MockResponse mockResponse = new MockResponse();
-        controller.getAddKey(request, mockResponse.get());
+        template(controller::getAddKey).handle(request, mockResponse.get());
         Assert.assertEquals("/user", mockResponse.redirectedTo());
     }
 
@@ -157,7 +157,7 @@ public class KeyControllerTest extends ControllerTest {
                 .get();
 
         MockResponse mockResponse = new MockResponse();
-        controller.finalizeKeyInsert(request, mockResponse.get());
+        route(controller::finalizeKeyInsert).handle(request, mockResponse.get());
         Assert.assertFalse(keyAccess.lookupPendingKey(guid).isPresent());
         assertPresent(keyAccess.getKey(fixtures.user(1).getId(), publicBytes));
     }
@@ -169,7 +169,7 @@ public class KeyControllerTest extends ControllerTest {
                 .addQueryParam("guid", guid)
                 .get();
         MockResponse mockResponse = new MockResponse();
-        controller.finalizeKeyInsert(request, mockResponse.get());
+        route(controller::finalizeKeyInsert).handle(request, mockResponse.get());
         Assert.assertEquals("/user", mockResponse.redirectedTo());
     }
 }

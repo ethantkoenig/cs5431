@@ -3,20 +3,15 @@ package utils;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public final class Log {
+public abstract class Log {
     private static Log parentLog = getParentLog();
-    public final Logger logger;
-
-    private Log(Logger logger) {
-        this.logger = logger;
-    }
 
     private static Log getParentLog() {
-        return new Log(Logger.getLogger(""));
+        return new DefaultLog(Logger.getLogger(""));
     }
 
     public static Log forClass(Class<?> clazz) {
-        return new Log(Logger.getLogger(clazz.getName()));
+        return new DefaultLog(Logger.getLogger(clazz.getName()));
     }
 
     public static Log parentLog() {
@@ -35,10 +30,27 @@ public final class Log {
         log(Level.SEVERE, format, args);
     }
 
-    public void log(Level level, String format, Object... args) {
-        if (logger.isLoggable(level)) {
-            logger.log(level, String.format(format, args));
+    public abstract void log(Level level, String format, Object... args);
+
+    public abstract Logger logger();
+
+    private static final class DefaultLog extends Log {
+        private final Logger logger;
+
+        private DefaultLog(Logger logger) {
+            this.logger = logger;
+        }
+
+        @Override
+        public void log(Level level, String format, Object... args) {
+            if (logger.isLoggable(level)) {
+                logger.log(level, String.format(format, args));
+            }
+        }
+
+        @Override
+        public Logger logger() {
+            return logger;
         }
     }
-
 }

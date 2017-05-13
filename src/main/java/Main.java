@@ -118,7 +118,7 @@ public class Main {
     private static boolean configureLog(Properties prop) {
         try {
             String logPath = IOUtils.getPropertyChecked(prop, "logfilePath");
-            LOGGER.logger.addHandler(new FileHandler(logPath));
+            LOGGER.logger().addHandler(new FileHandler(logPath));
             return true;
         } catch (IOException | SecurityException e) {
             System.err.println(e.toString());
