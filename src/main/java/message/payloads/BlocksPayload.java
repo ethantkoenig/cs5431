@@ -10,12 +10,17 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class BlocksPayload extends MessagePayload {
     public static final Deserializer<BlocksPayload> DESERIALIZER =
             new BlocksPayloadDeserializer();
     private final List<Block> blocks;
+
+    public BlocksPayload(Block block) {
+        this(Collections.singletonList(block));
+    }
 
     public BlocksPayload(List<Block> blocks) {
         this.blocks = blocks;

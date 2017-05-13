@@ -3,6 +3,7 @@ package network;
 import block.Block;
 import message.Message;
 import message.OutgoingMessage;
+import message.payloads.BlocksPayload;
 import utils.ByteUtil;
 import utils.Log;
 
@@ -21,7 +22,7 @@ import static utils.CanBeSerialized.serializeSingleton;
  */
 public class MinerThread extends Thread {
     private static final Log LOGGER = Log.forClass(MinerThread.class);
-    private Block block;
+    private final Block block;
     private final AtomicBoolean stopMining = new AtomicBoolean(false);
 
     private final BlockingQueue<OutgoingMessage> broadcastQueue;
@@ -31,20 +32,6 @@ public class MinerThread extends Thread {
         this.broadcastQueue = broadcastQueue;
     }
 
-    /**
-     * Try a random nonce then increase by one after each unsuccessful hash until
-     * block mined successfully.
-     *
-     * @throws IOException if error hashing block
-     */
-    private Block tryNonces() throws Exception {
-        LOGGER.info("[!] Trying nonces...");
-        if (!block.findValidNonce(stopMining)) {
-            return null;
-        }
-        return block;
-    }
-
     public void stopMining() {
         stopMining.set(true);
     }
@@ -52,28 +39,13 @@ public class MinerThread extends Thread {
     @Override
     public void run() {
         LOGGER.info("[+] MiningThread started");
-
-        Block finalBlock = null; // TODO give this var a better name
         try {
-            finalBlock = tryNonces();
-        } catch (Exception e) {
-            LOGGER.severe("Error hashing block: " + e.getMessage());
-        }
-
-        // The thread was told to stop by parent so get out.
-        if (finalBlock == null) {
-            return;
-        }
-
-        LOGGER.info("[+] Successfully mined block! Broadcasting to other nodes.");
-        // Put message on broadcast queue
-        try {
-            final Block minedBlock = finalBlock;
-            byte[] payload = ByteUtil.asByteArray(out -> serializeSingleton(out, minedBlock));
-            broadcastQueue.put(new OutgoingMessage(Message.BLOCKS, payload));
+            if (block.findValidNonce(stopMining)) {
+                LOGGER.info("[+] Successfully mined block! Broadcasting to other nodes.");
+                broadcastQueue.put(new BlocksPayload(block).toMessage());
+            }
         } catch (InterruptedException | IOException e) {
-            e.printStackTrace();
+            LOGGER.severe("Error while mining: %s", e.getMessage());
         }
-
     }
 }

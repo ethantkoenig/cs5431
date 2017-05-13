@@ -12,7 +12,6 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Logger;
 
 /**
  * Represents a block of transactions in the ledger
@@ -170,18 +169,20 @@ public class Block extends HashCache implements Iterable<Transaction>, CanBeSeri
         byte[] hash = new byte[ShaTwoFiftySix.HASH_SIZE_IN_BYTES];
         int hashGoal = Config.hashGoal();
 
-        do {
-            if (quit.get()) {
-                return false;
-            }
+        while (!quit.get()) {
             SHA256Digest copy = new SHA256Digest(digest);
             nonceAddOne();
             copy.update(nonce, 0, nonce.length);
             copy.doFinal(hash, 0);
-        } while (!ShaTwoFiftySix.create(hash).get()
-                .checkHashZeros(hashGoal));
-
-        return true;
+            Optional<ShaTwoFiftySix> optSha = ShaTwoFiftySix.create(hash);
+            if (!optSha.isPresent()) {
+                LOGGER.severe("Invalid hash: %s", Arrays.toString(hash));
+                break;
+            } else if (optSha.get().checkHashZeros(hashGoal)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

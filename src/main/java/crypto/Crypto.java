@@ -13,6 +13,7 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.jce.spec.ECNamedCurveParameterSpec;
 import utils.Config;
 import utils.DeserializationException;
+import utils.ShaTwoFiftySix;
 
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
@@ -82,9 +83,13 @@ public final class Crypto {
     }
 
     public static boolean verify(byte[] content, ECDSASignature signature, ECDSAPublicKey key) {
+        return verify(ShaTwoFiftySix.hashOf(content), signature, key);
+    }
+
+    public static boolean verify(ShaTwoFiftySix contentHash, ECDSASignature signature, ECDSAPublicKey key) {
         ECDSASigner signer = new ECDSASigner();
         signer.init(false, new ECPublicKeyParameters(key.point, PARAMETERS));
-        return signer.verifySignature(sha256(content), signature.r, signature.s);
+        return signer.verifySignature(contentHash.copyOfHash(), signature.r, signature.s);
     }
 
     public static ECDSAPublicKey loadPublicKey(String filename)
