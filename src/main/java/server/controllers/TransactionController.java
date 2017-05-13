@@ -147,12 +147,12 @@ public class TransactionController extends AbstractController {
         if (queryParamExists(request, "tranid")) {
             int tranid = queryParamInt(request, "tranid");
             transactionAccess.updateTransactionRequestAsComplete(tranid, loggedInUser.getUsername());
-            log.info("Accepted request; username=%s, tranId=%d, payloadHash=%s",
-                    tranid, loggedInUser.getUsername(), payloadHash);
+            log.info("Accepted request; user=%d, tranId=%d, payloadHash=%s",
+                    loggedInUser.getId(), tranid, payloadHash);
         } else {
             transactionAccess.insertTransaction(loggedInUser.getUsername(), recipientUsername, amount, message, false);
-            log.info("Created transaction; username=%s, payloadHash=%s",
-                    loggedInUser.getUsername(), payloadHash);
+            log.info("Created transaction; user=%d, payloadHash=%s",
+                    loggedInUser.getId(), payloadHash);
         }
 
         response.status(200);

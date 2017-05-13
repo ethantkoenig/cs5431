@@ -132,8 +132,8 @@ public class KeyController extends AbstractController {
         if (validKey) {
             String email = user.getEmail();
             mailService.sendEmail(email, SUBJECT, emailBody(link));
-            log.info("Sent key upload email; username=%s, address=%s, publickey=%s",
-                    user.getUsername(), email, bytesToHexString(publicKey));
+            log.info("Sent key upload email; userId=%d, address=%s, publickey=%s",
+                    user.getId(), email, bytesToHexString(publicKey));
             RouteUtils.successMessage(request, "Check your inbox.");
             keyAccess.insertPendingKey(user.getId(), publicKey, privateKey, guid);
         } else {
@@ -141,7 +141,6 @@ public class KeyController extends AbstractController {
         }
         response.redirect("/user");
         return "redirected";
-
     }
 
     String deleteKey(Request request, Response response, Log log) throws Exception {
@@ -149,8 +148,8 @@ public class KeyController extends AbstractController {
         User user = routeUtils.forceLoggedInUser(request);
         Optional<Key> optKey = keyAccess.getKey(user.getId(), publicKey);
         if (optKey.isPresent()) {
-            log.info("Delete key; username=%s, publicKey=%s",
-                    user.getUsername(), bytesToHexString(publicKey));
+            log.info("Delete key; userId=%d, publicKey=%s",
+                    user.getId(), bytesToHexString(publicKey));
             keyAccess.deleteKey(optKey.get().getId());
         }
         return "ok";

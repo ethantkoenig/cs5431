@@ -12,6 +12,7 @@ import server.access.UserAccess;
 import server.models.Key;
 import server.models.User;
 import server.utils.*;
+import server.utils.RouteUtils;
 import spark.ModelAndView;
 import spark.Request;
 import spark.Response;
@@ -135,10 +136,10 @@ public class UserController extends AbstractController {
         boolean validAuth = user.checkPassword(password);
         boolean lockedOut = user.getFailedLogins() >= FAILED_LOGIN_LIMIT;
         if (!lockedOut && !validAuth) {
-            log.info("Failed login attempt; username=%s", username);
+            log.info("Failed login attempt; user=%d", user.getId());
             userAccess.incrementFailedLogins(user.getId());
             if (user.getFailedLogins() + 1 == FAILED_LOGIN_LIMIT) {
-                log.info("Locking account; username=%s", username);
+                log.info("Locking account; user=%d", user.getId());
                 String link = baseURL(request) + "/unlock";
                 mailService.sendEmail(user.getEmail(), LOCKOUT_SUBJECT, lockoutBody(link));
                 lockedOut = true;
@@ -156,7 +157,7 @@ public class UserController extends AbstractController {
         }
         userAccess.resetFailedLogins(user.getId());
         request.session(true).attribute("username", username);
-        log.info("Successful login; username=%s", username);
+        log.info("Successful login; user=%d", user.getId());
         response.redirect("/user");
         return "redirected";
     }
@@ -186,12 +187,12 @@ public class UserController extends AbstractController {
 
     String addFriend(Request request, Response response, Log log) throws Exception {
         User loggedInUser = routeUtils.forceLoggedInUser(request);
-        String friend = RouteUtils.queryParam(request, "friend");
-        // TODO check that friend is valid
-        String username = loggedInUser.getUsername();
+        String friendUsername = RouteUtils.queryParam(request, "friend");
+        User friend = userAccess.getUserByUsername(friendUsername).orElseThrow(
+                () -> new InvalidParamException("No such user: " + friendUsername));
 
-        log.info("Add friend; username=%s, friend=%s", username, friend);
-        userAccess.insertFriends(username, friend);
+        log.info("Add friend; user=%d, friend=%d", loggedInUser.getId(), friend.getId());
+        userAccess.insertFriends(loggedInUser.getUsername(), friend.getUsername());
         return "ok";
     }
 
@@ -199,7 +200,7 @@ public class UserController extends AbstractController {
         User loggedInUser = routeUtils.forceLoggedInUser(request);
         String friend = RouteUtils.queryParam(request, "friend");
         String username = loggedInUser.getUsername();
-        log.info("Delete friend; username=%s, friend=%s", username, friend);
+        log.info("Delete friend; user=%d, friend=%s", loggedInUser.getId(), friend);
         userAccess.deleteFriends(username, friend);
         return "ok";
     }
@@ -238,8 +239,8 @@ public class UserController extends AbstractController {
             IncomingMessage respMessage = IncomingMessage.responderlessDeserializer()
                     .deserialize(new DataInputStream(socket.getInputStream()));
             if (respMessage.type != Message.FUNDS) {
-                LOGGER.severe(String.format("Unexpected response type %d, expected %d",
-                        respMessage.type, Message.FUNDS));
+                LOGGER.severe("Unexpected response type %d, expected %d",
+                        respMessage.type, Message.FUNDS);
             }
             return GetFundsResponsePayload.DESERIALIZER.deserialize(respMessage.payload);
         }
