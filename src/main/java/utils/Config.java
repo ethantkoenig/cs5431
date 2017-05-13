@@ -9,8 +9,6 @@ public final class Config {
     private static int PBKDF2_COST = 12;
     private static int HASH_GOAL = 2;
 
-    private static String MAIL_FROM = "ezracoinl@gmail.com";
-
     // Disallow instances of this class
     private Config() {
     }
@@ -29,9 +27,5 @@ public final class Config {
 
     public static void setHashGoal(int goal) {
         HASH_GOAL = goal;
-    }
-
-    public static String getMailFrom() {
-        return MAIL_FROM;
     }
 }

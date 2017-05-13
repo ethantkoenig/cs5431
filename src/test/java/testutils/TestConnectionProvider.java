@@ -15,6 +15,7 @@ public final class TestConnectionProvider extends PooledConnectionProvider {
 
     public TestConnectionProvider() throws SQLException {
         super();
+        configure();
         initTables();
     }
 

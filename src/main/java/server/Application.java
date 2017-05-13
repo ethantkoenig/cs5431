@@ -4,6 +4,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import message.payloads.PingPayload;
+import server.annotations.DatabasePassword;
 import server.config.DatabaseConfig;
 import server.controllers.*;
 import server.utils.*;
@@ -30,7 +31,7 @@ public class Application {
         int serverPort;
         try {
             serverPort = Integer.parseInt(IOUtils.getPropertyChecked(serverProp, "serverPort"));
-        } catch (IOException e) {
+        } catch (IOException | NumberFormatException e) {
             System.err.printf(String.format("Error: %s", e.getMessage()));
             return false;
         }
@@ -57,10 +58,13 @@ public class Application {
         String keystorePath;
         String host;
         String portString;
+        String keystorePassword;
         try {
             keystorePath = IOUtils.getPropertyChecked(serverProp, "keystore");
             host = IOUtils.getPropertyChecked(serverProp, "nodeAddress");
             portString = IOUtils.getPropertyChecked(serverProp, "nodePort");
+            keystorePassword = IOUtils.getPropertyChecked(serverProp, "keystorePassword");
+            Module.DB_PASSWORD = IOUtils.getPropertyChecked(serverProp, "databasePassword");
         } catch (IOException e) {
             System.err.println(String.format("Error: %s", e.getMessage()));
             return false;
@@ -74,11 +78,6 @@ public class Application {
             return false;
         }
 
-        String keystorePassword = System.getenv("KEYSTORE_PASS");
-        if (keystorePassword == null) {
-            System.err.println("Store keystore password in $KEYSTORE_PASS env variable");
-            return false;
-        }
         secure(keystorePath, keystorePassword, null, null);
         return true;
     }
@@ -99,10 +98,16 @@ public class Application {
     }
 
     private static class Module extends AbstractModule {
+        private static String DB_PASSWORD = null;
+
         @Override
         protected void configure() {
+            if (DB_PASSWORD == null) {
+                throw new IllegalStateException("DB_PASSWORD not initialized");
+            }
             bind(ConnectionProvider.class).to(ProductionConnectionProvider.class);
             bind(MailService.class).to(GmailService.class);
+            bind(String.class).annotatedWith(DatabasePassword.class).toInstance(DB_PASSWORD);
         }
     }
 }
