@@ -56,26 +56,27 @@ public final class RouteWrapper {
     }
 
     private static final class RouteLog extends Log {
-        public final Logger log;
+        public final Logger logger;
         public final Request request;
 
-        private RouteLog(Logger log, Request request) {
-            this.log = log;
+        private RouteLog(Logger logger, Request request) {
+            this.logger = logger;
             this.request = request;
         }
 
         @Override
         public void log(Level level, String format, Object... args) {
-            if (!log.isLoggable(level)) {
+            if (!logger.isLoggable(level)) {
                 return;
             }
-            String newFormat = String.format("[session=%s] %s", request.session().id(), format);
-            logger().log(level, newFormat, args);
+            String header = String.format("[session=%s] ", request.session().id());
+            String body = String.format(format, args);
+            logger.log(level, header + body);
         }
 
         @Override
         public Logger logger() {
-            return log;
+            return logger;
         }
     }
 }
