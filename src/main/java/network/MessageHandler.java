@@ -64,6 +64,10 @@ public class MessageHandler {
         addTransaction(tx);
     }
 
+    public boolean checkRecentBlock(IncomingMessage msg) {
+        return recentBlocksReceived.contains(msg);
+    }
+
     /**
      * @return whether {@code block} was successfully handled
      */

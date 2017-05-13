@@ -79,6 +79,9 @@ public class HandleMessageThread extends Thread {
                     LOGGER.warning("Received empty blocks message");
                     break;
                 }
+                if (handler.checkRecentBlock(message)) {
+                    break;
+                }
                 boolean added = false;
                 for (int i = 0; i < blocks.size() - 1; i++) {
                     Block child = blocks.get(i);
@@ -104,7 +107,9 @@ public class HandleMessageThread extends Thread {
                 if (!added) {
                     ShaTwoFiftySix hash = blocks.get(blocks.size() - 1).getShaTwoFiftySix();
                     message.respond(new GetBlocksRequestPayload(hash, Message.MAX_BLOCKS_TO_GET).toMessage());
-                } else {
+                // Only rebroadcast if successful add, and single block.
+                // Prevents rebroadcast of catching up
+                } else if (blocks.size() == 1) {
                     handler.blockBroadcaster(message);
                 }
                 break;
