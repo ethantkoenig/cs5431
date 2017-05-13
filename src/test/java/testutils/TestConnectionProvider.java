@@ -49,7 +49,8 @@ public final class TestConnectionProvider extends PooledConnectionProvider {
                     + "PRIMARY KEY (keypairid),"
                     + "FOREIGN KEY (userid)"
                     + "  REFERENCES users(id)"
-                    + "  ON DELETE CASCADE"
+                    + "  ON DELETE CASCADE,"
+                    + "UNIQUE (userid, publickey)"
                     + ")");
 
             statement.executeUpdate("CREATE TABLE IF NOT EXISTS recover ("
