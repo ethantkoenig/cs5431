@@ -32,7 +32,7 @@
                         <div class="horizontal">
                             <div class="input-group col-md-8">
                                 <input type="hidden" name="recipient" value="${request.touser}">
-                                <input type="hidden" name="tranid" value="${request.tranid?c}">
+                                <input type="hidden" name="tranId" value="${request.tranId?c}">
                                 <input type="hidden" name="amount" value="${request.amount?c}">
                                 <input type="hidden" name="message" value="${request.message}">
                                 <input type="password" class="form-control transaction-password" placeholder="Password">
@@ -41,7 +41,7 @@
                                 </span>
                             </div>
                             <div class="input-group">
-                                <button class="btn btn-secondary btn-danger delete-request" data-tranid=${request.tranid?c}>
+                                <button class="btn btn-secondary btn-danger delete-request" data-tranId=${request.tranId?c}>
                                     Delete
                                 </button>
                             </div>
