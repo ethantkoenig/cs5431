@@ -3,6 +3,7 @@ package server.controllers;
 
 import com.google.inject.Inject;
 import crypto.Crypto;
+import org.omg.PortableInterceptor.LOCATION_FORWARD;
 import server.access.AccountRecoveryAccess;
 import server.access.KeyAccess;
 import server.access.UserAccess;
@@ -11,12 +12,14 @@ import server.bodies.KeysBody;
 import server.models.User;
 import server.utils.MailService;
 import server.utils.RouteUtils;
+import server.utils.RouteWrapper;
 import server.utils.ValidateUtils;
 import spark.ModelAndView;
 import spark.Request;
 import spark.Response;
 import spark.template.freemarker.FreeMarkerEngine;
 import utils.ByteUtil;
+import utils.Log;
 
 import java.security.InvalidParameterException;
 import java.util.Optional;
@@ -28,6 +31,8 @@ import static utils.Optionals.ifPresent;
 
 
 public class AccountRecoveryController extends AbstractController {
+    private static final Log LOGGER = Log.forClass(AccountRecoveryController.class);
+    
     private static final String RECOVERY_SUBJECT = "EzraCoinL Wallet Password Recovery";
     private static final String UNLOCK_SUBJECT = "EzraCoinL Wallet Account Unlock";
     private static final String CHANGE_PASSWORD_SUBJECT = "EzraCoinL Password Change";
@@ -55,32 +60,34 @@ public class AccountRecoveryController extends AbstractController {
     }
 
     public void init() {
+        RouteWrapper wrapper = new RouteWrapper(LOGGER);
         path("/reset", () -> {
-            get("", wrapTemplate(this::getReset), new FreeMarkerEngine());
-            post("/mail", wrapRoute(this::resetMail));
-            post("", wrapRoute(this::reset));
+            get("", wrapper.template(this::getReset), new FreeMarkerEngine());
+            post("/mail", wrapper.route(this::resetMail));
+            post("", wrapper.route(this::reset));
         });
         path("/unlock", () -> {
-            get("", wrapTemplate(this::getUnlock), new FreeMarkerEngine());
-            post("/mail", wrapRoute(this::unlockMail));
-            post("", wrapRoute(this::unlock));
+            get("", wrapper.template(this::getUnlock), new FreeMarkerEngine());
+            post("/mail", wrapper.route(this::unlockMail));
+            post("", wrapper.route(this::unlock));
         });
         path("/change_password", () -> {
-            get("", wrapTemplate(this::getChangePassword), new FreeMarkerEngine());
-            post("/mail", wrapRoute(this::changePasswordMail));
-            post("", wrapRoute(this::changePassword));
+            get("", wrapper.template(this::getChangePassword), new FreeMarkerEngine());
+            post("/mail", wrapper.route(this::changePasswordMail));
+            post("", wrapper.route(this::changePassword));
         });
     }
 
-    ModelAndView getReset(Request request, Response response) throws Exception {
+    ModelAndView getReset(Request request, Response response, Log log) throws Exception {
         return getRecoveryPage(request, "resetRequest.ftl", "reset.ftl");
     }
 
-    String resetMail(Request request, Response response) throws Exception {
+    String resetMail(Request request, Response response, Log log) throws Exception {
         String email = queryParam(request, "email");
         ifPresent(createGUID(email), guid -> {
             String link = baseURL(request) + "/reset?guid=" + guid;
             mailService.sendEmail(email, RECOVERY_SUBJECT, resetEmailBody(link));
+            log.info("Password reset link sent; address=%s", email);
         });
         // Send success message regardless to prevent email guessing
         RouteUtils.successMessage(request, "Check your inbox.");
@@ -88,11 +95,11 @@ public class AccountRecoveryController extends AbstractController {
         return "redirected";
     }
 
-    ModelAndView getUnlock(Request request, Response response) throws Exception {
+    ModelAndView getUnlock(Request request, Response response, Log log) throws Exception {
         return getRecoveryPage(request, "unlockRequest.ftl", "unlock.ftl");
     }
 
-    String unlockMail(Request request, Response response) throws Exception {
+    String unlockMail(Request request, Response response, Log log) throws Exception {
         String email = queryParam(request, "email");
         ifPresent(createGUID(email), guid -> {
             String link = baseURL(request) + "/unlock?guid=" + guid;
@@ -103,7 +110,7 @@ public class AccountRecoveryController extends AbstractController {
         return "redirected";
     }
 
-    String unlock(Request request, Response response) throws Exception {
+    String unlock(Request request, Response response, Log log) throws Exception {
         String password = queryParam(request, "password");
         String guid = queryParam(request, "guid");
 
@@ -124,11 +131,12 @@ public class AccountRecoveryController extends AbstractController {
         userAccess.resetFailedLogins(user.getId());
         request.session().attribute("username", user.getUsername());
         response.redirect("/user");
+        log.info("Account unlocked; username=%s", user.getUsername());
         RouteUtils.successMessage(request, "Account unlocked");
         return "redirected";
     }
 
-    String reset(Request request, Response response) throws Exception {
+    String reset(Request request, Response response, Log log) throws Exception {
         String password = queryParam(request, "password");
         String guid = queryParam(request, "guid");
 
@@ -150,12 +158,12 @@ public class AccountRecoveryController extends AbstractController {
         return "redirected";
     }
 
-    ModelAndView getChangePassword(Request request, Response response) throws Exception {
+    ModelAndView getChangePassword(Request request, Response response, Log log) throws Exception {
         routeUtils.forceLoggedInUser(request);
         return getRecoveryPage(request, "changePasswordRequest.ftl", "changePassword.ftl");
     }
 
-    String changePasswordMail(Request request, Response response) throws Exception {
+    String changePasswordMail(Request request, Response response, Log log) throws Exception {
         User user = routeUtils.forceLoggedInUser(request);
         String guid = crypto.nextGUID();
         accountRecoveryAccess.insertRecovery(user.getId(), guid);
@@ -166,7 +174,7 @@ public class AccountRecoveryController extends AbstractController {
         return "redirected";
     }
 
-    String changePassword(Request request, Response response) throws Exception {
+    String changePassword(Request request, Response response, Log log) throws Exception {
         String guid = queryParam(request, "guid");
         String password = queryParam(request, "password");
 

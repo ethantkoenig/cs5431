@@ -21,7 +21,6 @@ import server.models.Key;
 import server.models.User;
 import server.utils.ConnectionProvider;
 import server.utils.Constants;
-import server.utils.RouteUtils;
 import spark.ModelAndView;
 import spark.Request;
 import spark.Response;
@@ -40,7 +39,6 @@ import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static testutils.TestUtils.assertPresent;
-import static testutils.TestUtils.assertThrows;
 
 @RunWith(JUnitQuickcheck.class)
 public class TransactionControllerTest extends ControllerTest {
@@ -64,7 +62,7 @@ public class TransactionControllerTest extends ControllerTest {
                 .addSessionAttribute("username", fixtures.user(1).getUsername())
                 .get();
         MockResponse mockResponse = new MockResponse();
-        ModelAndView modelAndView = controller.getTransact(request, mockResponse.get());
+        ModelAndView modelAndView = template(controller::getTransact).handle(request, mockResponse.get());
         assertEquals("transact.ftl", modelAndView.getViewName());
     }
 
@@ -105,8 +103,8 @@ public class TransactionControllerTest extends ControllerTest {
                 .get();
 
         MockResponse mockResponse = new MockResponse();
-        String json = controller.transact(request, mockResponse.get());
-        TransactionResponseBody body = new Gson().fromJson(json, TransactionResponseBody.class);
+        Object json = route(controller::transact).handle(request, mockResponse.get());
+        TransactionResponseBody body = new Gson().fromJson(json.toString(), TransactionResponseBody.class);
         assertEquals(1, body.encryptedKeys.size());
         assertEquals(key.encryptedPrivateKey, body.encryptedKeys.get(0));
     }
@@ -141,7 +139,7 @@ public class TransactionControllerTest extends ControllerTest {
                 .get();
 
         Response response = new MockResponse().get();
-        controller.transact(request, response); // TODO check return value
+        route(controller::transact).handle(request, response); // TODO check return value
     }
 
     @Property(trials = 1)
@@ -182,7 +180,7 @@ public class TransactionControllerTest extends ControllerTest {
         request.session().attribute("username", "username");
 
         Response response = new MockResponse().get();
-        String resp = controller.sendTransaction(request, response); // TODO check return value
+        Object resp = route(controller::sendTransaction).handle(request, response); // TODO check return value
         assertEquals("ok", resp); // TODO this is temporary
     }
 
@@ -193,11 +191,9 @@ public class TransactionControllerTest extends ControllerTest {
                 .addSessionAttribute("username", fixtures.user(1).getUsername())
                 .get();
 
-        Response response = new MockResponse().get();
-        assertThrows(errorMessage,
-                () -> controller.sendTransaction(request, response),
-                RouteUtils.InvalidParamException.class
-        );
+        MockResponse mockResponse = new MockResponse();
+        route(controller::sendTransaction).handle(request, mockResponse.get());
+        Assert.assertEquals(400, mockResponse.status());
     }
 
     @Test
@@ -206,7 +202,7 @@ public class TransactionControllerTest extends ControllerTest {
                 .addSessionAttribute("username", fixtures.user(1).getUsername())
                 .get();
         MockResponse mockResponse = new MockResponse();
-        ModelAndView modelAndView = controller.getRequests(request, mockResponse.get());
+        ModelAndView modelAndView = template(controller::getRequests).handle(request, mockResponse.get());
         assertEquals("request.ftl", modelAndView.getViewName());
     }
 
@@ -223,7 +219,7 @@ public class TransactionControllerTest extends ControllerTest {
                 .addQueryParam("message", message)
                 .get();
         MockResponse mockResponse = new MockResponse();
-        controller.createRequest(request, mockResponse.get());
+        route(controller::createRequest).handle(request, mockResponse.get());
         boolean requestAdded = access.getRequests(sender).stream()
                 .anyMatch(t -> t.isRequest()
                         && t.getToUser().equals(recipient)
@@ -254,7 +250,7 @@ public class TransactionControllerTest extends ControllerTest {
                 .addQueryParam("tranid", Integer.toString(transaction.getTranId()))
                 .get();
         MockResponse mockResponse = new MockResponse();
-        controller.deleteRequest(request, mockResponse.get());
+        route(controller::deleteRequest).handle(request, mockResponse.get());
 
         Assert.assertFalse(access.getRequests(sender.getUsername()).stream()
                 .anyMatch(t -> t.getTranId() == transaction.getTranId())

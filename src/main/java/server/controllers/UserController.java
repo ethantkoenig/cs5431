@@ -11,10 +11,7 @@ import server.access.KeyAccess;
 import server.access.UserAccess;
 import server.models.Key;
 import server.models.User;
-import server.utils.Constants;
-import server.utils.MailService;
-import server.utils.RouteUtils;
-import server.utils.ValidateUtils;
+import server.utils.*;
 import spark.ModelAndView;
 import spark.Request;
 import spark.Response;
@@ -68,30 +65,30 @@ public class UserController extends AbstractController {
     }
 
     public void init() {
+        RouteWrapper wrapper = new RouteWrapper(LOGGER);
         path("/register", () -> {
             get("", routeUtils.template("register.ftl"), new FreeMarkerEngine());
-            post("", wrapRoute(this::register));
+            post("", wrapper.route(this::register));
         });
 
         path("/login", () -> {
             get("", routeUtils.template("login.ftl"), new FreeMarkerEngine());
-            post("", wrapRoute(this::login));
+            post("", wrapper.route(this::login));
         });
 
-        delete("/logout", wrapRoute(this::logout));
+        delete("/logout", wrapper.route(this::logout));
 
-        get("/user", wrapTemplate(this::viewUser), new FreeMarkerEngine());
+        get("/user", wrapper.template(this::viewUser), new FreeMarkerEngine());
 
-        get("/balance", wrapTemplate(this::balance), new FreeMarkerEngine());
+        get("/balance", wrapper.template(this::balance), new FreeMarkerEngine());
 
         path("/friend", () -> {
-            post("", wrapRoute(this::addFriend));
-            delete("", wrapRoute(this::deleteFriend));
+            post("", wrapper.route(this::addFriend));
+            delete("", wrapper.route(this::deleteFriend));
         });
     }
 
-    String register(Request request, Response response)
-            throws Exception {
+    String register(Request request, Response response, Log log) throws Exception {
         String username = queryParam(request, "username");
         String password = queryParam(request, "password");
         String email = queryParam(request, "email");
@@ -118,17 +115,19 @@ public class UserController extends AbstractController {
         byte[] hash = Crypto.hashAndSalt(password, salt);
         userAccess.insertUser(username, email, salt, hash);
         request.session(true).attribute("username", username);
+        log.info("Successful registration; username=%s", username);
         RouteUtils.successMessage(request, "Registration complete. Welcome!");
         response.redirect("/user");
         return "ok";
     }
 
-    String login(Request request, Response response) throws Exception {
+    String login(Request request, Response response, Log log) throws Exception {
         String username = queryParam(request, "username");
         String password = queryParam(request, "password");
         Optional<User> optUser = userAccess.getUserByUsername(username);
         if (!optUser.isPresent()) {
             RouteUtils.errorMessage(request, LOGIN_ERROR);
+            log.info("Login attempt for nonexistent user; username=%s", username);
             response.redirect("/login");
             return "redirected";
         }
@@ -136,9 +135,10 @@ public class UserController extends AbstractController {
         boolean validAuth = user.checkPassword(password);
         boolean lockedOut = user.getFailedLogins() >= FAILED_LOGIN_LIMIT;
         if (!lockedOut && !validAuth) {
-            LOGGER.info("Failed login attempt for %s", user.getUsername());
+            log.info("Failed login attempt; username=%s", username);
             userAccess.incrementFailedLogins(user.getId());
             if (user.getFailedLogins() + 1 == FAILED_LOGIN_LIMIT) {
+                log.info("Locking account; username=%s", username);
                 String link = baseURL(request) + "/unlock";
                 mailService.sendEmail(user.getEmail(), LOCKOUT_SUBJECT, lockoutBody(link));
                 lockedOut = true;
@@ -156,18 +156,20 @@ public class UserController extends AbstractController {
         }
         userAccess.resetFailedLogins(user.getId());
         request.session(true).attribute("username", username);
-
+        log.info("Successful login; username=%s", username);
         response.redirect("/user");
         return "redirected";
     }
 
-    String logout(Request request, Response response) throws SQLException {
+    String logout(Request request, Response response, Log log) throws SQLException {
+        String username = request.session().attribute("username");
         request.session().removeAttribute("username");
+        log.info("Successful logout; username=%s", username);
         RouteUtils.successMessage(request, "Successfully logged out");
         return "ok"; // will be redirected to homepage via index.js
     }
 
-    ModelAndView viewUser(Request request, Response response) throws Exception {
+    ModelAndView viewUser(Request request, Response response, Log log) throws Exception {
         User loggedInUser = routeUtils.forceLoggedInUser(request);
         String loggedInUsername = loggedInUser.getUsername();
 
@@ -182,25 +184,27 @@ public class UserController extends AbstractController {
                 .get();
     }
 
-    String addFriend(Request request, Response response) throws Exception {
+    String addFriend(Request request, Response response, Log log) throws Exception {
         User loggedInUser = routeUtils.forceLoggedInUser(request);
         String friend = RouteUtils.queryParam(request, "friend");
+        // TODO check that friend is valid
         String username = loggedInUser.getUsername();
 
+        log.info("Add friend; username=%s, friend=%s", username, friend);
         userAccess.insertFriends(username, friend);
         return "ok";
     }
 
-    String deleteFriend(Request request, Response response) throws Exception {
+    String deleteFriend(Request request, Response response, Log log) throws Exception {
         User loggedInUser = routeUtils.forceLoggedInUser(request);
         String friend = RouteUtils.queryParam(request, "friend");
         String username = loggedInUser.getUsername();
-
+        log.info("Delete friend; username=%s, friend=%s", username, friend);
         userAccess.deleteFriends(username, friend);
         return "ok";
     }
 
-    ModelAndView balance(Request request, Response response) throws Exception {
+    ModelAndView balance(Request request, Response response, Log log) throws Exception {
         User loggedInUser = routeUtils.forceLoggedInUser(request);
         List<Key> keys = keyAccess.getKeysByUserID(loggedInUser.getId());
 

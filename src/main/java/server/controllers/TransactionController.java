@@ -19,12 +19,15 @@ import server.models.Transaction;
 import server.models.User;
 import server.utils.Constants;
 import server.utils.RouteUtils;
+import server.utils.RouteWrapper;
 import spark.ModelAndView;
 import spark.Request;
 import spark.Response;
 import spark.template.freemarker.FreeMarkerEngine;
 import utils.ByteUtil;
+import utils.Log;
 import utils.Optionals;
+import utils.ShaTwoFiftySix;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -36,8 +39,10 @@ import java.util.stream.Collectors;
 
 import static server.utils.RouteUtils.*;
 import static spark.Spark.*;
+import static utils.ByteUtil.bytesToHexString;
 
 public class TransactionController extends AbstractController {
+    private static final Log LOGGER = Log.forClass(TransactionController.class);
 
     private final UserAccess userAccess;
     private final KeyAccess keyAccess;
@@ -53,21 +58,22 @@ public class TransactionController extends AbstractController {
     }
 
     public void init() {
+        RouteWrapper wrapper = new RouteWrapper(LOGGER);
         path("/transact", () -> {
-            get("", wrapTemplate(this::getTransact), new FreeMarkerEngine());
-            post("", wrapRoute(this::transact));
+            get("", wrapper.template(this::getTransact), new FreeMarkerEngine());
+            post("", wrapper.route(this::transact));
         });
 
         path("/requests", () -> {
-            get("", wrapTemplate(this::getRequests), new FreeMarkerEngine());
-            post("", wrapRoute(this::createRequest));
-            delete("", wrapRoute(this::deleteRequest));
+            get("", wrapper.template(this::getRequests), new FreeMarkerEngine());
+            post("", wrapper.route(this::createRequest));
+            delete("", wrapper.route(this::deleteRequest));
         });
 
-        post("/sendtransaction", wrapRoute(this::sendTransaction));
+        post("/sendtransaction", wrapper.route(this::sendTransaction));
     }
 
-    ModelAndView getTransact(Request request, Response response) throws Exception {
+    ModelAndView getTransact(Request request, Response response, Log log) throws Exception {
         User loggedInUser = routeUtils.forceLoggedInUser(request);
         String username = loggedInUser.getUsername();
         List<String> friends = userAccess.getPeopleWhoFriendMe(username);
@@ -79,9 +85,10 @@ public class TransactionController extends AbstractController {
                 .get();
     }
 
-    String transact(Request request, Response response) throws Exception {
+    String transact(Request request, Response response, Log log) throws Exception {
         User loggedInUser = routeUtils.forceLoggedInUser(request);
         String recipientUsername = queryParam(request, "recipient");
+        // TODO we don't check message length
         String message = queryParam(request, "message");
 
         if (!userAccess.isFriendsWith(recipientUsername, loggedInUser.getUsername())) {
@@ -135,22 +142,27 @@ public class TransactionController extends AbstractController {
                     .ifPresent(k -> encryptedPrivateKeys.add(k.encryptedPrivateKey));
         }
 
+        ShaTwoFiftySix payloadHash = ShaTwoFiftySix.hashOf(payload);
         // if transaction already exists (meaning it was a request) mark as complete
         if (queryParamExists(request, "tranid")) {
             int tranid = queryParamInt(request, "tranid");
             transactionAccess.updateTransactionRequestAsComplete(tranid, loggedInUser.getUsername());
+            log.info("Accepted request; username=%s, tranId=%d, payloadHash=%s",
+                    tranid, loggedInUser.getUsername(), payloadHash);
         } else {
             transactionAccess.insertTransaction(loggedInUser.getUsername(), recipientUsername, amount, message, false);
+            log.info("Created transaction; username=%s, payloadHash=%s",
+                    loggedInUser.getUsername(), payloadHash);
         }
 
         response.status(200);
         return routeUtils.toJson(response, new TransactionResponseBody(
-                ByteUtil.bytesToHexString(payload),
+                bytesToHexString(payload),
                 encryptedPrivateKeys
         ));
     }
 
-    String sendTransaction(Request request, Response response) throws Exception {
+    String sendTransaction(Request request, Response response, Log log) throws Exception {
         SendTransactionBody payload = routeUtils.parseBody(request, SendTransactionBody.class);
 
         byte[] msgPayload = ByteUtil.asByteArray(outputStream -> {
@@ -169,7 +181,7 @@ public class TransactionController extends AbstractController {
         return "ok"; // TODO handle properly
     }
 
-    ModelAndView getRequests(Request request, Response response) throws Exception {
+    ModelAndView getRequests(Request request, Response response, Log log) throws Exception {
         User touser = routeUtils.forceLoggedInUser(request);
         List<Transaction> requests = transactionAccess.getRequests(touser.getUsername());
         List<String> friends = userAccess.getFriends(touser.getUsername());
@@ -179,7 +191,7 @@ public class TransactionController extends AbstractController {
                 .get();
     }
 
-    String createRequest(Request request, Response response) throws Exception {
+    String createRequest(Request request, Response response, Log log) throws Exception {
         User touser = routeUtils.forceLoggedInUser(request);
         String fromuser = queryParam(request, "requestee");
 
@@ -196,13 +208,16 @@ public class TransactionController extends AbstractController {
         long amount = queryParamLong(request, "amount");
 
         transactionAccess.insertTransaction(fromuser, touser.getUsername(), amount, message, true);
+        log.info("Created request; touser=%s, fromuser=%s, amount=%d, message=%s",
+                touser, fromuser, amount, message);
         response.redirect("/user");
         return "redirected";
     }
 
-    String deleteRequest(Request request, Response response) throws Exception {
+    String deleteRequest(Request request, Response response, Log log) throws Exception {
         User user = routeUtils.forceLoggedInUser(request);
         int transactionId = queryParamInt(request, "tranid");
+        log.info("Delete request; id=%d", transactionId);
         transactionAccess.deleteRequest(transactionId, user.getUsername());
         return "ok";
     }
