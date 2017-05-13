@@ -16,7 +16,6 @@ import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.GmailScopes;
 import com.google.api.services.gmail.model.Message;
 import utils.ByteUtil;
-import utils.Config;
 
 import javax.mail.MessagingException;
 import javax.mail.Session;
@@ -33,6 +32,7 @@ public class GmailService implements MailService {
     private static final File DATA_STORE_DIR = new File("gmail-data-store");
     private static final List<String> SCOPES = Collections.singletonList(GmailScopes.GMAIL_SEND);
     private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
+    private static final String EMAIL_ADDRESS = "ezracoinl@gmail.com";
 
     private final HttpTransport httpTransport;
     private final FileDataStoreFactory dataStoreFactory;
@@ -70,7 +70,7 @@ public class GmailService implements MailService {
         Properties props = new Properties();
         Session session = Session.getDefaultInstance(props, null);
         MimeMessage mimeMessage = new MimeMessage(session);
-        mimeMessage.setFrom(new InternetAddress(Config.getMailFrom()));
+        mimeMessage.setFrom(new InternetAddress(EMAIL_ADDRESS));
         mimeMessage.setRecipients(javax.mail.Message.RecipientType.TO,
                 InternetAddress.parse(to));
         mimeMessage.setSubject(subject);
@@ -87,5 +87,4 @@ public class GmailService implements MailService {
         message.setRaw(encoded);
         service.users().messages().send("me", message).execute();
     }
-
 }
