@@ -27,11 +27,11 @@
             <#list requests as request>
                 <div class="well">
                     <form action="/transact" method="post" class="transactform">
-                        <h2>${request.touser} has requested $${request.amount}.</h2>
+                        <h2>${request.toUser} has requested $${request.amount}.</h2>
                         <p>${request.message}</p>
                         <div class="horizontal">
                             <div class="input-group col-md-8">
-                                <input type="hidden" name="recipient" value="${request.touser}">
+                                <input type="hidden" name="recipient" value="${request.toUser}">
                                 <input type="hidden" name="tranId" value="${request.tranId?c}">
                                 <input type="hidden" name="amount" value="${request.amount?c}">
                                 <input type="hidden" name="message" value="${request.message}">
