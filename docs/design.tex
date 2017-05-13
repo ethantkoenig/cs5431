@@ -48,7 +48,7 @@
 \subsection{Wallet app}
 
 \begin{itemize}
-	\item In order to protect the confidentiality of user passwords stored on disk, we salt and hash the passwords before storing them in the database.
+	\item In order to protect the confidentiality of user authentication secret stored on disk, we salt and hash the secrets before storing them in the database.
 	See the Authentication section for details.
 	\item Private keys are encrypted client-side, and unencrypted keys never reach the web server.
 	This protects against attackers who have compromised the web server from gleaning private keys.
@@ -85,9 +85,7 @@
 		However, the attacker will not be able to upload new keys on behalf of the user.
 		We prevent this through an email-based two factor authorization mechanism for uploading keys.
 		\item The attacker cannot make transactions on behalf of the user, provided the attacker does not know the user's master password, or the encryption secret derived from the master password.
-		This assumption will hold under our threat model. so long as users do not reuse their encryption password, either as their authentication password or in other services.
-		The risk of users using the same password for both authentication and encryption may make it worthwhile to have users remember a single master password, from which two different authentication and encryption secrets are derived. % This is the case now (?)
-		This is something we will consider for our next sprint.
+		This assumption will hold under our threat model, since neither the master password nor the encryption secret are ever sent to the server.
 	\end{itemize}
 \end{itemize}
 
