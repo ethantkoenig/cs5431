@@ -123,6 +123,10 @@ public class MinerTest extends RandomizedTest {
 
         Block genesisBlock = simulation.expectGenesisBlock(miner1);
 
+        // Assert we get the rebroadcasted genesis block
+        simulation.expectGenesisBlock(miner0);
+        simulation.expectGenesisBlock(miner1);
+
         simulation.sendGetBlocksRequest(miner1, genesisBlock.getShaTwoFiftySix(), 1);
         Block getBlockResponse = simulation.getSingleBlockMessage(miner1);
         Assert.assertEquals(genesisBlock, getBlockResponse);
@@ -148,6 +152,10 @@ public class MinerTest extends RandomizedTest {
         MinerSimulation.TestMiner miner1 = simulation.addPrivileged();
 
         Block genesisBlock = assertSingleBlockMessage(simulation.getNextMessage(miner1));
+
+        // Assert we get the rebroadcasted genwsis blocks
+        simulation.expectGenesisBlock(miner0);
+        simulation.expectGenesisBlock(miner1);
 
         Transaction txId = new Transaction.Builder()
                 .addInput(new TxIn(genesisBlock.getShaTwoFiftySix(), 0), miner1.keyPair.privateKey)
