@@ -21,9 +21,6 @@ import utils.ByteUtil;
 import utils.Log;
 import utils.Optionals;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.net.Socket;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
@@ -51,18 +48,21 @@ public class UserController extends AbstractController {
     private final RouteUtils routeUtils;
     private final MailService mailService;
     private final Crypto crypto;
+    private final CryptocurrencyEndpoint.Provider endpointProvider;
 
     @Inject
     private UserController(UserAccess userAccess,
                            KeyAccess keyAccess,
                            RouteUtils routeUtils,
                            MailService mailService,
-                           Crypto crypto) {
+                           Crypto crypto,
+                           CryptocurrencyEndpoint.Provider endpointProvider) {
         this.userAccess = userAccess;
         this.keyAccess = keyAccess;
         this.routeUtils = routeUtils;
         this.mailService = mailService;
         this.crypto = crypto;
+        this.endpointProvider = endpointProvider;
     }
 
     public void init() {
@@ -229,15 +229,9 @@ public class UserController extends AbstractController {
     }
 
     private GetFundsResponsePayload queryForFunds(List<ECDSAPublicKey> publicKeys) throws Exception {
-        try (Socket socket = new Socket(
-                Constants.getNodeAddress().getAddress(),
-                Constants.getNodeAddress().getPort())) {
-
-            new GetFundsRequestPayload(publicKeys).toMessage()
-                    .serialize(new DataOutputStream(socket.getOutputStream()));
-
-            IncomingMessage respMessage = IncomingMessage.responderlessDeserializer()
-                    .deserialize(new DataInputStream(socket.getInputStream()));
+        try (CryptocurrencyEndpoint endpoint = endpointProvider.getEndpoint()) {
+            endpoint.send(new GetFundsRequestPayload(publicKeys).toMessage());
+            IncomingMessage respMessage = endpoint.receive();
             if (respMessage.type != Message.FUNDS) {
                 LOGGER.severe("Unexpected response type %d, expected %d",
                         respMessage.type, Message.FUNDS);

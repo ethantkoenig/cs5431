@@ -205,7 +205,7 @@ public class MinerTest extends RandomizedTest {
             simulation.sendGetBlocksRequest(miner0, badBlock.getShaTwoFiftySix(), 1);
         }
 
-        // should have never received response for any bad block
+        // should have never sent response for any bad block
         // TODO assume that bad GET_BLOCKS request get no response
         simulation.assertNoMessage();
     }

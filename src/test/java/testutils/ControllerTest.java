@@ -1,13 +1,11 @@
 package testutils;
 
-import network.ConnectionThread;
 import org.dbunit.database.DatabaseConnection;
 import org.dbunit.database.IDatabaseConnection;
 import org.dbunit.dataset.IDataSet;
 import org.dbunit.dataset.xml.FlatXmlDataSetBuilder;
 import org.dbunit.operation.DatabaseOperation;
 import org.junit.Before;
-import org.mockito.Mockito;
 import server.utils.ConnectionProvider;
 import server.utils.RouteWrapper;
 import spark.Route;
@@ -18,7 +16,6 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.sql.Connection;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public abstract class ControllerTest extends RandomizedTest {
     private ConnectionProvider connectionProvider;

@@ -3,31 +3,21 @@ package server.controllers;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import crypto.ECDSAPublicKey;
-import message.IncomingMessage;
 import message.Message;
-import message.OutgoingMessage;
 import message.payloads.GetFundsRequestPayload;
 import message.payloads.GetFundsResponsePayload;
-import network.ConnectionThread;
 import org.junit.Assert;
 import org.junit.Test;
 import server.access.UserAccess;
 import server.models.User;
 import server.utils.ConnectionProvider;
-import server.utils.Constants;
 import spark.ModelAndView;
 import spark.Request;
 import spark.Response;
 import testutils.*;
-import utils.ByteUtil;
 
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.ServerSocket;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
+import java.util.stream.Collectors;
 
 import static testutils.TestUtils.assertPresent;
 
@@ -35,6 +25,7 @@ public class UserControllerTest extends ControllerTest {
     private UserAccess userAccess;
     private UserController controller;
     private final Fixtures fixtures;
+    private final MockCryptocurrencyEndpoint endpoint;
 
     public UserControllerTest() throws Exception {
         super();
@@ -44,6 +35,7 @@ public class UserControllerTest extends ControllerTest {
         userAccess = injector.getInstance(UserAccess.class);
         setConnectionProvider(injector.getInstance(ConnectionProvider.class));
         fixtures = injector.getInstance(Fixtures.class);
+        endpoint = injector.getInstance(MockCryptocurrencyEndpoint.Provider.class).getEndpoint();
     }
 
     @Test
@@ -200,32 +192,19 @@ public class UserControllerTest extends ControllerTest {
 
     @Test
     public void testBalance() throws Exception {
-        ServerSocket socket = new ServerSocket(0);
-        Constants.setNodeAddress(new InetSocketAddress(
-                InetAddress.getLocalHost(),
-                socket.getLocalPort()
-        ));
-
-        new Thread(() -> {
+        endpoint.respondWith(message -> {
             try {
-                BlockingQueue<IncomingMessage> messageQueue = new ArrayBlockingQueue<>(10);
-                ConnectionThread connectionThread = new ConnectionThread(socket.accept(), messageQueue);
-                connectionThread.start();
-                IncomingMessage message = messageQueue.take();
                 Assert.assertEquals(Message.GET_FUNDS, message.type);
                 GetFundsRequestPayload request = GetFundsRequestPayload.DESERIALIZER.deserialize(message.payload);
-                Map<ECDSAPublicKey, Long> balances = new HashMap<>();
-                for (ECDSAPublicKey key : request.requestedKeys) {
-                    balances.put(key, 100L);
-                }
+                Map<ECDSAPublicKey, Long> balances = request.requestedKeys.stream()
+                        .collect(Collectors.toMap(k -> k, k -> 100L));
                 GetFundsResponsePayload response = new GetFundsResponsePayload(balances);
-                connectionThread.send(new OutgoingMessage(Message.FUNDS,
-                        ByteUtil.asByteArray(response::serialize))
-                );
+                return response.toMessage();
             } catch (Exception e) {
-                e.printStackTrace();
+                Assert.fail(e.getMessage());
+                return null;
             }
-        }).start();
+        });
 
         Request request = new MockRequest()
                 .addSessionAttribute("username", fixtures.user(1).getUsername())
