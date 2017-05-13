@@ -21,13 +21,14 @@ import static utils.CanBeSerialized.serializeSingleton;
  * @version 1.0, Feb 22 2017
  */
 public class MinerThread extends Thread {
-    private static final Log LOGGER = Log.forClass(MinerThread.class);
+    private final Log LOGGER;
     private final Block block;
     private final AtomicBoolean stopMining = new AtomicBoolean(false);
 
     private final BlockingQueue<OutgoingMessage> broadcastQueue;
 
-    public MinerThread(Block block, BlockingQueue<OutgoingMessage> broadcastQueue) {
+    public MinerThread(String name, Block block, BlockingQueue<OutgoingMessage> broadcastQueue) {
+        LOGGER = Log.named("MinerThread " + name);
         this.block = block;
         this.broadcastQueue = broadcastQueue;
     }

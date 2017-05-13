@@ -18,11 +18,13 @@ import java.util.Optional;
 
 import static network.MinerSimulation.assertBlocksMessage;
 import static network.MinerSimulation.assertSingleBlockMessage;
+import static testutils.TestUtils.assertEqualsWithHashCode;
 
 public class MinerTest extends RandomizedTest {
 
     @Test
     public void testCatchUp() throws Exception {
+        System.setProperty("java.util.logging.SimpleFormatter.format", "%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS %4$s %3$s%n%5$s%6$s%n");
         Config.setHashGoal(1);
 
         MinerSimulation simulation = new MinerSimulation(crypto);
@@ -35,6 +37,8 @@ public class MinerTest extends RandomizedTest {
         Block getBlockResponse = simulation.getSingleBlockMessage(miner1);
         Assert.assertEquals(genesisBlock, getBlockResponse);
 
+        simulation.flushQueues();
+
         final int numIters = random.nextInt(3 * Message.MAX_BLOCKS_TO_GET);
         for (int iter = 0; iter < numIters; iter++) {
             simulation.addValidBlock(random);
@@ -44,16 +48,15 @@ public class MinerTest extends RandomizedTest {
         simulation.sendValidTransaction(miner0, transactions.get(0));
         MinerSimulation.TestMiner miner2 = simulation.addNode();
         simulation.sendValidTransaction(miner1, transactions.get(1));
-        simulation.expectValidBlockFromAny();
+        simulation.expectValidBlockFrom(miner0);
         simulation.flushQueues();
 
         transactions = simulation.validTransactions(random, 2);
         simulation.sendValidTransaction(miner0, transactions.get(0));
         simulation.sendValidTransaction(miner0, transactions.get(1));
 
-        Block block = simulation.expectValidBlockFromAny();
+        Block block = simulation.expectValidBlockFrom(miner1);
         simulation.flushQueues();
-
 
         IncomingMessage response = null;
         for (int i = 0; i < 15; i++) {
@@ -84,7 +87,11 @@ public class MinerTest extends RandomizedTest {
         MinerSimulation.TestMiner miner1 = simulation.addNode();
         MinerSimulation.TestMiner miner2 = simulation.addPrivileged();
 
-        Block genesisBlock = simulation.expectGenesisBlock(miner2);
+        Block genesisBlock = simulation.expectGenesisBlock(miner0);
+        assertEqualsWithHashCode(genesisBlock, simulation.expectGenesisBlock(miner1));
+        assertEqualsWithHashCode(genesisBlock, simulation.expectGenesisBlock(miner2));
+
+        simulation.flushQueues();
 
         Thread.sleep(50); // make sure other miners get the genesis block
 

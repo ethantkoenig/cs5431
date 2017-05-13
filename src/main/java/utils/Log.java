@@ -14,6 +14,10 @@ public abstract class Log {
         return new DefaultLog(Logger.getLogger(clazz.getName()));
     }
 
+    public static Log named(String name) {
+        return new DefaultLog(Logger.getLogger(name));
+    }
+
     public static Log parentLog() {
         return parentLog;
     }

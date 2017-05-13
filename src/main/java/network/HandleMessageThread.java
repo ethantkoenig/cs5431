@@ -25,7 +25,7 @@ import java.util.concurrent.BlockingQueue;
  * @version 1.0, Feb 22 2017
  */
 public class HandleMessageThread extends Thread {
-    private static final Log LOGGER = Log.forClass(HandleMessageThread.class);
+    private final Log LOGGER;
 
     private BlockingQueue<IncomingMessage> messageQueue;
 
@@ -37,13 +37,15 @@ public class HandleMessageThread extends Thread {
     private final OrphanedBlocks orphanedBlocks = new OrphanedBlocks();
 
     // Needs reference to parent in order to call Node.broadcast()
-    public HandleMessageThread(BlockingQueue<IncomingMessage> messageQueue,
+    public HandleMessageThread(String name,
+                               BlockingQueue<IncomingMessage> messageQueue,
                                BlockingQueue<OutgoingMessage> broadcastQueue,
                                MiningBundle bundle,
                                boolean isMining) {
+        LOGGER = Log.named("HandleMessageThread " + name);
         this.messageQueue = messageQueue;
         this.bundle = bundle;
-        this.handler = new MessageHandler(broadcastQueue, bundle, isMining);
+        this.handler = new MessageHandler(name, broadcastQueue, bundle, isMining);
     }
 
     /**

@@ -33,6 +33,7 @@ import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static testutils.RandomUtils.choiceList;
@@ -41,6 +42,7 @@ public final class MinerSimulation {
     private final Path tmpPath = Paths.get(System.getProperty("java.io.tmpdir"));
 
     private final List<TestMiner> miners = new ArrayList<>();
+    private final Set<Transaction> transactions = new HashSet<>();
     private final ServerSocket serverSocket;
     private final ECDSAKeyPair privilegedKeyPair;
     private final BlockChain blockChain;
@@ -54,7 +56,6 @@ public final class MinerSimulation {
         this.crypto = crypto;
         serverSocket = new ServerSocket(0);
         this.privilegedKeyPair = privilegedKeyPair;
-        // TODO use a temporary directory
         Path blockChainPath = Files.createTempDirectory(tmpPath, "blockchain");
         this.blockChain = new BlockChain(blockChainPath);
     }
@@ -72,7 +73,9 @@ public final class MinerSimulation {
                 .map(m -> m.portNumber).collect(Collectors.toList());
         ServerSocket socket = new ServerSocket(0);
         Path blockChainPath = Files.createTempDirectory(tmpPath, "blockchain");
-        Miner miner = new Miner(socket, keyPair, privilegedKeyPair.publicKey, blockChainPath);
+        String name = "miner" + miners.size();
+        Miner miner = new Miner(name, socket, keyPair,
+                privilegedKeyPair.publicKey, blockChainPath);
         miner.connect("localhost", serverSocket.getLocalPort());
         for (int portNumToConnectTo : portNumsToConnectTo) {
             miner.connect("localhost", portNumToConnectTo);
@@ -88,10 +91,10 @@ public final class MinerSimulation {
 
     public void addValidBlock(Random random) throws Exception {
         List<Transaction> transactions = validTransactions(random, Block.NUM_TRANSACTIONS_PER_BLOCK);
-        for(Transaction transaction : transactions) {
+        for (Transaction transaction : transactions) {
             sendValidTransaction(choiceList(random, miners), transaction);
         }
-        expectValidBlockFromAny();
+        expectValidBlockFrom(choiceList(random, miners));
         flushQueues();
     }
 
@@ -142,8 +145,8 @@ public final class MinerSimulation {
         return block;
     }
 
-    public Block expectValidBlockFromAny() throws Exception {
-        Block block = assertSingleBlockMessage(getAny());
+    public Block expectValidBlockFrom(TestMiner repr) throws Exception {
+        Block block = assertSingleBlockMessage(getNextMessage(repr));
         Block parent = TestUtils.assertPresent(blockChain.getBlockWithHash(block.previousBlockHash));
         UnspentTransactions unspent = blockChain.getUnspentTransactionsAt(parent);
         Assert.assertTrue(block.verifyNonGenesis(unspent).isPresent());
@@ -156,12 +159,12 @@ public final class MinerSimulation {
     }
 
     public void sendValidTransaction(TestMiner repr, Transaction transaction) throws Exception {
+        transactions.add(transaction);
         byte[] serialized = ByteUtil.asByteArray(transaction::serialize);
         sendMessage(repr, new OutgoingMessage(Message.TRANSACTION, serialized));
-        for (TestMiner miner : miners) {
-            Transaction deserialized = assertTransactionMessage(getNextMessage(miner));
-            TestUtils.assertEqualsWithHashCode(transaction, deserialized);
-        }
+        IncomingMessage message = expectMessage(repr, msg -> msg.type == Message.TRANSACTION);
+        Assert.assertNotNull(message);
+        Assert.assertEquals(Message.TRANSACTION, message.type);
     }
 
     public void sendBlock(TestMiner repr, Block block) throws IOException {
@@ -202,7 +205,8 @@ public final class MinerSimulation {
         }
         for (TestMiner miner : miners) {
             while (true) {
-                IncomingMessage message = miner.queue.take();
+                IncomingMessage message = miner.queue.poll(500, TimeUnit.MILLISECONDS);
+                Assert.assertNotNull(message);
                 if (message.type == Message.BLOCKS) {
                     for (Block b : BlocksPayload.DESERIALIZER.deserialize(message.payload).blocks()) {
                         blockChain.insertBlock(b);
@@ -216,28 +220,33 @@ public final class MinerSimulation {
         }
     }
 
-    public IncomingMessage getAny() throws Exception {
-        // TODO make less hacky
-        for (int i = 0; i < 100; i++) {
-            for (TestMiner miner : miners) {
-                if (!miner.queue.isEmpty()) {
-                    return miner.queue.take();
-                }
-            }
-            Thread.sleep(10);
-        }
-        Assert.fail();
-        return null;
-    }
-
     public IncomingMessage getNextMessage(TestMiner testMiner) throws Exception {
         return getNextMessage(testMiner, 500);
     }
 
     public IncomingMessage getNextMessage(TestMiner testMiner, long timeout) throws Exception {
-        IncomingMessage msg = testMiner.queue.poll(timeout, TimeUnit.MILLISECONDS);
-        Assert.assertNotNull(msg);
-        return msg;
+        while (true) {
+            IncomingMessage msg = testMiner.queue.poll(timeout, TimeUnit.MILLISECONDS);
+            Assert.assertNotNull(msg);
+            if (msg.type == Message.TRANSACTION) {
+                Transaction transaction = Transaction.DESERIALIZER.deserialize(msg.payload);
+                if (transactions.contains(transaction)) {
+                    continue;
+                }
+            }
+            return msg;
+        }
+    }
+
+    public IncomingMessage expectMessage(TestMiner testMiner,
+                                         Predicate<IncomingMessage> predicate) throws Exception {
+        while (true) {
+            IncomingMessage msg = testMiner.queue.poll(500, TimeUnit.MILLISECONDS);
+            Assert.assertNotNull(msg);
+            if (predicate.test(msg)) {
+                return msg;
+            }
+        }
     }
 
     public Optional<IncomingMessage> checkForMessage(TestMiner testMiner) throws Exception {
