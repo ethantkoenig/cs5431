@@ -46,8 +46,8 @@
                         <#else>
                             <td>Transaction</td>
                         </#if>
-                        <td>${tran.fromuser}</td>
-                        <td>${tran.touser}</td>
+                        <td>${tran.fromUser}</td>
+                        <td>${tran.toUser}</td>
                         <td>${tran.message}</td>
                         <td>$${tran.amount}</td>
                     </tr>
