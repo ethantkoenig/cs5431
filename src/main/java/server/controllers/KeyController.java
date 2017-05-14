@@ -96,11 +96,13 @@ public class KeyController extends AbstractController {
             response.redirect("/user");
             return "redirected";
         }
-        Key key = optKey.get();
         keyAccess.removePendingKey(guid);
-        keyAccess.insertKey(key.getUserId(), key.getPublicKey(), key.encryptedPrivateKey);
-        log.info("Key added; keyId=%d, userId=%d, publickey=%s",
-                key.getId(), key.getUserId(), bytesToHexString(key.getPublicKey()));
+        Key key = optKey.get();
+        if (!keyAccess.getKey(key.getUserId(), key.getPublicKey()).isPresent()) {
+            keyAccess.insertKey(key.getUserId(), key.getPublicKey(), key.encryptedPrivateKey);
+            log.info("Key added; keyId=%d, userId=%d, publickey=%s",
+                    key.getId(), key.getUserId(), bytesToHexString(key.getPublicKey()));
+        }
         RouteUtils.successMessage(request, "Key successfully uploaded.");
         response.redirect("/user");
         return "redirected";
