@@ -5,16 +5,20 @@ import block.Block;
 import message.IncomingMessage;
 import message.Message;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import testutils.RandomizedTest;
 import transaction.Transaction;
 import transaction.TxIn;
 import transaction.TxOut;
 import utils.Config;
+import utils.Log;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Level;
 
 import static network.MinerSimulation.assertBlocksMessage;
 import static network.MinerSimulation.assertSingleBlockMessage;
@@ -22,11 +26,15 @@ import static testutils.TestUtils.assertEqualsWithHashCode;
 
 public class MinerTest extends RandomizedTest {
 
+    @Before
+    public void setUpMinerTest() {
+        Config.setHashGoal(1);
+        System.setProperty("java.util.logging.SimpleFormatter.format", "%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS %4$s %3$s%n%5$s%6$s%n");
+        Log.parentLog().logger().setLevel(Level.INFO);
+    }
+
     @Test
     public void testCatchUp() throws Exception {
-        System.setProperty("java.util.logging.SimpleFormatter.format", "%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS %4$s %3$s%n%5$s%6$s%n");
-        Config.setHashGoal(1);
-
         MinerSimulation simulation = new MinerSimulation(crypto);
         MinerSimulation.TestMiner miner0 = simulation.addNode();
         MinerSimulation.TestMiner miner1 = simulation.addPrivileged();
@@ -79,9 +87,36 @@ public class MinerTest extends RandomizedTest {
     }
 
     @Test
-    public void testOldBlocks() throws Exception {
-        Config.setHashGoal(1);
+    public void testNotFullyConnected() throws Exception {
+        MinerSimulation simulation = new MinerSimulation(crypto);
+        MinerSimulation.TestMiner miner0 = simulation.addNode();
+        MinerSimulation.TestMiner miner1 = simulation.addNode();
+        MinerSimulation.TestMiner miner2 = simulation.addPrivilegedTo(1);
 
+        Block genesisBlock = simulation.expectGenesisBlock(miner1);
+
+        simulation.sendGetBlocksRequest(miner1, genesisBlock.getShaTwoFiftySix(), 1);
+        Block getBlockResponse = simulation.getSingleBlockMessage(miner1);
+        Assert.assertEquals(genesisBlock, getBlockResponse);
+
+        simulation.flushQueues();
+
+        final int numIters = random.nextInt(3 * Message.MAX_BLOCKS_TO_GET);
+        for (int iter = 0; iter < numIters; iter++) {
+            simulation.addValidBlock(random);
+        }
+        Block block = simulation.addValidBlock(random);
+
+        for (MinerSimulation.TestMiner miner : Arrays.asList(miner0, miner1, miner2)) {
+            simulation.sendGetBlocksRequest(miner, block.getShaTwoFiftySix(), Message.MAX_BLOCKS_TO_GET);
+            IncomingMessage response = simulation.getNextMessage(miner);
+            Block[] blocks = assertBlocksMessage(response, Message.MAX_BLOCKS_TO_GET);
+            assertEqualsWithHashCode(block, blocks[0]);
+        }
+    }
+
+    @Test
+    public void testOldBlocks() throws Exception {
         MinerSimulation simulation = new MinerSimulation(crypto);
         MinerSimulation.TestMiner miner0 = simulation.addNode();
         MinerSimulation.TestMiner miner1 = simulation.addNode();
@@ -145,15 +180,12 @@ public class MinerTest extends RandomizedTest {
         simulation.sendBlock(miner1, badGenesis);
         simulation.sendGetBlocksRequest(miner0, badGenesis.getShaTwoFiftySix(), 1);
         simulation.sendGetBlocksRequest(miner1, badGenesis.getShaTwoFiftySix(), 1);
-
-        // TODO assume that bad GET_BLOCKS request get no response
-        simulation.assertNoMessage();
+        simulation.expectMessage(miner0, msg -> msg.type == Message.BAD_REQUEST);
+        simulation.expectMessage(miner1, msg -> msg.type == Message.BAD_REQUEST);
     }
 
     @Test
     public void testInvalidTransactionRejection() throws Exception {
-        Config.setHashGoal(1);
-
         MinerSimulation simulation = new MinerSimulation(crypto);
         MinerSimulation.TestMiner miner0 = simulation.addNode();
         MinerSimulation.TestMiner miner1 = simulation.addPrivileged();
@@ -218,10 +250,7 @@ public class MinerTest extends RandomizedTest {
             badBlock.findValidNonce();
             simulation.sendBlock(miner0, badBlock);
             simulation.sendGetBlocksRequest(miner0, badBlock.getShaTwoFiftySix(), 1);
+            simulation.expectMessage(miner0, msg -> msg.type == Message.BAD_REQUEST);
         }
-
-        // should have never sent response for any bad block
-        // TODO assume that bad GET_BLOCKS request get no response
-        simulation.assertNoMessage();
     }
 }

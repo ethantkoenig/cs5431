@@ -61,16 +61,30 @@ public final class MinerSimulation {
     }
 
     public TestMiner addNode() throws Exception {
-        return addNode(crypto.signatureKeyPair());
+        final List<Integer> portNumsToConnectTo = miners.stream()
+                .map(m -> m.portNumber).collect(Collectors.toList());
+        return addNode(crypto.signatureKeyPair(), portNumsToConnectTo);
+    }
+
+    public TestMiner addNodeTo(int... minerIndices) throws Exception {
+        final List<Integer> portNumsToConnectTo = Arrays.stream(minerIndices)
+                .mapToObj(i -> miners.get(i).portNumber).collect(Collectors.toList());
+        return addNode(crypto.signatureKeyPair(), portNumsToConnectTo);
     }
 
     public TestMiner addPrivileged() throws Exception {
-        return addNode(privilegedKeyPair);
-    }
-
-    private TestMiner addNode(ECDSAKeyPair keyPair) throws Exception {
         final List<Integer> portNumsToConnectTo = miners.stream()
                 .map(m -> m.portNumber).collect(Collectors.toList());
+        return addNode(privilegedKeyPair, portNumsToConnectTo);
+    }
+
+    public TestMiner addPrivilegedTo(int... minerIndices) throws Exception {
+        final List<Integer> portNumsToConnectTo = Arrays.stream(minerIndices)
+                .mapToObj(i -> miners.get(i).portNumber).collect(Collectors.toList());
+        return addNode(privilegedKeyPair, portNumsToConnectTo);
+    }
+
+    private TestMiner addNode(ECDSAKeyPair keyPair, List<Integer> portNumsToConnectTo) throws Exception {
         ServerSocket socket = new ServerSocket(0);
         Path blockChainPath = Files.createTempDirectory(tmpPath, "blockchain");
         String name = "miner" + miners.size();
@@ -89,13 +103,14 @@ public final class MinerSimulation {
         return testMiner;
     }
 
-    public void addValidBlock(Random random) throws Exception {
+    public Block addValidBlock(Random random) throws Exception {
         List<Transaction> transactions = validTransactions(random, Block.NUM_TRANSACTIONS_PER_BLOCK);
         for (Transaction transaction : transactions) {
             sendValidTransaction(choiceList(random, miners), transaction);
         }
-        expectValidBlockFrom(choiceList(random, miners));
+        Block block = expectValidBlockFrom(choiceList(random, miners));
         flushQueues();
+        return block;
     }
 
     public List<Transaction> validTransactions(Random random, int numTransactions) throws Exception {
@@ -168,8 +183,7 @@ public final class MinerSimulation {
     }
 
     public void sendBlock(TestMiner repr, Block block) throws IOException {
-        byte[] serialized = ByteUtil.asByteArray(block::serialize);
-        sendMessage(repr, new OutgoingMessage(Message.BLOCKS, serialized));
+        sendMessage(repr, new BlocksPayload(block).toMessage());
     }
 
     public void sendGetBlocksRequest(TestMiner repr, ShaTwoFiftySix hash, int numRequested) throws IOException {

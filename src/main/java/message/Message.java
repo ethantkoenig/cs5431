@@ -19,6 +19,7 @@ public abstract class Message {
     public static final byte UTX_WITH_KEYS = 6;
     public static final byte PING = 7;
     public static final byte PONG = 8;
+    public static final byte BAD_REQUEST = 9;
 
     public final byte type;
     public final byte[] payload;

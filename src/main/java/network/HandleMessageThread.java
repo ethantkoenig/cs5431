@@ -144,9 +144,11 @@ public class HandleMessageThread extends Thread {
         if (request.numBlocksRequested <= 0 ||
                 request.numBlocksRequested > Message.MAX_BLOCKS_TO_GET) {
             LOGGER.info("GET_BLOCKS request, invalid number of requested blocks: %d", request.numBlocksRequested);
+            message.respond(new BadRequestPayload().toMessage());
             return;
         } else if (!chain.containsBlockWithHash(request.hash)) {
             LOGGER.info("GET_BLOCKS message received with unknown hash: %s", request.hash);
+            message.respond(new BadRequestPayload().toMessage());
             return;
         }
         handler.getBlockMsgHandler(message, request);
