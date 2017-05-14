@@ -11,6 +11,8 @@ import testutils.RandomizedTest;
 import transaction.Transaction;
 import utils.Config;
 
+import java.lang.reflect.Array;
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @RunWith(JUnitQuickcheck.class)
@@ -21,13 +23,9 @@ public class BlockProperties extends RandomizedTest {
         Config.setHashGoal(1);
     }
 
-    @Property(trials = 5)
+    @Property(trials = 2)
     public void findValidNonceFindsValidNonce(ECDSAKeyPair reward, Transaction txA, Transaction txB) throws Exception {
-        Block b = Block.empty(randomShaTwoFiftySix());
-        b.addReward(reward.publicKey);
-        b.addTransaction(txA);
-        b.addTransaction(txB);
-
+        Block b = Block.block(randomShaTwoFiftySix(), Arrays.asList(txA, txB), reward.publicKey);
         b.findValidNonce(new AtomicBoolean(false));
         Assert.assertTrue(b.checkHash());
     }

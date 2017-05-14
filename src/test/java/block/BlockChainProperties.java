@@ -51,17 +51,12 @@ public class BlockChainProperties {
                     .addOutput(new TxOut(utxo.getValue().value, utxo.getValue().ownerPubKey))
                     .build();
             txs.add(tx);
-        }
-
-        Block newblock = Block.empty(bc.getCurrentHead().getShaTwoFiftySix());
-        for (Transaction tx : txs) {
-            newblock.addTransaction(tx);
-            if (newblock.isFull()) {
+            if (txs.size() == Block.NUM_TRANSACTIONS_PER_BLOCK) {
                 break;
             }
         }
 
-        newblock.addReward(keyPair.publicKey);
+        Block newblock = Block.block(bc.getCurrentHead().getShaTwoFiftySix(), txs, keyPair.publicKey);
 
         // Verify the block against the old UTXO set and the new one, then insert
         newblock.verifyNonGenesis(newutxos);

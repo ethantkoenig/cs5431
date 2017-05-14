@@ -17,7 +17,11 @@ import utils.Config;
 import utils.Pair;
 import utils.ShaTwoFiftySix;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
+import java.util.stream.IntStream;
 
 public class BlockTest extends RandomizedTest {
     private final Crypto crypto;
@@ -33,14 +37,8 @@ public class BlockTest extends RandomizedTest {
 
         Assert.assertNotEquals(errorMessage, b1, new Object());
 
-        Block b2 = Block.empty(ShaTwoFiftySix.zero());
-        for (Transaction tx : b1) {
-            b2.addTransaction(tx);
-        }
-        b2.addReward(b1.reward.ownerPubKey);
-        for (int i = 0; i < Block.NONCE_SIZE_IN_BYTES; ++i) {
-            b2.nonce[i] = b1.nonce[i];
-        }
+        Block b2 = Block.block(ShaTwoFiftySix.zero(), b1.transactions, b1.reward.ownerPubKey);
+        System.arraycopy(b1.nonce, 0, b2.nonce, 0, Block.NONCE_SIZE_IN_BYTES);
 
         TestUtils.assertEqualsWithHashCode(errorMessage, b1, b2);
 
@@ -52,12 +50,7 @@ public class BlockTest extends RandomizedTest {
     @Test
     public void testSerialize() throws Exception {
         ShaTwoFiftySix previousBlockHash = ShaTwoFiftySix.hashOf(randomBytes(256));
-        Block block = Block.empty(previousBlockHash);
-        for (int i = 0; i < Block.NUM_TRANSACTIONS_PER_BLOCK; i++) {
-            block.transactions[i] = randomTransaction();
-        }
-        block.addReward(crypto.signatureKeyPair().publicKey);
-
+        Block block = randomBlock(previousBlockHash);
         Block deserialized = Block.DESERIALIZER.deserialize(ByteUtil.asByteArray(block::serialize));
 
         TestUtils.assertEqualsWithHashCode(errorMessage, block, deserialized);
@@ -68,37 +61,8 @@ public class BlockTest extends RandomizedTest {
     }
 
     @Test
-    public void testAddReward() throws Exception {
-        Block b = Block.empty(ShaTwoFiftySix.zero());
-        ECDSAPublicKey key = crypto.signatureKeyPair().publicKey;
-        b.addReward(key);
-
-        Assert.assertEquals(Block.REWARD_AMOUNT, b.reward.value);
-        Assert.assertEquals(key, b.reward.ownerPubKey);
-
-        TestUtils.assertThrows(errorMessage, () -> b.addReward(key), IllegalStateException.class);
-    }
-
-    @Test
-    public void testAddTransaction() throws Exception {
-        Block b = Block.empty(ShaTwoFiftySix.zero());
-
-        for (int i = 0; i < Block.NUM_TRANSACTIONS_PER_BLOCK; ++i) {
-            Assert.assertFalse(errorMessage, b.isFull());
-            Transaction tx = randomTransaction();
-            b.addTransaction(tx);
-            Assert.assertEquals(tx, b.transactions[i]);
-        }
-
-        Assert.assertTrue(errorMessage, b.isFull());
-        Assert.assertFalse(errorMessage, b.addTransaction(randomTransaction()));
-    }
-
-    @Test
     public void testSerializeGenesis() throws Exception {
-        Block block = Block.genesis();
-        block.addReward(crypto.signatureKeyPair().publicKey);
-
+        Block block = Block.genesis(crypto.signatureKeyPair().publicKey);
         Block deserialized = Block.DESERIALIZER.deserialize(ByteUtil.asByteArray(block::serialize));
 
         TestUtils.assertEqualsWithHashCode(errorMessage, block, deserialized);
@@ -114,10 +78,7 @@ public class BlockTest extends RandomizedTest {
         ShaTwoFiftySix previousBlockHash = ShaTwoFiftySix.hashOf(randomBytes(256));
         Pair<Block, UnspentTransactions> pair = randomValidBlock(previousBlockHash);
         Block block = pair.getLeft();
-        block.addReward(crypto.signatureKeyPair().publicKey);
-        while (!block.checkHash()) { // mine the block
-            block.nonceAddOne();
-        }
+        block.findValidNonce();
 
         UnspentTransactions result = TestUtils.assertPresent(block.verifyNonGenesis(pair.getRight()));
 
@@ -127,9 +88,6 @@ public class BlockTest extends RandomizedTest {
         expected.put(lastTxn.getShaTwoFiftySix(), 0, lastTxn.getOutput(0));
         expected.put(block.getShaTwoFiftySix(), 0, block.reward);
         TestUtils.assertEqualsWithHashCode(errorMessage, result, expected);
-
-        block.reward = new TxOut(block.reward.value + 1, block.reward.ownerPubKey);
-        Assert.assertFalse(errorMessage, block.verifyNonGenesis(pair.getRight()).isPresent());
 
         block = randomBlock(randomShaTwoFiftySix());
         Assert.assertFalse(errorMessage, block.verifyNonGenesis(UnspentTransactions.empty()).isPresent());
@@ -141,29 +99,29 @@ public class BlockTest extends RandomizedTest {
         Assert.assertFalse(errorMessage,
                 randomBlock(randomShaTwoFiftySix()).verifyGenesis(pair.publicKey));
 
-        Block genesis = Block.genesis();
-        genesis.addReward(pair.publicKey);
+        Block genesis = Block.genesis(pair.publicKey);
         genesis.findValidNonce();
         Assert.assertTrue(errorMessage, genesis.verifyGenesis(pair.publicKey));
 
-        genesis.reward = new TxOut(Block.REWARD_AMOUNT + 1, pair.publicKey);
-        Assert.assertFalse(errorMessage, genesis.verifyGenesis(pair.publicKey));
+        Block badGenesis = new Block(
+                ShaTwoFiftySix.zero(),
+                new Transaction[0],
+                new TxOut(Block.REWARD_AMOUNT + 1, pair.publicKey)
+        );
+        Assert.assertFalse(errorMessage, badGenesis.verifyGenesis(pair.publicKey));
     }
 
     @Test
     public void testGetTransactionDifferences() throws Exception {
         ShaTwoFiftySix previousBlockHash = ShaTwoFiftySix.hashOf(randomBytes(256));
-        Block block1 = Block.empty(previousBlockHash);
-        Block block2 = Block.empty(previousBlockHash);
 
         Transaction txn1 = randomTransaction();
         Transaction txn2 = randomTransaction();
         Transaction txn3 = randomTransaction();
 
-        block1.addTransaction(txn1);
-        block1.addTransaction(txn2);
-        block2.addTransaction(txn2);
-        block2.addTransaction(txn3);
+        ECDSAPublicKey publicKey = crypto.signatureKeyPair().publicKey;
+        Block block1 = Block.block(previousBlockHash, Arrays.asList(txn1, txn2), publicKey);
+        Block block2 = Block.block(previousBlockHash, Arrays.asList(txn2, txn3), publicKey);
 
         Assert.assertEquals(errorMessage,
                 block1.getTransactionDifferences(block2),
@@ -184,18 +142,5 @@ public class BlockTest extends RandomizedTest {
                 Assert.assertTrue(hash.checkHashZeros(1));
             }
         }
-    }
-
-    @Test
-    public void testSerializeFailures() throws Exception {
-        Block block = Block.empty(randomShaTwoFiftySix());
-
-        TestUtils.assertThrows(errorMessage, () -> block.getShaTwoFiftySix(), IllegalStateException.class);
-
-        while (!block.isFull()) {
-            block.addTransaction(randomTransaction());
-        }
-
-        TestUtils.assertThrows(errorMessage, () -> block.getShaTwoFiftySix(), IllegalStateException.class);
     }
 }

@@ -121,7 +121,6 @@ public class MessageHandler {
         Block block = miningQueue.removeLast();
         // If there is no current miner thread then start a new one.
         if (minerThread == null || !minerThread.isAlive()) {
-            block.addReward(bundle.getKeyPair().publicKey);
             minerThread = new MinerThread(name, block, broadcastQueue);
             minerThread.start();
         }
@@ -243,10 +242,11 @@ public class MessageHandler {
             // currentAddToBlock is full, so start mining it
             LOGGER.info("[+] Starting mining thread");
 
-            Block blockToMine = Block.empty(bundle.getBlockChain().getCurrentHead().getShaTwoFiftySix());
-            for (Transaction t : unminedTransactions) {
-                blockToMine.addTransaction(t);
-            }
+            Block blockToMine = Block.block(
+                    bundle.getBlockChain().getCurrentHead().getShaTwoFiftySix(),
+                    unminedTransactions,
+                    bundle.getKeyPair().publicKey
+            );
             miningQueue.addFirst(blockToMine);
             startMiningThread();
             addTransaction(transaction);
