@@ -99,12 +99,11 @@ User & Funds & Should & As a user, I can accept or decline a request from anothe
 \hline
 User & Account & Should & As a user, I can reset my password. \\
 \hline
-User & User Accounts & Should & As a user, I can search for other users by name, so that I don't have to remember other users' usernames. \\
-\hline
 User & Transactions & Should & As a user, I can view my transaction history. \\
 \hline
 User & Credentials & Could & As a user, I can reset my password if I forget it. \\
 \hline
+User & Credentials & Could & As a user, I can update my master password. \\
 \end{tabularx}
 
 \section{Threat Models}
@@ -192,10 +191,13 @@ Our key integrity and availability goals are very much satisfied. We feel that i
 \item The wallet software prevents unauthorized access to a user's credentials. This goals concerns confidentiality, since it involves unauthorized access of an asset. We do the best we can to safeguard the users password, and have safeguard in place if the session cookie is hijacked.
 \item The wallet software prevents unauthorized modification of a user's credentials. This goal concerns integrity, since users' credentials are a system asset. We do this through two-factor authentication for password resets.
 \item The wallet software prevents users from constructing invalid transactions. This goal concerns integrity. If we allowed users to construct malformed transactions, it could lead them to believe they have performed transactions that will never be accepted by the blockchain, leading to inconsistencies between the wallet software and the blockchain. We do this by running a node on the server, and sanity check all transactions with a UTXO (unspent transaction output) key-value store in memory.
-\item The wallet software does not store plaintext private keys. This goal concerns confidentiality, as a users private key allows them to spend their coins, and if a malicious user compromises the server they should not have access to everyone's private keys. We store private keys encrypted under the users password.
+\item The wallet software must prevent unauthorized disclosure of a user's friend list. This goal concerns confidentiality, since it involves unauthorized access of an asset.
+\item The wallet software must prevent unauthorized modification/deletion of a user's friend list. This goal concerns integrity, since it involves unauthorized modification of an asset.
 \end{itemize}
 
-Authentication passwords could be disclosed to an attacker, since attackers may have access to the memory contents of the server. In this scenario, preventing unauthorized access to a user's balance, transaction history, and keys will not be possible. Preventing unauthorized modification of a user's keys will still be possible, through use of two-factor authorization for key addition.
+The authentication secret derived from a user's master password could be disclosed to an attacker, since attackers may obtain access to the memory contents of the server.
+In this scenario, preventing unauthorized access to a user's balance, transaction history, public keys, and friends list will not be possible.
+Preventing unauthorized modification of a user's keys will still be possible, through use of two-factor authorization for such operations.
 
 \section{Review of Essential Security Elements}
 
@@ -203,7 +205,7 @@ Authentication passwords could be disclosed to an attacker, since attackers may 
 
 For the cryptocurrency itself, there is no authentication. All parties in the cryptocurrency network remain pseudonymous, so there are no places where authentication comes into play.
 
-Our web-app will authenticate users via a password-based login. Access to all of the app's service will be mediated through logging in. In addition, we require the user re-enter their password for certain operations, and two factor authentication for others.
+Our Venmo-style web app will authenticate users via an authentication secret derived from their master password. Access to all of the app's service will be mediated through logging in. In addition, we require the user re-enter their password for certain operations, and two factor authentication for others.
 
 \subsection{Authorization}
 
