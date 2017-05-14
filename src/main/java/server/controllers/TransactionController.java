@@ -101,12 +101,12 @@ public class TransactionController extends AbstractController {
         }
 
         if (!userAccess.isFriendsWith(recipientUsername, loggedInUser.getUsername())) {
-            return "This person has not authorized you to send them money."; // TODO
+            throw new InvalidParamException("This person has not authorized you to send them money.");
         }
 
         Optional<User> recipient = userAccess.getUserByUsername(recipientUsername);
         if (!recipient.isPresent()) {
-            return "invalid recipient"; // TODO handle properly
+            throw new InvalidParamException("Invalid recipient");
         }
         List<ECDSAPublicKey> keys = keyAccess.getKeysByUserID(loggedInUser.getId()).stream()
                 .map(Key::asKey).flatMap(Optionals::stream).collect(Collectors.toList());
@@ -114,8 +114,10 @@ public class TransactionController extends AbstractController {
                 .map(Key::asKey).flatMap(Optionals::stream).collect(Collectors.toList());
         long amount = queryParamLong(request, "amount");
 
-        if (keys.isEmpty() || recipientKeys.isEmpty()) {
-            return "oh no, no keys"; // TODO handle properly
+        if (keys.isEmpty()) {
+            throw new InvalidParamException("You have not uploaded any keys");
+        } else if (recipientKeys.isEmpty()) {
+            throw new InvalidParamException("The recipient has not uploaded any keys");
         }
 
         GetUTXWithKeysResponsePayload unsigned;
@@ -129,14 +131,14 @@ public class TransactionController extends AbstractController {
 
             IncomingMessage respMessage = endpoint.receive();
             if (respMessage.type != Message.UTX_WITH_KEYS) {
-                return "oh no, bad response from node"; // TODO handle properly
+                LOGGER.severe("Unexpected message type: %d", respMessage.type);
+
             }
             unsigned = GetUTXWithKeysResponsePayload.DESERIALIZER.deserialize(respMessage.payload);
         }
 
         if (!unsigned.wasSuccessful) {
-            // TODO don't have enough money, handle properly
-            return "oh no, not successful! (you don't have enough money)";
+            throw new InvalidParamException("You do not have sufficient funds for this transaction");
         }
         byte[] payload = unsigned.unsignedTransaction;
 
@@ -181,7 +183,7 @@ public class TransactionController extends AbstractController {
             endpoint.send(new OutgoingMessage(Message.TRANSACTION, msgPayload));
         }
         successMessage(request, "Transaction sent!");
-        return "ok"; // TODO handle properly
+        return "ok";
     }
 
     ModelAndView getRequests(Request request, Response response, Log log) throws Exception {
