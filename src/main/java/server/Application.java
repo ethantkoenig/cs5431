@@ -5,6 +5,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import message.payloads.PingPayload;
 import server.annotations.DatabasePassword;
+import server.annotations.NodeAddress;
 import server.config.DatabaseConfig;
 import server.controllers.*;
 import server.utils.*;
@@ -23,8 +24,7 @@ public class Application {
     private static final int PING_NUMBER = 5431;
 
     public static boolean run(Properties serverProp) {
-        if (!handleArgs(serverProp)
-                || !pingNode()) {
+        if (!handleArgs(serverProp)) {
             return false;
         }
 
@@ -72,7 +72,10 @@ public class Application {
 
         try {
             int port = Integer.parseInt(portString);
-            Constants.setNodeAddress(new InetSocketAddress(host, port));
+            Module.NODE_ADDRESS = new InetSocketAddress(host, port);
+            if (!pingNode(Module.NODE_ADDRESS)) {
+                return false;
+            }
         } catch (NumberFormatException e) {
             System.err.println("Misformatted port number: " + portString);
             return false;
@@ -82,15 +85,12 @@ public class Application {
         return true;
     }
 
-    private static boolean pingNode() {
-        try (Socket socket = new Socket(
-                Constants.getNodeAddress().getAddress(),
-                Constants.getNodeAddress().getPort())) {
+    private static boolean pingNode(InetSocketAddress address) {
+        try (Socket socket = new Socket(address.getAddress(), address.getPort())) {
             DataOutputStream socketOut = new DataOutputStream(socket.getOutputStream());
             new PingPayload(PING_NUMBER).toMessage().serialize(socketOut);
         } catch (IOException e) {
-            System.err.println(String.format("Unable to connect to node at %s",
-                    Constants.getNodeAddress()));
+            System.err.println(String.format("Unable to connect to node at %s", address));
             System.err.println(e.getMessage());
             return false;
         }
@@ -99,15 +99,25 @@ public class Application {
 
     private static class Module extends AbstractModule {
         private static String DB_PASSWORD = null;
+        private static InetSocketAddress NODE_ADDRESS = null;
 
         @Override
         protected void configure() {
+            bind(ConnectionProvider.class).to(ProductionConnectionProvider.class);
+            bind(MailService.class).to(GmailService.class);
+            bind(CryptocurrencyEndpoint.Provider.class)
+                    .to(ProductionCryptocurrencyEndpoint.Provider.class);
+
             if (DB_PASSWORD == null) {
                 throw new IllegalStateException("DB_PASSWORD not initialized");
             }
-            bind(ConnectionProvider.class).to(ProductionConnectionProvider.class);
-            bind(MailService.class).to(GmailService.class);
             bind(String.class).annotatedWith(DatabasePassword.class).toInstance(DB_PASSWORD);
+
+            if (NODE_ADDRESS == null) {
+                throw new IllegalStateException("NODE_ADDRESS not initialized");
+            }
+            bind(InetSocketAddress.class).annotatedWith(NodeAddress.class)
+                    .toInstance(NODE_ADDRESS);
         }
     }
 }

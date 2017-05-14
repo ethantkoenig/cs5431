@@ -17,7 +17,7 @@ import server.bodies.TransactionResponseBody;
 import server.models.Key;
 import server.models.Transaction;
 import server.models.User;
-import server.utils.Constants;
+import server.utils.CryptocurrencyEndpoint;
 import server.utils.RouteUtils;
 import server.utils.RouteWrapper;
 import spark.ModelAndView;
@@ -29,9 +29,6 @@ import utils.Log;
 import utils.Optionals;
 import utils.ShaTwoFiftySix;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -48,13 +45,19 @@ public class TransactionController extends AbstractController {
     private final KeyAccess keyAccess;
     private final TransactionAccess transactionAccess;
     private final RouteUtils routeUtils;
+    private final CryptocurrencyEndpoint.Provider endpointProvider;
 
     @Inject
-    private TransactionController(UserAccess userAccess, KeyAccess keyAccess, TransactionAccess transactionAccess, RouteUtils routeUtils) {
+    private TransactionController(UserAccess userAccess,
+                                  KeyAccess keyAccess,
+                                  TransactionAccess transactionAccess,
+                                  RouteUtils routeUtils,
+                                  CryptocurrencyEndpoint.Provider endpointProvider) {
         this.userAccess = userAccess;
         this.keyAccess = keyAccess;
         this.transactionAccess = transactionAccess;
         this.routeUtils = routeUtils;
+        this.endpointProvider = endpointProvider;
     }
 
     public void init() {
@@ -110,19 +113,15 @@ public class TransactionController extends AbstractController {
         }
 
         GetUTXWithKeysResponsePayload unsigned;
-        try (Socket socket = new Socket(
-                Constants.getNodeAddress().getAddress(),
-                Constants.getNodeAddress().getPort())) {
-
-            new GetUTXWithKeysRequestPayload(
+        try (CryptocurrencyEndpoint endpoint = endpointProvider.getEndpoint()) {
+            endpoint.send(new GetUTXWithKeysRequestPayload(
                     keys,
                     keys.get(0),
                     recipientKeys.get(0),
                     amount
-            ).toMessage().serialize(new DataOutputStream(socket.getOutputStream()));
+            ).toMessage());
 
-            IncomingMessage respMessage = IncomingMessage.responderlessDeserializer()
-                    .deserialize(new DataInputStream(socket.getInputStream()));
+            IncomingMessage respMessage = endpoint.receive();
             if (respMessage.type != Message.UTX_WITH_KEYS) {
                 return "oh no, bad response from node"; // TODO handle properly
             }
@@ -172,11 +171,8 @@ public class TransactionController extends AbstractController {
             }
         });
 
-        try (Socket socket = new Socket(
-                Constants.getNodeAddress().getAddress(),
-                Constants.getNodeAddress().getPort())) {
-            DataOutputStream socketOut = new DataOutputStream(socket.getOutputStream());
-            new OutgoingMessage(Message.TRANSACTION, msgPayload).serialize(socketOut);
+        try (CryptocurrencyEndpoint endpoint = endpointProvider.getEndpoint()) {
+            endpoint.send(new OutgoingMessage(Message.TRANSACTION, msgPayload));
         }
         return "ok"; // TODO handle properly
     }

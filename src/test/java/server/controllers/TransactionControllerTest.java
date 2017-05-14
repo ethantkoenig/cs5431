@@ -6,11 +6,11 @@ import com.google.inject.Injector;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import crypto.ECDSAPublicKey;
-import message.IncomingMessage;
 import message.Message;
+import message.OutgoingMessage;
 import message.payloads.GetUTXWithKeysResponsePayload;
-import network.ConnectionThread;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import server.access.TransactionAccess;
@@ -20,7 +20,6 @@ import server.bodies.TransactionResponseBody;
 import server.models.Key;
 import server.models.User;
 import server.utils.ConnectionProvider;
-import server.utils.Constants;
 import spark.ModelAndView;
 import spark.Request;
 import spark.Response;
@@ -28,15 +27,10 @@ import testutils.*;
 import transaction.Transaction;
 import utils.ByteUtil;
 
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.ServerSocket;
 import java.util.Collections;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 import java.util.stream.Collectors;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static testutils.TestUtils.assertPresent;
 
@@ -45,15 +39,23 @@ public class TransactionControllerTest extends ControllerTest {
     private TransactionController controller;
     private TransactionAccess access;
     private Fixtures fixtures;
+    private MockCryptocurrencyEndpoint endpoint;
 
     public TransactionControllerTest() throws Exception {
         super();
+        System.err.println("Constructing a new TransactionControllerTest"); // TODO
         Injector injector = Guice.createInjector(new TestModule());
         controller = injector.getInstance(TransactionController.class);
         controller.init();
         access = injector.getInstance(TransactionAccess.class);
         setConnectionProvider(injector.getInstance(ConnectionProvider.class));
         fixtures = injector.getInstance(Fixtures.class);
+        endpoint = injector.getInstance(MockCryptocurrencyEndpoint.Provider.class).getEndpoint();
+    }
+
+    @Before
+    public void clearEndpoint() {
+        endpoint.clear();
     }
 
     @Test
@@ -70,30 +72,17 @@ public class TransactionControllerTest extends ControllerTest {
     public void testTransactValid(Transaction transaction) throws Exception {
         final int senderId = 1;
         final int recipientId = 2;
-        ServerSocket socket = new ServerSocket(0);
-        Constants.setNodeAddress(new InetSocketAddress(
-                InetAddress.getLocalHost(),
-                socket.getLocalPort()
-        ));
 
         final Key key = fixtures.keyOwnedBy(senderId);
-        BlockingQueue<IncomingMessage> messageQueue = new ArrayBlockingQueue<>(10);
-        new Thread(() -> {
-            try {
-                ConnectionThread connectionThread = new ConnectionThread(socket.accept(), messageQueue);
-                connectionThread.start();
-                IncomingMessage message = messageQueue.take();
-                assertEquals(Message.GET_UTX_WITH_KEYS, message.type);
-                ECDSAPublicKey ecKey = assertPresent(key.asKey());
-                GetUTXWithKeysResponsePayload response = GetUTXWithKeysResponsePayload.success(
-                        Collections.singletonList(ecKey),
-                        transaction
-                );
-                connectionThread.send(response.toMessage());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }).start();
+        ECDSAPublicKey ecKey = assertPresent(key.asKey());
+        OutgoingMessage response = GetUTXWithKeysResponsePayload.success(
+                Collections.singletonList(ecKey),
+                transaction
+        ).toMessage();
+        endpoint.respondWith(message -> {
+            assertEquals(Message.GET_UTX_WITH_KEYS, message.type);
+            return response;
+        });
 
         Request request = new MockRequest()
                 .addQueryParam("recipient", fixtures.user(recipientId).getUsername())
@@ -111,61 +100,25 @@ public class TransactionControllerTest extends ControllerTest {
 
     @Test
     public void testTransactInvalid() throws Exception {
-        ServerSocket socket = new ServerSocket(0);
-        Constants.setNodeAddress(new InetSocketAddress(
-                InetAddress.getLocalHost(),
-                socket.getLocalPort()
-        ));
-
-        BlockingQueue<IncomingMessage> messageQueue = new ArrayBlockingQueue<>(10);
-        new Thread(() -> {
-            try {
-                ConnectionThread connectionThread = new ConnectionThread(socket.accept(), messageQueue);
-                connectionThread.start();
-                IncomingMessage message = messageQueue.take();
-                assertEquals(Message.GET_UTX_WITH_KEYS, message.type);
-                GetUTXWithKeysResponsePayload response = GetUTXWithKeysResponsePayload.failure();
-                connectionThread.send(response.toMessage());
-            } catch (InterruptedException | IOException e) {
-                e.printStackTrace();
-            }
-        }).start();
+        OutgoingMessage response = GetUTXWithKeysResponsePayload.failure().toMessage();
+        endpoint.respondWith(sent -> {
+            assertEquals(Message.GET_UTX_WITH_KEYS, sent.type);
+            return response;
+        });
 
         Request request = new MockRequest()
                 .addQueryParam("recipient", fixtures.user(1).getUsername())
                 .addQueryParam("amount", "100")
                 .addQueryParam("message", "this is a test message")
-                .addSessionAttribute("username", fixtures.user(1).getUsername())
+                .addSessionAttribute("username", fixtures.user(2).getUsername())
                 .get();
 
-        Response response = new MockResponse().get();
-        route(controller::transact).handle(request, response); // TODO check return value
+        MockResponse mockResponse = new MockResponse();
+        route(controller::transact).handle(request, mockResponse.get());
     }
 
     @Property(trials = 1)
     public void testSendTransaction(Transaction transaction) throws Exception {
-        ServerSocket socket = new ServerSocket(0);
-        Constants.setNodeAddress(new InetSocketAddress(
-                InetAddress.getLocalHost(),
-                socket.getLocalPort()
-        ));
-
-        BlockingQueue<IncomingMessage> messageQueue = new ArrayBlockingQueue<>(10);
-        new Thread(() -> {
-            try {
-                ConnectionThread connectionThread = new ConnectionThread(socket.accept(), messageQueue);
-                connectionThread.start();
-                IncomingMessage message = messageQueue.take();
-                assertEquals(Message.TRANSACTION, message.type);
-                Assert.assertArrayEquals(
-                        ByteUtil.asByteArray(transaction::serialize),
-                        message.payload
-                );
-            } catch (InterruptedException | IOException e) {
-                e.printStackTrace();
-            }
-        }).start();
-
         byte[] payload = ByteUtil.asByteArray(transaction::serializeWithoutSignatures);
         SendTransactionBody body = new SendTransactionBody(
                 ByteUtil.bytesToHexString(payload),
@@ -182,6 +135,10 @@ public class TransactionControllerTest extends ControllerTest {
         Response response = new MockResponse().get();
         Object resp = route(controller::sendTransaction).handle(request, response); // TODO check return value
         assertEquals("ok", resp); // TODO this is temporary
+
+        OutgoingMessage sent = endpoint.sent();
+        assertEquals(Message.TRANSACTION, sent.type);
+        assertArrayEquals(ByteUtil.asByteArray(transaction::serialize), sent.payload);
     }
 
     @Test
