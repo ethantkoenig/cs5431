@@ -164,6 +164,7 @@ public class Main {
 
         if (isMining) {
             node = new Miner(
+                    "miner",
                     new ServerSocket(port),
                     new ECDSAKeyPair(myPrivate, myPublic),
                     privilegedKey,
@@ -171,6 +172,7 @@ public class Main {
             );
         } else {
             node = new Node(
+                    "node",
                     new ServerSocket(port),
                     new ECDSAKeyPair(myPrivate, myPublic),
                     privilegedKey,

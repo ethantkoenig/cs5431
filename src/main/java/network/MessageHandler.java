@@ -23,7 +23,8 @@ import java.util.stream.Collectors;
  * The MessageHandler class manages internal state and handles incoming messages
  */
 public class MessageHandler {
-    private static final Log LOGGER = Log.forClass(MessageHandler.class);
+    private final Log LOGGER;
+    private final String name;
 
     private final MiningBundle bundle;
     private final BlockingQueue<OutgoingMessage> broadcastQueue;
@@ -33,12 +34,16 @@ public class MessageHandler {
     private MinerThread minerThread;
     private LinkedList<Block> miningQueue = new LinkedList<>();
     private FixedSizeSet<IncomingMessage> recentTransactionsReceived = new FixedSizeSet<>();
+    private FixedSizeSet<IncomingMessage> recentBlocksReceived = new FixedSizeSet<>();
 
     private boolean isMining;
 
-    public MessageHandler(BlockingQueue<OutgoingMessage> broadcast,
+    public MessageHandler(String name,
+                          BlockingQueue<OutgoingMessage> broadcast,
                           MiningBundle miningBundle,
                           boolean isMining) {
+        LOGGER = Log.forClass(MessageHandler.class, name);
+        this.name = name;
         this.bundle = miningBundle;
         this.broadcastQueue = broadcast;
         this.isMining = isMining;
@@ -63,6 +68,10 @@ public class MessageHandler {
         addTransaction(tx);
     }
 
+    public boolean checkRecentBlock(IncomingMessage msg) {
+        return recentBlocksReceived.contains(msg);
+    }
+
     /**
      * @return whether {@code block} was successfully handled
      */
@@ -78,6 +87,19 @@ public class MessageHandler {
             return false;
         }
         return true;
+    }
+
+    /**
+     * Rebroadcasts new blocks to other all other nodes.
+     */
+    public void blockBroadcaster(IncomingMessage msg) throws InterruptedException {
+        if (recentBlocksReceived.contains(msg)) {
+            return;
+        }
+        LOGGER.info("New block, broadcasting to all other miners.");
+        broadcastQueue.put(new OutgoingMessage(msg.type, msg.payload));
+        LOGGER.info("New block put onto broadcastQueue");
+        recentBlocksReceived.add(msg);
     }
 
     /**
@@ -100,7 +122,7 @@ public class MessageHandler {
         // If there is no current miner thread then start a new one.
         if (minerThread == null || !minerThread.isAlive()) {
             block.addReward(bundle.getKeyPair().publicKey);
-            minerThread = new MinerThread(block, broadcastQueue);
+            minerThread = new MinerThread(name, block, broadcastQueue);
             minerThread.start();
         }
     }

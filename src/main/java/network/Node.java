@@ -16,8 +16,8 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.SynchronousQueue;
 
 /**
  * The network.Node class represents an arbitrary node in the network that can communicate
@@ -32,23 +32,24 @@ public class Node {
     private final ServerSocket serverSocket;
 
     // Synchronized blocking queue to hold incoming messages
-    protected BlockingQueue<IncomingMessage> messageQueue;
+    protected final BlockingQueue<IncomingMessage> messageQueue = new ArrayBlockingQueue<>(25);
 
     // Synchronized blocking queue to hold outgoing broadcast messages
-    protected BlockingQueue<OutgoingMessage> broadcastQueue;
+    protected final BlockingQueue<OutgoingMessage> broadcastQueue = new ArrayBlockingQueue<>(25);
 
     protected MiningBundle miningBundle;
 
     // The connections list holds all of the Nodes current connections
-    protected ArrayList<ConnectionThread> connections;
+    protected final ArrayList<ConnectionThread> connections = new ArrayList<>();
 
-    public Node(ServerSocket serverSocket,
+    public final String name;
+
+    public Node(String name,
+                ServerSocket serverSocket,
                 ECDSAKeyPair myKeyPair,
                 ECDSAPublicKey privilegedKey,
                 Path blockChainPath) {
-        this.connections = new ArrayList<>();
-        this.messageQueue = new SynchronousQueue<>();
-        this.broadcastQueue = new SynchronousQueue<>();
+        this.name = name;
         this.serverSocket = serverSocket;
         BlockChain blockChain = new BlockChain(blockChainPath);
         UnspentTransactions unspentTransactions = UnspentTransactions.empty();
@@ -57,9 +58,9 @@ public class Node {
 
     public void startNode() {
         // Start network.HandleMessageThread
-        new HandleMessageThread(this.messageQueue, this.broadcastQueue, miningBundle, false).start();
+        new HandleMessageThread(name, messageQueue, broadcastQueue, miningBundle, false).start();
         // Start network.BroadcastThread
-        new BroadcastThread(this::broadcast, this.broadcastQueue).start();
+        new BroadcastThread(this::broadcast, broadcastQueue).start();
         // Start accepting incoming connections from other miners
         try {
             accept();

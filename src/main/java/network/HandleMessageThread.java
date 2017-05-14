@@ -7,7 +7,6 @@ import message.Message;
 import message.OutgoingMessage;
 import message.payloads.*;
 import transaction.Transaction;
-import utils.Config;
 import utils.DeserializationException;
 import utils.Deserializer;
 import utils.Log;
@@ -25,7 +24,7 @@ import java.util.concurrent.BlockingQueue;
  * @version 1.0, Feb 22 2017
  */
 public class HandleMessageThread extends Thread {
-    private static final Log LOGGER = Log.forClass(HandleMessageThread.class);
+    private final Log LOGGER;
 
     private BlockingQueue<IncomingMessage> messageQueue;
 
@@ -37,13 +36,15 @@ public class HandleMessageThread extends Thread {
     private final OrphanedBlocks orphanedBlocks = new OrphanedBlocks();
 
     // Needs reference to parent in order to call Node.broadcast()
-    public HandleMessageThread(BlockingQueue<IncomingMessage> messageQueue,
+    public HandleMessageThread(String name,
+                               BlockingQueue<IncomingMessage> messageQueue,
                                BlockingQueue<OutgoingMessage> broadcastQueue,
                                MiningBundle bundle,
                                boolean isMining) {
+        LOGGER = Log.forClass(HandleMessageThread.class, name);
         this.messageQueue = messageQueue;
         this.bundle = bundle;
-        this.handler = new MessageHandler(broadcastQueue, bundle, isMining);
+        this.handler = new MessageHandler(name, broadcastQueue, bundle, isMining);
     }
 
     /**
@@ -79,6 +80,9 @@ public class HandleMessageThread extends Thread {
                     LOGGER.warning("Received empty blocks message");
                     break;
                 }
+                if (handler.checkRecentBlock(message)) {
+                    break;
+                }
                 boolean added = false;
                 for (int i = 0; i < blocks.size() - 1; i++) {
                     Block child = blocks.get(i);
@@ -104,6 +108,10 @@ public class HandleMessageThread extends Thread {
                 if (!added) {
                     ShaTwoFiftySix hash = blocks.get(blocks.size() - 1).getShaTwoFiftySix();
                     message.respond(new GetBlocksRequestPayload(hash, Message.MAX_BLOCKS_TO_GET).toMessage());
+                // Only rebroadcast if successful add, and single block.
+                // Prevents rebroadcast of catching up
+                } else if (blocks.size() == 1) {
+                    handler.blockBroadcaster(message);
                 }
                 break;
             case Message.GET_BLOCKS:
@@ -135,9 +143,11 @@ public class HandleMessageThread extends Thread {
         if (request.numBlocksRequested <= 0 ||
                 request.numBlocksRequested > Message.MAX_BLOCKS_TO_GET) {
             LOGGER.info("GET_BLOCKS request, invalid number of requested blocks: %d", request.numBlocksRequested);
+            message.respond(new BadRequestPayload().toMessage());
             return;
         } else if (!chain.containsBlockWithHash(request.hash)) {
             LOGGER.info("GET_BLOCKS message received with unknown hash: %s", request.hash);
+            message.respond(new BadRequestPayload().toMessage());
             return;
         }
         handler.getBlockMsgHandler(message, request);
