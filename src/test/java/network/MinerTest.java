@@ -54,7 +54,9 @@ public class MinerTest extends RandomizedTest {
 
         List<Transaction> transactions = simulation.validTransactions(random, 2);
         simulation.sendValidTransaction(miner0, transactions.get(0));
-        MinerSimulation.TestMiner miner2 = simulation.addNode();
+        MinerSimulation.TestMiner miner2 = random.nextBoolean()
+                ? simulation.addNode()
+                : simulation.addNodeTo(0);
         simulation.sendValidTransaction(miner1, transactions.get(1));
         simulation.expectValidBlockFrom(miner0);
         simulation.flushQueues();
@@ -69,12 +71,12 @@ public class MinerTest extends RandomizedTest {
         IncomingMessage response = null;
         for (int i = 0; i < 15; i++) {
             simulation.sendGetBlocksRequest(miner2, block.getShaTwoFiftySix(), Message.MAX_BLOCKS_TO_GET);
-            Optional<IncomingMessage> optMsg = simulation.checkForMessage(miner2);
-            if (optMsg.isPresent()) {
-                response = optMsg.get();
-                break;
+            response = simulation.getNextMessage(miner2);
+            if (response.type == Message.BAD_REQUEST) {
+                Thread.sleep(100); // wait for miner2 to get caught up
+                continue;
             }
-            Thread.sleep(100); // wait for miner2 to get caught up
+            break;
         }
 
         Assert.assertNotNull(response);
@@ -101,7 +103,7 @@ public class MinerTest extends RandomizedTest {
 
         simulation.flushQueues();
 
-        final int numIters = random.nextInt(3 * Message.MAX_BLOCKS_TO_GET);
+        final int numIters = random.nextInt(4 * Message.MAX_BLOCKS_TO_GET);
         for (int iter = 0; iter < numIters; iter++) {
             simulation.addValidBlock(random);
         }
@@ -178,6 +180,8 @@ public class MinerTest extends RandomizedTest {
         badGenesis.findValidNonce();
         simulation.sendBlock(miner0, badGenesis);
         simulation.sendBlock(miner1, badGenesis);
+        simulation.expectMessage(miner0, msg -> msg.type == Message.BLOCKS);
+        simulation.expectMessage(miner1, msg -> msg.type == Message.BLOCKS);
         simulation.sendGetBlocksRequest(miner0, badGenesis.getShaTwoFiftySix(), 1);
         simulation.sendGetBlocksRequest(miner1, badGenesis.getShaTwoFiftySix(), 1);
         simulation.expectMessage(miner0, msg -> msg.type == Message.BAD_REQUEST);
