@@ -38,6 +38,8 @@ import java.util.stream.Collectors;
 import static testutils.RandomUtils.choiceList;
 
 public final class MinerSimulation {
+    private final Path tmpPath = Paths.get(System.getProperty("java.io.tmpdir"));
+
     private final List<TestMiner> miners = new ArrayList<>();
     private final ServerSocket serverSocket;
     private final ECDSAKeyPair privilegedKeyPair;
@@ -53,7 +55,7 @@ public final class MinerSimulation {
         serverSocket = new ServerSocket(0);
         this.privilegedKeyPair = privilegedKeyPair;
         // TODO use a temporary directory
-        Path blockChainPath = Files.createTempDirectory(Paths.get("/tmp"), "blockchain");
+        Path blockChainPath = Files.createTempDirectory(tmpPath, "blockchain");
         this.blockChain = new BlockChain(blockChainPath);
     }
 
@@ -69,7 +71,7 @@ public final class MinerSimulation {
         final List<Integer> portNumsToConnectTo = miners.stream()
                 .map(m -> m.portNumber).collect(Collectors.toList());
         ServerSocket socket = new ServerSocket(0);
-        Path blockChainPath = Files.createTempDirectory(Paths.get("/tmp"), "blockchain");
+        Path blockChainPath = Files.createTempDirectory(tmpPath, "blockchain");
         Miner miner = new Miner(socket, keyPair, privilegedKeyPair.publicKey, blockChainPath);
         miner.connect("localhost", serverSocket.getLocalPort());
         for (int portNumToConnectTo : portNumsToConnectTo) {
