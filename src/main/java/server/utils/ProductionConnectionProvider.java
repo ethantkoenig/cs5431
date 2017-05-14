@@ -22,7 +22,6 @@ public final class ProductionConnectionProvider extends PooledConnectionProvider
 
     @Override
     protected void configure(BasicDataSource dataSource) {
-        System.out.println("dbPassword=" + dbPassword);
         dataSource.setDriverClassName(jdbcDriver);
         dataSource.setUsername(dbUser);
         dataSource.setPassword(dbPassword);

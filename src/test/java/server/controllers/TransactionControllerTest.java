@@ -43,7 +43,6 @@ public class TransactionControllerTest extends ControllerTest {
 
     public TransactionControllerTest() throws Exception {
         super();
-        System.err.println("Constructing a new TransactionControllerTest"); // TODO
         Injector injector = Guice.createInjector(new TestModule());
         controller = injector.getInstance(TransactionController.class);
         controller.init();
@@ -133,8 +132,7 @@ public class TransactionControllerTest extends ControllerTest {
         request.session().attribute("username", "username");
 
         Response response = new MockResponse().get();
-        Object resp = route(controller::sendTransaction).handle(request, response); // TODO check return value
-        assertEquals("ok", resp); // TODO this is temporary
+        route(controller::sendTransaction).handle(request, response);
 
         OutgoingMessage sent = endpoint.sent();
         assertEquals(Message.TRANSACTION, sent.type);

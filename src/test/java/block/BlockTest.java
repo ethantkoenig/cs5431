@@ -17,11 +17,8 @@ import utils.Config;
 import utils.Pair;
 import utils.ShaTwoFiftySix;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
-import java.util.stream.IntStream;
 
 public class BlockTest extends RandomizedTest {
     private final Crypto crypto;
@@ -84,8 +81,9 @@ public class BlockTest extends RandomizedTest {
 
         UnspentTransactions expected = UnspentTransactions.empty();
         Transaction lastTxn = block.transactions[Block.NUM_TRANSACTIONS_PER_BLOCK - 1];
-        // TODO currently assumes that last transaction will only have one output
-        expected.put(lastTxn.getShaTwoFiftySix(), 0, lastTxn.getOutput(0));
+        for (int i = 0; i < lastTxn.numOutputs; i++) {
+            expected.put(lastTxn.getShaTwoFiftySix(), i, lastTxn.getOutput(i));
+        }
         expected.put(block.getShaTwoFiftySix(), 0, block.reward);
         TestUtils.assertEqualsWithHashCode(errorMessage, result, expected);
 

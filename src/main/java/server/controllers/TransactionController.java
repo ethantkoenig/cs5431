@@ -40,6 +40,10 @@ import static utils.ByteUtil.bytesToHexString;
 
 public class TransactionController extends AbstractController {
     private static final Log LOGGER = Log.forClass(TransactionController.class);
+    private static final int MAX_MESSAGE_LENGTH = 250;
+    private static final String MESSAGE_TOO_LONG =
+            "Message too long, must be under " + MAX_MESSAGE_LENGTH + " characters";
+
 
     private final UserAccess userAccess;
     private final KeyAccess keyAccess;
@@ -91,11 +95,13 @@ public class TransactionController extends AbstractController {
     String transact(Request request, Response response, Log log) throws Exception {
         User loggedInUser = routeUtils.forceLoggedInUser(request);
         String recipientUsername = queryParam(request, "recipient");
-        // TODO we don't check message length
         String message = queryParam(request, "message");
+        if (message.length() > MAX_MESSAGE_LENGTH) {
+            throw new InvalidParamException(MESSAGE_TOO_LONG);
+        }
 
         if (!userAccess.isFriendsWith(recipientUsername, loggedInUser.getUsername())) {
-            return "This person has not authorized you to send them money.";
+            return "This person has not authorized you to send them money."; // TODO
         }
 
         Optional<User> recipient = userAccess.getUserByUsername(recipientUsername);
@@ -174,6 +180,7 @@ public class TransactionController extends AbstractController {
         try (CryptocurrencyEndpoint endpoint = endpointProvider.getEndpoint()) {
             endpoint.send(new OutgoingMessage(Message.TRANSACTION, msgPayload));
         }
+        successMessage(request, "Transaction sent!");
         return "ok"; // TODO handle properly
     }
 
@@ -196,9 +203,8 @@ public class TransactionController extends AbstractController {
         }
 
         String message = queryParam(request, "message");
-
-        if (message.length() > 250) {
-            return "Message too long, must be under 250 characters";
+        if (message.length() > MAX_MESSAGE_LENGTH) {
+            throw new InvalidParamException(MESSAGE_TOO_LONG);
         }
 
         long amount = queryParamLong(request, "amount");

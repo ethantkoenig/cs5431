@@ -96,8 +96,7 @@ $(document).ready(function () {
                     contentType: 'application/json',
                     data: JSON.stringify(response),
                     success: function () {
-                        // TODO eventually redirect to logged-in user's page
-                        window.location.replace("/");
+                        window.location.replace("/user");
                     },
                     error: function () {
                         window.location.replace("/change_password");
@@ -220,8 +219,8 @@ $(document).ready(function () {
                     signatures: signatures
                 }),
                 success: function () {
-                    display_alert("Transaction sent", "success")
-                    window.location.replace("/");
+                    display_alert("Transaction sent", "success");
+                    window.location.replace("/user");
                 }
             });
         }).fail(function (jqXHR, textStatus, errorThrown) {
