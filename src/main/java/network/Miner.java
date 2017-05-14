@@ -7,14 +7,16 @@ import utils.Log;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.nio.file.Path;
 
 public class Miner extends Node {
     private final static Log LOGGER = Log.forClass(Miner.class);
 
     public Miner(ServerSocket serverSocket,
                  ECDSAKeyPair myKeyPair,
-                 ECDSAPublicKey privilegedKey) {
-        super(serverSocket, myKeyPair, privilegedKey);
+                 ECDSAPublicKey privilegedKey,
+                 Path blockChainPath) {
+        super(serverSocket, myKeyPair, privilegedKey, blockChainPath);
     }
 
     public void startMiner() {

@@ -13,7 +13,6 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
@@ -45,12 +44,12 @@ public class Node {
 
     public Node(ServerSocket serverSocket,
                 ECDSAKeyPair myKeyPair,
-                ECDSAPublicKey privilegedKey) {
+                ECDSAPublicKey privilegedKey,
+                Path blockChainPath) {
         this.connections = new ArrayList<>();
         this.messageQueue = new SynchronousQueue<>();
         this.broadcastQueue = new SynchronousQueue<>();
         this.serverSocket = serverSocket;
-        Path blockChainPath = Paths.get("blockchain" + serverSocket.getLocalPort());
         BlockChain blockChain = new BlockChain(blockChainPath);
         UnspentTransactions unspentTransactions = UnspentTransactions.empty();
         miningBundle = new MiningBundle(blockChain, myKeyPair, privilegedKey, unspentTransactions);

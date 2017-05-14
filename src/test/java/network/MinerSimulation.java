@@ -26,6 +26,8 @@ import utils.ShaTwoFiftySix;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -51,7 +53,8 @@ public final class MinerSimulation {
         serverSocket = new ServerSocket(0);
         this.privilegedKeyPair = privilegedKeyPair;
         // TODO use a temporary directory
-        this.blockChain = new BlockChain(Paths.get("testblockchain" + serverSocket.getLocalPort()));
+        Path blockChainPath = Files.createTempDirectory(Paths.get("/tmp"), "blockchain");
+        this.blockChain = new BlockChain(blockChainPath);
     }
 
     public TestMiner addNode() throws Exception {
@@ -66,7 +69,8 @@ public final class MinerSimulation {
         final List<Integer> portNumsToConnectTo = miners.stream()
                 .map(m -> m.portNumber).collect(Collectors.toList());
         ServerSocket socket = new ServerSocket(0);
-        Miner miner = new Miner(socket, keyPair, privilegedKeyPair.publicKey);
+        Path blockChainPath = Files.createTempDirectory(Paths.get("/tmp"), "blockchain");
+        Miner miner = new Miner(socket, keyPair, privilegedKeyPair.publicKey, blockChainPath);
         miner.connect("localhost", serverSocket.getLocalPort());
         for (int portNumToConnectTo : portNumsToConnectTo) {
             miner.connect("localhost", portNumToConnectTo);
