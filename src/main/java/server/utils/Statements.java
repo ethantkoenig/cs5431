@@ -22,7 +22,7 @@ public final class Statements {
             + "PRIMARY KEY (id),"
             + "UNIQUE (username),"
             + "UNIQUE (email)"
-            + "";
+            + ")";
     public static final String CREATE_KEYS_TABLE = "CREATE TABLE IF NOT EXISTS keypairs ("
             + "keypairid int NOT NULL AUTO_INCREMENT,"
             + "userid int NOT NULL,"
@@ -33,7 +33,7 @@ public final class Statements {
             + "FOREIGN KEY (userid)"
             + "  REFERENCES users(id)"
             + "  ON DELETE CASCADE"
-            + "";
+            + ")";
     public static final String CREATE_PASSWORD_RECOVERY_TABLE = "CREATE TABLE IF NOT EXISTS recover ("
             + "userid int NOT NULL,"
             + "dt DATETIME DEFAULT CURRENT_TIMESTAMP,"
@@ -41,11 +41,11 @@ public final class Statements {
             + "FOREIGN KEY (userid)"
             + "  REFERENCES users(id)"
             + "  ON DELETE CASCADE"
-            + "";
+            + ")";
     public static final String CREATE_FRIENDS_TABLE = "CREATE TABLE IF NOT EXISTS friends ("
             + "username varchar(32) NOT NULL,"
             + "friend varchar(32) NOT NULL"
-            + "";
+            + ")";
 
     public static final String CREATE_TRANSACTIONS_TABLE = "CREATE TABLE IF NOT EXISTS transactions ("
             + "tranid int NOT NULL AUTO_INCREMENT,"
@@ -55,7 +55,7 @@ public final class Statements {
             + "message varchar(256),"
             + "isrequest boolean not null default 0,"
             + "PRIMARY KEY (tranid)"
-            + "";
+            + ")";
 
     public static final String CREATE_PENDING_KEYS_TABLE = "CREATE TABLE IF NOT EXISTS pendingkeys ("
             + "userid int NOT NULL,"
@@ -67,7 +67,7 @@ public final class Statements {
             + "FOREIGN KEY (userid)"
             + "  REFERENCES users(id)"
             + "  ON DELETE CASCADE"
-            + "";
+            + ")";
 
     public static final String GET_ALL_USERS = "SELECT * FROM users";
     private static final int RECOVERY_TIME = 60 * 60; // 1 hour for recovery link to remain active
