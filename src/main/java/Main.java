@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -149,21 +150,32 @@ public class Main {
         ECDSAPublicKey myPublic;
         ECDSAPrivateKey myPrivate;
         ECDSAPublicKey privilegedKey;
-        String logpath;
+        String blockChainPath;
         Node node;
         try {
             myPublic = Crypto.loadPublicKey(IOUtils.getPropertyChecked(prop, "publicKey"));
             myPrivate = Crypto.loadPrivateKey(IOUtils.getPropertyChecked(prop, "privateKey"));
             privilegedKey = Crypto.loadPublicKey(IOUtils.getPropertyChecked(prop, "privilegedKey"));
+            blockChainPath = IOUtils.getPropertyChecked(prop, "blockChainPath");
         } catch (DeserializationException | IOException e) {
             System.err.println(String.format("Error: %s", e.getMessage()));
             return false;
         }
 
         if (isMining) {
-            node = new Miner(new ServerSocket(port), new ECDSAKeyPair(myPrivate, myPublic), privilegedKey);
+            node = new Miner(
+                    new ServerSocket(port),
+                    new ECDSAKeyPair(myPrivate, myPublic),
+                    privilegedKey,
+                    Paths.get(blockChainPath)
+            );
         } else {
-            node = new Node(new ServerSocket(port), new ECDSAKeyPair(myPrivate, myPublic), privilegedKey);
+            node = new Node(
+                    new ServerSocket(port),
+                    new ECDSAKeyPair(myPrivate, myPublic),
+                    privilegedKey,
+                    Paths.get(blockChainPath)
+            );
         }
 
         String nodeList = IOUtils.getPropertyChecked(prop, "nodeList");
