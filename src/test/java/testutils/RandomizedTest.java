@@ -15,6 +15,8 @@ import utils.ShaTwoFiftySix;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 /**
@@ -61,11 +63,11 @@ public abstract class RandomizedTest {
     }
 
     protected Block randomBlock(ShaTwoFiftySix previousHash) throws GeneralSecurityException, IOException {
-        Block b = Block.empty(previousHash);
+        List<Transaction> transactions = new ArrayList<>();
         for (int i = 0; i < Block.NUM_TRANSACTIONS_PER_BLOCK; ++i) {
-            b.addTransaction(randomTransaction());
+            transactions.add(randomTransaction());
         }
-        b.addReward(crypto.signatureKeyPair().publicKey);
+        Block b = Block.block(previousHash, transactions, crypto.signatureKeyPair().publicKey);
         b.setRandomNonce(random);
         return b;
     }
@@ -81,22 +83,24 @@ public abstract class RandomizedTest {
                 .addOutput(output)
                 .build();
 
-        Block block = Block.empty(previousHash);
-
+        List<Transaction> transactions = new ArrayList<>();
         for (int i = 0; i < Block.NUM_TRANSACTIONS_PER_BLOCK; i++) {
             senderPair = recipientPair;
             recipientPair = crypto.signatureKeyPair();
 
-            Transaction previous = i > 0 ? block.transactions[i - 1] : initTransaction;
+            Transaction previous = i > 0 ? transactions.get(i - 1) : initTransaction;
 
-            block.transactions[i] = new Transaction.Builder()
+            transactions.add(new Transaction.Builder()
                     .addInput(
                             new TxIn(previous.getShaTwoFiftySix(), 0),
                             senderPair.privateKey
                     )
                     .addOutput(new TxOut(output.value, recipientPair.publicKey))
-                    .build();
+                    .build()
+            );
         }
+
+        Block block = Block.block(previousHash, transactions, senderPair.publicKey);
 
         UnspentTransactions unspent = UnspentTransactions.empty();
         unspent.put(initTransaction.getShaTwoFiftySix(), 0, output);

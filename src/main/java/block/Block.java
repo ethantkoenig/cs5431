@@ -26,27 +26,36 @@ public class Block extends HashCache implements Iterable<Transaction>, CanBeSeri
 
     public final ShaTwoFiftySix previousBlockHash;
     public final Transaction[] transactions;
-    public TxOut reward;
+    public final TxOut reward;
     public final byte[] nonce = new byte[NONCE_SIZE_IN_BYTES];
 
-    private Block(ShaTwoFiftySix previousBlockHash, int numTransactions) {
+    Block(ShaTwoFiftySix previousBlockHash, Transaction[] transactions, TxOut reward) {
         this.previousBlockHash = previousBlockHash;
-        this.transactions = new Transaction[numTransactions];
+        this.transactions = transactions;
+        this.reward = reward;
     }
 
     /**
      * @return a genesis block
      */
-    public static Block genesis() {
-        return new Block(ShaTwoFiftySix.zero(), 0);
+    public static Block genesis(ECDSAPublicKey rewardKey) {
+        return new Block(ShaTwoFiftySix.zero(), new Transaction[0], new TxOut(REWARD_AMOUNT, rewardKey));
     }
 
-    /**
-     * @param previousBlockHash SHA-256 hash of the previous Block
-     * @return an empty block.
-     */
-    public static Block empty(ShaTwoFiftySix previousBlockHash) {
-        return new Block(previousBlockHash, NUM_TRANSACTIONS_PER_BLOCK);
+    public static Block block(ShaTwoFiftySix previousBlockHash,
+                              List<Transaction> transactions,
+                              ECDSAPublicKey rewardKey) {
+        Transaction[] transactionsArray = transactions.toArray(new Transaction[transactions.size()]);
+        return block(previousBlockHash, transactionsArray, rewardKey);
+    }
+
+    public static Block block(ShaTwoFiftySix previousBlockHash,
+                              Transaction[] transactions,
+                              ECDSAPublicKey rewardKey) {
+        if (transactions.length != NUM_TRANSACTIONS_PER_BLOCK) {
+            throw new IllegalArgumentException("Invalid number of transactions");
+        }
+        return new Block(previousBlockHash, transactions, new TxOut(REWARD_AMOUNT, rewardKey));
     }
 
     /**
@@ -62,15 +71,6 @@ public class Block extends HashCache implements Iterable<Transaction>, CanBeSeri
     }
 
     public void serializeWithoutNonce(DataOutputStream outputStream) throws IOException {
-        for (Transaction transaction : transactions) {
-            if (transaction == null) {
-                throw new IllegalStateException("Cannot serialize a non-full block");
-            }
-        }
-        if (reward == null) {
-            throw new IllegalStateException("Cannot serialize a block without a reward");
-        }
-
         previousBlockHash.writeTo(outputStream);
         CanBeSerialized.serializeArray(outputStream, transactions);
         reward.ownerPubKey.serialize(outputStream);
@@ -117,35 +117,6 @@ public class Block extends HashCache implements Iterable<Transaction>, CanBeSeri
         }
     }
 
-    /**
-     * @return true if block has all NUM_TRANSACTIONS_PER_BLOCK filled
-     */
-    public boolean isFull() {
-        for (Transaction transaction : transactions) {
-            if (transaction == null)
-                return false;
-        }
-        return true;
-    }
-
-    /**
-     * Add a transaction to the block
-     *
-     * @param newTransaction the transaction to be added
-     * @return true if successful
-     */
-    public boolean addTransaction(Transaction newTransaction) {
-        if (this.isFull()) return false;
-        invalidateCache();
-        for (int i = 0; i < transactions.length; i++) {
-            if (transactions[i] == null) {
-                transactions[i] = newTransaction;
-                return true;
-            }
-        }
-        // Should never get here
-        return false;
-    }
 
     /**
      * Update the `nonce` of `this` to make the SHA-256 hash have the correct number of zeros.
@@ -204,17 +175,6 @@ public class Block extends HashCache implements Iterable<Transaction>, CanBeSeri
             }
         }
         return result;
-    }
-
-    /**
-     * Add a reward transaction
-     */
-    public void addReward(ECDSAPublicKey publicKey) {
-        if (reward != null) {
-            throw new IllegalStateException("Cannot reset block's reward");
-        }
-        invalidateCache();
-        reward = new TxOut(REWARD_AMOUNT, publicKey);
     }
 
     /**
@@ -285,14 +245,14 @@ public class Block extends HashCache implements Iterable<Transaction>, CanBeSeri
         public Block deserialize(DataInputStream input) throws DeserializationException, IOException {
             ShaTwoFiftySix hash = ShaTwoFiftySix.deserialize(input);
 
-            List<Transaction> transactions = Deserializer.deserializeList(input, Transaction.DESERIALIZER);
-            Block block = new Block(hash, transactions.size());
-            for (int i = 0; i < transactions.size(); i++) {
-                block.transactions[i] = transactions.get(i);
+            Transaction[] transactions = Deserializer.deserializeList(input, Transaction.DESERIALIZER)
+                    .stream().toArray(Transaction[]::new);
+            if (transactions.length != 0 && transactions.length != NUM_TRANSACTIONS_PER_BLOCK) {
+                String msg = String.format("Invalid number of transactions: %d", transactions.length);
+                throw new DeserializationException(msg);
             }
-
             ECDSAPublicKey rewardKey = ECDSAPublicKey.DESERIALIZER.deserialize(input);
-            block.reward = new TxOut(REWARD_AMOUNT, rewardKey);
+            Block block = new Block(hash, transactions, new TxOut(REWARD_AMOUNT, rewardKey));
             IOUtils.fill(input, block.nonce);
             return block;
         }

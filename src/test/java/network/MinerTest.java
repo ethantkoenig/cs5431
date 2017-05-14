@@ -147,10 +147,11 @@ public class MinerTest extends RandomizedTest {
                 .addOutput(new TxOut(Block.REWARD_AMOUNT - 1, miner1.keyPair.publicKey))
                 .build();
 
-        Block oldBlock = Block.empty(genesisBlock.getShaTwoFiftySix());
-        oldBlock.addTransaction(transaction1);
-        oldBlock.addTransaction(transaction2);
-        oldBlock.addReward(miner1.keyPair.publicKey);
+        Block oldBlock = Block.block(
+                genesisBlock.getShaTwoFiftySix(),
+                Arrays.asList(transaction1, transaction2),
+                miner1.keyPair.publicKey
+        );
         oldBlock.findValidNonce();
         simulation.sendBlock(miner0, oldBlock);
         simulation.sendBlock(miner1, oldBlock);
@@ -175,8 +176,7 @@ public class MinerTest extends RandomizedTest {
         Block getBlockResponse = simulation.getSingleBlockMessage(miner1);
         Assert.assertEquals(genesisBlock, getBlockResponse);
 
-        Block badGenesis = Block.genesis();
-        badGenesis.addReward(miner0.keyPair.publicKey);
+        Block badGenesis = Block.genesis(miner0.keyPair.publicKey);
         badGenesis.findValidNonce();
         simulation.sendBlock(miner0, badGenesis);
         simulation.sendBlock(miner1, badGenesis);
@@ -247,10 +247,11 @@ public class MinerTest extends RandomizedTest {
         badTransactions.add(txNegativeOutput);
 
         for (Transaction badTransaction : badTransactions) {
-            Block badBlock = Block.empty(genesisBlock.getShaTwoFiftySix());
-            badBlock.addTransaction(txId);
-            badBlock.addTransaction(badTransaction);
-            badBlock.addReward(miner1.keyPair.publicKey);
+            Block badBlock = Block.block(
+                    genesisBlock.getShaTwoFiftySix(),
+                    Arrays.asList(txId, badTransaction),
+                    miner1.keyPair.publicKey
+            );
             badBlock.findValidNonce();
             simulation.sendBlock(miner0, badBlock);
             simulation.sendGetBlocksRequest(miner0, badBlock.getShaTwoFiftySix(), 1);

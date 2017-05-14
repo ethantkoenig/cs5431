@@ -28,8 +28,7 @@ public class Miner extends Node {
 
         if (miningBundle.getKeyPair().publicKey.equals(miningBundle.privilegedKey)
                 && miningBundle.getBlockChain().getCurrentHead() == null) {
-            Block genesis = Block.genesis();
-            genesis.addReward(miningBundle.privilegedKey);
+            Block genesis = Block.genesis(miningBundle.privilegedKey);
             MinerThread minerThread = new MinerThread(name, genesis, broadcastQueue);
             minerThread.start();
         }

@@ -7,6 +7,7 @@ import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import crypto.ECDSAKeyPair;
+import org.junit.Assert;
 import transaction.Transaction;
 import transaction.TxIn;
 import transaction.TxOut;
@@ -16,6 +17,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.List;
 
 public class BlockChainGenerator extends Generator<BlockChain> {
 
@@ -28,10 +30,8 @@ public class BlockChainGenerator extends Generator<BlockChain> {
 
     @Override
     public BlockChain generate(SourceOfRandomness random, GenerationStatus status) {
-        Block genesis = Block.genesis();
         ECDSAKeyPair privilegedKey = gen().type(ECDSAKeyPair.class).generate(random, status);
-
-        genesis.addReward(privilegedKey.publicKey);
+        Block genesis = Block.genesis(privilegedKey.publicKey);
 
         try {
             while (!genesis.checkHash()) {
@@ -53,8 +53,8 @@ public class BlockChainGenerator extends Generator<BlockChain> {
         }
         BlockChain blockchain = new BlockChain(blockChainPath, genesis);
 
-        Block second = Block.empty(genesis.getShaTwoFiftySix());
         ShaTwoFiftySix prevHash = genesis.getShaTwoFiftySix();
+        List<Transaction> transactions = new ArrayList<>();
         try {
             for (int i = 0; i < Block.NUM_TRANSACTIONS_PER_BLOCK - 1; ++i) {
                 Transaction dummy = new Transaction.Builder()
@@ -65,13 +65,12 @@ public class BlockChainGenerator extends Generator<BlockChain> {
                                 new TxOut(Block.REWARD_AMOUNT, privilegedKey.publicKey))
                         .build();
                 prevHash = dummy.getShaTwoFiftySix();
-                second.addTransaction(dummy);
+                transactions.add(dummy);
             }
         } catch (IOException e) {
             // We should not reach this case
             e.printStackTrace();
-            assert false;
-            return null;
+            Assert.fail(e.getMessage());
         }
 
         Transaction.Builder txBuilder = new Transaction.Builder();
@@ -102,14 +101,12 @@ public class BlockChainGenerator extends Generator<BlockChain> {
             return null;
         }
 
-        second.addTransaction(distributer);
-        second.addReward(privilegedKey.publicKey);
+        transactions.add(distributer);
+        Block second = Block.block(genesis.getShaTwoFiftySix(), transactions, privilegedKey.publicKey);
 
         try {
-            while (!second.checkHash()) {
-                second.nonceAddOne();
-            }
-        } catch (Exception e) {
+            second.findValidNonce();
+        } catch (IOException e) {
             // We should not reach here
             e.printStackTrace();
             assert false;
