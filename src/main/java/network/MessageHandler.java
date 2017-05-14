@@ -42,7 +42,7 @@ public class MessageHandler {
                           BlockingQueue<OutgoingMessage> broadcast,
                           MiningBundle miningBundle,
                           boolean isMining) {
-        LOGGER = Log.named("MessageHandler " + name);
+        LOGGER = Log.forClass(MessageHandler.class, name);
         this.name = name;
         this.bundle = miningBundle;
         this.broadcastQueue = broadcast;

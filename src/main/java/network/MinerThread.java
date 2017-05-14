@@ -28,7 +28,7 @@ public class MinerThread extends Thread {
     private final BlockingQueue<OutgoingMessage> broadcastQueue;
 
     public MinerThread(String name, Block block, BlockingQueue<OutgoingMessage> broadcastQueue) {
-        LOGGER = Log.named("MinerThread " + name);
+        LOGGER = Log.forClass(MinerThread.class, name);
         this.block = block;
         this.broadcastQueue = broadcastQueue;
     }

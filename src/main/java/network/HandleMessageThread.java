@@ -7,7 +7,6 @@ import message.Message;
 import message.OutgoingMessage;
 import message.payloads.*;
 import transaction.Transaction;
-import utils.Config;
 import utils.DeserializationException;
 import utils.Deserializer;
 import utils.Log;
@@ -42,7 +41,7 @@ public class HandleMessageThread extends Thread {
                                BlockingQueue<OutgoingMessage> broadcastQueue,
                                MiningBundle bundle,
                                boolean isMining) {
-        LOGGER = Log.named("HandleMessageThread " + name);
+        LOGGER = Log.forClass(HandleMessageThread.class, name);
         this.messageQueue = messageQueue;
         this.bundle = bundle;
         this.handler = new MessageHandler(name, broadcastQueue, bundle, isMining);
