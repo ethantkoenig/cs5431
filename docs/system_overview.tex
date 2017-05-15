@@ -43,7 +43,7 @@ We've  implemented a pay-to-public-key (P2PK) Cryptocurrency called EzraCoinL, o
 
 CoinL allows peer-to-peer transactions without the need for a centralized organization to verify the legitimacy and/or consistency of the exchanges.  This is accomplished through the use of a public distributed ledger, referred to as the blockchain.
 
-Our system resists double-spending attacks through the use of the blockchain. The blockchain is maintained by all of the nodes in the network. Each transaction is propagated through a network of nodes, where it is  independently verified and then added to that node's copy of the ledger once a new block has been formed. Once a node has recorded a predetermined fixed number of transactions (we call this a block), then that node will propose the addition of this block to the blockchain. 
+Our system resists double-spending attacks through the use of the blockchain. The blockchain is maintained by all of the nodes in the network. Each transaction is propagated through a network of nodes, where it is  independently verified and then added to that node's copy of the ledger once a new block has been formed. Once a node has recorded a predetermined fixed number of transactions (we call this a block), then that node will propose the addition of this block to the blockchain.
 
 However, to avoid race conditions and inconsistent views of the ledger, we must ensure that everyone in the network agrees on the next block in the chain. This is accomplished through the completion of a computationally difficult task, or proof of work. The first node to identify a nonce such that the SHA-256 hash of the block and the nonce is beneath a threshold will ``win'' and get their proposed block added to the chain. Ideally, the threshold would be dynamic to ensure that the time between block additions remains consistent -- regardless of the number of the nodes in the network. Bitcoin does this, but we do not - the hash difficulty is set by us.  To incentivize nodes to engage in this computationally difficult task, they will be rewarded with a predetermined amount of the CoinL upon successfully mining a block which is accepted into the main chain.
 
@@ -53,9 +53,9 @@ As with Bitcoin, a private key will represent the 'key' to which a user needs to
 
 \subsection*{Web app}
 
-The web-app serves as a mediator between a typical user and our cryptocurrency. Thus, the primary focus of the web-app is to abstract away many of the intricases of our cryptocurrency. As a result, users of the web-app never directly deal with things such as transaction hashes/indexes, blocks, digital signatures, or proper change allocation. All of this is handled under the hood by us, as we assume the typical user is not concerned with it. As stated previously, if a user wants an even higher level of security, they should use the client to launder coins and perform input-output mixing, or perform a Coinjoin transaction. However, we have not implemented any true framework for Coinjoin functionality. 
+The web-app serves as a mediator between a typical user and our cryptocurrency. Thus, the primary focus of the web-app is to abstract away many of the intricacies of our cryptocurrency. As a result, users of the web-app never directly deal with things such as transaction hashes/indexes, blocks, digital signatures, or proper change allocation. All of this is handled under the hood by us, as we assume the typical user is not concerned with it. As stated previously, if a user wants an even higher level of security, they should use the client to launder coins and perform input-output mixing, or perform a Coinjoin transaction. However, we have not implemented any true framework for Coinjoin functionality.
 
-There are several important security features backing the web-app. We have a self-signed SSL certificate for our web-app. In an ideal world, we would apply for a proper certificate at a certificate authority, otherwise sites could spoof our web-app. As this web-app is not an actual product, we have not gone to those lengths. We store salted and hashed passwords with PBKDF2, and require passwords to be at least 16 characters in length. This stringent password policy is important because we store private keys encrypted under the users password on a database on our server. We perform browser-side decryption and digital signatures, that way the central server never has possesion of a user's plaintext private key. We feel this is extremely necessary as a central point of failure necessitates additional measures for user security.
+There are several important security features backing the web-app. We have a self-signed SSL certificate for our web-app. In an ideal world, we would apply for a proper certificate at a certificate authority, otherwise sites could spoof our web-app. As this web-app is not an actual product, we have not gone to those lengths. We store salted and hashed passwords with PBKDF2, and require passwords to be at least 16 characters in length. This stringent password policy is important because we store private keys encrypted under the users password on a database on our server. We perform browser-side decryption and digital signatures, that way the central server never has possession of a user's plaintext private key. We feel this is extremely necessary as a central point of failure necessitates additional measures for user security.
 
 In addition, we allow users to change their password. This involves two-factor authentication, at which point we download the encrypted private keys, decrypt them under the old password, and re-encrypt them under the new one and send them back to the server. That way users who are not acting maliciously will not lose their keys in the event they want to change their password. If we suspect a user is being targeted, we lock their account and require them to unlock their account through a one-time-link sent to their email. In this case, we do wipe their keys.
 
@@ -186,14 +186,12 @@ Our key integrity and availability goals are very much satisfied. We feel that i
 
 \subsubsection*{Wallet App}
 
-% TODO: goals for protecting keys
-
 \begin{itemize}
 \item The wallet software prevents unauthorized disclosure of a user's balance or transaction history. This goal concerns confidentiality, as our wallet software must not expose private user information. Note that the transaction history can still be mapped by the public key on the blockchain, but the wallet software must not allow an easy way for users to do this.
 \item The wallet software prevents unauthorized spending of a user's funds. This goal concerns integrity, since only the owner of funds should be authorized to spend (i.e. update) those funds.
 \item The wallet software prevents unauthorized disclosure of a user's keys. This goal concerns confidentiality, since it involves unauthorized access of an asset. As a matter of fact, we do not disclose keys to anyone except the user themself, though the user could disclose them some other way. We also can only disclose the public key, since we store encrypted private keys.
 \item The wallet software prevents unauthorized modification/deletion of a user's keys. This goal concerns integrity, since keys are a system asset. A malicious user who gains access to an account can delete, but not add keys. We feel addition is important as a malicious user could add their own keys to pose as the user and request funds from others.
-\item The wallet software prevents unauthorized access to a user's credentials. This goals concerns confidentiality, since it involves unauthorized access of an asset. We do the best we can to safeguard the users password, and have safeguard in place if the session cookie is hijacked.
+\item The wallet software prevents unauthorized access to a user's credentials. This goals concerns confidentiality, since it involves unauthorized access of an asset. We do the best we can to safeguard users' passwords, and have safeguard in place if the session cookie is hijacked.
 \item The wallet software prevents unauthorized modification of a user's credentials. This goal concerns integrity, since users' credentials are a system asset. We do this through two-factor authentication for password resets.
 \item The wallet software prevents users from constructing invalid transactions. This goal concerns integrity. If we allowed users to construct malformed transactions, it could lead them to believe they have performed transactions that will never be accepted by the blockchain, leading to inconsistencies between the wallet software and the blockchain. We do this by running a node on the server, and sanity check all transactions with a UTXO (unspent transaction output) key-value store in memory.
 \item The wallet software prevents unauthorized disclosure of a user's friend list. This goal concerns confidentiality, since it involves unauthorized access of an asset.
@@ -321,7 +319,7 @@ Preventing unauthorized modification of a user's keys will still be possible, th
 	Preserving all blocks, including those that are not part of the current chain, allows nodes to review the progression of the blockchain and detect double-spending attacks, though we do not attempt to do this in this class.
 	\item We have implemented the persistence of the blockchain so that it is no longer solely stored in memory.
 	Each completed block is written to a file which makes the audit and reconstruction of the blockchain possible should a new node enter the network.
-      \item We also have a logging system that logs important events to files, allowing the miner to review previous activity, such as the receiving and verification of transactions and blocks and connection statsu to other nodes.
+      \item We also have a logging system that logs important events to files, allowing the miner to review previous activity, such as the receiving and verification of transactions and blocks and connection status to other nodes.
         Other events such as invalid blocks, transactions, and message formats are logged in order to detect malicious nodes.
 
 \end{itemize}
@@ -331,7 +329,7 @@ Preventing unauthorized modification of a user's keys will still be possible, th
 \begin{itemize}
 	\item We log all system event that involve our security requirements.
   Logged events include registrations, logins, logouts, requests, transaction, friending/unfriending, and key upload/removal.
-  This log enables administrators to detect and diagnose malicious activity.Unfortunately, the decentralized nature of the underlying cryptocurrency will prevent us from undoing fraudulent transactions.
+  This log enables administrators to detect and diagnose malicious activity. Unfortunately, the decentralized nature of the underlying cryptocurrency will prevent us from undoing fraudulent transactions.
 \end{itemize}
 
 \subsection{Summary}
