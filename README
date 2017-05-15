@@ -1,4 +1,4 @@
-# CS 5431 - Milestone 3 README
+# CS 5431 - Milestone 5 README
 
 James Cassell (jcc384)
 Evan King (esk79)
@@ -29,39 +29,38 @@ Copy this tar to a directory of your choosing, and extract it.
 Inside the decompressed directory, there will be an executable at bin/cs5431.
 This executable will run our project.
 
-### Running a Node
+### Running a Miner
 
-To launch a node (i.e. a ledger-keeping, block-mining component of the
+To launch a miner (i.e. a ledger-keeping, block-mining component of the
 cryptocurrency network), run
 
-$ bin/cs5431 miner <port no> <public> <private> <privileged> <address list>
+$ bin/cs5431 miner -c path/to/node.properties
 
-Arguments:
-* port_no : port number to bind to
-* public  : filepath to this node's public key (generated via a client, see below)
-* private  : filepath to this node's private key (generated via a client, see below)
-* privileged  : filepath to the "privileged" public key (generated via client)
-                the "privileged" public key is a public key belonging to a
-                particular node, which allows that node to mine the genesis block.
-* address : filepath to list of addresses of other nodes to connect to; these are 
-            nodes that have already been started. This means that the first node to
-            start up should not have any address arguments in the file, the second 
-            node should should the first node's address, etc. Each address should be
-            on a separate line of the form "(ip address):(port no)"
+where config.properties is a .properties file with the configuration for the
+miner. Check out example/miner1.properties or example/miner2.properties inside
+the decompressed directory, and modify them as you need.
 
-For example, to launch three nodes locally, run
+Description of fields:
 
-$ bin/cs5431 node 8000 public1 private1 public3
+nodePort: port on which miner will run4444
+publicKey: filepath of miner's public key
+privateKey: filepath of miner's private key
+privilegedKey: filepath of privileged public key
+logfilePath: filepath where log will be stored
+blockChainPath: filepath where blockchain will be stored
+nodeList: comma-separated list of <ip-addr>:<port-no> addresses to connect to
 
-(then, in another terminal)
-$ echo "localhost:8000" > nodes1.txt
-$ bin/cs5431 node 8001 public2 private2 public3 nodes1.txt
+### Running a Node
 
-(finally, in yet another terminal)
-$ echo -e "localhost:8000\nlocalhost:8001" > nodes2.txt
-$ bin/cs5431 node 8002 public3 private3 public3 node2.txt
+To launch a node (i.e. a ledger-keeping, non-block-mining component of the
+cryptocurrency network), run
 
-where publicX/privateX are filepaths to public/private keys.
+$ bin/cs5431 node -c path/to/node.properties
+
+where node.properties is a .properties file with the configuration for the node.
+Check out example/node.properties, and modify it as you need.
+
+Description of fields: (same as miner.properties)
 
 ### Running a Client
 
@@ -92,31 +91,25 @@ This will open an interactive shell, which supports the following commands:
 
 To run the webserver,
 
-1. Store the MySql password ("pbM,L3j]") in $MYSQL_PASS
-2. Store our email password ("HAfCt/9^") in $EMAIL_PASS
-3. Create a keystore
+1. Create a keystore. We've provided you with one, example/KeyStore.jks inside
+   the decompressed directory, whose password is "password".
 
-   You can download one from https://www.dropbox.com/s/pcxxzcgfbr5ilko/KeyStore.jks?dl=0
-   or make your own if you don't trust us.
+2. Run
 
-4. Store the keystore password in $KEYSTORE_PASS (the password for the Dropbox
-   keystore is "password")
-5. Run
+  $ bin/cs5431 webserver -sc path/to/webserver.properties
 
-  $ bin/cs5431 webserver path/to/keystore <port-num> <public> <private> <privileged> <address list>
+where webserver.properties is a .properties file with the configuration for the
+webserver. Check out our example/webserver.properties, and modify it as you need.
 
-Arguments:
-* port-num : port number on which webserver will run a cryptocurrency node
-* public  : filepath to this node's public key (generated via a client, see below)
-* private  : filepath to this node's private key (generated via a client, see below)
-* privileged  : filepath to the "privileged" public key (generated via client)
-                the "privileged" public key is a public key belonging to a
-                particular node, which allows that node to mine the genesis block.
-* address : filepath to list of addresses of other nodes to connect to; these are
-            nodes that have already been started. This means that the first node to
-            start up should not have any address arguments in the file, the second
-            node should should the first node's address, etc. Each address should be
-            on a separate line of the form "(ip address):(port no)"
+Description of fields:
+
+serverPort: port on which webserver will run
+nodeAddress: address of cryptocurrency node/miner that webserver will contact
+nodePort: port number of cryptocurrency node/miner that webserver will contact
+keystore: filepath to keystore.
+keystorePassword: password for keystore
+logfilePath: filepath for webserver log
+databasePassword: password for our database
 
 ## Testing and FindBugs
 
@@ -126,50 +119,49 @@ $ ./gradlew check
 
 ## Example commands for making transactions and blocks
 
+We've provided you with two private/public keypairs in the example/
+directory, key1.priv/key1.pub and key2.priv/key.pub. You're free to
+generate you own if you want; just make sure to update the
+minerX.properties files accordingly.
+
 Run
 
-$ bin/cs5431 client
-  > generate key1.pub key1.priv
-  > generate key2.pub key2.priv
-  > generate key3.pub key3.priv
-  > quit
+$ # run non-privileged miner
+$ # yes, launch miner2 before miner1, this is not a mistake
+$ bin/cs5431 miner -c miner2.properties
 
-$ # run the setup steps described in the "Running the Webserver" section above
-$ bin/cs5431 webserver path/to/keystore.jks 4443 key1.pub key1.priv key1.pub /dev/null
+$ # (another terminal) run privileged miner
+$ bin/cs5431 miner -c miner1.properties
 
-(in another terminal)
-$ echo "localhost:4443" > nodes4444.txt
-$ bin/cs5431 miner 4444 key2.pub key2.priv key3.pub nodes4444.txt
+$ # (another terminal) run webserver
+$ bin/cs5431 webserver -sc webserver.properties
 
-(in yet another terminal)
-$ echo -e "localhost:4443\nlocalhost:4444" > nodes4445.txt
-$ bin/cs5341 miner 4445 key3.pub key3.priv key3.pub nodes4445.txt
-
-You should see some output from each two nodes. In particular, you
-should see a print hexidecimal string starting with (at least) four zeros.
+You should see some output from each miner. In particular, you
+should see a printed hexadecimal string starting with (at least) four zeros.
 This is the SHA-256 hash of the genesis block, which contains a reward
 transaction for key2 (of value 50000).
 
 Open the website in a browser (https://localhost:5000) and create an account
-with username "username1" by clicking on the "Register" link.
-Make sure your password
+with username "username1" by clicking on the "Register" link. Make sure to
+register with an email address you actually own. Your password must be at least
+16 characters in length.
 
-- is between 12 and 24 characters in length
-- contains a lowercase letter, uppercase letter, and number
-
-Go to your user page (/user/username1), and upload the public/private key
-for key3 using the form on the left of the page. The keys should be entered as
+Go to your user page (/user), and upload the public/private key
+for key1 using the form on the left of the page. The keys should be entered as
 hex-strings, which you can get by running
 
-$ echo $(xxd -p key3.pub | tr -d "\n") # similarly for key3.priv
+$ echo $(xxd -p key1.pub | tr -d "\n") # similarly for key1.priv
+
+You will have to follow a one-time link that is sent to your email to confirm
+the key upload.
 
 Then logout by clicking the "Logout" link, and create another user account
-with username "username2". Upload the public/private key2 for username2. Then,
-from the user page, click on the "username1" icon, which authorizes username1
-to send you money.
+with username "username2" (with another email you own). Upload the public/private
+key2 for username2. Then, from the user page, click on the "username1" icon, which
+authorizes username1 to send username2 money.
 
 Logout and log back in as username1. Click on the "Balance" link. You should
-have a balance of 50000 (recall that key3 is the privileged key).
+have a balance of 50000 (recall that key1 is the privileged key).
 
 Click on the "Transact" link, and try sending money to username2. You will need
 to enter the same password that you entered when you submitted key3.
