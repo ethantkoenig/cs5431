@@ -273,12 +273,14 @@ Preventing unauthorized modification of a user's keys will still be possible, th
 	The master password must be at least 16 characters in length.
 	\item Two secrets, an authentication secret and an encryption secret, are derived from the master password.
 	The master password and derived encryption secret are never sent over the network; only the authentication secret is sent to the webserver.
-	\item The authentication secret is salted, using a 16-byte, randomly generated salt, and then hashed with PBKDF2 using SHA-256 and 4096 iterations.
+	\item The authentication secret is salted, using a 16- yte, randomly generated salt, and then hashed with PBKDF2 using SHA-256 and 4096 iterations.
 	The hashed authentication secret is stored along with the salt in the database.
 	\item Upon login, the user must present their authentication secret. The user's salt is retrieved from the database and hashed with the provided secret.
 	This result is compared with the hash stored in the database.
 	\item After logging in, the user is identified via a session cookie.
-	Spark, the web framework we are using, handles the details of cookie management. % TODO we need details about this, Evan save the day
+	Spark, the web framework we are using, handles the details of session management. Internally, spark utilizes javax.servlet.http.Cookie and javax.servlet.http.HttpSession.
+	A unique, random 32 byte hex string is generated for each session and that session is mapped in server memory to the authenticated user. This is consistent with how nearly all
+	java web apps manage sessions with JSESSIONIDs.
 	\item To protect against online guessing attacks, a user's account is ``locked'' after 5 failed login attempts.
 	If a user's account is locked, the user is notified via email, and must unlock their account using a one-time link that is sent to the user's email account (similar to the password reset workflow).
 \end{itemize}
