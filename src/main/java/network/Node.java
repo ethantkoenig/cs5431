@@ -80,17 +80,23 @@ public class Node {
         LOGGER.info("[+] Accepting connections");
 
         while (true) {
-            ConnectionThread connectionThread = null;
+            ConnectionThread connectionThread;
             try {
-                connectionThread = new ConnectionThread(serverSocket.accept(), this.messageQueue);
+
+                connectionThread = new ConnectionThread(
+                        Connection.accept(serverSocket.accept()),
+                        this.messageQueue
+                );
             } catch (IOException e) {
                 e.printStackTrace();
                 continue;
             }
             LOGGER.info("[+] Received connection!");
             connectionThread.start();
-            synchronized (this) {
-                connections.add(connectionThread);
+            if (connectionThread.isBroadcastConnection()) {
+                synchronized (this) {
+                    connections.add(connectionThread);
+                }
             }
         }
     }
@@ -110,7 +116,8 @@ public class Node {
         LOGGER.info("[+] Connecting to host: %s.%n", host);
         try {
             Socket socket = new Socket(host, port);
-            ConnectionThread connectionThread = new ConnectionThread(socket, this.messageQueue);
+            Connection connection = Connection.connect(socket, true);
+            ConnectionThread connectionThread = new ConnectionThread(connection, this.messageQueue);
             connectionThread.start();
             synchronized (this) {
                 this.connections.add(connectionThread);

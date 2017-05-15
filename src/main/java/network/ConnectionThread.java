@@ -2,13 +2,11 @@ package network;
 
 import message.IncomingMessage;
 import message.OutgoingMessage;
-import utils.Config;
 import utils.DeserializationException;
-import utils.Deserializer;
 import utils.Log;
 
-import java.io.*;
-import java.net.Socket;
+import java.io.EOFException;
+import java.io.IOException;
 import java.util.concurrent.BlockingQueue;
 
 /**
@@ -20,25 +18,16 @@ import java.util.concurrent.BlockingQueue;
 public class ConnectionThread extends Thread {
     private static final Log LOGGER = Log.forClass(ConnectionThread.class);
 
-    private final Socket socket;
+    private final Connection connection;
     private final BlockingQueue<IncomingMessage> messageQueue;
 
-    // The out buffer to write to this network.ConnectionThread
-    private DataOutputStream out;
-
-    // The in buffer to read incoming messages to this network.ConnectionThread
-    private InputStream in;
-
-    public ConnectionThread(Socket socket, BlockingQueue<IncomingMessage> messageQueue) {
-        this.socket = socket;
+    public ConnectionThread(Connection connection, BlockingQueue<IncomingMessage> messageQueue) {
+        this.connection = connection;
         this.messageQueue = messageQueue;
-        try {
-            this.out = new DataOutputStream(socket.getOutputStream());
-            this.in = socket.getInputStream();
-        } catch (IOException e) {
-            LOGGER.severe("Unable to establish two way connection between nodes.%n");
-            e.printStackTrace();
-        }
+    }
+
+    public boolean isBroadcastConnection() {
+        return connection.isBroadcastConnection;
     }
 
     /**
@@ -65,7 +54,7 @@ public class ConnectionThread extends Thread {
      * @throws IOException if out.checkError() returns true indicating that the connection has been closed.
      */
     public void send(OutgoingMessage message) throws IOException {
-        message.serialize(new DataOutputStream(out));
+        connection.send(message);
     }
 
     /**
@@ -75,11 +64,8 @@ public class ConnectionThread extends Thread {
      * Receives incoming messages, and put them onto the messageQueue.
      */
     private void receive() throws DeserializationException, IOException, InterruptedException {
-        DataInputStream dataInputStream = new DataInputStream(in);
-        Deserializer<IncomingMessage> deserializer = IncomingMessage.deserializer(this::send);
         while (true) {
-            IncomingMessage message = deserializer.deserialize(dataInputStream);
-            messageQueue.put(message);
+            messageQueue.put(connection.receive());
         }
     }
 
@@ -88,16 +74,9 @@ public class ConnectionThread extends Thread {
      */
     public void close() {
         try {
-            in.close();
-            out.close();
-            socket.close();
+            connection.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    @Override
-    public String toString() {
-        return "ConnectionThread{socket=" + socket + "}";
     }
 }

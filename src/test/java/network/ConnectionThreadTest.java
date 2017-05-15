@@ -20,11 +20,13 @@ public class ConnectionThreadTest extends RandomizedTest {
         Pair<Socket, Socket> pair = TestUtils.sockets();
 
         BlockingQueue<IncomingMessage> leftQueue = new ArrayBlockingQueue<>(5);
-        ConnectionThread leftThread = new ConnectionThread(pair.getLeft(), leftQueue);
+        Connection leftConnection = Connection.connect(pair.getLeft(), true);
+        ConnectionThread leftThread = new ConnectionThread(leftConnection, leftQueue);
         leftThread.start();
 
         BlockingQueue<IncomingMessage> rightQueue = new ArrayBlockingQueue<>(5);
-        ConnectionThread rightThread = new ConnectionThread(pair.getRight(), rightQueue);
+        Connection rightConnection = Connection.accept(pair.getRight());
+        ConnectionThread rightThread = new ConnectionThread(rightConnection, rightQueue);
         rightThread.start();
 
         OutgoingMessage m1 = new OutgoingMessage(Message.BLOCKS, randomBytes(random.nextInt(1024)));

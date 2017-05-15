@@ -1,9 +1,10 @@
 package cli;
 
 import crypto.Crypto;
-import network.ConnectionThread;
 import message.IncomingMessage;
 import message.Message;
+import network.Connection;
+import network.ConnectionThread;
 import org.junit.Assert;
 import org.junit.Test;
 import testutils.RandomizedTest;
@@ -59,7 +60,8 @@ public class ClientInterfaceTest extends RandomizedTest {
         new Thread(() -> {
             try {
                 Socket socket = serverSocket.accept();
-                new ConnectionThread(socket, queue).start();
+                Connection connection = Connection.accept(socket);
+                new ConnectionThread(connection, queue).start();
             } catch (IOException e) {
                 queue.add(null); // signal that Thread had error
             }
