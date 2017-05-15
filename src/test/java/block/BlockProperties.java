@@ -2,7 +2,6 @@ package block;
 
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
-import crypto.Crypto;
 import crypto.ECDSAKeyPair;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -11,7 +10,6 @@ import testutils.RandomizedTest;
 import transaction.Transaction;
 import utils.Config;
 
-import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 

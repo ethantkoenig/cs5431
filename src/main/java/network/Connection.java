@@ -26,9 +26,9 @@ public class Connection implements AutoCloseable {
     final boolean isBroadcastConnection;
 
     private Connection(Socket socket,
-                      DataOutputStream out,
-                      DataInputStream in,
-                      boolean isBroadcastConnection) {
+                       DataOutputStream out,
+                       DataInputStream in,
+                       boolean isBroadcastConnection) {
         this.socket = socket;
         this.out = out;
         this.in = in;

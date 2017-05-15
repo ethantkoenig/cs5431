@@ -7,7 +7,7 @@ import com.beust.jcommander.Parameters;
 public class CommandWebserver {
 
     @Parameter(
-            names = { "-sc", "--server-config" },
+            names = {"-sc", "--server-config"},
             description = "The path to the server configuration file to use")
     public String serverConfigFile = "server.properties";
 }

@@ -1,6 +1,5 @@
 package message;
 
-import utils.Config;
 import utils.DeserializationException;
 import utils.Deserializer;
 import utils.IOUtils;
@@ -9,7 +8,6 @@ import utils.Log;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.logging.Logger;
 
 public class IncomingMessage extends Message {
     private static final Log LOGGER = Log.forClass(IncomingMessage.class);

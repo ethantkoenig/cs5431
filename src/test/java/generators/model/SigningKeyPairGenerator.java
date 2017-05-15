@@ -7,9 +7,7 @@ import crypto.Crypto;
 import crypto.ECDSAKeyPair;
 import crypto.ECDSAPrivateKey;
 import crypto.ECDSAPublicKey;
-import org.junit.BeforeClass;
 import testutils.InsecureSecureRandom;
-import utils.Config;
 
 import java.security.GeneralSecurityException;
 import java.util.HashMap;

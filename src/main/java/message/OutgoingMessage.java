@@ -1,7 +1,6 @@
 package message;
 
 
-import message.Message;
 import utils.CanBeSerialized;
 
 import java.io.DataOutputStream;

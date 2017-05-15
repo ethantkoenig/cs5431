@@ -108,9 +108,9 @@ public class HandleMessageThread extends Thread {
                 if (!added) {
                     ShaTwoFiftySix hash = blocks.get(blocks.size() - 1).getShaTwoFiftySix();
                     message.respond(new GetBlocksRequestPayload(hash, Message.MAX_BLOCKS_TO_GET).toMessage());
-                // Only rebroadcast if successful add, and single block.
-                // Prevents rebroadcast of catching up
                 } else if (blocks.size() == 1) {
+                    // Only rebroadcast if successful add, and single block.
+                    // Prevents rebroadcast of catching up
                     handler.blockBroadcaster(message);
                 }
                 break;

@@ -22,10 +22,11 @@ public abstract class ControllerTest extends RandomizedTest {
     private IDataSet dataSet;
 
     private static final RouteWrapper wrapper;
+
     static {
-            Log logger = Log.forClass(ControllerTest.class);
-            logger.logger().setLevel(Level.OFF);
-            wrapper = new RouteWrapper(logger);
+        Log logger = Log.forClass(ControllerTest.class);
+        logger.logger().setLevel(Level.OFF);
+        wrapper = new RouteWrapper(logger);
     }
 
     protected ControllerTest() throws Exception {

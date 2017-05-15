@@ -1,6 +1,5 @@
 package transaction;
 
-import crypto.Crypto;
 import crypto.ECDSAKeyPair;
 import org.junit.Assert;
 import org.junit.Test;

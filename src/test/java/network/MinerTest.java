@@ -17,7 +17,6 @@ import utils.Log;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.logging.Level;
 
 import static network.MinerSimulation.assertBlocksMessage;

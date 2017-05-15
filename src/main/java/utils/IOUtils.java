@@ -79,11 +79,10 @@ public final class IOUtils {
     }
 
     /**
-     *  Attempts to get a named property. Throws an `IOException` if `key` is not present in `prop`.
+     * Attempts to get a named property. Throws an `IOException` if `key` is not present in `prop`.
      *
      * @param prop The `Properties` object to query
-     * @param key The key of the property to query
-     *
+     * @param key  The key of the property to query
      * @return The value of the property with key `key`, if present.
      */
     public static String getPropertyChecked(Properties prop, String key) throws IOException {

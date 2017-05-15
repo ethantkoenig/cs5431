@@ -40,7 +40,7 @@
                     <th>Amount</th>
                 </tr>
                 <#list transactions as tran>
-                <tr>
+                    <tr>
                         <#if tran.request>
                             <td>Request</td>
                         <#else>

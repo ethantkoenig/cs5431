@@ -186,7 +186,7 @@ public class Main {
                 .filter(s -> !s.isEmpty())
                 .collect(Collectors.toList());
 
-        for (String s: nodes) {
+        for (String s : nodes) {
             Optional<InetSocketAddress> optAddr = IOUtils.parseAddress(s);
             if (!optAddr.isPresent()) {
                 String msg = String.format("Invalid address %s", s);

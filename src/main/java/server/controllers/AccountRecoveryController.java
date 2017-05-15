@@ -3,7 +3,6 @@ package server.controllers;
 
 import com.google.inject.Inject;
 import crypto.Crypto;
-import org.omg.PortableInterceptor.LOCATION_FORWARD;
 import server.access.AccountRecoveryAccess;
 import server.access.KeyAccess;
 import server.access.UserAccess;
@@ -32,7 +31,7 @@ import static utils.Optionals.ifPresent;
 
 public class AccountRecoveryController extends AbstractController {
     private static final Log LOGGER = Log.forClass(AccountRecoveryController.class);
-    
+
     private static final String RECOVERY_SUBJECT = "EzraCoinL Wallet Password Recovery";
     private static final String UNLOCK_SUBJECT = "EzraCoinL Wallet Account Unlock";
     private static final String CHANGE_PASSWORD_SUBJECT = "EzraCoinL Password Change";

@@ -5,11 +5,9 @@ import block.UnspentTransactions;
 import crypto.Crypto;
 import crypto.ECDSAKeyPair;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import transaction.Transaction;
 import transaction.TxIn;
 import transaction.TxOut;
-import utils.Config;
 import utils.Pair;
 import utils.ShaTwoFiftySix;
 

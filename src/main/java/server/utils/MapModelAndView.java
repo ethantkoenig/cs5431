@@ -4,7 +4,6 @@ import spark.ModelAndView;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 public final class MapModelAndView {
     private final String viewName;

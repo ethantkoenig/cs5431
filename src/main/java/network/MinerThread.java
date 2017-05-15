@@ -1,17 +1,13 @@
 package network;
 
 import block.Block;
-import message.Message;
 import message.OutgoingMessage;
 import message.payloads.BlocksPayload;
-import utils.ByteUtil;
 import utils.Log;
 
 import java.io.IOException;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import static utils.CanBeSerialized.serializeSingleton;
 
 /**
  * The MinerThread is run as a background thread by a Node and is responsible for mining.

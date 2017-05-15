@@ -41,7 +41,8 @@
                                 </span>
                             </div>
                             <div class="input-group">
-                                <button class="btn btn-secondary btn-danger delete-request" data-tranId=${request.tranId?c}>
+                                <button class="btn btn-secondary btn-danger delete-request"
+                                        data-tranId=${request.tranId?c}>
                                     Delete
                                 </button>
                             </div>

@@ -3,9 +3,7 @@ package generators.server.models;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
-import crypto.Crypto;
 import crypto.ECDSAKeyPair;
-import org.junit.BeforeClass;
 import server.models.Key;
 import utils.ByteUtil;
 
