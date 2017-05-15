@@ -30,8 +30,9 @@ import utils.Optionals;
 import utils.ShaTwoFiftySix;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static server.utils.RouteUtils.*;
@@ -95,24 +96,25 @@ public class TransactionController extends AbstractController {
     String transact(Request request, Response response, Log log) throws Exception {
         User loggedInUser = routeUtils.forceLoggedInUser(request);
         String recipientUsername = queryParam(request, "recipient");
+        long amount = queryParamLong(request, "amount");
         String message = queryParam(request, "message");
+
         if (message.length() > MAX_MESSAGE_LENGTH) {
             throw new InvalidParamException(MESSAGE_TOO_LONG);
         }
+        User recipient = userAccess.getUserByUsername(recipientUsername)
+                .orElseThrow(() -> new InvalidParamException("Invalid recipient"));
 
         if (!userAccess.isFriendsWith(recipientUsername, loggedInUser.getUsername())) {
+            LOGGER.info("Unauthorized transaction; user=%d, recipient=%d, amount=%d, message=%s",
+                    loggedInUser.getId(), recipient.getId(), amount, message);
             throw new InvalidParamException("This person has not authorized you to send them money.");
         }
 
-        Optional<User> recipient = userAccess.getUserByUsername(recipientUsername);
-        if (!recipient.isPresent()) {
-            throw new InvalidParamException("Invalid recipient");
-        }
         List<ECDSAPublicKey> keys = keyAccess.getKeysByUserID(loggedInUser.getId()).stream()
                 .map(Key::asKey).flatMap(Optionals::stream).collect(Collectors.toList());
-        List<ECDSAPublicKey> recipientKeys = keyAccess.getKeysByUserID(recipient.get().getId()).stream()
+        List<ECDSAPublicKey> recipientKeys = keyAccess.getKeysByUserID(recipient.getId()).stream()
                 .map(Key::asKey).flatMap(Optionals::stream).collect(Collectors.toList());
-        long amount = queryParamLong(request, "amount");
 
         if (keys.isEmpty()) {
             throw new InvalidParamException("You have not uploaded any keys");
@@ -187,9 +189,14 @@ public class TransactionController extends AbstractController {
     }
 
     ModelAndView getRequests(Request request, Response response, Log log) throws Exception {
-        User touser = routeUtils.forceLoggedInUser(request);
-        List<Transaction> requests = transactionAccess.getRequests(touser.getUsername());
-        List<String> friends = userAccess.getFriends(touser.getUsername());
+        User loggedInUser = routeUtils.forceLoggedInUser(request);
+        List<Transaction> requests = transactionAccess.getRequests(loggedInUser.getUsername());
+
+        Set<String> friendedMe = new HashSet<>(
+                userAccess.getPeopleWhoFriendMe(loggedInUser.getUsername())
+        );
+        List<String> friends = userAccess.getFriends(loggedInUser.getUsername()).stream()
+                .filter(friendedMe::contains).collect(Collectors.toList());
         return routeUtils.modelAndView(request, "request.ftl")
                 .add("friends", friends)
                 .add("requests", requests)
@@ -197,23 +204,28 @@ public class TransactionController extends AbstractController {
     }
 
     String createRequest(Request request, Response response, Log log) throws Exception {
-        User touser = routeUtils.forceLoggedInUser(request);
-        String fromuser = queryParam(request, "requestee");
+        User loggedInUser = routeUtils.forceLoggedInUser(request);
+        String requestee = queryParam(request, "requestee");
+        long amount = queryParamLong(request, "amount");
+        String message = queryParam(request, "message");
 
-        if (!userAccess.isFriendsWith(fromuser, touser.getUsername())) {
-            return "This person has not authorized you to send them money.";
+        if (!userAccess.isFriendsWith(loggedInUser.getUsername(), requestee)) {
+            LOGGER.info("Unauthorized request; user=%d, requstee=%s, amount=%d, message=%s",
+                    loggedInUser.getId(), requestee, amount, message);
+            throw new InvalidParamException("You must authorize the requestee to send you money.");
+        } else if (!userAccess.isFriendsWith(requestee, loggedInUser.getUsername())) {
+            LOGGER.info("Unauthorized request; user=%d, requstee=%s, amount=%d, message=%s",
+                    loggedInUser.getId(), requestee, amount, message);
+            throw new InvalidParamException("This person has not authorized you to make requests.");
         }
 
-        String message = queryParam(request, "message");
         if (message.length() > MAX_MESSAGE_LENGTH) {
             throw new InvalidParamException(MESSAGE_TOO_LONG);
         }
 
-        long amount = queryParamLong(request, "amount");
-
-        transactionAccess.insertTransaction(fromuser, touser.getUsername(), amount, message, true);
-        log.info("Created request; touser=%s, fromuser=%s, amount=%d, message=%s",
-                touser, fromuser, amount, message);
+        transactionAccess.insertTransaction(requestee, loggedInUser.getUsername(), amount, message, true);
+        log.info("Created request; requester=%d, requestee=%s, amount=%d, message=%s",
+                loggedInUser.getId(), requestee, amount, message);
         response.redirect("/user");
         return "redirected";
     }
