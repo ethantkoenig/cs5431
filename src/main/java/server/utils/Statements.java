@@ -32,7 +32,7 @@ public final class Statements {
             + "INDEX userid_index (userid),"
             + "FOREIGN KEY (userid)"
             + "  REFERENCES users(id)"
-            + "  ON DELETE CASCADE"
+            + "  ON DELETE CASCADE,"
             + "UNIQUE (userid, publickey)"
             + ")";
     public static final String CREATE_PASSWORD_RECOVERY_TABLE = "CREATE TABLE IF NOT EXISTS recover ("
