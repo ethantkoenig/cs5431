@@ -68,11 +68,15 @@ public class Connection implements AutoCloseable {
 
     public IncomingMessage receive() throws DeserializationException, IOException {
         Deserializer<IncomingMessage> deserializer = IncomingMessage.deserializer(this::send);
-        return deserializer.deserialize(in);
+        synchronized (in) {
+            return deserializer.deserialize(in);
+        }
     }
 
     public void send(OutgoingMessage message) throws IOException {
-        message.serialize(out);
+        synchronized (out) {
+            message.serialize(out);
+        }
     }
 
     /**
