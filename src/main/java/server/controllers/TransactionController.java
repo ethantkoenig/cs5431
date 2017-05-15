@@ -40,6 +40,10 @@ import static utils.ByteUtil.bytesToHexString;
 
 public class TransactionController extends AbstractController {
     private static final Log LOGGER = Log.forClass(TransactionController.class);
+    private static final int MAX_MESSAGE_LENGTH = 250;
+    private static final String MESSAGE_TOO_LONG =
+            "Message too long, must be under " + MAX_MESSAGE_LENGTH + " characters";
+
 
     private final UserAccess userAccess;
     private final KeyAccess keyAccess;
@@ -91,16 +95,18 @@ public class TransactionController extends AbstractController {
     String transact(Request request, Response response, Log log) throws Exception {
         User loggedInUser = routeUtils.forceLoggedInUser(request);
         String recipientUsername = queryParam(request, "recipient");
-        // TODO we don't check message length
         String message = queryParam(request, "message");
+        if (message.length() > MAX_MESSAGE_LENGTH) {
+            throw new InvalidParamException(MESSAGE_TOO_LONG);
+        }
 
         if (!userAccess.isFriendsWith(recipientUsername, loggedInUser.getUsername())) {
-            return "This person has not authorized you to send them money.";
+            throw new InvalidParamException("This person has not authorized you to send them money.");
         }
 
         Optional<User> recipient = userAccess.getUserByUsername(recipientUsername);
         if (!recipient.isPresent()) {
-            return "invalid recipient"; // TODO handle properly
+            throw new InvalidParamException("Invalid recipient");
         }
         List<ECDSAPublicKey> keys = keyAccess.getKeysByUserID(loggedInUser.getId()).stream()
                 .map(Key::asKey).flatMap(Optionals::stream).collect(Collectors.toList());
@@ -108,8 +114,10 @@ public class TransactionController extends AbstractController {
                 .map(Key::asKey).flatMap(Optionals::stream).collect(Collectors.toList());
         long amount = queryParamLong(request, "amount");
 
-        if (keys.isEmpty() || recipientKeys.isEmpty()) {
-            return "oh no, no keys"; // TODO handle properly
+        if (keys.isEmpty()) {
+            throw new InvalidParamException("You have not uploaded any keys");
+        } else if (recipientKeys.isEmpty()) {
+            throw new InvalidParamException("The recipient has not uploaded any keys");
         }
 
         GetUTXWithKeysResponsePayload unsigned;
@@ -123,14 +131,14 @@ public class TransactionController extends AbstractController {
 
             IncomingMessage respMessage = endpoint.receive();
             if (respMessage.type != Message.UTX_WITH_KEYS) {
-                return "oh no, bad response from node"; // TODO handle properly
+                LOGGER.severe("Unexpected message type: %d", respMessage.type);
+
             }
             unsigned = GetUTXWithKeysResponsePayload.DESERIALIZER.deserialize(respMessage.payload);
         }
 
         if (!unsigned.wasSuccessful) {
-            // TODO don't have enough money, handle properly
-            return "oh no, not successful! (you don't have enough money)";
+            throw new InvalidParamException("You do not have sufficient funds for this transaction");
         }
         byte[] payload = unsigned.unsignedTransaction;
 
@@ -174,7 +182,8 @@ public class TransactionController extends AbstractController {
         try (CryptocurrencyEndpoint endpoint = endpointProvider.getEndpoint()) {
             endpoint.send(new OutgoingMessage(Message.TRANSACTION, msgPayload));
         }
-        return "ok"; // TODO handle properly
+        successMessage(request, "Transaction sent!");
+        return "ok";
     }
 
     ModelAndView getRequests(Request request, Response response, Log log) throws Exception {
@@ -196,9 +205,8 @@ public class TransactionController extends AbstractController {
         }
 
         String message = queryParam(request, "message");
-
-        if (message.length() > 250) {
-            return "Message too long, must be under 250 characters";
+        if (message.length() > MAX_MESSAGE_LENGTH) {
+            throw new InvalidParamException(MESSAGE_TOO_LONG);
         }
 
         long amount = queryParamLong(request, "amount");
