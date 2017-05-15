@@ -153,8 +153,8 @@ public class TransactionController extends AbstractController {
 
         ShaTwoFiftySix payloadHash = ShaTwoFiftySix.hashOf(payload);
         // if transaction already exists (meaning it was a request) mark as complete
-        if (queryParamExists(request, "tranid")) {
-            int tranid = queryParamInt(request, "tranid");
+        if (queryParamExists(request, "tranId")) {
+            int tranid = queryParamInt(request, "tranId");
             transactionAccess.updateTransactionRequestAsComplete(tranid, loggedInUser.getUsername());
             log.info("Accepted request; user=%d, tranId=%d, payloadHash=%s",
                     loggedInUser.getId(), tranid, payloadHash);
@@ -232,7 +232,7 @@ public class TransactionController extends AbstractController {
 
     String deleteRequest(Request request, Response response, Log log) throws Exception {
         User user = routeUtils.forceLoggedInUser(request);
-        int transactionId = queryParamInt(request, "tranid");
+        int transactionId = queryParamInt(request, "tranId");
         log.info("Delete request; id=%d", transactionId);
         transactionAccess.deleteRequest(transactionId, user.getUsername());
         return "ok";

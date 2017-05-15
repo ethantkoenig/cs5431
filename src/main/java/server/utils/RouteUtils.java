@@ -109,7 +109,7 @@ public final class RouteUtils {
             return Integer.parseInt(param);
         } catch (NumberFormatException e) {
             String msg = String.format(
-                    "Expected long value for parameter %s, found %s",
+                    "Expected int value for parameter %s, found %s",
                     paramName, param
             );
             throw new InvalidParamException(msg);

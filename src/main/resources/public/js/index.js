@@ -178,7 +178,7 @@ $(document).ready(function () {
         $.ajax({
             type: 'DELETE',
             url: '/requests' + '?' + $.param({
-                tranid: this.dataset.tranid
+                tranId: this.dataset.tranid
             }),
             success: function () {
                 window.location.replace("/requests");

@@ -202,7 +202,7 @@ public class TransactionControllerTest extends ControllerTest {
         );
         Request request = new MockRequest()
                 .addSessionAttribute("username", sender.getUsername())
-                .addQueryParam("tranid", Integer.toString(transaction.getTranId()))
+                .addQueryParam("tranId", Integer.toString(transaction.getTranId()))
                 .get();
         MockResponse mockResponse = new MockResponse();
         route(controller::deleteRequest).handle(request, mockResponse.get());
