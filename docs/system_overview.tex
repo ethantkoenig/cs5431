@@ -317,8 +317,9 @@ Preventing unauthorized modification of a user's keys will still be possible, th
 	Preserving all blocks, including those that are not part of the current chain, allows nodes to review the progression of the blockchain and detect double-spending attacks, though we do not attempt to do this in this class.
 	\item We have implemented the persistence of the blockchain so that it is no longer solely stored in memory.
 	Each completed block is written to a file which makes the audit and reconstruction of the blockchain possible should a new node enter the network.
-	\item We also have a logging system that logs important events, allowing the miner to review previous activity, such as the receiving and verification of transactions and blocks.
-	% TODO - Elaborate now that it's in
+      \item We also have a logging system that logs important events to files, allowing the miner to review previous activity, such as the receiving and verification of transactions and blocks and connection statsu to other nodes.
+        Other events such as invalid blocks, transactions, and message formats are logged in order to detect malicious nodes.
+
 \end{itemize}
 
 \subsubsection*{Web app}
