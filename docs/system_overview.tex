@@ -200,52 +200,6 @@ The authentication secret derived from a user's master password could be disclos
 In this scenario, preventing unauthorized access to a user's balance, transaction history, public keys, and friends list will not be possible.
 Preventing unauthorized modification of a user's keys will still be possible, through use of two-factor authentication for such operations.
 
-\section{Review of Essential Security Elements}
-
-\subsection{Authentication}
-
-For the cryptocurrency itself, there is no authentication. All parties in the cryptocurrency network remain pseudonymous, so there are no places where authentication comes into play.
-
-Our Venmo-style web app will authenticate users via an authentication secret derived from their master password. Access to all of the app's service will be mediated through logging in. In addition, we require the user re-enter their password for certain operations, and two factor authentication for others.
-This serves as a countermeasure against session-hijacking attacks, and leaks of a user's authentication secret.
-
-\subsection{Authorization}
-
-In the blockchain, the cryptographic signing of a transaction using a private key authorizes that particular transaction. Clearly, for a currency to function, all transactions made with that currency must be authorized.
-
-In the web app, we allow users to authorize which other users can and cannot send them money.
-
-\subsection{Audit}
-
-In the cryptocurrency, audit naturally comes up in the blockchain. Every user will have access to every transaction that has occurred using our currency. This will allow members of the network to detect double-spending attacks, and other misconduct.
-
-The web-app maintains a log of all system ``events'' that pertain to our security requirements. This log can be manually reviewed to detect and diagnose any attacks or misconduct.
-
-\subsection{Confidentiality}
-
-For many users of a cryptocurrency, one of the strongest appeals is the pseudonymity.
-Users may create more public/private keys at will and protect their identity as they make transactions.
-For those using our blockchain alone, we will store no personal information about our users and thus their identities remain safe.
-However, the pseudonymity that public keys provide is not perfect anonymity. It is possible to infer the owners of public keys by analyzing behavioral patterns, such as network timing attacks. We do not plan to protect against such attacks.
-
-Our web-app has a number of safeguards previously mentioned to protect user confidentiality. While users who are logged in can see all the usernames of other users, they learn nothing else about those users. Users' keys, email, balance, friends are not disclosed to other users.
-
-\subsection{Integrity}
-
-It is essential to our cryptocurrency that the history of transactions is untampered, as it determines each user's balance.
-The integrity of the transactions is maintained by both the cryptographic signing of individual transactions as well as the infeasibility of altering the blockchain as it grows.
-It becomes harder to alter old transactions as it would require finding a new nonce for every block thereafter.
-However, this argument is probabilistic, not absolute; even if an adversary does not obtain a majority of the network's computing power, he/she can still attempt a double-spending attack, and will succeed with non-zero probability.
-
-Integrity is equally important in our web-app.
-It is important, for obvious reasons, that users cannot execute requests or transactions for other users, or spend other users' funds.
-Additionally, a user's keys must remain unaltered in order for users to know that they are paying the correct person.
-If an attacker alters the public keys that are stored under a particular user, then anyone paying that user may inadvertently pay the attacker's public key. We protect against such attacks through two-factor authentication for key addition.
-
-\subsection{Summary}
-
-We've built both a cryptocurrency and a secure wallet app. We protect against a number of strong, real world attacks on modern cryptocurrencies and wallets. We feel that if we wanted to we could deploy our currency as is with only a few additional features needed. One of those features would be consensus based difficulty adjustment, as miners must agree to raise block difficulty over time. In addition, while we have emulated real world testing to the best of our ability, some Wide Area Network testing would greatly increase our confidence in the security and robustness of our system. A cryptocurrency is only worth as much as it is secure, so naturally our 'worth' would increase as we add new security features over time in the event of actual deployment.
-
 \section{Implementation}
 
 \subsection{Confidentiality}
@@ -372,6 +326,10 @@ We've built both a cryptocurrency and a secure wallet app. We protect against a 
   Logged events include registrations, logins, logouts, requests, transaction, friending/unfriending, and key upload/removal.
   This log enables administrators to detect and diagnose malicious activity.Unfortunately, the decentralized nature of the underlying cryptocurrency will prevent us from undoing fraudulent transactions.
 \end{itemize}
+
+\subsection{Summary}
+
+We've built both a cryptocurrency and a secure wallet app. We protect against a number of strong, real world attacks on modern cryptocurrencies and wallets. We feel that if we wanted to we could deploy our currency as is with only a few additional features needed. One of those features would be consensus based difficulty adjustment, as miners must agree to raise block difficulty over time. In addition, while we have emulated real world testing to the best of our ability, some Wide Area Network testing would greatly increase our confidence in the security and robustness of our system. A cryptocurrency is only worth as much as it is secure, so naturally our 'worth' would increase as we add new security features over time in the event of actual deployment.
 
 
 \begin{thebibliography}{9}
