@@ -34,7 +34,7 @@
                     <input type="password" class="form-control" placeholder="Password">
                 </div>
                 <input type="hidden" class="hidden-password" name="password">
-                <input class="btn btn-primary" type="submit" value="Update">
+                <input class="btn btn-primary" type="submit" value="Upload key">
             </form>
             <div class="row" id="status-message"></div>
         </div>
