@@ -4,6 +4,7 @@ package cli;
 import crypto.Crypto;
 import message.Message;
 import message.OutgoingMessage;
+import network.Connection;
 import transaction.Transaction;
 import transaction.TxIn;
 import transaction.TxOut;
@@ -12,7 +13,6 @@ import utils.DeserializationException;
 import utils.ShaTwoFiftySix;
 
 import java.io.BufferedReader;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -68,9 +68,10 @@ public class GenerateTransaction {
         byte[] payload = ByteUtil.asByteArray(transaction::serialize);
 
         for (InetSocketAddress address : addresses) {
-            try (Socket socket = new Socket(address.getAddress(), address.getPort())) {
-                DataOutputStream socketOut = new DataOutputStream(socket.getOutputStream());
-                new OutgoingMessage(Message.TRANSACTION, payload).serialize(socketOut);
+            try (Socket socket = new Socket(address.getAddress(), address.getPort());
+                 Connection connection = Connection.connect(socket, false)
+            ) {
+                connection.send(new OutgoingMessage(Message.TRANSACTION, payload));
             }
         }
     }

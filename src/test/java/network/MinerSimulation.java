@@ -96,9 +96,10 @@ public final class MinerSimulation {
         }
         new Thread(miner::startMiner).start();
         BlockingQueue<IncomingMessage> queue = new ArrayBlockingQueue<IncomingMessage>(25);
-        ConnectionThread conn = new ConnectionThread(serverSocket.accept(), queue);
-        conn.start();
-        TestMiner testMiner = new TestMiner(keyPair, queue, socket.getLocalPort(), conn);
+        Connection connection = Connection.accept(serverSocket.accept());
+        ConnectionThread connThread = new ConnectionThread(connection, queue);
+        connThread.start();
+        TestMiner testMiner = new TestMiner(keyPair, queue, socket.getLocalPort(), connThread);
         miners.add(testMiner);
         return testMiner;
     }

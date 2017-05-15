@@ -3,41 +3,35 @@ package server.utils;
 import com.google.inject.Inject;
 import message.IncomingMessage;
 import message.OutgoingMessage;
+import network.Connection;
 import server.annotations.NodeAddress;
 import utils.DeserializationException;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
 public class ProductionCryptocurrencyEndpoint implements CryptocurrencyEndpoint {
-    private final Socket socket;
-    private final DataOutputStream outputStream;
-    private final DataInputStream inputStream;
+    private final Connection connection;
 
-    public ProductionCryptocurrencyEndpoint(InetSocketAddress address) throws IOException {
-        socket = new Socket(address.getAddress(), address.getPort());
-        outputStream = new DataOutputStream(socket.getOutputStream());
-        inputStream = new DataInputStream(socket.getInputStream());
+    ProductionCryptocurrencyEndpoint(InetSocketAddress address) throws IOException {
+        Socket socket = new Socket(address.getAddress(), address.getPort());
+        this.connection = Connection.connect(socket, false);
     }
 
     @Override
     public void send(OutgoingMessage message) throws IOException {
-        message.serialize(outputStream);
+        connection.send(message);
     }
 
     @Override
     public IncomingMessage receive() throws DeserializationException, IOException {
-        return IncomingMessage.deserializer(this::send).deserialize(inputStream);
+        return connection.receive();
     }
 
     @Override
     public void close() throws IOException {
-        outputStream.close();
-        inputStream.close();
-        socket.close();
+        connection.close();
     }
 
     public static final class Provider implements CryptocurrencyEndpoint.Provider {
