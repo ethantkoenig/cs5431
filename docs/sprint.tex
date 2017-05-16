@@ -15,7 +15,7 @@
 \usepackage[colorlinks=true, allcolors=blue]{hyperref}
 \usepackage{tabularx}
 
-\title{CS 5431: Milestone 4 Beta - Sprint Report}
+\title{CS 5431: Milestone 5 - Sprint Report}
 \author{
 James Cassell (jcc384)
 \and
@@ -35,30 +35,30 @@ Will Ronchetti (wrr33)
 
 \subsection{Activity Breakdown}
 
-\begin{enumerate}
-\item Ethan implemented the client-side encrypting of private keys and signing of transactions. He also worked on improving test coverage of the web application, and the front-ends for balances and the improved transaction workflow. He contributed 30 hours to this sprint.
-\item Will implemented and tested the server backend required to display amounts by processing the UTXO set. He also worked on testing the web app. He contributed 20 hours to this sprint.
-\item Evan implemented the password recovery feature, the friends feature, the account lockout feature, relocated the database to a remote location, and assisted with UI and error handling. The friend feature allows users to only receive money from those who they have previously identified as a "friend." Evan contributed roughly 30 hours to this sprint.
-\item James worked on giving non-mining nodes the ability to maintain a blockchain, making the webserver a node, and the requests and response from nodes for determining funds for a given key.
-  He also worked on manually testing the system.
-  James contributed approximately 15 hours to this sprint.
-\item Eric worked on networking, adding message types and appropriate handling.
-He also worked on some of the functionality needed by the server to create transactions and query for the total amount owned by a public key.
-Eric contributed approximately 12 hours to this sprint.
+\begin{enumerate} % TODO update
+\item Ethan worked on client-side generation of keys, switching to a single master password, improved account unlocking, cryptocurrency bug fixes, and UI improvements. He contributed 50 hours to this sprint.
+\item Will implemented and tested two-factor authentication for adding keys. He also assisted with manual testing of the web app, and contributed roughly 25 hours to the final sprint.
+\item Evan focused on usbaility, ensuring that the web app responds with proper success/error messages and that the UI is functional and intuitive. Evan contributed roughly 10 hours to this sprint.
+\item James worked on logging to files, removing EOFExceptions from dropped connections, and relaying of blocks in the network.
+    James contributed approximately 10 hours to this sprint.
+\item Eric worked on documentation and user testing.
+He contributed approximately 8 hours to this sprint.
 \end{enumerate}
 
 \subsection{Productivity Analysis}
 
 Our goals for this sprint were the following:
+
 \begin{itemize}
-\item Update the web app to perform private key encryption and transaction signing on the client side. We had previously stored unencrypted private keys in the server's database, and performed all signing on the server side.
-\item Introduce a password recovery mechanism (for authentication passwords).
-\item Improve the interface for performing transactions, so that user do not have to manually enter transaction hashes or hexadecimal-encoded keys.
-\item Improve test coverage of web app functionality.
-\item Allow users to view their balance.
-\item Allow users to remove keys
+\item Add requests, and the ability to accept/decline requests.
+\item Improved audit and logging for the web app.
+\item Allow for client-side generation of keys, so that users of the webapp can create a new key without having to use our text-based client.
+\item Use a single master password, from which different authenication and encryption secrets are derived
+\item Use two-factor authorization for key upload.
+\item Separate the password reset and account unlocking workflows, so that a user's keys are not cleared if the user's account becomes locked.
 \item Make improvement to the web app's UI.
-\item Introduce a ``friends'' system allowing users to determine who can and cannot transact with them.
+\item Improve the command-line interface for running our project.
+\item Add relaying of blocks by nodes to allow sparse network connectivity.
 \end{itemize}
 
 \bigskip\noindent We were able to accomplish all of our goals for this sprint.
